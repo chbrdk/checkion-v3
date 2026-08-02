@@ -15,7 +15,9 @@ import { adaptDomainResultToContracts, adaptScanResultToContracts } from './adap
 import type { DomainScanResultWithFullPages, ScanOptions, ScanResult } from './types'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
 
-export type SingleScanRunner = (options: ScanOptions) => Promise<ScanResult>
+export type SingleScanRunner = (
+  options: ScanOptions & { groupId?: string; userId?: string },
+) => Promise<ScanResult>
 
 export type DomainScanRunner = (
   url: string,
