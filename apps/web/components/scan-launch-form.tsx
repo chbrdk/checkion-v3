@@ -453,6 +453,7 @@ export function ScanLaunchForm({
               <Field
                 className="checkion-launch-compose__url"
                 label="URL"
+                size="md"
                 hint={
                   activeCapability === 'geo'
                     ? 'Target host for citation checks'
@@ -465,6 +466,7 @@ export function ScanLaunchForm({
                   value={url}
                   onChange={(e) => onUrlChange(e.target.value)}
                   required
+                  block
                   aria-label="Scan URL"
                   placeholder="https://"
                 />
