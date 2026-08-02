@@ -74,10 +74,10 @@ const CAPABILITY_CARDS: Array<{
   deck: string
 }> = [
   {
-    id: 'seo',
-    label: 'SEO',
-    kicker: 'Findability',
-    deck: 'Titles, meta, headings, and corpus coverage across the host.',
+    id: 'wcag',
+    label: 'WCAG',
+    kicker: 'Accessibility',
+    deck: 'Page or domain — contrast, structure, and assistive tech readiness.',
   },
   {
     id: 'geo',
@@ -86,10 +86,10 @@ const CAPABILITY_CARDS: Array<{
     deck: 'Citations, placement, and share of voice in LLM answers.',
   },
   {
-    id: 'wcag',
-    label: 'WCAG',
-    kicker: 'Accessibility',
-    deck: 'Page or domain — contrast, structure, and assistive tech readiness.',
+    id: 'seo',
+    label: 'SEO',
+    kicker: 'Findability',
+    deck: 'Titles, meta, headings, and corpus coverage across the host.',
   },
 ]
 
@@ -328,7 +328,7 @@ export function ScanLaunchForm({
         <p className="checkion-launch-hero__deck">
           {fromAudion
             ? 'Single-page accessibility for this AUDION step — results live in CHECKION.'
-            : 'Choose a capability, drop a URL, launch. SEO coverage, GEO presence, or WCAG — one magazine to begin.'}
+            : 'Choose a capability, drop a URL, launch. WCAG, GEO presence, or SEO coverage — one magazine to begin.'}
         </p>
       </header>
 

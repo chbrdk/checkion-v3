@@ -53,13 +53,17 @@ describe('ScanLaunchForm', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders inviting launch IA with SEO / GEO / WCAG capability tiles', () => {
+  it('renders inviting launch IA with WCAG / GEO / SEO capability tiles', () => {
     render(<ScanLaunchForm projects={projects} />)
     expect(screen.getByRole('heading', { name: /Start a run/i })).toBeTruthy()
     expect(screen.getByRole('radiogroup', { name: /Capability/i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /SEO\./i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /GEO\./i })).toBeTruthy()
     expect(screen.getByRole('radio', { name: /WCAG\./i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /SEO\./i })).toBeTruthy()
+    const capabilityLabels = screen
+      .getAllByRole('radio', { name: /^(WCAG|GEO|SEO)\./i })
+      .map((el) => el.getAttribute('aria-label')?.split('.')[0])
+    expect(capabilityLabels).toEqual(['WCAG', 'GEO', 'SEO'])
     expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
     expect(screen.getByRole('radio', { name: /Quick single scan/i })).toBeTruthy()
