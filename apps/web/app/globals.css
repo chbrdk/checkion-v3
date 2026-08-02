@@ -2425,7 +2425,8 @@ a { color: inherit; text-decoration: none; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
-  border-block: 1px solid var(--line);
+  /* Bottom rule only — no top hairline on the depth boxes */
+  border-bottom: 1px solid var(--line);
 }
 
 .checkion-depth-tile {
