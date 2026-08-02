@@ -61,9 +61,9 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('radio', { name: /GEO\./i })).toBeTruthy()
     expect(screen.getByRole('radio', { name: /WCAG\./i })).toBeTruthy()
     expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('group', { name: /WCAG scan depth/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Quick single scan/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Deep scan/i })).toBeTruthy()
+    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Quick single scan/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Deep scan/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /SEO · domain-1/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /GEO · geo-1/i })).toBeTruthy()
@@ -73,20 +73,20 @@ describe('ScanLaunchForm', () => {
   it('reveals WCAG depth only when WCAG is selected', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="seo" />)
     expect(screen.getByRole('radio', { name: /SEO\./i })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     expect(screen.getByRole('button', { name: /Launch SEO crawl/i })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
-    expect(screen.getByRole('group', { name: /WCAG scan depth/i })).toBeTruthy()
+    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
   })
 
   it('shows GEO fields when GEO capability is selected', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
-    expect(screen.getByLabelText(/GEO queries/i)).toBeTruthy()
+    expect(screen.getByLabelText(/GEO queries/i )).toBeTruthy()
     expect(screen.getByLabelText(/GEO models/i)).toBeTruthy()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
   })
 
   it('locks AUDION handoff to WCAG Quick single', () => {
@@ -103,7 +103,7 @@ describe('ScanLaunchForm', () => {
     expect(screen.queryByRole('radio', { name: /GEO\./i })).toBeNull()
     expect(screen.queryByRole('radio', { name: /SEO\./i })).toBeNull()
     expect(screen.getByRole('radio', { name: /WCAG\./i })).toBeTruthy()
-    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
@@ -211,8 +211,8 @@ describe('ScanLaunchForm', () => {
         defaultUrl="https://example.com/"
       />,
     )
-    expect(screen.getByRole('button', { name: /^Deep scan$/i })).toHaveAttribute(
-      'aria-pressed',
+    expect(screen.getByRole('radio', { name: /Deep scan/i })).toHaveAttribute(
+      'aria-checked',
       'true',
     )
     fireEvent.click(screen.getByRole('button', { name: /Launch deep scan/i }))

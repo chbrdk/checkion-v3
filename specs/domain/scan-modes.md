@@ -19,13 +19,14 @@ Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on 
 One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 
 1. **Capability picker** (primary) — large inviting tiles: **SEO** · **GEO** · **WCAG** (AUDION handoff locks to WCAG)
-2. **WCAG depth** (secondary, only when WCAG selected) — `ToggleGroup`: Quick single scan · Deep scan
-3. **URL** — page or host to evaluate / cite against
-4. **Project** — CHECKION Collection capability
-5. **GEO extras** (when capability = GEO) — queries (one per line; sensible defaults from host) · optional models (default `OPENAI_MODEL` / `gpt-5.4-nano`)
-6. **CTA** — launches the selected path; secondary demo jumps stay quiet (fixture result links)
+2. **WCAG depth** (secondary, only when WCAG selected) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip)
+3. **Compose band** — editorial form unit below the pickers:
+   - **URL** — hero input (page or host)
+   - **GEO extras** (when capability = GEO) — queries · optional models
+   - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
+4. Fixture demo jumps stay below the stage as quiet secondary links
 
-Primitives: `Panel` · `SectionChrome` · `ToggleGroup` (WCAG depth only) · `Field` / `Input` / `Textarea` / `Select` / `Button` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability tiles as app composition (`checkion-capability-grid`) · light `checkion-rise` motion.
+Primitives: `Panel` (stage shell) · `Field` / `Input` / `Textarea` / `Select` / `Button` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · light `checkion-rise` motion.
 
 Deep-links (`paths.routes.scanLaunch`):
 - `projectId`, `mode=seo|geo|single|deep`, `url`

@@ -12,7 +12,6 @@ import {
   Panel,
   Text,
   Textarea,
-  ToggleGroup,
   TopStatus,
 } from '@msqdx/ui'
 import { Select } from '../lib/msqdx-ui-client'
@@ -109,6 +108,26 @@ const CAPABILITY_CARDS: Array<{
     label: 'WCAG',
     kicker: 'Accessibility',
     deck: 'Page or domain — contrast, structure, and assistive tech readiness.',
+  },
+]
+
+const WCAG_DEPTH_CARDS: Array<{
+  id: WcagDepth
+  label: string
+  kicker: string
+  deck: string
+}> = [
+  {
+    id: 'single',
+    label: 'Quick single scan',
+    kicker: 'One page',
+    deck: 'One URL, one magazine — accessibility first with SEO and performance beside it.',
+  },
+  {
+    id: 'deep',
+    label: 'Deep scan',
+    kicker: 'Domain crawl',
+    deck: 'Spider from this URL into a light corpus magazine alongside the page result.',
   },
 ]
 
@@ -211,12 +230,10 @@ export function ScanLaunchForm({
     setError(null)
   }
 
-  function onWcagDepthChange(next: string) {
+  function onWcagDepthChange(next: WcagDepth) {
     if (fromAudion) return
-    if (next === 'single' || next === 'deep') {
-      setWcagDepth(next)
-      setError(null)
-    }
+    setWcagDepth(next)
+    setError(null)
   }
 
   function onUrlChange(next: string) {
@@ -387,16 +404,34 @@ export function ScanLaunchForm({
               <span className="checkion-launch-depth__label" id="checkion-launch-depth-label">
                 WCAG depth
               </span>
-              <ToggleGroup
-                aria-label="WCAG scan depth"
-                value={activeWcagDepth}
-                onChange={onWcagDepthChange}
-                size="md"
-                options={[
-                  { value: 'single', label: 'Quick single scan' },
-                  { value: 'deep', label: 'Deep scan' },
-                ]}
-              />
+              <div
+                className="checkion-depth-grid"
+                role="radiogroup"
+                aria-labelledby="checkion-launch-depth-label"
+              >
+                {WCAG_DEPTH_CARDS.map((card) => {
+                  const selected = activeWcagDepth === card.id
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${card.label}. ${card.deck}`}
+                      className={
+                        selected
+                          ? 'checkion-depth-tile checkion-depth-tile--selected'
+                          : 'checkion-depth-tile'
+                      }
+                      onClick={() => onWcagDepthChange(card.id)}
+                    >
+                      <span className="checkion-depth-tile__kicker">{card.kicker}</span>
+                      <span className="checkion-depth-tile__label">{card.label}</span>
+                      <span className="checkion-depth-tile__deck">{card.deck}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           ) : null}
 
@@ -413,75 +448,86 @@ export function ScanLaunchForm({
             </Hint>
           ) : null}
 
-          <Field
-            label="URL"
-            hint={
-              activeCapability === 'geo'
-                ? 'Target host for citation checks'
-                : activeCapability === 'seo'
-                  ? 'Host root to crawl for SEO coverage'
-                  : 'Page to evaluate'
-            }
-          >
-            <Input
-              value={url}
-              onChange={(e) => onUrlChange(e.target.value)}
-              required
-              aria-label="Scan URL"
-              placeholder="https://"
-            />
-          </Field>
-
-          {activeCapability === 'geo' ? (
-            <>
+          <div className="checkion-launch-compose">
+            <div className="checkion-launch-compose__lead">
               <Field
-                label="Queries"
-                hint="One prompt per line — leave as-is for host defaults"
+                className="checkion-launch-compose__url"
+                label="URL"
+                hint={
+                  activeCapability === 'geo'
+                    ? 'Target host for citation checks'
+                    : activeCapability === 'seo'
+                      ? 'Host root to crawl for SEO coverage'
+                      : 'Page to evaluate'
+                }
               >
-                <Textarea
-                  value={geoQueries}
-                  onChange={(e) => setGeoQueries(e.target.value)}
-                  rows={4}
-                  aria-label="GEO queries"
-                />
-              </Field>
-              <Field label="Models" hint="Comma or line-separated · default gpt-5.4-nano">
                 <Input
-                  value={geoModels}
-                  onChange={(e) => setGeoModels(e.target.value)}
-                  aria-label="GEO models"
-                  placeholder={DEFAULT_GEO_MODEL}
+                  value={url}
+                  onChange={(e) => onUrlChange(e.target.value)}
+                  required
+                  aria-label="Scan URL"
+                  placeholder="https://"
                 />
               </Field>
-            </>
-          ) : null}
 
-          <Field label="Project" hint="CHECKION Collection capability">
-            <Select
-              value={projectId}
-              onChange={setProjectId}
-              options={projects.map((p) => ({ value: p.id, label: p.name }))}
-              aria-label="Project"
-            />
-          </Field>
+              {activeCapability === 'geo' ? (
+                <div className="checkion-launch-compose__geo">
+                  <Field
+                    label="Queries"
+                    hint="One prompt per line — leave as-is for host defaults"
+                  >
+                    <Textarea
+                      value={geoQueries}
+                      onChange={(e) => setGeoQueries(e.target.value)}
+                      rows={4}
+                      aria-label="GEO queries"
+                    />
+                  </Field>
+                  <Field label="Models" hint="Comma or line-separated · default gpt-5.4-nano">
+                    <Input
+                      value={geoModels}
+                      onChange={(e) => setGeoModels(e.target.value)}
+                      aria-label="GEO models"
+                      placeholder={DEFAULT_GEO_MODEL}
+                    />
+                  </Field>
+                </div>
+              ) : null}
+            </div>
 
-          <div className="checkion-scan-form__actions">
-            {status === 'submitting' ? (
-              <LoadingText>{modeCopy.loading}</LoadingText>
-            ) : (
-              <Button type="submit" disabled={!projectId || !url.trim()}>
-                {modeCopy.cta}
-              </Button>
-            )}
-            {status === 'idle' ? (
-              <TopStatus level="ok" primary="Ready" secondary={modeCopy.destination} />
-            ) : null}
-            {status === 'error' ? (
-              <TopStatus level="critical" primary="Launch failed" secondary="retry" />
-            ) : null}
+            <div className="checkion-launch-compose__footer">
+              <Field
+                className="checkion-launch-compose__project"
+                label="Project"
+                hint="CHECKION Collection capability"
+              >
+                <Select
+                  value={projectId}
+                  onChange={setProjectId}
+                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                  aria-label="Project"
+                />
+              </Field>
+
+              <div className="checkion-scan-form__actions checkion-launch-compose__actions">
+                {status === 'submitting' ? (
+                  <LoadingText>{modeCopy.loading}</LoadingText>
+                ) : (
+                  <Button type="submit" disabled={!projectId || !url.trim()}>
+                    {modeCopy.cta}
+                  </Button>
+                )}
+                {status === 'idle' ? (
+                  <TopStatus level="ok" primary="Ready" secondary={modeCopy.destination} />
+                ) : null}
+                {status === 'error' ? (
+                  <TopStatus level="critical" primary="Launch failed" secondary="retry" />
+                ) : null}
+              </div>
+            </div>
+
+            {error ? <Alert tone="error">{error}</Alert> : null}
           </div>
-
-          {error ? <Alert tone="error">{error}</Alert> : null}
         </form>
       </Panel>
 
