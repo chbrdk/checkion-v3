@@ -134,24 +134,27 @@ export function GeoModelPicker({ value, onChange, disabled = false }: Props) {
         <ul className="checkion-geo-model-picker__selected">
           {selected.map((model) => (
             <li key={model.id} className="checkion-geo-model-picker__selected-item">
-              <Chip
-                static
-                size="sm"
-                selected
-                className="checkion-geo-model-picker__chip"
+              <span
                 title={`${model.id} · ${providerLabel(model.provider)} · ${availabilityLabel(model)}`}
               >
-                <span className="checkion-geo-model-picker__chip-label">{model.label}</span>
-                <span
-                  className={
-                    model.liveSupported
-                      ? 'checkion-geo-model-picker__avail checkion-geo-model-picker__avail--live'
-                      : 'checkion-geo-model-picker__avail'
-                  }
+                <Chip
+                  static
+                  size="sm"
+                  selected
+                  className="checkion-geo-model-picker__chip"
                 >
-                  {availabilityLabel(model)}
-                </span>
-              </Chip>
+                  <span className="checkion-geo-model-picker__chip-label">{model.label}</span>
+                  <span
+                    className={
+                      model.liveSupported
+                        ? 'checkion-geo-model-picker__avail checkion-geo-model-picker__avail--live'
+                        : 'checkion-geo-model-picker__avail'
+                    }
+                  >
+                    {availabilityLabel(model)}
+                  </span>
+                </Chip>
+              </span>
               <Button
                 type="button"
                 variant="ghost"
