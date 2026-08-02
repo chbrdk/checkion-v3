@@ -32,15 +32,17 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
    - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO; GEO CTA alone (project silent); destination status stays quiet
 
 ### GEO silent URL + project (no compose row)
-`POST /api/geo-jobs` still requires `{ projectId, url, queries[] }`. When the URL+Project row is hidden:
+`POST /api/geo-jobs` requires `{ url, queries[] }` (and resolves `projectId`). **`companyId` / `platformCompanyId` are not GEO-job fields** — they only matter when auto-creating a Collection project for federation. When the URL+Project row is hidden:
 
 | Field | How GEO launch fills it |
 |-------|-------------------------|
-| `projectId` | Silent state: deep-link `projectId` if it matches a known project, else the first / currently selected Collection project. No Project select UI. |
+| `projectId` | Silent state: deep-link `projectId` if it matches a known project, else the first / currently selected Collection project. When none exist (typical staging DB without fixtures), the API auto-creates a project from the target host using session / `PLEXON_DEMO_COMPANY_ID` for federation company. Unknown ids return `project_not_found` with a clear `detail`. No Project select UI. |
 | `url` | `resolveGeoLaunchUrl()` — deep-link / prefilled `url` when present; else first query text that implies an `http(s)` URL or bare hostname; else demo fallback `https://www.bosch-ebike.com/de/` (same seed used for default queries). Suggest still receives this resolved URL. |
 | `queries` / `models` | Visible GEO extras; empty queries fall back to `defaultGeoQueries(resolvedUrl)` client-side. |
 
 Deep-links (`/scan?mode=geo&projectId=&url=`) still apply silently — they seed state and POST body without showing the row.
+
+Launch failures surface the API `detail` (or a clear auth/HTML warning) in an `Alert` — the Start CTA is no longer silently disabled solely because no project list exists.
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 
@@ -78,7 +80,7 @@ Deep-links (`paths.routes.scanLaunch`):
 ### GEO (`geo`)
 - Gate: `lib/geo-eeat/live-geo-gate.ts` — live when `DATABASE_URL` **or** `CHECKION_LIVE_GEO=1`; `CHECKION_LIVE_GEO=0` forces synthesize.
 - Live requires `OPENAI_API_KEY`; fixture path synthesizes a completed magazine overview instantly.
-- Create: `POST /api/geo-jobs` with `{ projectId, url, queries[], models?, competitors?, title? }`.
+- Create: `POST /api/geo-jobs` with `{ url, queries[], projectId?, models?, competitors?, title? }`. `projectId` is resolved when omitted (first Collection project, or auto-create from URL + session/`PLEXON_DEMO_COMPANY_ID`). **No `companyId` on this body** — company is only used when auto-creating a project. Live requires `OPENAI_API_KEY`.
 - Suggest (launch only): `POST /api/geo/suggest-queries` with `{ url, existing?, max? }` — see GEO query list above.
 
 ## Cross-product (AUDION)

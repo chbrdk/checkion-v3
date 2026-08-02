@@ -293,20 +293,41 @@ export function ScanLaunchForm({
     router.push(paths.routes.domainSection(data.id, 'overview'))
   }
 
+  async function readLaunchError(res: Response, fallback: string): Promise<string> {
+    const contentType = res.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      try {
+        const errBody = (await res.json()) as { detail?: string; error?: string }
+        if (errBody.detail?.trim()) return errBody.detail.trim()
+        if (errBody.error?.trim()) return errBody.error.trim()
+      } catch {
+        /* fall through */
+      }
+    } else {
+      // Auth middleware may redirect to HTML /login — don't swallow as opaque status.
+      if (res.redirected || contentType.includes('text/html')) {
+        return `${fallback}: sign in required (got HTML instead of API JSON)`
+      }
+    }
+    return `${fallback} (${res.status})`
+  }
+
   async function launchGeo() {
     const queries = geoQueries.map((q) => q.trim()).filter(Boolean)
     // URL+Project row is hidden for GEO — resolve silently from deep-link /
     // state, else first query host, else demo fallback (API requires url).
+    // projectId may be empty on staging DB (no fixtures); API resolves / auto-creates.
     const resolvedUrl = resolveGeoLaunchUrl(url, queries)
     const resolvedQueries =
       queries.length > 0 ? queries : defaultGeoQueries(resolvedUrl)
     const models = modelsForLaunch(geoModels)
+    const resolvedProjectId = projectId.trim() || projects[0]?.id || undefined
     const body: Record<string, unknown> = {
-      projectId,
       url: resolvedUrl,
       queries: resolvedQueries,
       models,
     }
+    if (resolvedProjectId) body.projectId = resolvedProjectId
 
     const res = await fetch(paths.routes.apiGeoJobs, {
       method: 'POST',
@@ -314,19 +335,19 @@ export function ScanLaunchForm({
       body: JSON.stringify(body),
     })
     if (!res.ok) {
-      let detail = `GEO launch failed (${res.status})`
-      try {
-        const errBody = (await res.json()) as { detail?: string; error?: string }
-        if (errBody.detail) detail = errBody.detail
-        else if (errBody.error) detail = errBody.error
-      } catch {
-        /* ignore */
-      }
-      throw new Error(detail)
+      throw new Error(await readLaunchError(res, 'GEO launch failed'))
     }
-    const data = (await res.json()) as { jobId?: string; job?: { id: string } }
+    let data: { jobId?: string; job?: { id: string }; projectId?: string }
+    try {
+      data = (await res.json()) as typeof data
+    } catch {
+      throw new Error('GEO launch returned a non-JSON response — check auth / API health')
+    }
     const jobId = data.jobId || data.job?.id
     if (!jobId) throw new Error('GEO launch returned no job id')
+    if (data.projectId && data.projectId !== projectId) {
+      setProjectId(data.projectId)
+    }
     router.push(paths.routes.geoSection(jobId, 'overview'))
   }
 
@@ -525,16 +546,22 @@ export function ScanLaunchForm({
                     size="lg"
                     disabled={
                       status === 'submitting' ||
-                      !projectId ||
                       (activeCapability === 'geo'
                         ? !resolveGeoLaunchUrl(url, geoQueries).trim()
-                        : !url.trim())
+                        : !projectId || !url.trim())
                     }
                   >
                     {status === 'submitting' ? modeCopy.loading : modeCopy.cta}
                   </Button>
                 </div>
               </div>
+
+              {activeCapability === 'geo' && !projectId && projects.length === 0 ? (
+                <Alert tone="info">
+                  No Collection project yet — Start will auto-create one from the target host
+                  (company from session or PLEXON_DEMO_COMPANY_ID when federating).
+                </Alert>
+              ) : null}
 
               {error ? <Alert tone="error">{error}</Alert> : null}
             </div>

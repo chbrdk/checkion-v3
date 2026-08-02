@@ -363,6 +363,39 @@ describe('ScanLaunchForm', () => {
     })
   })
 
+  it('allows GEO start with empty projects and surfaces API detail', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: false,
+      status: 400,
+      headers: { get: () => 'application/json' },
+      json: async () => ({
+        error: 'project_required',
+        detail: 'Could not auto-create a Collection project for GEO',
+      }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ScanLaunchForm projects={[]} defaultMode="geo" />)
+    expect(screen.getByText(/No Collection project yet/i)).toBeTruthy()
+    const start = screen.getByRole('button', { name: /Start GEO job/i })
+    expect(start).not.toBeDisabled()
+    fireEvent.click(start)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const body = JSON.parse(
+      String(
+        (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock.calls[0]?.[1]
+          ?.body,
+      ),
+    ) as { projectId?: string; url: string; queries: string[] }
+    expect(body.projectId).toBeUndefined()
+    expect(body.url).toContain('http')
+    expect(body.queries.length).toBeGreaterThan(0)
+    await waitFor(() => {
+      expect(screen.getByText(/Could not auto-create a Collection project for GEO/i)).toBeTruthy()
+    })
+  })
+
   it('posts SEO domain crawl and navigates to domain overview', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
