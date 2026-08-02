@@ -21,7 +21,7 @@ import {
   sameQueryList,
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
-import { GeoModelChips } from './geo-model-chips'
+import { GeoModelPicker } from './geo-model-picker'
 import { GeoQueryList } from './geo-query-list'
 
 export { defaultGeoQueries } from '../lib/geo-query-suggest'
@@ -476,7 +476,7 @@ export function ScanLaunchForm({
                     url={url}
                     disabled={status === 'submitting'}
                   />
-                  <GeoModelChips
+                  <GeoModelPicker
                     value={geoModels}
                     onChange={setGeoModels}
                     disabled={status === 'submitting'}

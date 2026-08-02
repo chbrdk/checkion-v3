@@ -22,13 +22,13 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 2. **WCAG depth** (secondary, only when WCAG selected) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip)
 3. **Compose band** — editorial form unit below the pickers:
    - **URL** — hero input (page or host)
-   - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as provider-grouped multi-select chips (`GeoModelChips` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md`
+   - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
 4. Fixture demo jumps stay below the stage as quiet secondary links
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 
-Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / `Button` / `SectionChrome` / `Dialog` / `EmptyState` / `Chip` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · GEO query list (`GeoQueryList` / `checkion-geo-query-list`) · GEO model chips (`GeoModelChips` / `checkion-geo-model-chips`) · light `checkion-rise` motion.
+Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / `Button` / `SectionChrome` / `Dialog` / `EmptyState` / `Chip` / `ToggleGroup` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · GEO query list (`GeoQueryList` / `checkion-geo-query-list`) · GEO model picker (`GeoModelPicker` / `checkion-geo-model-picker`) · light `checkion-rise` motion.
 
 ### GEO query list + Suggest
 - Default rows: host-derived prompts (`defaultGeoQueries(url)`). Changing URL refreshes defaults only when the list still matches the previous host defaults.

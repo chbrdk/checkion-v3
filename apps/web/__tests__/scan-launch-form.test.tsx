@@ -86,11 +86,13 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('group', { name: /^GEO queries$/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /AI suggest GEO queries/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /^GEO models$/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /GPT-5\.4 nano \(Live\)/i })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Remove GPT-5\.4 nano/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Suggest default GEO models/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Add GEO model/i })).toBeTruthy()
+    // Full catalog is not dumped as chips on the launch surface
+    expect(screen.queryByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i })).toBeNull()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     // Magazine list rows — host defaults present as editable text buttons
@@ -98,25 +100,32 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Add GEO query/i })).toBeTruthy()
   })
 
-  it('toggles GEO model chips and Suggest restores default', () => {
+  it('adds GEO models via dialog search and Suggest restores default', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
-    const luna = screen.getByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i })
-    expect(luna).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(luna)
-    expect(luna).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
+    expect(screen.getByRole('heading', { name: /Add model/i })).toBeTruthy()
+    expect(screen.getByRole('group', { name: /Model provider/i })).toBeTruthy()
 
-    const sonnet = screen.getByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i })
-    fireEvent.click(sonnet)
-    expect(sonnet).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
+    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.6 Luna/i }))
+    expect(screen.getByRole('option', { name: /GPT-5\.6 Luna/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /^Anthropic$/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'sonnet 5' } })
+    fireEvent.click(screen.getByRole('option', { name: /Claude Sonnet 5/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Done$/i }))
+
+    expect(screen.getByText(/GPT-5\.6 Luna/i)).toBeTruthy()
+    expect(screen.getByText(/Claude Sonnet 5/i)).toBeTruthy()
     expect(screen.getByText(/1 Soon model/i)).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: /Suggest default GEO models/i }))
-    expect(screen.getByRole('button', { name: /GPT-5\.4 nano \(Live\)/i })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    expect(luna).toHaveAttribute('aria-pressed', 'false')
-    expect(sonnet).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
+    expect(screen.queryByText(/GPT-5\.6 Luna/i)).toBeNull()
+    expect(screen.queryByText(/Claude Sonnet 5/i)).toBeNull()
   })
 
   it('adds and removes GEO query rows from the list', () => {
@@ -198,8 +207,13 @@ describe('ScanLaunchForm', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
-    fireEvent.click(screen.getByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
+    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.6 Luna/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Anthropic$/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'sonnet 5' } })
+    fireEvent.click(screen.getByRole('option', { name: /Claude Sonnet 5/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Done$/i }))
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
 
     await waitFor(() => {

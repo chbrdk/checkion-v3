@@ -203,6 +203,38 @@ export function groupCatalogByProvider(): Array<{
   }))
 }
 
+/** Provider has at least one live-supported model. */
+export function providerIsLive(provider: GeoModelProvider): boolean {
+  return GEO_MODEL_CATALOG.some((m) => m.provider === provider && m.liveSupported)
+}
+
+/**
+ * Search / filter catalog for the Add-model picker.
+ * Query matches id or label (case-insensitive). Empty query → all for provider.
+ */
+export function searchCatalogModels(opts: {
+  provider?: GeoModelProvider | 'all'
+  query?: string
+  excludeIds?: readonly string[]
+}): GeoModelEntry[] {
+  const provider = opts.provider ?? 'all'
+  const q = (opts.query ?? '').trim().toLowerCase()
+  const exclude = new Set(opts.excludeIds ?? [])
+  return GEO_MODEL_CATALOG.filter((m) => {
+    if (exclude.has(m.id)) return false
+    if (provider !== 'all' && m.provider !== provider) return false
+    if (!q) return true
+    return m.id.toLowerCase().includes(q) || m.label.toLowerCase().includes(q)
+  })
+}
+
+/** Resolve selected ids to catalog entries (unknown ids dropped). */
+export function resolveSelectedModels(selectedIds: string[]): GeoModelEntry[] {
+  return selectedIds
+    .map((id) => byId.get(id))
+    .filter((m): m is GeoModelEntry => m != null)
+}
+
 /**
  * Models to POST on launch: live-supported selection only.
  * Empty after filter → catalog default so live OpenAI never gets an empty list.

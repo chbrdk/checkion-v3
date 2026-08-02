@@ -19,7 +19,7 @@
 | Settings API tokens | `specs/domain/settings-api-tokens.md` |
 | Edit dialogs | `specs/domain/edit-dialogs.md` |
 | GEO competitive presence | `specs/domain/geo-competitive-presence.md` |
-| GEO model catalog (launch chips) | `specs/domain/geo-model-catalog.md` |
+| GEO model catalog (compact picker) | `specs/domain/geo-model-catalog.md` |
 | GEO answer insights | `specs/domain/geo-answer-insights.md` |
 | GEO on-page E-E-A-T (appendix) | `specs/domain/geo-eeat.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |

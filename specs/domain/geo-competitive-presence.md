@@ -33,7 +33,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 ### Launch defaults
 From `/scan` GEO mode the form may send:
 - `queries` — editable magazine list (one prompt per row via `GeoQueryList`), or host-derived defaults when empty after trim; **Suggest** uses `POST /api/geo/suggest-queries` (fixture host pool without `OPENAI_API_KEY`, OpenAI when keyed)
-- `models` — multi-select chips from `lib/geo/model-catalog.ts` (`GeoModelChips`); defaults to recommended `gpt-5.4-nano`; live POST filters to OpenAI-supported ids (see `geo-model-catalog.md`). Server still falls back to `OPENAI_MODEL` / `gpt-5.4-nano` when omitted
+- `models` — compact picker from `lib/geo/model-catalog.ts` (`GeoModelPicker`: selected chips + Add dialog); defaults to recommended `gpt-5.4-nano`; live POST filters to OpenAI-supported ids (see `geo-model-catalog.md`). Server still falls back to `OPENAI_MODEL` / `gpt-5.4-nano` when omitted
 - `url` + `projectId` — required
 
 After create, navigate to `/geo/:id/overview`.

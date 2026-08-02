@@ -7,7 +7,10 @@ import {
   getGeoModel,
   groupCatalogByProvider,
   modelsForLaunch,
+  providerIsLive,
+  resolveSelectedModels,
   sameModelSelection,
+  searchCatalogModels,
   toggleModelSelection,
 } from '../lib/geo/model-catalog'
 
@@ -22,15 +25,43 @@ describe('geo model catalog', () => {
     expect(GEO_MODEL_CATALOG.every((m) => m.id.trim().length > 0)).toBe(true)
   })
 
-  it('defaults and recommends gpt-5.4-nano', () => {
+  it('defaults and recommends a small set including gpt-5.4-nano', () => {
     expect(catalogDefaultId()).toBe('gpt-5.4-nano')
-    expect(defaultGeoModelIds()).toEqual(['gpt-5.4-nano'])
+    const recommended = defaultGeoModelIds()
+    expect(recommended).toEqual(['gpt-5.4-nano'])
+    expect(recommended.length).toBeLessThanOrEqual(3)
   })
 
   it('groups by provider in stable order', () => {
     const groups = groupCatalogByProvider()
     expect(groups.map((g) => g.provider)).toEqual(['openai', 'anthropic', 'google'])
     expect(groups.every((g) => g.models.length > 0)).toBe(true)
+  })
+
+  it('searches and filters catalog for the Add-model picker', () => {
+    expect(searchCatalogModels({ provider: 'openai' }).every((m) => m.provider === 'openai')).toBe(
+      true,
+    )
+    expect(searchCatalogModels({ query: 'sonnet' }).map((m) => m.id)).toEqual(
+      expect.arrayContaining(['claude-sonnet-5', 'claude-sonnet-4-6']),
+    )
+    expect(searchCatalogModels({ provider: 'google', query: '3.6' }).map((m) => m.id)).toEqual([
+      'gemini-3.6-flash',
+    ])
+    expect(searchCatalogModels({ query: 'no-such-model' })).toEqual([])
+    expect(
+      searchCatalogModels({ provider: 'all', excludeIds: ['gpt-5.4-nano'] }).some(
+        (m) => m.id === 'gpt-5.4-nano',
+      ),
+    ).toBe(false)
+  })
+
+  it('resolves selection and provider live flags', () => {
+    expect(resolveSelectedModels(['gpt-5.4-nano', 'missing']).map((m) => m.id)).toEqual([
+      'gpt-5.4-nano',
+    ])
+    expect(providerIsLive('openai')).toBe(true)
+    expect(providerIsLive('anthropic')).toBe(false)
   })
 
   it('filters launch payload to live-supported models with default fallback', () => {
