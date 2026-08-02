@@ -52,8 +52,8 @@ Live wiring is accepted (`specs/domain/plexon-federation.md`); keep fixtures as 
 When live GEO is on (`shouldRunLiveGeo()` in `lib/geo-eeat/live-geo-gate.ts`):
 
 1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → OpenAI query×model runs → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures).
-2. Payload persists as `GeoOverview` jsonb on `geo_jobs`.
-3. Magazine UI `/geo/:id/...` and `GET /api/geo-jobs/:id/reading` read live or fixture data via `geo-store`.
+2. Payload persists as `GeoOverview` jsonb on `geo_jobs`. Failures persist as `status: failed` (not empty `completed`).
+3. Magazine UI `/geo/:id/...` shows an in-progress meter while `queued`/`running` and **polls** `GET /api/geo-jobs/:id` until finalize; empty completed shells are treated as failure, not a zeroed success magazine. Reading API remains `GET /api/geo-jobs/:id/reading`.
 
 Local live example:
 

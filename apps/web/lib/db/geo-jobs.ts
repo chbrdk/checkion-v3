@@ -139,7 +139,11 @@ export async function dbCreateGeoJob(input: {
       console.error('[checkion-v3] db geo job failed', jobId, message)
       const failed: GeoOverview = {
         ...queued,
-        job: { ...queued.job, status: 'completed', completedAt: new Date().toISOString() },
+        job: {
+          ...queued.job,
+          status: 'failed',
+          completedAt: new Date().toISOString(),
+        },
         lede: `GEO job failed: ${message}`,
       }
       await dbUpsertGeoOverview(failed)

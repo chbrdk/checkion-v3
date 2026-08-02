@@ -160,6 +160,28 @@ describe('stubbed live geo path', () => {
     expect(overview?.competitors).toContain('rival.com')
     expect(overview?.insights.cells.length).toBe(1)
   })
+
+  it('marks live pipeline failures as failed, not empty completed', async () => {
+    vi.stubEnv('DATABASE_URL', '')
+    vi.stubEnv('CHECKION_LIVE_GEO', '1')
+    // Gate is on, but key missing → pipeline throws → status failed (not empty completed).
+    vi.stubEnv('OPENAI_API_KEY', '')
+
+    const job = await createGeoJob({
+      projectId: 'proj-1',
+      url: 'https://example.com',
+      queries: ['best widgets'],
+      models: ['gpt-5.4-nano'],
+      includePageScan: false,
+      waitForCompletion: true,
+    })
+
+    expect(job.status).toBe('failed')
+    const overview = await getGeoOverview(job.id)
+    expect(overview?.job.status).toBe('failed')
+    expect(overview?.queryRuns).toHaveLength(0)
+    expect(overview?.lede).toMatch(/failed|OPENAI/i)
+  })
 })
 
 describe('parsers', () => {

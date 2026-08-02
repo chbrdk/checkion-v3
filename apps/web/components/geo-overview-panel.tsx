@@ -1,8 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Hint } from '@msqdx/ui'
+import { Hint, StatusMeterPanel } from '@msqdx/ui'
 import type { GeoOverview } from '@checkion-v3/contracts'
+import {
+  geoOverviewReadyForMagazine,
+  isGeoJobInProgress,
+  isGeoOverviewFailed,
+} from '../lib/geo-job-display'
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
 import { buildGeoReadingFallback } from '../lib/geo-readings'
@@ -13,6 +18,77 @@ import { GeoMovesGallery } from './geo-moves-gallery'
 
 export function GeoOverviewPanel({ overview }: { overview: GeoOverview }) {
   const { eeat, recommendations, job, presence } = overview
+  const inProgress = isGeoJobInProgress(job.status)
+  const failed = isGeoOverviewFailed(overview)
+  const showMagazine = geoOverviewReadyForMagazine(overview)
+
+  if (inProgress) {
+    const queued = job.status === 'queued'
+    return (
+      <div className="checkion-magazine-body checkion-spread checkion-geo-spread-layout">
+        <StatusMeterPanel
+          title={queued ? 'GEO job queued' : 'GEO run in progress'}
+          meta={`${job.queryCount} queries · ${job.modelCount} models`}
+          level="warn"
+          banner={
+            queued
+              ? 'Waiting for the live pipeline to start — results will appear here when query runs finish.'
+              : 'Answer engines are being queried now. This page refreshes when the magazine has values.'
+          }
+          meters={[
+            {
+              id: 'queue',
+              label: 'Queue',
+              value: queued ? '…' : 'ok',
+              fillPct: queued ? 35 : 100,
+            },
+            {
+              id: 'models',
+              label: 'Models',
+              value: '…',
+              fillPct: queued ? 10 : 45,
+            },
+            {
+              id: 'finalize',
+              label: 'Magazine',
+              value: '…',
+              fillPct: queued ? 5 : 20,
+            },
+          ]}
+        />
+        <p className="checkion-spread__prose">{overview.lede}</p>
+      </div>
+    )
+  }
+
+  if (failed) {
+    const detail =
+      overview.lede?.trim() ||
+      'The GEO pipeline finished without query results. Check OPENAI_API_KEY and try again.'
+    return (
+      <div className="checkion-magazine-body checkion-spread checkion-geo-spread-layout">
+        <StatusMeterPanel
+          title="GEO run failed"
+          meta={job.status === 'failed' ? 'failed' : 'empty result'}
+          level="critical"
+          banner={detail}
+          meters={[
+            { id: 'pipeline', label: 'Pipeline', value: 'err', fillPct: 100 },
+            { id: 'queries', label: 'Query runs', value: '0', fillPct: 0 },
+            { id: 'magazine', label: 'Magazine', value: '—', fillPct: 0 },
+          ]}
+        />
+        <p className="checkion-geo-recs__cta">
+          <Link href={paths.routes.scanLaunch({ mode: 'geo', projectId: job.projectId })} className="checkion-geo-recs__nav">
+            Start another GEO run
+          </Link>
+        </p>
+      </div>
+    )
+  }
+
+  if (!showMagazine) return null
+
   const tone = scoreTone(job.overallScore)
   const avgPos = presence.solo.avgPosition
 

@@ -74,8 +74,9 @@ export async function runQueryRuns(input: {
     openai =
       chatClientForTests ??
       (new OpenAI({ apiKey: getOpenAIKey() }) as unknown as QueryRunChatClient)
-  } catch {
-    return { queryRuns: [], usage }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'openai_unavailable'
+    throw new Error(`GEO query client unavailable: ${message}`)
   }
 
   const targetHost = normalizeGeoHost(input.targetUrl)

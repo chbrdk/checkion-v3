@@ -521,7 +521,7 @@ export interface DomainOverview {
 }
 
 /** GEO / E-E-A-T job — separate from ScanMode ('single' | 'deep'). */
-export type GeoJobStatus = 'queued' | 'running' | 'completed'
+export type GeoJobStatus = 'queued' | 'running' | 'completed' | 'failed'
 
 export interface GeoJobSummary {
   id: string

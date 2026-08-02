@@ -104,7 +104,11 @@ async function memoryCreateGeoJob(input: {
       console.error('[checkion-v3] memory geo job failed', jobId, message)
       memoryUpsert({
         ...queued,
-        job: { ...queued.job, status: 'completed', completedAt: new Date().toISOString() },
+        job: {
+          ...queued.job,
+          status: 'failed',
+          completedAt: new Date().toISOString(),
+        },
         lede: `GEO job failed: ${message}`,
       })
     }

@@ -38,6 +38,15 @@ From `/scan` GEO mode the form may send:
 
 After create, navigate to `/geo/:id/overview`.
 
+### Result readiness (live vs fixture)
+| Path | Create response | Overview behaviour |
+|------|-----------------|-------------------|
+| Fixture (`CHECKION_LIVE_GEO=0` / no DB) | `status: completed` with filled `queryRuns` | Magazine renders values immediately |
+| Live (`DATABASE_URL` and/or `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY`) | `status: queued` shell (`queryRuns: []`), pipeline continues async | Overview shows an honest **in-progress** state and **polls** `GET /api/geo-jobs/:id` until `completed` or `failed` — never present an empty magazine as a finished success |
+| Pipeline / OpenAI failure | `status: failed` with error lede | Overview shows failure, not 0% “done” |
+
+Do **not** mark failed runs as `completed` with empty `queryRuns`.
+
 ## Atoms
 
 | Atom | Definition | Source |

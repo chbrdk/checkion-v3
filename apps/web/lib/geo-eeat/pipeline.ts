@@ -114,6 +114,12 @@ export async function executeLiveGeoPipeline(input: {
   })
   mergeUsageTotals(usage, queryOut.usage)
 
+  if (input.queries.length > 0 && queryOut.queryRuns.length === 0) {
+    throw new Error(
+      'GEO query runs returned no results — check OPENAI_API_KEY and model access',
+    )
+  }
+
   const overview = buildLiveGeoOverview({
     jobId: input.jobId,
     projectId: input.projectId,

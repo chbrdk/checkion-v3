@@ -1,4 +1,9 @@
-import type { IssueSeverity, ScanStatus, ScoreCard } from '@checkion-v3/contracts'
+import type {
+  GeoJobStatus,
+  IssueSeverity,
+  ScanStatus,
+  ScoreCard,
+} from '@checkion-v3/contracts'
 import type { StatLedeTone, TopStatusLevel } from '@msqdx/ui'
 
 export function scoreTone(value: number | null | undefined): StatLedeTone {
@@ -8,7 +13,7 @@ export function scoreTone(value: number | null | undefined): StatLedeTone {
   return 'neg'
 }
 
-export function statusTopLevel(status: ScanStatus): TopStatusLevel {
+export function statusTopLevel(status: ScanStatus | GeoJobStatus): TopStatusLevel {
   if (status === 'failed') return 'critical'
   if (status === 'running' || status === 'queued') return 'warn'
   return 'ok'
