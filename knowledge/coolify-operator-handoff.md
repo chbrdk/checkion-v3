@@ -2,13 +2,14 @@
 
 Repo-side work for this slice is done (Dockerfile clones `msqdx-ui`, docs, packaging test).
 
-## You do next (Coolify + GitHub)
+**GitHub:** https://github.com/chbrdk/checkion-v3 (`main` pushed)
 
-1. **GitHub:** Create `checkion-v3` remote (if missing), then ask the agent to **commit + push** (not done automatically — needs your OK).
-2. Coolify → Project `msqdx-ecosystem-v3` → Env `staging` → New app **`checkion-v3`**
-3. Source: that repo / `main` · Dockerfile `Dockerfile` · Base `/`
-4. Domain: `checkion-v3.projects-a.plygrnd.tech` · Port **3007**
-5. Env:
+## You do next (Coolify)
+
+1. Coolify → Project `msqdx-ecosystem-v3` → Env `staging` → New app **`checkion-v3`**
+2. Source: `chbrdk/checkion-v3` / `main` · Dockerfile `Dockerfile` · Base `/`
+3. Domain: `checkion-v3.projects-a.plygrnd.tech` · Port **3007**
+4. Env:
    ```
    NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech
    NEXT_PLEXON_BASE_URL=https://plexon-v3.projects-a.plygrnd.tech
@@ -16,8 +17,8 @@ Repo-side work for this slice is done (Dockerfile clones `msqdx-ui`, docs, packa
    PORT=3007
    HOSTNAME=0.0.0.0
    ```
-6. Deploy → smoke URLs in `knowledge/staging-coolify.md`
-7. Confirm prod `https://checkion.projects-a.plygrnd.tech` unchanged
+5. Deploy → smoke URLs in `knowledge/staging-coolify.md`
+6. Confirm prod `https://checkion.projects-a.plygrnd.tech` unchanged
 
 Full checklist: [knowledge/staging-coolify.md](./staging-coolify.md)
 
