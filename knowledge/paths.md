@@ -37,7 +37,14 @@ Login `/login` · NextAuth `/api/auth/*` · Plexon `validate-credentials` — se
 ## Federation
 Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dummy` for fixture-only local / Staging Shell.
 
+## Central launch (`/scan`)
+- Route: `/scan` (`paths.routes.scan`) — Single, Deep, and GEO from one magazine form (`ScanLaunchForm`)
+- Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'single'|'deep'|'geo', url, … })`
+- Modes: `mode=single` → `POST /api/scans` → `/results/:id/overview` · `mode=deep` → same + domain payload · `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview`
+- Spec: `specs/domain/scan-modes.md`
+
 ## GEO routes
+- Launch: `/scan?mode=geo` (canonical create entry; index `/geo` catalogs finished jobs)
 - Magazine: `/geo/:id/overview` · `/queries` (Placement nav deferred; legacy `/placement` redirects to Queries)
 - Queries deep-link: `/geo/:id/queries?q=<prompt>&model=<modelId>` (`paths.routes.geoQueriesPrompt`)
 - Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading`
@@ -48,7 +55,7 @@ Public landing: `/share/[token]` · API `/api/share`
 
 ## Cross-product deep-link (AUDION → single-page scan)
 - Launch: `paths.routes.scanLaunch({ projectId, mode: 'single', url, platformProjectId?, audionRunId?, stepUrl? })` → `/scan?projectId=&mode=single&url=`
-- Prefills project, mode, URL; optional AUDION correlation posted on launch
+- Prefills project, mode, URL; optional AUDION correlation posted on launch; handoff **locks** mode to single (no deep/GEO)
 - After submit → `/results/[id]/overview` (`paths.routes.resultSection`)
 - Machine: `POST /api/scans` with Bearer `checkion_…` + optional `platformProjectId` / `audionRunId` / `stepUrl` (persisted on `ScanSummary` / payload jsonb)
 - Domain: `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`

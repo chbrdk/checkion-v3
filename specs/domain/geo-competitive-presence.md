@@ -24,9 +24,19 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 ### Surfaces
 | Surface | Path |
 |---------|------|
-| Index | `/geo` |
+| Launch | `/scan?mode=geo` (central `ScanLaunchForm` — same place as Single/Deep; see `scan-modes.md`) |
+| Index | `/geo` (catalog; create CTA deep-links to launch) |
 | Result | `/geo/:id/overview` · `/queries` (legacy `/placement` → redirect to Queries) |
 | Reading API | `GET /api/geo-jobs/:id/reading?kind=verdict\|eeat\|placement\|queries\|query` |
+| Create API | `POST /api/geo-jobs` |
+
+### Launch defaults
+From `/scan` GEO mode the form may send:
+- `queries` — user list (one prompt per line), or host-derived defaults when empty after trim
+- `models` — optional; server defaults to `OPENAI_MODEL` / `gpt-5.4-nano` when omitted
+- `url` + `projectId` — required
+
+After create, navigate to `/geo/:id/overview`.
 
 ## Atoms
 

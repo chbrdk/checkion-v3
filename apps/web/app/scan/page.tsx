@@ -1,5 +1,5 @@
 import { AppShell } from '../../components/app-shell'
-import { ScanLaunchForm } from '../../components/scan-launch-form'
+import { ScanLaunchForm, type LaunchMode } from '../../components/scan-launch-form'
 import { listProjects } from '../../lib/fixtures/project-store'
 import { TopStatus } from '@msqdx/ui'
 
@@ -15,6 +15,11 @@ function decodeOptionalUrl(raw: string | undefined): string | undefined {
   } catch {
     return undefined
   }
+}
+
+function parseLaunchMode(raw: string | undefined): LaunchMode {
+  if (raw === 'deep' || raw === 'geo' || raw === 'single') return raw
+  return 'single'
 }
 
 export default async function ScanPage({
@@ -39,24 +44,31 @@ export default async function ScanPage({
   const fromAudion = Boolean(
     params.audionRunId?.trim() ||
       params.platformProjectId?.trim() ||
-      (defaultUrl && params.projectId?.trim() && params.mode !== 'deep'),
+      (defaultUrl && params.projectId?.trim() && params.mode !== 'deep' && params.mode !== 'geo'),
   )
-  /** AUDION journey handoff always launches single-page (never deep crawl). */
-  const defaultMode = fromAudion ? 'single' : params.mode === 'deep' ? 'deep' : 'single'
+  /** AUDION journey handoff always launches single-page (never deep / GEO). */
+  const defaultMode: LaunchMode = fromAudion ? 'single' : parseLaunchMode(params.mode)
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined
 
+  const statusPrimary = fromAudion
+    ? 'AUDION handoff'
+    : defaultMode === 'geo'
+      ? 'GEO launch'
+      : 'Launch'
+  const statusSecondary = fromAudion
+    ? 'single-page · CHECKION'
+    : defaultMode === 'geo'
+      ? 'competitive presence'
+      : defaultMode === 'deep'
+        ? 'deep crawl'
+        : 'single page'
+
   return (
     <AppShell
-      title="Scan"
-      status={
-        <TopStatus
-          level="ok"
-          primary={fromAudion ? 'AUDION handoff' : 'Dummy launch'}
-          secondary={fromAudion ? 'single-page · CHECKION' : 'fixtures'}
-        />
-      }
+      title="Launch"
+      status={<TopStatus level="ok" primary={statusPrimary} secondary={statusSecondary} />}
     >
       <ScanLaunchForm
         projects={projects}

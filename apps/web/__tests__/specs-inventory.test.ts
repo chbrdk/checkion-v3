@@ -57,6 +57,7 @@ describe('specs inventory', () => {
     expect(paths.routes.projects).toBe('/projects')
     expect(paths.routes.projectDetail('p1')).toBe('/projects/p1')
     expect(paths.routes.scan).toBe('/scan')
+    expect(paths.routes.scanLaunch({ mode: 'geo' })).toBe('/scan?mode=geo')
     expect(paths.routes.resultSection('s1', 'overview')).toBe('/results/s1/overview')
     expect(paths.routes.resultSection('s1', 'detail')).toBe('/results/s1/detail')
     expect(paths.routes.domainSection('d1', 'issues')).toBe('/domain/d1/issues')

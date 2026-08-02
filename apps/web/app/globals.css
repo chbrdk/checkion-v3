@@ -2257,11 +2257,116 @@ a { color: inherit; text-decoration: none; }
   margin-top: var(--space-3);
 }
 
+.checkion-scan-form--launch {
+  max-width: none;
+  margin-top: 0;
+  gap: var(--space-4);
+}
+
 .checkion-scan-form__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
+}
+
+.checkion-scan-form__actions--after-copy {
+  margin-top: var(--space-3);
+}
+
+/* ——— Central launch (/scan) ——— */
+.checkion-magazine--launch {
+  max-width: 40rem;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.checkion-launch-hero {
+  display: grid;
+  gap: 0.55rem;
+  padding-block: clamp(0.5rem, 2vw, 1rem) 0.25rem;
+  animation: checkion-rise 0.55s ease-out both;
+}
+
+.checkion-launch-hero__eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, var(--muted));
+}
+
+.checkion-launch-hero__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(2.35rem, 5.5vw, 3.35rem);
+  font-weight: var(--weight-light, 300);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-launch-hero__deck {
+  margin: 0.35rem 0 0;
+  max-width: 34rem;
+  font-size: var(--type-md, 1.05rem);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.checkion-launch-stage {
+  animation: checkion-rise 0.6s 0.08s ease-out both;
+}
+
+.checkion-launch-mode {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.checkion-launch-mode__label {
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-launch-mode__hint {
+  margin: 0;
+  font-size: var(--type-sm, 0.9rem);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.checkion-launch-mode__hint strong {
+  color: var(--ink, var(--fg));
+  font-weight: var(--weight-medium, 500);
+}
+
+.checkion-launch-demos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  animation: checkion-rise 0.55s 0.16s ease-out both;
+}
+
+.checkion-launch-demos__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-launch-hero,
+  .checkion-launch-stage,
+  .checkion-launch-demos {
+    animation: none;
+  }
 }
 
 .checkion-result-actions {

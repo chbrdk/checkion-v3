@@ -19,8 +19,17 @@ export async function GeoIndexPage() {
           <SectionChrome title="GEO jobs" meta={`${jobs.length} fixtures`} />
           <Text role="body">
             Separate from single and domain scans: project queries run against answer engines, then
-            we show where your domain is cited and how E-E-A-T reads on-page.
+            we show where your domain is cited and how E-E-A-T reads on-page. Start a new job from
+            the central launch form.
           </Text>
+          <div className="checkion-scan-form__actions checkion-scan-form__actions--after-copy">
+            <Link
+              href={paths.routes.scanLaunch({ mode: 'geo' })}
+              className="ds-btn ds-btn--primary ds-btn--sm"
+            >
+              <span className="ds-btn__label">Start GEO job</span>
+            </Link>
+          </div>
         </Panel>
 
         <Panel>
