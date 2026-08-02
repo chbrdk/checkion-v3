@@ -2525,6 +2525,8 @@ a { color: inherit; text-decoration: none; }
 .checkion-launch-compose__url,
 .checkion-launch-compose__project {
   display: flex;
+  flex-direction: column;
+  align-items: stretch; /* override .ds-field align-items: flex-start */
   width: 100%;
   min-width: 0;
   max-width: none;
@@ -2543,9 +2545,20 @@ a { color: inherit; text-decoration: none; }
   background: transparent;
 }
 
-.checkion-launch-compose__project .ds-select,
-.checkion-launch-compose__project .ds-select-trigger,
-.checkion-launch-compose__project .ds-field {
+/* Beat @msqdx/ui Select caps (max-width 14rem / inline-flex) so trigger fills 40% column */
+.checkion-launch-compose__project .ds-select {
+  display: flex;
+  width: 100%;
+  max-width: none;
+}
+
+.checkion-launch-compose__project .ds-select-trigger {
+  width: 100%;
+  max-width: none;
+}
+
+.checkion-launch-compose__project .ds-select-menu {
+  max-width: none;
   width: 100%;
 }
 
