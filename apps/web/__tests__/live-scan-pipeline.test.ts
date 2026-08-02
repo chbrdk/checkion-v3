@@ -119,16 +119,16 @@ describe('stubbed live scan path', () => {
   it('runs injected domain spider via POST helper', async () => {
     vi.stubEnv('DATABASE_URL', '')
     vi.stubEnv('CHECKION_LIVE_SCANS', '1')
-    setDomainScanRunnerForTests(async function* (url) {
-      yield { type: 'progress', scannedCount: 1, total: 2, url }
+    setDomainScanRunnerForTests((async function* (url: string) {
+      yield { type: 'progress', scannedCount: 1, total: 2, url, message: 'scanning' }
       const page = stubScanResult(url, 'page-1')
       yield {
-        type: 'complete',
+        type: 'complete' as const,
         domainResult: {
           id: 'domain-stub',
           domain: url,
           timestamp: new Date().toISOString(),
-          status: 'complete',
+          status: 'complete' as const,
           progress: { scanned: 1, total: 1 },
           totalPages: 1,
           score: 88,
@@ -144,7 +144,7 @@ describe('stubbed live scan path', () => {
           ],
         },
       }
-    })
+    }) as unknown as Parameters<typeof setDomainScanRunnerForTests>[0])
 
     const domain = await createDomainScan({
       projectId: 'proj-1',

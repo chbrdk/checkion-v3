@@ -97,6 +97,7 @@ export async function startDomainScan(
 
   if (input.waitForCompletion) {
     await run()
+    // Prefer completed row from hooks if caller re-reads; return last known completed shape when available.
   } else {
     void run()
   }

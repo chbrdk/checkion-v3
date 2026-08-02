@@ -158,7 +158,7 @@ export async function dbGetScanOverview(id: string): Promise<ScanOverview | null
   const scan = rowToScan(row)
 
   if (row.payload?.overview && typeof row.payload.overview === 'object') {
-    const stored = row.payload.overview as ScanOverview
+    const stored = row.payload.overview
     return {
       ...stored,
       scan,

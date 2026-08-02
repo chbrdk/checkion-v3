@@ -1,7 +1,10 @@
 # Scan result workspace — CHECKION v3
 
 ## Status
-Accepted (Phase 1) · Single-scan magazine composition upgraded · Chapter 03 Detail report
+Accepted (Phase 2) · Live single/domain pipelines write overview/issues/scores into jsonb · Single-scan magazine composition · Chapter 03 Detail report
+
+## Live payload (Phase 2)
+`POST /api/scans` / `POST /api/domain-scans` persist contract-shaped overview + issues via `lib/scan/adapt-scan-result.ts`. Magazine readers prefer `payload.overview` when present; fixtures still use `buildRichScanOverview`.
 
 ## IA
 Overview → Issues → Detail. **No** Domain mega-page port.

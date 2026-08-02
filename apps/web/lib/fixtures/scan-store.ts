@@ -389,7 +389,7 @@ async function memoryCreateDomainScan(input: {
       },
     },
   )
-  return domain
+  return memoryGetDomainScan(domain.id) ?? domain
 }
 
 function memoryCreateScan(input: {

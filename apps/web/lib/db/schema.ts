@@ -14,6 +14,7 @@ import type {
   GeoOverview,
   IssueSummary,
   ProjectStatus,
+  ScanOverview,
   ScanSummary,
   ScoreCard,
   ShareLink,
@@ -59,7 +60,7 @@ export type ScanPayload = {
   issues?: IssueSummary[]
   scores?: ScoreCard[]
   /** Full magazine overview when produced by the live pipeline. */
-  overview?: Record<string, unknown>
+  overview?: ScanOverview
   error?: string
 }
 

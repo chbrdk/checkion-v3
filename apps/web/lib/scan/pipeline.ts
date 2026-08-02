@@ -14,6 +14,7 @@ import type {
 import { adaptDomainResultToContracts, adaptScanResultToContracts } from './adapt-scan-result'
 import type { DomainScanResultWithFullPages, ScanOptions, ScanResult } from './types'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
+import type { DomainScanStreamUpdate } from './spider'
 
 export type SingleScanRunner = (
   options: ScanOptions & { groupId?: string; userId?: string },
@@ -27,16 +28,9 @@ export type DomainScanRunner = (
     domainScanId?: string
     projectId?: string | null
   },
-) => AsyncGenerator<
-  | { type: 'progress'; scannedCount: number; total: number; url: string }
-  | { type: 'complete'; domainResult: DomainScanResultWithFullPages }
-  | { type: 'cancelled'; domainResult: DomainScanResultWithFullPages }
-  | { type: 'error'; url: string; message: string }
-  | { type: 'init'; message: string }
-  | { type: 'page_complete'; pageIndex: number; url: string; normalizedUrl: string; ok: boolean },
-  void,
-  unknown
->
+) =>
+  | AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>
+  | Promise<AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>>
 
 let singleRunner: SingleScanRunner | null = null
 let domainRunner: DomainScanRunner | null = null
@@ -50,7 +44,9 @@ export function setDomainScanRunnerForTests(runner: DomainScanRunner | null): vo
   domainRunner = runner
 }
 
-async function defaultSingleRunner(options: ScanOptions): Promise<ScanResult> {
+async function defaultSingleRunner(
+  options: ScanOptions & { groupId?: string; userId?: string },
+): Promise<ScanResult> {
   const { runScan } = await import('./scanner')
   return runScan(options)
 }
@@ -63,7 +59,7 @@ async function defaultDomainRunner(
     domainScanId?: string
     projectId?: string | null
   },
-) {
+): Promise<AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>> {
   const { runDomainScan } = await import('./spider')
   return runDomainScan(url, options)
 }
@@ -96,7 +92,6 @@ export async function executeSingleLiveScan(input: {
     runners: ['axe', 'htmlcs'],
     groupId: input.id,
   })
-  // Ensure result id matches our row id for screenshot paths / issues.
   const normalized: ScanResult = { ...result, id: input.id, groupId: result.groupId ?? input.id }
   return adaptScanResultToContracts(normalized, {
     id: input.id,
@@ -113,16 +108,21 @@ export async function executeDomainLiveScan(input: {
   useSitemap?: boolean
   onProgress?: (scanned: number, total: number, currentUrl: string) => void | Promise<void>
 }): Promise<PersistedDomainBundle> {
-  const runner = domainRunner ?? defaultDomainRunner
+  const runner =
+    domainRunner ?? ((...args: Parameters<DomainScanRunner>) => defaultDomainRunner(...args))
   const maxPages = resolveDomainScanMaxPages(input.maxPages)
   let completed: DomainScanResultWithFullPages | null = null
 
-  for await (const update of runner(input.url, {
-    useSitemap: input.useSitemap ?? true,
-    maxPages,
-    domainScanId: input.id,
-    projectId: input.projectId,
-  })) {
+  const stream = await Promise.resolve(
+    runner(input.url, {
+      useSitemap: input.useSitemap ?? true,
+      maxPages,
+      domainScanId: input.id,
+      projectId: input.projectId,
+    }),
+  )
+
+  for await (const update of stream) {
     if (update.type === 'progress') {
       await input.onProgress?.(update.scannedCount, update.total, update.url)
     } else if (update.type === 'complete' || update.type === 'cancelled') {
