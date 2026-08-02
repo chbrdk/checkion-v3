@@ -335,16 +335,10 @@ export function ScanLaunchForm({
       <Panel className="checkion-launch-stage">
         <form className="checkion-scan-form checkion-scan-form--launch" onSubmit={onSubmit}>
           <div className="checkion-launch-capability">
-            <span
-              className="checkion-launch-capability__label"
-              id="checkion-launch-capability-label"
-            >
-              Capability
-            </span>
             <div
               className="checkion-capability-grid"
               role="radiogroup"
-              aria-labelledby="checkion-launch-capability-label"
+              aria-label="Capability"
             >
               {visibleCards.map((card) => {
                 const selected = activeCapability === card.id

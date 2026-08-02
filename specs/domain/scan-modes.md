@@ -18,7 +18,7 @@ Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on 
 ## Launch UX (central magazine)
 One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 
-1. **Capability picker** (primary) — large inviting tiles: **SEO** · **GEO** · **WCAG** (AUDION handoff locks to WCAG). No secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
+1. **Capability picker** (primary) — large inviting tiles: **SEO** · **GEO** · **WCAG** (AUDION handoff locks to WCAG). No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
 2. **WCAG depth** (secondary, only when WCAG selected) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only).
 3. **Compose band** — editorial form unit below the pickers:
    - **URL** — hero input (page or host)
