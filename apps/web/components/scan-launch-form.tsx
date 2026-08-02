@@ -8,11 +8,9 @@ import {
   Field,
   Hint,
   Input,
-  LoadingText,
   Panel,
   Text,
   Textarea,
-  TopStatus,
 } from '@msqdx/ui'
 import { Select } from '../lib/msqdx-ui-client'
 import { paths } from '../lib/paths'
@@ -184,7 +182,6 @@ export function ScanLaunchForm({
         deck: 'AUDION handed off this step URL. Confirm the Collection project, then launch a single-page accessibility scan.',
         cta: 'Launch single scan',
         loading: 'Starting single-page scan…',
-        destination: '→ /results/…/overview',
       }
     }
     switch (activeCapability) {
@@ -194,7 +191,6 @@ export function ScanLaunchForm({
           deck: 'Crawl the host and open the domain magazine where SEO coverage is a first-class chapter — titles, meta, H1s, and keyword density across pages.',
           cta: 'Launch SEO crawl',
           loading: 'Starting SEO domain crawl…',
-          destination: '→ /domain/…/overview',
         }
       case 'geo':
         return {
@@ -202,7 +198,6 @@ export function ScanLaunchForm({
           deck: 'Ask answer engines where this host shows up — citations, placement, and competitive share of voice.',
           cta: 'Start GEO job',
           loading: 'Starting GEO job…',
-          destination: '→ /geo/…/overview',
         }
       default:
         if (activeWcagDepth === 'deep') {
@@ -211,7 +206,6 @@ export function ScanLaunchForm({
             deck: 'Spider the domain from this URL and open a light corpus magazine alongside the page result.',
             cta: 'Launch deep scan',
             loading: 'Starting deep crawl…',
-            destination: '→ /results/…/overview',
           }
         }
         return {
@@ -219,7 +213,6 @@ export function ScanLaunchForm({
           deck: 'One URL, one magazine result — accessibility first, with SEO and performance signals in the same reading.',
           cta: 'Launch single scan',
           loading: 'Starting single-page scan…',
-          destination: '→ /results/…/overview',
         }
     }
   }, [activeCapability, activeWcagDepth, fromAudion])
@@ -512,19 +505,13 @@ export function ScanLaunchForm({
               </Field>
 
               <div className="checkion-scan-form__actions checkion-launch-compose__actions">
-                {status === 'submitting' ? (
-                  <LoadingText>{modeCopy.loading}</LoadingText>
-                ) : (
-                  <Button type="submit" disabled={!projectId || !url.trim()}>
-                    {modeCopy.cta}
-                  </Button>
-                )}
-                {status === 'idle' ? (
-                  <TopStatus level="ok" primary="Ready" secondary={modeCopy.destination} />
-                ) : null}
-                {status === 'error' ? (
-                  <TopStatus level="critical" primary="Launch failed" secondary="retry" />
-                ) : null}
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={status === 'submitting' || !projectId || !url.trim()}
+                >
+                  {status === 'submitting' ? modeCopy.loading : modeCopy.cta}
+                </Button>
               </div>
             </div>
 
