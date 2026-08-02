@@ -32,10 +32,17 @@ export const paths = {
   envPlexonBase: 'NEXT_PLEXON_BASE_URL',
   envCheckionPublicUrl: 'NEXT_PUBLIC_CHECKION_URL',
   envPlexonServiceSecret: 'PLEXON_SERVICE_SECRET',
+  envPlexonAuthUrl: 'PLEXON_AUTH_URL',
+  envPlexonRegisterUrl: 'NEXT_PUBLIC_PLEXON_REGISTER_URL',
+  envAuthSecret: 'AUTH_SECRET',
+  /** Local-only NextAuth fallback when AUTH_SECRET unset (never use in prod with Plexon auth). */
+  authDevFallbackSecret: 'checkion-v3-local-dev-auth-secret-min-32chars',
   envFederationMode: 'CHECKION_FEDERATION_MODE',
+  envLiveScans: 'CHECKION_LIVE_SCANS',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
   envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
   routes: {
+    apiAuthNextAuth: '/api/auth',
     home: '/',
     scan: '/scan',
     projects: '/projects',

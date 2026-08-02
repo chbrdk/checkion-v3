@@ -6,11 +6,11 @@ import { listDomainScans, listScans } from '../lib/fixtures/scan-store'
 import { listShares } from '../lib/fixtures/share-store'
 import { paths } from '../lib/paths'
 
-export default function HomePage() {
-  const projects = listProjects()
-  const scans = listScans().filter((s) => s.status === 'completed').slice(0, 5)
-  const domains = listDomainScans().slice(0, 3)
-  const shares = listShares()
+export default async function HomePage() {
+  const projects = await listProjects()
+  const scans = ((await listScans())).filter((s) => s.status === 'completed').slice(0, 5)
+  const domains = ((await listDomainScans())).slice(0, 3)
+  const shares = await listShares()
 
   return (
     <AppShell
@@ -22,8 +22,8 @@ export default function HomePage() {
           <SectionChrome title="Demo snapshot" meta="fixtures" />
           <StatLedeGroup>
             <StatLede label="Projects" value={projects.length} />
-            <StatLede label="Scans" value={listScans().length} />
-            <StatLede label="Domain" value={listDomainScans().length} />
+            <StatLede label="Scans" value={((await listScans())).length} />
+            <StatLede label="Domain" value={((await listDomainScans())).length} />
             <StatLede label="Shares" value={shares.length} />
           </StatLedeGroup>
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>

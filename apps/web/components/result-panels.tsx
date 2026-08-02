@@ -95,7 +95,7 @@ function shieldStats(snap: SecurityPrivacySnapshot): {
   }
 }
 
-export function ResultMagazineShell({
+export async function ResultMagazineShell({
   overview,
   actions,
   children,
@@ -111,7 +111,7 @@ export function ResultMagazineShell({
   activeSection?: 'overview' | 'issues' | 'detail'
   sectionBase?: 'results' | 'domain'
 }) {
-  const project = getProject(overview.scan.projectId)
+  const project = await getProject(overview.scan.projectId)
   const { scan } = overview
   const host = hostFromUrl(scan.url)
   const path = pathFromUrl(scan.url)

@@ -7,7 +7,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const overview = getScanOverview(id)
+  const overview = await getScanOverview(id)
   if (!overview) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
   const result = await resolveWeakestSignalStatement(overview)

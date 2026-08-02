@@ -7,7 +7,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const overview = getDomainOverview(id)
+  const overview = await getDomainOverview(id)
   if (!overview) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   if (!overview.eeat && !overview.generative) {
     return NextResponse.json({ error: 'no_trust_geo' }, { status: 404 })

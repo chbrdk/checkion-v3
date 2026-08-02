@@ -5,9 +5,9 @@ import { listProjects } from '../../lib/fixtures/project-store'
 import { listScans } from '../../lib/fixtures/scan-store'
 import { paths } from '../../lib/paths'
 
-export default function ResultsIndexPage() {
-  const projects = Object.fromEntries(listProjects().map((p) => [p.id, p.name]))
-  const scans = listScans()
+export default async function ResultsIndexPage() {
+  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
+  const scans = await listScans()
 
   return (
     <AppShell

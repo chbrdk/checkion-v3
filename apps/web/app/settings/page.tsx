@@ -6,8 +6,8 @@ import { listApiTokens } from '../../lib/fixtures/api-tokens-store'
 import { paths } from '../../lib/paths'
 import { plexonBaseUrl } from '../../lib/runtime-config'
 
-export default function SettingsPage() {
-  const tokens = listApiTokens()
+export default async function SettingsPage() {
+  const tokens = await listApiTokens()
 
   return (
     <AppShell title="Settings" description="Local fixture mode — projects, scans, domain, GEO.">

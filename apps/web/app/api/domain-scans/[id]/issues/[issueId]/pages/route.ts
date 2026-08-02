@@ -16,7 +16,7 @@ export async function GET(
   const maxIssues =
     maxRaw == null || maxRaw === '' || maxRaw === 'null' ? null : Number(maxRaw)
 
-  const result = listIssueAffectedPages(id, issueId, {
+  const result = await listIssueAffectedPages(id, issueId, {
     page: Number.isFinite(page) ? page : 1,
     pageSize: Number.isFinite(pageSize) ? pageSize : 25,
     sort,

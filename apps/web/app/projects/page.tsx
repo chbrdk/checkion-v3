@@ -13,12 +13,12 @@ export default async function ProjectsPage({
   let bindPlatformProjectId: string | undefined
 
   if (platformProjectId) {
-    const bound = getProjectByPlatformId(platformProjectId)
+    const bound = await getProjectByPlatformId(platformProjectId)
     if (bound) redirect(paths.routes.projectDetail(bound.id))
     bindPlatformProjectId = platformProjectId
   }
 
-  const projects = listProjects()
+  const projects = await listProjects()
   return (
     <AppShell
       title="Projects"

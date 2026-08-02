@@ -12,7 +12,8 @@ Deploy **checkion-v3** into Coolify island **msqdx-v3-staging** next to plexon-v
 | Domain | `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`) |
 | Dockerfile | repo root `Dockerfile` (clones `chbrdk/msqdx-ui`) |
 | Container port | **3007** |
-| Data mode | In-memory fixtures (`CHECKION_FEDERATION_MODE=dummy`) |
+| Data mode | Fixtures by default (`CHECKION_FEDERATION_MODE=dummy`); optional Postgres via `DATABASE_URL` |
+| Live scans | On when `DATABASE_URL` set or `CHECKION_LIVE_SCANS=1`; Chromium OS deps installed in Dockerfile runner |
 
 Hierarchy and Wave B notes: `plexon-v3/knowledge/coolify-v3-staging-runbook.md`.
 
@@ -22,7 +23,7 @@ Hierarchy and Wave B notes: `plexon-v3/knowledge/coolify-v3-staging-runbook.md`.
 2. GitHub repo for checkion-v3 on branch `main` (Coolify source)
 3. Operator Coolify access (credentials not in-repo)
 
-## Env (Coolify)
+## Env (Coolify) — Staging Shell (fixtures)
 
 ```
 NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech
@@ -32,11 +33,23 @@ PORT=3007
 HOSTNAME=0.0.0.0
 ```
 
-Not required for Staging Shell (fixtures):
+Optional Auth / DB / live federation:
 
-- `PLEXON_SERVICE_SECRET` (Federation live = later slice)
-- `AUTH_SECRET` / NextAuth (Auth = later slice)
-- `DATABASE_URL` (no product Postgres yet)
+```
+PLEXON_AUTH_URL=https://plexon-v3.projects-a.plygrnd.tech
+PLEXON_SERVICE_SECRET=<shared>
+AUTH_SECRET=<≥32 chars>          # required by entrypoint when PLEXON_AUTH_URL + secret set
+NEXT_PUBLIC_PLEXON_REGISTER_URL=https://plexon-v3.projects-a.plygrnd.tech/register
+DATABASE_URL=postgres://…        # triggers drizzle-kit push on start; also enables live scans unless CHECKION_LIVE_SCANS=0
+CHECKION_LIVE_SCANS=1            # force live Puppeteer scans (even without DB — results stay in-memory)
+CHECKION_FEDERATION_MODE=live
+PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
+PLEXON_DEMO_COMPANY_ID=…
+```
+
+### Chromium / Puppeteer
+
+The root `Dockerfile` installs common Chromium shared libraries on **builder base + runner** and prefers **puppeteer-bundled Chrome** (`PUPPETEER_SKIP_DOWNLOAD=false`). Coolify may instead use a browser-capable base image; if you swap the base, keep equivalent libs (or document the image). Live scans need enough RAM for headless Chrome (~512MB+ spare).
 
 ## Coolify attach checklist
 
@@ -51,7 +64,7 @@ Not required for Staging Shell (fixtures):
 ## Smoke checklist
 
 1. `GET https://checkion-v3.projects-a.plygrnd.tech/api/health` → ok + federation contract id
-2. `GET …/api/federation/health` → contract present; plexonReachable may be false while mode=`dummy`
+2. `GET …/api/federation/health` → contract present; `deferred: true` in dummy; live probes plexon
 3. Browser: `/geo/geo-1/overview` and `/geo/geo-1/queries` (fixture magazine)
 4. Optional: launch fixture scan from UI → result overview
 5. Confirm **prod** `https://checkion.projects-a.plygrnd.tech` untouched
@@ -67,16 +80,8 @@ docker run --rm -p 3007:3007 \
   checkion-v3
 ```
 
-## Out of scope (later slices)
-
-- NextAuth / login against plexon-v3
-- `CHECKION_FEDERATION_MODE=live` + project origin
-- Product Postgres
-- Live GEO / crawl workers
-- Switching plexon registry from prod CHECKION URL to v3
-
 ## Status
 
-Dockerfile + runbook ready for operator attach. Live Coolify deploy requires GitHub remote + Coolify credentials (not in-repo).
+Dockerfile + entrypoint + runbook ready. Live Coolify deploy requires GitHub remote + Coolify credentials (not in-repo).
 
 Operator shortlist: [`coolify-operator-handoff.md`](./coolify-operator-handoff.md).

@@ -12,11 +12,11 @@ export default async function ShareLandingPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const share = getShare(token)
+  const share = await getShare(token)
   if (!share) notFound()
 
   if (share.resourceType === 'single') {
-    const overview = getScanOverview(share.resourceId)
+    const overview = await getScanOverview(share.resourceId)
     if (!overview) notFound()
     return (
       <main className="checkion-share-landing">
@@ -35,7 +35,7 @@ export default async function ShareLandingPage({
     )
   }
 
-  const overview = getDomainOverview(share.resourceId)
+  const overview = await getDomainOverview(share.resourceId)
   if (!overview) notFound()
 
   return (

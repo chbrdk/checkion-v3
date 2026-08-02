@@ -21,6 +21,10 @@ import {
   parseDomainPageScanId,
   synthesizeAffectedPageUrl,
 } from '../domain-issue-page-synth'
+import { isDatabaseConfigured } from '../db/config'
+import { shouldRunLiveScans } from '../scan/live-scan-gate'
+import { executeSingleLiveScan } from '../scan/pipeline'
+import { startDomainScan } from '../scan/domain-scan-start'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 
@@ -31,9 +35,15 @@ const issuesByScan: Record<string, IssueSummary[]> = Object.fromEntries(
 const scoresByScan: Record<string, ScoreCard[]> = Object.fromEntries(
   Object.entries(SCORE_FIXTURES).map(([k, v]) => [k, [...v]]),
 )
+const overviewByScan: Record<string, ScanOverview> = {}
+const domainOverviewExtras: Record<string, Record<string, unknown>> = {}
 let domainScans = [...DOMAIN_SCAN_FIXTURES]
 
-export function listScans(projectId?: string): ScanSummary[] {
+async function dbApi() {
+  return import('../db/scans')
+}
+
+function memoryListScans(projectId?: string): ScanSummary[] {
   return projectId ? scans.filter((s) => s.projectId === projectId) : [...scans]
 }
 
@@ -48,7 +58,7 @@ function resolveVirtualDomainPageScan(id: string): ScanSummary | null {
   const issue = domainIssues.find((i) => i.id === parsed.issueId)
   if (!issue) return null
 
-  const overview = getDomainOverview(parsed.domainId)
+  const overview = memoryGetDomainOverview(parsed.domainId)
   const rootUrl = overview?.scan.rootUrl ?? template.url
   const seeds =
     issue.affectedPages?.length
@@ -64,11 +74,11 @@ function resolveVirtualDomainPageScan(id: string): ScanSummary | null {
   }
 }
 
-export function getScan(id: string): ScanSummary | null {
+function memoryGetScan(id: string): ScanSummary | null {
   return scans.find((s) => s.id === id) ?? resolveVirtualDomainPageScan(id)
 }
 
-export function getScanOverview(id: string): ScanOverview | null {
+function memoryGetScanOverview(id: string): ScanOverview | null {
   const virtual = parseDomainPageScanId(id)
   if (virtual) {
     const scan = resolveVirtualDomainPageScan(id)
@@ -91,7 +101,20 @@ export function getScanOverview(id: string): ScanOverview | null {
     }
   }
 
-  const scan = getScan(id)
+  const stored = overviewByScan[id]
+  if (stored) {
+    const scan = memoryGetScan(id)
+    if (!scan) return null
+    return {
+      ...stored,
+      scan,
+      scores: scoresByScan[id] ?? stored.scores,
+      topIssues: enrichIssueInspect(issuesByScan[id] ?? stored.topIssues).slice(0, 8),
+      ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
+    }
+  }
+
+  const scan = memoryGetScan(id)
   const rich = buildRichScanOverview(
     id,
     scan,
@@ -106,7 +129,7 @@ export function getScanOverview(id: string): ScanOverview | null {
   }
 }
 
-export function getScanIssues(id: string): IssueSummary[] {
+function memoryGetScanIssues(id: string): IssueSummary[] {
   if (parseDomainPageScanId(id)) {
     return enrichIssueInspect(issuesByScan[TEMPLATE_SINGLE_SCAN_ID] ?? []).map((issue) => ({
       ...issue,
@@ -116,20 +139,20 @@ export function getScanIssues(id: string): IssueSummary[] {
   return enrichIssueInspect(issuesByScan[id] ?? [])
 }
 
-export function getScanScores(id: string): ScoreCard[] {
-  const overview = getScanOverview(id)
+function memoryGetScanScores(id: string): ScoreCard[] {
+  const overview = memoryGetScanOverview(id)
   if (overview?.scores.length) return overview.scores
   if (parseDomainPageScanId(id)) return scoresByScan[TEMPLATE_SINGLE_SCAN_ID] ?? []
   return scoresByScan[id] ?? []
 }
 
-export function listDomainScans(projectId?: string): DomainScanLight[] {
+function memoryListDomainScans(projectId?: string): DomainScanLight[] {
   return projectId
     ? domainScans.filter((d) => d.projectId === projectId)
     : [...domainScans]
 }
 
-export function getDomainScan(id: string): DomainScanLight | null {
+function memoryGetDomainScan(id: string): DomainScanLight | null {
   return domainScans.find((d) => d.id === id) ?? null
 }
 
@@ -143,7 +166,7 @@ function systemicFromIssues(issues: IssueSummary[]): DomainSystemicIssue[] {
   }))
 }
 
-export function getDomainOverview(id: string): DomainOverview | null {
+function memoryGetDomainOverview(id: string): DomainOverview | null {
   if (id === 'domain-1') {
     return {
       ...LIVE_DOMAIN_OVERVIEW,
@@ -151,19 +174,25 @@ export function getDomainOverview(id: string): DomainOverview | null {
     }
   }
 
-  const domain = getDomainScan(id)
+  const domain = memoryGetDomainScan(id)
   if (!domain) return null
   const issues = issuesByScan[id] ?? []
+  const extras = domainOverviewExtras[id] ?? {}
 
   return {
     scan: domain,
     scores: scoresByScan[id] ?? [],
-    lede: `Deep domain crawl across ${domain.pageCount} pages (dummy corpus).`,
-    systemicIssues: systemicFromIssues(issues),
+    lede:
+      typeof extras.lede === 'string'
+        ? extras.lede
+        : `Deep domain crawl across ${domain.pageCount} pages (dummy corpus).`,
+    systemicIssues:
+      (extras.systemicIssues as DomainSystemicIssue[] | undefined) ?? systemicFromIssues(issues),
+    ...extras,
   }
 }
 
-export function createScan(input: {
+function memoryCreateSynthesizedScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
@@ -201,7 +230,177 @@ export function createScan(input: {
   return synthesized.scan
 }
 
-export function deleteScan(id: string): boolean {
+async function memoryCreateLiveScan(input: {
+  projectId: string
+  mode: 'single' | 'deep'
+  url: string
+  waitForCompletion?: boolean
+}): Promise<ScanSummary> {
+  const id = `scan-${input.mode}-${Date.now()}`
+  const startedAt = new Date().toISOString()
+  const queued: ScanSummary = {
+    id,
+    projectId: input.projectId,
+    mode: input.mode,
+    url: input.url,
+    status: 'queued',
+    startedAt,
+    completedAt: null,
+    overallScore: null,
+    issueCount: 0,
+  }
+  scans = [queued, ...scans]
+  issuesByScan[id] = []
+  scoresByScan[id] = []
+
+  if (input.mode === 'deep') {
+    await memoryCreateDomainScan({
+      projectId: input.projectId,
+      url: input.url,
+      waitForCompletion: input.waitForCompletion,
+      linkScanId: id,
+    })
+    return queued
+  }
+
+  const run = async () => {
+    try {
+      scans = scans.map((s) => (s.id === id ? { ...s, status: 'running' } : s))
+      const bundle = await executeSingleLiveScan({
+        id,
+        projectId: input.projectId,
+        url: input.url,
+        mode: 'single',
+      })
+      scans = scans.map((s) => (s.id === id ? bundle.scan : s))
+      issuesByScan[id] = enrichIssueInspect(bundle.issues)
+      scoresByScan[id] = bundle.scores
+      overviewByScan[id] = bundle.overview
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'scan_failed'
+      const failedAt = new Date().toISOString()
+      scans = scans.map((s) =>
+        s.id === id ? { ...s, status: 'failed', completedAt: failedAt } : s,
+      )
+      console.error('[checkion-v3] memory single scan failed', id, message)
+    }
+  }
+
+  if (input.waitForCompletion) {
+    await run()
+    return memoryGetScan(id) ?? queued
+  }
+  void run()
+  return queued
+}
+
+async function memoryCreateDomainScan(input: {
+  projectId: string
+  url: string
+  maxPages?: number
+  useSitemap?: boolean
+  waitForCompletion?: boolean
+  linkScanId?: string
+}): Promise<DomainScanLight> {
+  if (!shouldRunLiveScans()) {
+    const synth = memoryCreateSynthesizedScan({
+      projectId: input.projectId,
+      mode: 'deep',
+      url: input.url,
+    })
+    return domainScans.find((d) => d.startedAt === synth.startedAt) ?? domainScans[0]!
+  }
+
+  const { domain } = await startDomainScan(
+    {
+      projectId: input.projectId,
+      url: input.url,
+      maxPages: input.maxPages,
+      useSitemap: input.useSitemap,
+      waitForCompletion: input.waitForCompletion,
+    },
+    {
+      insertQueued: async (row) => {
+        domainScans = [
+          {
+            id: row.id,
+            projectId: row.projectId,
+            rootUrl: row.rootUrl,
+            status: 'queued',
+            pageCount: 0,
+            overallScore: null,
+            issueCount: 0,
+            startedAt: row.startedAt,
+            completedAt: null,
+          },
+          ...domainScans,
+        ]
+        issuesByScan[row.id] = []
+        scoresByScan[row.id] = []
+      },
+      markRunning: async (domainId) => {
+        domainScans = domainScans.map((d) =>
+          d.id === domainId ? { ...d, status: 'running' } : d,
+        )
+        if (input.linkScanId) {
+          scans = scans.map((s) =>
+            s.id === input.linkScanId ? { ...s, status: 'running' } : s,
+          )
+        }
+      },
+      updateProgress: async (domainId, scanned) => {
+        domainScans = domainScans.map((d) =>
+          d.id === domainId ? { ...d, pageCount: scanned } : d,
+        )
+      },
+      persistCompleted: async (bundle) => {
+        domainScans = domainScans.map((d) => (d.id === bundle.domain.id ? bundle.domain : d))
+        issuesByScan[bundle.domain.id] = enrichIssueInspect(bundle.issues)
+        scoresByScan[bundle.domain.id] = bundle.scores
+        domainOverviewExtras[bundle.domain.id] = bundle.overviewExtras
+        if (input.linkScanId) {
+          scans = scans.map((s) =>
+            s.id === input.linkScanId
+              ? {
+                  ...s,
+                  status: 'completed',
+                  completedAt: bundle.domain.completedAt,
+                  overallScore: bundle.domain.overallScore,
+                  issueCount: bundle.domain.issueCount,
+                }
+              : s,
+          )
+          issuesByScan[input.linkScanId] = enrichIssueInspect(bundle.issues)
+          scoresByScan[input.linkScanId] = bundle.scores
+        }
+      },
+      persistFailed: async (domainId) => {
+        const failedAt = new Date().toISOString()
+        domainScans = domainScans.map((d) =>
+          d.id === domainId ? { ...d, status: 'failed', completedAt: failedAt } : d,
+        )
+        if (input.linkScanId) {
+          scans = scans.map((s) =>
+            s.id === input.linkScanId
+              ? { ...s, status: 'failed', completedAt: failedAt }
+              : s,
+          )
+        }
+      },
+    },
+  )
+  return domain
+}
+
+function memoryCreateScan(input: {
+  projectId: string
+  mode: 'single' | 'deep'
+  url: string
+}): ScanSummary {
+  return memoryCreateSynthesizedScan(input)
+}
+
+function memoryDeleteScan(id: string): boolean {
   const before = scans.length
   scans = scans.filter((s) => s.id !== id)
   delete issuesByScan[id]
@@ -209,8 +408,7 @@ export function deleteScan(id: string): boolean {
   return scans.length < before
 }
 
-/** Move scans + domain crawls from one project to another (e.g. after delete). */
-export function reassignProjectResources(
+function memoryReassignProjectResources(
   fromProjectId: string,
   toProjectId: string,
 ): { scanCount: number; recentScanIds: string[]; lastScanAt: string | null } {
@@ -236,10 +434,95 @@ export function reassignProjectResources(
   }
 }
 
-export function rerunScan(id: string): ScanSummary | null {
-  const source = getScan(id)
+export async function listScans(projectId?: string): Promise<ScanSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListScans(projectId)
+  return memoryListScans(projectId)
+}
+
+export async function getScan(id: string): Promise<ScanSummary | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetScan(id)
+  return memoryGetScan(id)
+}
+
+export async function getScanOverview(id: string): Promise<ScanOverview | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetScanOverview(id)
+  return memoryGetScanOverview(id)
+}
+
+export async function getScanIssues(id: string): Promise<IssueSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetScanIssues(id)
+  return memoryGetScanIssues(id)
+}
+
+export async function getScanScores(id: string): Promise<ScoreCard[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetScanScores(id)
+  return memoryGetScanScores(id)
+}
+
+export async function listDomainScans(projectId?: string): Promise<DomainScanLight[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListDomainScans(projectId)
+  return memoryListDomainScans(projectId)
+}
+
+export async function getDomainScan(id: string): Promise<DomainScanLight | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetDomainScan(id)
+  return memoryGetDomainScan(id)
+}
+
+export async function getDomainOverview(id: string): Promise<DomainOverview | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetDomainOverview(id)
+  return memoryGetDomainOverview(id)
+}
+
+export async function createScan(input: {
+  projectId: string
+  mode: 'single' | 'deep'
+  url: string
+  waitForCompletion?: boolean
+}): Promise<ScanSummary> {
+  if (isDatabaseConfigured()) {
+    return (await dbApi()).dbCreateScan(input)
+  }
+  if (shouldRunLiveScans()) {
+    return memoryCreateLiveScan(input)
+  }
+  return memoryCreateScan(input)
+}
+
+export async function createDomainScan(input: {
+  projectId: string
+  url: string
+  maxPages?: number
+  useSitemap?: boolean
+  waitForCompletion?: boolean
+}): Promise<DomainScanLight> {
+  if (isDatabaseConfigured()) {
+    return (await dbApi()).dbCreateDomainScan(input)
+  }
+  return memoryCreateDomainScan(input)
+}
+
+export async function deleteScan(id: string): Promise<boolean> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbDeleteScan(id)
+  return memoryDeleteScan(id)
+}
+
+/** Move scans + domain crawls from one project to another (e.g. after delete). */
+export async function reassignProjectResources(
+  fromProjectId: string,
+  toProjectId: string,
+): Promise<{ scanCount: number; recentScanIds: string[]; lastScanAt: string | null }> {
+  if (isDatabaseConfigured()) {
+    return (await dbApi()).dbReassignProjectResources(fromProjectId, toProjectId)
+  }
+  return memoryReassignProjectResources(fromProjectId, toProjectId)
+}
+
+export async function rerunScan(id: string): Promise<ScanSummary | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbRerunScan(id)
+  const source = memoryGetScan(id)
   if (!source) return null
-  return createScan({
+  return memoryCreateScan({
     projectId: source.projectId,
     mode: source.mode,
     url: source.url,

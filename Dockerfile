@@ -10,17 +10,44 @@
 # Sibling design system: clones github.com/chbrdk/msqdx-ui next to the app
 # so file: deps, webpack aliases (`../../../msqdx-ui/…`), and barrels resolve.
 # Coolify: Dockerfile path `Dockerfile`, domain https://checkion-v3.projects-a.plygrnd.tech
-# (see knowledge/staging-coolify.md). Staging shell = fixtures only; no Auth/DB required.
+# (see knowledge/staging-coolify.md). Fixture mode needs no AUTH/DB; live auth+DB via entrypoint.
 
 ARG NODE_IMAGE=node:22-bookworm-slim
 
 # ---- Base ----
+# Chromium OS deps for Puppeteer-bundled Chrome (live scans). Coolify may use a
+# browser-capable base instead; keep these packages when staying on node slim.
 FROM ${NODE_IMAGE} AS base
 WORKDIR /workspace
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PUPPETEER_SKIP_DOWNLOAD=false
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    wget \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable
 
@@ -60,7 +87,37 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3007
 ENV HOSTNAME=0.0.0.0
 ENV CHECKION_FEDERATION_MODE=dummy
+ENV PUPPETEER_SKIP_DOWNLOAD=false
 EXPOSE 3007
+
+# Puppeteer OS libraries (same set as builder base) for live scans.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    wget \
+    xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /workspace/checkion-v3/package.json ./package.json
 COPY --from=builder /workspace/checkion-v3/package-lock.json ./package-lock.json
@@ -75,6 +132,11 @@ COPY --from=builder /workspace/msqdx-ui /workspace/msqdx-ui
 
 # Optional public assets if present
 COPY --from=builder /workspace/checkion-v3/apps/web/public ./apps/web/public
+COPY --from=builder /workspace/checkion-v3/apps/web/drizzle.config.ts ./apps/web/drizzle.config.ts
+COPY --from=builder /workspace/checkion-v3/apps/web/lib/db ./apps/web/lib/db
+COPY --from=builder /workspace/checkion-v3/scripts ./scripts
+
+RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/check-database-url.mjs
 
 WORKDIR /workspace/checkion-v3
-CMD ["npm", "run", "start", "-w", "web"]
+CMD ["./scripts/docker-entrypoint.sh"]

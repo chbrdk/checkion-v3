@@ -12,7 +12,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const overview = getGeoOverview(id)
+  const overview = await getGeoOverview(id)
   if (!overview) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
   const url = new URL(request.url)

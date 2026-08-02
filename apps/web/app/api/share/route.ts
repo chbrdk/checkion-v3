@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (!isShareType(resourceType) || !resourceId) {
     return NextResponse.json({ error: 'invalid_query' }, { status: 400 })
   }
-  const share = findShare(resourceType, resourceId)
+  const share = await findShare(resourceType, resourceId)
   if (!share) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   return NextResponse.json(share)
 }
@@ -29,9 +29,9 @@ export async function POST(request: Request) {
   }
   const exists =
     body.resourceType === 'single'
-      ? getScan(body.resourceId)
-      : getDomainScan(body.resourceId)
+      ? await getScan(body.resourceId)
+      : await getDomainScan(body.resourceId)
   if (!exists) return NextResponse.json({ error: 'resource_not_found' }, { status: 404 })
-  const share = createShare(body.resourceType, body.resourceId)
+  const share = await createShare(body.resourceType, body.resourceId)
   return NextResponse.json(share, { status: 201 })
 }

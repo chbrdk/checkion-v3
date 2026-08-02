@@ -21,7 +21,7 @@ export default async function ResultSectionPage({
   params: Promise<{ id: string; section: string }>
 }) {
   const { id, section: rawSection } = await params
-  const overview = getScanOverview(id)
+  const overview = await getScanOverview(id)
   if (!overview) notFound()
 
   if (rawSection === 'scores') {
@@ -33,7 +33,7 @@ export default async function ResultSectionPage({
   }
   const section = rawSection
 
-  const issues = getScanIssues(id)
+  const issues = await getScanIssues(id)
   const actions = (
     <ResultActions
       resourceId={overview.scan.id}

@@ -6,7 +6,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const scan = getScan(id)
+  const scan = await getScan(id)
   if (!scan) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   return NextResponse.json(scan)
 }
@@ -16,7 +16,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const ok = deleteScan(id)
+  const ok = await deleteScan(id)
   if (!ok) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   return NextResponse.json({ ok: true })
 }

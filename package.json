@@ -9,6 +9,7 @@
     "build": "npm run build -w @checkion-v3/contracts && npm run build -w web",
     "test": "npm run test -w web",
     "typecheck": "npm run typecheck -w web",
-    "dev": "npm run dev -w web"
+    "dev": "npm run dev -w web",
+    "db:push": "npm run db:push -w web"
   }
 }

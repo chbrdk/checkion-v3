@@ -5,7 +5,7 @@ import { listProjects } from '../lib/fixtures/project-store'
 import type { DeferredJobCard } from '../lib/fixtures/deferred-jobs'
 import { paths } from '../lib/paths'
 
-export function DeferredJobsPage({
+export async function DeferredJobsPage({
   title,
   description,
   jobs,
@@ -16,7 +16,7 @@ export function DeferredJobsPage({
   jobs: DeferredJobCard[]
   specHint: string
 }) {
-  const projects = Object.fromEntries(listProjects().map((p) => [p.id, p.name]))
+  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
 
   return (
     <AppShell title={title} description={description}>

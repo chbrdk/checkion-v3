@@ -1,23 +1,27 @@
 # Plexon federation — CHECKION v3
 
 ## Status
-**Deferred** — local fixture development first (projects, scans, domain, GEO). Live sync later.
+**Accepted** — live wiring available when `CHECKION_FEDERATION_MODE=live` and service secret configured. Default local / Staging Shell remains `dummy` (fixtures).
 
 ## Contract
-`2026-05-plexon-federation-v3` against **plexon-v3 only** (parked implementation exists).
+`2026-05-plexon-federation-v3` against **plexon-v3 only**.
 
-## Parked directions
+## Directions
 | Direction | Endpoint | Notes |
 |-----------|----------|-------|
-| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Code present; unused in local dummy flow |
-| CHECKION → Plexon | `checkion-project-origin` client + plexon-v3 route | Not called from `POST /api/projects` while deferred |
+| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Upsert / catalog via project-store (Postgres when `DATABASE_URL` set) |
+| CHECKION → Plexon | `POST …/checkion-project-origin` via `registerCheckionProjectOnPlexon` | Called from `POST /api/projects` when live + owner/company available |
 
-## Mode (now)
-- `paths.federationMode = dummy` — local CRUD only
-- Do **not** set `CHECKION_FEDERATION_MODE=live` until product surfaces (scan / domain / GEO) are ready
+## Mode
+- Default `paths.federationMode = dummy` — local CRUD / fixtures
+- Override with `CHECKION_FEDERATION_MODE=live` + `PLEXON_SERVICE_SECRET` (+ `NEXT_PLEXON_BASE_URL`)
+- `/api/federation/health` reports `deferred: false` when live and configured; probes plexon `/api/health`
 
-## Later (when un-deferred)
-- Wire outbound origin on project create again
-- Health/settings live probe
-- Capability status from real sync
-- Env: see `knowledge/paths.md`
+## Auth (NextAuth + Plexon)
+- NextAuth credentials provider validates against plexon `POST /api/auth/validate-credentials`
+- Env: `PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, `AUTH_SECRET` (≥32), optional `NEXT_PUBLIC_PLEXON_REGISTER_URL`
+- Middleware requires login when Plexon auth is configured; public: `/login`, `/api/auth/*`, `/api/health`, `/api/federation/health`, `/api/platform/provisioning/*`, `/share/*`
+- Local bypass (“Continue to app”) only when Plexon auth unset
+
+## Env
+See `knowledge/paths.md` and `knowledge/staging-coolify.md`.

@@ -6,7 +6,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  const scan = getDomainScan(id)
+  const scan = await getDomainScan(id)
   if (!scan) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   return NextResponse.json(scan)
 }

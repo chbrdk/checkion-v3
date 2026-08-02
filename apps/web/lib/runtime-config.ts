@@ -14,6 +14,19 @@ export function getPlexonServiceSecret(): string {
   return process.env[paths.envPlexonServiceSecret]?.trim() || ''
 }
 
+/** Plexon auth URL (runtime — do not cache at import). */
+export function getPlexonAuthUrl(): string {
+  return process.env[paths.envPlexonAuthUrl]?.trim() || ''
+}
+
+export function getPlexonRegisterUrl(): string | null {
+  return process.env[paths.envPlexonRegisterUrl]?.trim() || null
+}
+
+export function isPlexonAuthConfigured(): boolean {
+  return Boolean(getPlexonAuthUrl() && getPlexonServiceSecret())
+}
+
 export type FederationRuntimeMode = 'dummy' | 'live'
 
 /** Prefer env override; fall back to paths.federationMode. */

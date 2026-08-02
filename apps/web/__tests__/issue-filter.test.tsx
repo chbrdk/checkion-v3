@@ -5,8 +5,8 @@ import { IssuesWorkspace } from '../components/issues-workspace'
 import { getScanIssues, getScanOverview } from '../lib/fixtures/scan-store'
 
 describe('issue filter', () => {
-  it('filters by severity and exposes inspect accordion', () => {
-    const issues = getScanIssues('scan-single-1')
+  it('filters by severity and exposes inspect accordion', async () => {
+    const issues = await getScanIssues('scan-single-1')
     const seriousCount = issues.filter((i) => i.severity === 'serious').length
     render(<IssueFilterPanel issues={issues} />)
     // Chip order: all, critical, serious, …
@@ -17,8 +17,8 @@ describe('issue filter', () => {
     expect(screen.getAllByText(/Lead finding|Inspect/i).length).toBeGreaterThan(0)
   })
 
-  it('keeps remediation detail on single-scan fixtures', () => {
-    const issues = getScanIssues('scan-single-1')
+  it('keeps remediation detail on single-scan fixtures', async () => {
+    const issues = await getScanIssues('scan-single-1')
     expect(issues.length).toBeGreaterThan(20)
     expect(issues.every((i) => Boolean(i.detail))).toBe(true)
     expect(issues.some((i) => Boolean(i.selector))).toBe(true)
@@ -28,9 +28,9 @@ describe('issue filter', () => {
     expect(issues.every((i) => Boolean(i.boundingBox))).toBe(true)
   })
 
-  it('syncs capture marker click with rail expand', () => {
-    const overview = getScanOverview('scan-single-1')
-    const issues = getScanIssues('scan-single-1')
+  it('syncs capture marker click with rail expand', async () => {
+    const overview = await getScanOverview('scan-single-1')
+    const issues = await getScanIssues('scan-single-1')
     expect(overview?.screenshotUrl).toBeTruthy()
     render(
       <IssuesWorkspace
@@ -53,9 +53,9 @@ describe('issue filter', () => {
     expect(openRow?.textContent).toMatch(new RegExp(first.title.slice(0, 20), 'i'))
   })
 
-  it('expands rail row and activates matching marker', () => {
-    const overview = getScanOverview('scan-single-1')
-    const issues = getScanIssues('scan-single-1')
+  it('expands rail row and activates matching marker', async () => {
+    const overview = await getScanOverview('scan-single-1')
+    const issues = await getScanIssues('scan-single-1')
     const second = issues.find((i) => i.boundingBox && i.id !== issues[0]?.id) ?? issues[1]!
     render(
       <IssuesWorkspace
@@ -79,9 +79,9 @@ describe('issue filter', () => {
     ).toBeTruthy()
   })
 
-  it('switches capture layers to heatmap and regions', () => {
-    const overview = getScanOverview('scan-single-1')
-    const issues = getScanIssues('scan-single-1')
+  it('switches capture layers to heatmap and regions', async () => {
+    const overview = await getScanOverview('scan-single-1')
+    const issues = await getScanIssues('scan-single-1')
     expect(overview?.visualLayers?.saliencyHeatmapUrl).toBeTruthy()
     expect(overview?.visualLayers?.regions?.length).toBeGreaterThan(0)
     render(

@@ -5,9 +5,9 @@ import { listProjects } from '../../lib/fixtures/project-store'
 import { listDomainScans } from '../../lib/fixtures/scan-store'
 import { paths } from '../../lib/paths'
 
-export default function DomainIndexPage() {
-  const projects = Object.fromEntries(listProjects().map((p) => [p.id, p.name]))
-  const domains = listDomainScans()
+export default async function DomainIndexPage() {
+  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
+  const domains = await listDomainScans()
 
   return (
     <AppShell

@@ -8,20 +8,20 @@ import {
 } from '../lib/fixtures/scan-store'
 
 describe('fixture stores', () => {
-  it('lists projects with collection binding', () => {
-    const items = listProjects()
+  it('lists projects with collection binding', async () => {
+    const items = await listProjects()
     expect(items.length).toBeGreaterThan(0)
-    expect(getProjectByPlatformId('plx-collection-demo-1')?.id).toBe('proj-demo-1')
+    expect((((await getProjectByPlatformId('plx-collection-demo-1')))?.id)).toBe('proj-demo-1')
   })
 
-  it('builds light scan overview', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('builds light scan overview', async () => {
+    const overview = await getScanOverview('scan-single-1')
     expect(overview?.scores.length).toBeGreaterThan(0)
-    expect(getScanIssues('scan-single-1').length).toBeGreaterThan(0)
+    expect((await getScanIssues('scan-single-1')).length).toBeGreaterThan(0)
   })
 
-  it('builds domain corpus overview', () => {
-    const overview = getDomainOverview('domain-1')
+  it('builds domain corpus overview', async () => {
+    const overview = await getDomainOverview('domain-1')
     expect(overview?.scan.rootUrl).toMatch(/durr\.com/)
     expect(overview?.scan.pageCount).toBeGreaterThan(1000)
     expect(overview?.scan.overallScore).toBe(43)
@@ -32,11 +32,11 @@ describe('fixture stores', () => {
     expect(overview?.performance?.avgLcp).toBeGreaterThan(0)
     expect(overview?.generative?.score).toBe(51)
     expect(overview?.classification?.tags.length).toBeGreaterThan(0)
-    expect(getScanIssues('domain-1').length).toBeGreaterThan(10)
+    expect((await getScanIssues('domain-1')).length).toBeGreaterThan(10)
   })
 
-  it('synthesizes a completed dummy scan on launch', () => {
-    const created = createScan({
+  it('synthesizes a completed dummy scan on launch', async () => {
+    const created = await createScan({
       projectId: 'proj-demo-1',
       mode: 'single',
       url: 'https://example.com',
@@ -44,7 +44,7 @@ describe('fixture stores', () => {
     expect(created.status).toBe('completed')
     expect(created.id).toMatch(/^scan-single-/)
     expect(created.overallScore).not.toBeNull()
-    expect(getScanIssues(created.id).length).toBeGreaterThan(0)
-    expect(getScanOverview(created.id)?.scores.length).toBeGreaterThan(0)
+    expect((await getScanIssues(created.id)).length).toBeGreaterThan(0)
+    expect(((await getScanOverview(created.id))?.scores.length)).toBeGreaterThan(0)
   })
 })

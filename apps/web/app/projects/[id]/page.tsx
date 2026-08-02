@@ -10,10 +10,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const project = getProject(id)
+  const project = await getProject(id)
   if (!project) notFound()
-  const recentScans = listScans(id)
-  const domains = listDomainScans(id)
+  const recentScans = await listScans(id)
+  const domains = await listDomainScans(id)
 
   return (
     <AppShell title={project.name} description={project.domain}>

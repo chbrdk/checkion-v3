@@ -6,6 +6,7 @@
     "dev": "next dev --webpack --port 3007",
     "build": "next build --webpack",
     "start": "next start",
+    "db:push": "drizzle-kit push",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -13,18 +14,28 @@
     "@checkion-v3/contracts": "file:../../packages/contracts",
     "@msqdx/ui": "file:../../../msqdx-ui/packages/ui",
     "@msqdx/ui-tokens": "file:../../../msqdx-ui/packages/ui-tokens",
+    "axe-core": "^4.12.1",
+    "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.27.0",
     "next": "16.1.6",
+    "next-auth": "^5.0.0-beta.32",
+    "pa11y": "^9.1.1",
+    "pg": "^8.22.0",
+    "puppeteer": "^24.43.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-driftkit": "^0.7.3"
+    "react-driftkit": "^0.7.3",
+    "uuid": "^13.0.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "22.10.2",
+    "@types/pg": "^8.20.0",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.2",
+    "@types/uuid": "^10.0.0",
+    "drizzle-kit": "^0.31.10",
     "jsdom": "^29.1.1",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

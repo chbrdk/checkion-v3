@@ -16,7 +16,7 @@ function hostFromUrl(url: string): string {
 }
 
 /** Domain-corpus magazine chrome — cover is host + page count, not a page screenshot. */
-export function DomainMagazineShell({
+export async function DomainMagazineShell({
   overview,
   actions,
   children,
@@ -29,7 +29,7 @@ export function DomainMagazineShell({
   variant?: 'cover' | 'folio'
   activeSection?: 'overview' | 'issues' | 'detail'
 }) {
-  const project = getProject(overview.scan.projectId)
+  const project = await getProject(overview.scan.projectId)
   const { scan } = overview
   const host = hostFromUrl(scan.rootUrl)
   const deck = overview.classification?.shortSummary ?? overview.lede

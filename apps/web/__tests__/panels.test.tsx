@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ProjectListPanel, ProjectWorkspace } from '../components/project-panels'
@@ -11,6 +12,10 @@ import { getDomainOverview, getScanIssues, getScanOverview } from '../lib/fixtur
 import type { ProjectSummary } from '@checkion-v3/contracts'
 import { scoreTone, worstScore } from '../lib/scan-display'
 
+vi.mock('../lib/fixtures/project-store', () => ({
+  getProject: async () => ({ id: 'proj-demo-1', name: 'Demo Project' }),
+}))
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -21,7 +26,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 describe('panels smoke', () => {
-  it('renders project list', () => {
+  it('renders project list', async () => {
     const projects: ProjectSummary[] = [
       {
         id: 'p1',
@@ -40,7 +45,7 @@ describe('panels smoke', () => {
     expect(screen.getByRole('button', { name: /New project/i })).toBeTruthy()
   })
 
-  it('renders project workspace cover and tables', () => {
+  it('renders project workspace cover and tables', async () => {
     render(
       <ProjectWorkspace
         project={{
@@ -93,14 +98,10 @@ describe('panels smoke', () => {
     expect(screen.getByRole('table', { name: /Domain crawls/i })).toBeTruthy()
   })
 
-  it('renders domain corpus magazine (distinct from single)', () => {
-    const overview = getDomainOverview('domain-1')
+  it('renders domain corpus magazine (distinct from single)', async () => {
+    const overview = await getDomainOverview('domain-1')
     expect(overview).toBeTruthy()
-    render(
-      <DomainMagazineShell overview={overview!}>
-        <DomainOverviewPanel overview={overview!} />
-      </DomainMagazineShell>,
-    )
+    render(await DomainMagazineShell({ overview: overview!, children: (<><DomainOverviewPanel overview={overview!} /></>) }))
     expect(screen.getByText('durr.com')).toBeTruthy()
     expect(screen.getByText(/pages scanned/i)).toBeTruthy()
     expect(screen.getByLabelText(/Domain score 43/i)).toBeTruthy()
@@ -124,8 +125,8 @@ describe('panels smoke', () => {
   })
 
   it('renders domain issues without capture canvas', async () => {
-    const overview = getDomainOverview('domain-1')
-    const issues = getScanIssues('domain-1')
+    const overview = await getDomainOverview('domain-1')
+    const issues = await getScanIssues('domain-1')
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -154,11 +155,7 @@ describe('panels smoke', () => {
         }),
       ),
     )
-    render(
-      <DomainMagazineShell overview={overview!} variant="folio" activeSection="issues">
-        <DomainIssuesPanel domainId="domain-1" issues={issues} />
-      </DomainMagazineShell>,
-    )
+    render(await DomainMagazineShell({ overview: overview!, variant: "folio", activeSection: "issues", children: (<><DomainIssuesPanel domainId="domain-1" issues={issues} /></>) }))
     expect(screen.getByRole('heading', { name: /Systemic issue groups/i })).toBeTruthy()
     expect(screen.queryByText(/pages affected/i)).toBeNull()
     expect(screen.getByText(/Showing 1–/i)).toBeTruthy()
@@ -189,20 +186,16 @@ describe('panels smoke', () => {
     vi.unstubAllGlobals()
   })
 
-  it('paginates domain issue groups beyond page size', () => {
-    const overview = getDomainOverview('domain-1')
-    const base = getScanIssues('domain-1')
+  it('paginates domain issue groups beyond page size', async () => {
+    const overview = await getDomainOverview('domain-1')
+    const base = await getScanIssues('domain-1')
     const many = Array.from({ length: 30 }, (_, i) => ({
       ...base[i % base.length]!,
       id: `paged-iss-${i}`,
       title: `Paged issue ${i + 1}`,
       affectedCount: 1000 - i,
     }))
-    render(
-      <DomainMagazineShell overview={overview!} variant="folio" activeSection="issues">
-        <DomainIssuesPanel domainId="domain-1" issues={many} />
-      </DomainMagazineShell>,
-    )
+    render(await DomainMagazineShell({ overview: overview!, variant: "folio", activeSection: "issues", children: (<><DomainIssuesPanel domainId="domain-1" issues={many} /></>) }))
     expect(screen.getByText(/Showing 1–25 of 30/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /^Next$/i })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: /^Next$/i }))
@@ -210,13 +203,9 @@ describe('panels smoke', () => {
     expect(screen.getByText(/Paged issue 26/i)).toBeTruthy()
   })
 
-  it('renders domain detail corpus ledger', () => {
-    const overview = getDomainOverview('domain-1')
-    render(
-      <DomainMagazineShell overview={overview!} variant="folio" activeSection="detail">
-        <DomainDetailPanel overview={overview!} />
-      </DomainMagazineShell>,
-    )
+  it('renders domain detail corpus ledger', async () => {
+    const overview = await getDomainOverview('domain-1')
+    render(await DomainMagazineShell({ overview: overview!, variant: "folio", activeSection: "detail", children: (<><DomainDetailPanel overview={overview!} /></>) }))
     expect(screen.getByRole('heading', { name: /Corpus ledger/i })).toBeTruthy()
     expect(screen.getByLabelText(/Search report/i)).toBeTruthy()
     expect(screen.getByLabelText(/Score ledger/i)).toBeTruthy()
@@ -227,14 +216,10 @@ describe('panels smoke', () => {
     expect(screen.queryByAltText(/Scan capture/i)).toBeNull()
   })
 
-  it('renders single-scan magazine overview', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('renders single-scan magazine overview', async () => {
+    const overview = await getScanOverview('scan-single-1')
     expect(overview).toBeTruthy()
-    render(
-      <ResultMagazineShell overview={overview!}>
-        <ResultOverviewPanel overview={overview!} />
-      </ResultMagazineShell>,
-    )
+    render(await ResultMagazineShell({ overview: overview!, children: (<><ResultOverviewPanel overview={overview!} /></>) }))
     expect(screen.getByText('durr-consulting.com')).toBeTruthy()
     expect(screen.getByText(/DÜRR Consulting offers specialized expertise/i)).toBeTruthy()
     expect(
@@ -256,14 +241,10 @@ describe('panels smoke', () => {
     expect(overview!.passedChecks?.length).toBeGreaterThan(0)
   })
 
-  it('renders Detail chapter report from light snapshots', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('renders Detail chapter report from light snapshots', async () => {
+    const overview = await getScanOverview('scan-single-1')
     expect(overview).toBeTruthy()
-    render(
-      <ResultMagazineShell overview={overview!} variant="folio" activeSection="detail">
-        <ResultDetailPanel overview={overview!} />
-      </ResultMagazineShell>,
-    )
+    render(await ResultMagazineShell({ overview: overview!, variant: "folio", activeSection: "detail", children: (<><ResultDetailPanel overview={overview!} /></>) }))
     expect(screen.getByRole('tab', { name: /Detail/i })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { name: /Full report/i })).toBeTruthy()
     expect(screen.getByLabelText(/Search report/i)).toBeTruthy()
@@ -294,13 +275,9 @@ describe('panels smoke', () => {
     expect(document.querySelectorAll('.checkion-report__table tbody tr[data-tone]').length).toBeGreaterThan(5)
   })
 
-  it('filters Detail report with smart search', () => {
-    const overview = getScanOverview('scan-single-1')
-    render(
-      <ResultMagazineShell overview={overview!} variant="folio" activeSection="detail">
-        <ResultDetailPanel overview={overview!} />
-      </ResultMagazineShell>,
-    )
+  it('filters Detail report with smart search', async () => {
+    const overview = await getScanOverview('scan-single-1')
+    render(await ResultMagazineShell({ overview: overview!, variant: "folio", activeSection: "detail", children: (<><ResultDetailPanel overview={overview!} /></>) }))
     const search = screen.getByLabelText(/Search report/i)
     fireEvent.change(search, { target: { value: 'LCP' } })
     expect(screen.getByRole('heading', { name: /^Performance$/i })).toBeTruthy()
@@ -314,11 +291,11 @@ describe('panels smoke', () => {
 })
 
 describe('scan display helpers', () => {
-  it('maps score tones and weakest category', () => {
+  it('maps score tones and weakest category', async () => {
     expect(scoreTone(90)).toBe('pos')
     expect(scoreTone(70)).toBe('low')
     expect(scoreTone(40)).toBe('neg')
-    const overview = getScanOverview('scan-single-1')
+    const overview = await getScanOverview('scan-single-1')
     const worst = worstScore(overview!.scores)
     expect(worst?.kind).toBe('accessibility')
   })

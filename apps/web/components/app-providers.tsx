@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { SessionProvider } from 'next-auth/react'
 import { paths } from '../lib/paths'
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -15,9 +16,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     setReady(true)
   }, [])
 
-  if (!ready) {
-    return <>{children}</>
-  }
-
-  return <>{children}</>
+  return (
+    <SessionProvider>
+      {ready ? children : children}
+    </SessionProvider>
+  )
 }

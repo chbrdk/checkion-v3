@@ -5,9 +5,9 @@ import { listGeoJobs } from '../lib/fixtures/geo-store'
 import { listProjects } from '../lib/fixtures/project-store'
 import { paths } from '../lib/paths'
 
-export function GeoIndexPage() {
-  const jobs = listGeoJobs()
-  const projects = Object.fromEntries(listProjects().map((p) => [p.id, p.name]))
+export async function GeoIndexPage() {
+  const jobs = await listGeoJobs()
+  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
 
   return (
     <AppShell

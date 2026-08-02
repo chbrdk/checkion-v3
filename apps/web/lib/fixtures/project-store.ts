@@ -7,6 +7,7 @@ import type {
 import { UNASSIGNED_PROJECT_ID } from '@checkion-v3/contracts'
 import { PROJECT_FIXTURES, toProjectSummary } from './projects'
 import { reassignProjectResources } from './scan-store'
+import { isDatabaseConfigured } from '../db/config'
 
 const UNASSIGNED_PROJECT: ProjectDetail = {
   id: UNASSIGNED_PROJECT_ID,
@@ -25,6 +26,10 @@ let projects: ProjectDetail[] = [
   ...PROJECT_FIXTURES.map((p) => ({ ...p, recentScanIds: [...p.recentScanIds] })),
   { ...UNASSIGNED_PROJECT },
 ]
+
+async function dbApi() {
+  return import('../db/projects')
+}
 
 export function normalizeProjectDomain(input: string): string {
   const trimmed = input.trim()
@@ -47,22 +52,21 @@ function slugify(name: string): string {
   )
 }
 
-/** Visible capability projects (excludes the system unassigned bucket). */
-export function listProjects(): ProjectSummary[] {
+function memoryListProjects(): ProjectSummary[] {
   return projects.filter((p) => p.id !== UNASSIGNED_PROJECT_ID).map(toProjectSummary)
 }
 
-export function getProject(id: string): ProjectDetail | null {
+function memoryGetProject(id: string): ProjectDetail | null {
   const found = projects.find((p) => p.id === id)
   return found ? { ...found, recentScanIds: [...found.recentScanIds] } : null
 }
 
-export function getProjectByPlatformId(platformProjectId: string): ProjectDetail | null {
+function memoryGetProjectByPlatformId(platformProjectId: string): ProjectDetail | null {
   const found = projects.find((p) => p.platformProjectId === platformProjectId)
   return found ? { ...found, recentScanIds: [...found.recentScanIds] } : null
 }
 
-export function createProject(input: CreateProjectInput): ProjectDetail {
+function memoryCreateProject(input: CreateProjectInput): ProjectDetail {
   const name = input.name.trim()
   const domain = normalizeProjectDomain(input.domain)
   if (!name) throw new Error('name_required')
@@ -92,8 +96,7 @@ export function createProject(input: CreateProjectInput): ProjectDetail {
   return { ...project, recentScanIds: [] }
 }
 
-/** Upsert from Plexon provisioning PUT (platform project → CHECKION mirror). */
-export function upsertByPlatformProjectId(
+function memoryUpsertByPlatformProjectId(
   platformProjectId: string,
   input: {
     name: string
@@ -137,8 +140,7 @@ export function upsertByPlatformProjectId(
   return { ...project, recentScanIds: [] }
 }
 
-/** Bind a local project to a Plexon collection after outbound origin. */
-export function applyPlatformBinding(
+function memoryApplyPlatformBinding(
   projectId: string,
   binding: { platformProjectId: string; capabilityStatus?: ProjectDetail['capabilityStatus'] },
 ): ProjectDetail | null {
@@ -165,7 +167,7 @@ export function applyPlatformBinding(
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
-export function setProjectCapabilityStatus(
+function memorySetProjectCapabilityStatus(
   projectId: string,
   capabilityStatus: ProjectDetail['capabilityStatus'],
 ): ProjectDetail | null {
@@ -176,7 +178,7 @@ export function setProjectCapabilityStatus(
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
-export function updateProject(id: string, patch: UpdateProjectInput): ProjectDetail | null {
+function memoryUpdateProject(id: string, patch: UpdateProjectInput): ProjectDetail | null {
   if (id === UNASSIGNED_PROJECT_ID) return null
   const idx = projects.findIndex((p) => p.id === id)
   if (idx < 0) return null
@@ -197,13 +199,13 @@ export function updateProject(id: string, patch: UpdateProjectInput): ProjectDet
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
-export function deleteProject(id: string): boolean {
+async function memoryDeleteProject(id: string): Promise<boolean> {
   if (id === UNASSIGNED_PROJECT_ID) return false
   const before = projects.length
   const existed = projects.some((p) => p.id === id)
   if (!existed) return false
 
-  const moved = reassignProjectResources(id, UNASSIGNED_PROJECT_ID)
+  const moved = await reassignProjectResources(id, UNASSIGNED_PROJECT_ID)
   projects = projects
     .filter((p) => p.id !== id)
     .map((p) => {
@@ -219,7 +221,79 @@ export function deleteProject(id: string): boolean {
   return projects.length < before
 }
 
-/** Test helper — restore demo fixtures. */
+/** Visible capability projects (excludes the system unassigned bucket). */
+export async function listProjects(): Promise<ProjectSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListProjects()
+  return memoryListProjects()
+}
+
+export async function getProject(id: string): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetProject(id)
+  return memoryGetProject(id)
+}
+
+export async function getProjectByPlatformId(
+  platformProjectId: string,
+): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetProjectByPlatformId(platformProjectId)
+  return memoryGetProjectByPlatformId(platformProjectId)
+}
+
+export async function createProject(input: CreateProjectInput): Promise<ProjectDetail> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbCreateProject(input)
+  return memoryCreateProject(input)
+}
+
+/** Upsert from Plexon provisioning PUT (platform project → CHECKION mirror). */
+export async function upsertByPlatformProjectId(
+  platformProjectId: string,
+  input: {
+    name: string
+    domain?: string | null
+    status?: 'active' | 'archived'
+    ownerPlexonUserId?: string
+    platformCompanyId?: string
+  },
+): Promise<ProjectDetail> {
+  if (isDatabaseConfigured()) {
+    return (await dbApi()).dbUpsertByPlatformProjectId(platformProjectId, input)
+  }
+  return memoryUpsertByPlatformProjectId(platformProjectId, input)
+}
+
+/** Bind a local project to a Plexon collection after outbound origin. */
+export async function applyPlatformBinding(
+  projectId: string,
+  binding: { platformProjectId: string; capabilityStatus?: ProjectDetail['capabilityStatus'] },
+): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbApplyPlatformBinding(projectId, binding)
+  return memoryApplyPlatformBinding(projectId, binding)
+}
+
+export async function setProjectCapabilityStatus(
+  projectId: string,
+  capabilityStatus: ProjectDetail['capabilityStatus'],
+): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) {
+    return (await dbApi()).dbSetProjectCapabilityStatus(projectId, capabilityStatus)
+  }
+  return memorySetProjectCapabilityStatus(projectId, capabilityStatus)
+}
+
+export async function updateProject(
+  id: string,
+  patch: UpdateProjectInput,
+): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbUpdateProject(id, patch)
+  return memoryUpdateProject(id, patch)
+}
+
+export async function deleteProject(id: string): Promise<boolean> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbDeleteProject(id)
+  return memoryDeleteProject(id)
+}
+
+/** Test helper — restore demo fixtures (memory only). */
 export function resetProjectStore(): void {
   projects = [
     ...PROJECT_FIXTURES.map((p) => ({ ...p, recentScanIds: [...p.recentScanIds] })),

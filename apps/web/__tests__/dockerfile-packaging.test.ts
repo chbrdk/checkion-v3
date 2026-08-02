@@ -17,7 +17,11 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('msqdx-ui')
     expect(df).toContain('EXPOSE 3007')
     expect(df).toContain('git clone')
-    expect(df).toMatch(/"npm",\s*"run",\s*"start",\s*"-w",\s*"web"/)
+    expect(df).toContain('docker-entrypoint.sh')
+    expect(df).toContain('apps/web/drizzle.config.ts')
+    expect(df).toContain('libnss3')
+    expect(df).toContain('PUPPETEER_SKIP_DOWNLOAD')
+    expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
   })
 
   it('keeps health path for Traefik probes', () => {

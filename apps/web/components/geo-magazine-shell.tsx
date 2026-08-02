@@ -16,7 +16,7 @@ function hostFromUrl(url: string): string {
 }
 
 /** Cover chrome stays magazine-local; body panels use DS. */
-export function GeoMagazineShell({
+export async function GeoMagazineShell({
   overview,
   actions,
   children,
@@ -30,7 +30,7 @@ export function GeoMagazineShell({
   activeSection?: GeoSectionId
 }) {
   const { job } = overview
-  const project = getProject(job.projectId)
+  const project = await getProject(job.projectId)
   const host = overview.targetHost || hostFromUrl(job.url)
   const tone = scoreTone(job.overallScore)
 

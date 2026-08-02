@@ -1,5 +1,6 @@
 import type { ApiTokenStub } from '@checkion-v3/contracts'
 import { paths } from '../paths'
+import { isDatabaseConfigured } from '../db/config'
 
 let tokens: ApiTokenStub[] = [
   {
@@ -11,6 +12,11 @@ let tokens: ApiTokenStub[] = [
   },
 ]
 
-export function listApiTokens(): ApiTokenStub[] {
+async function dbApi() {
+  return import('../db/api-tokens')
+}
+
+export async function listApiTokens(): Promise<ApiTokenStub[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListApiTokens()
   return [...tokens]
 }

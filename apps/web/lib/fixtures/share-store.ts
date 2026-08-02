@@ -1,4 +1,5 @@
 import type { ShareLink } from '@checkion-v3/contracts'
+import { isDatabaseConfigured } from '../db/config'
 
 let shares: ShareLink[] = [
   {
@@ -21,11 +22,15 @@ let shares: ShareLink[] = [
   },
 ]
 
+async function dbApi() {
+  return import('../db/share-links')
+}
+
 function newToken(): string {
   return `sh_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`
 }
 
-export function findShare(
+function memoryFindShare(
   resourceType: ShareLink['resourceType'],
   resourceId: string,
 ): ShareLink | null {
@@ -35,19 +40,30 @@ export function findShare(
   )
 }
 
-export function getShare(token: string): ShareLink | null {
+export async function findShare(
+  resourceType: ShareLink['resourceType'],
+  resourceId: string,
+): Promise<ShareLink | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbFindShare(resourceType, resourceId)
+  return memoryFindShare(resourceType, resourceId)
+}
+
+export async function getShare(token: string): Promise<ShareLink | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbGetShare(token)
   return shares.find((s) => s.token === token) ?? null
 }
 
-export function listShares(): ShareLink[] {
+export async function listShares(): Promise<ShareLink[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListShares()
   return [...shares]
 }
 
-export function createShare(
+export async function createShare(
   resourceType: ShareLink['resourceType'],
   resourceId: string,
-): ShareLink {
-  const existing = findShare(resourceType, resourceId)
+): Promise<ShareLink> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbCreateShare(resourceType, resourceId)
+  const existing = memoryFindShare(resourceType, resourceId)
   if (existing) return existing
   const created: ShareLink = {
     token: newToken(),
@@ -59,7 +75,8 @@ export function createShare(
   return created
 }
 
-export function deleteShare(token: string): boolean {
+export async function deleteShare(token: string): Promise<boolean> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbDeleteShare(token)
   const before = shares.length
   shares = shares.filter((s) => s.token !== token)
   return shares.length < before

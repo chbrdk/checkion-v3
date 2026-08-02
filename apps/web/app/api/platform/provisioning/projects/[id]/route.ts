@@ -33,13 +33,13 @@ export async function GET(
     return jsonWithContract({ error: 'platform project id required' }, { status: 400 })
   }
 
-  const project = getProjectByPlatformId(platformProjectId)
+  const project = await getProjectByPlatformId(platformProjectId)
   if (!project) {
     return jsonWithContract({ error: 'Not found' }, { status: 404 })
   }
 
-  const scans = listScans(project.id)
-  const domains = listDomainScans(project.id)
+  const scans = await listScans(project.id)
+  const domains = await listDomainScans(project.id)
   const standalone = scans.filter((s) => s.mode === 'single').slice(0, CATALOG_LIMIT)
   const domainCatalog = domains.slice(0, CATALOG_LIMIT)
 
@@ -107,10 +107,12 @@ export async function PUT(
     )
   }
 
-  const project = upsertByPlatformProjectId(platformProjectId, {
+  const project = await upsertByPlatformProjectId(platformProjectId, {
     name: body.name,
     domain: body.domain,
     status: body.status,
+    ownerPlexonUserId: body.ownerUserId,
+    platformCompanyId: body.platformCompanyId,
   })
 
   return jsonWithContract({

@@ -6,5 +6,5 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  return NextResponse.json({ items: getScanIssues(id) })
+  return NextResponse.json({ items: await getScanIssues(id) })
 }

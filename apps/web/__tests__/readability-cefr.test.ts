@@ -22,7 +22,7 @@ const baseUx = (over: Partial<UxSnapshot>): UxSnapshot => ({
 })
 
 describe('readability CEFR mapping', () => {
-  it('maps Flesch grade levels to CEFR bands', () => {
+  it('maps Flesch grade levels to CEFR bands', async () => {
     expect(fleschGradeLevelToCefr(3)).toBe('A1')
     expect(fleschGradeLevelToCefr(6)).toBe('A2')
     expect(fleschGradeLevelToCefr(8)).toBe('B1')
@@ -31,12 +31,12 @@ describe('readability CEFR mapping', () => {
     expect(fleschGradeLevelToCefr(20)).toBe('C2')
   })
 
-  it('derives clarity 0–100 from Flesch grade level', () => {
+  it('derives clarity 0–100 from Flesch grade level', async () => {
     expect(fleschGradeLevelToClarity(6)).toBeGreaterThanOrEqual(70)
     expect(fleschGradeLevelToClarity(20)).toBeLessThan(40)
   })
 
-  it('normalizes CHECKION flesch labels + grade-level score', () => {
+  it('normalizes CHECKION flesch labels + grade-level score', async () => {
     const out = normalizeUxReadability(
       baseUx({
         readabilityGrade: 'Very Complex (Academic)',
@@ -47,13 +47,13 @@ describe('readability CEFR mapping', () => {
     expect(out.readabilityScore).toBe(fleschGradeLevelToClarity(20))
   })
 
-  it('leaves already-CEFR magazine fixtures alone', () => {
+  it('leaves already-CEFR magazine fixtures alone', async () => {
     const input = baseUx({ readabilityGrade: 'B1', readabilityScore: 72 })
     expect(normalizeUxReadability(input)).toEqual(input)
   })
 
-  it('exposes CEFR on live scan-single-1 overview', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('exposes CEFR on live scan-single-1 overview', async () => {
+    const overview = await getScanOverview('scan-single-1')
     expect(overview?.ux?.readabilityGrade).toBe('C2')
     expect(overview?.ux?.readabilityScore).toBeGreaterThan(0)
     expect(overview?.ux?.readabilityScore).toBeLessThanOrEqual(100)

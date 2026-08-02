@@ -53,7 +53,7 @@ describe('platform provisioning projects', () => {
     expect(body.platformProjectId).toBe('pp-live-1')
     expect(typeof body.externalProjectId).toBe('string')
 
-    const project = getProjectByPlatformId('pp-live-1')
+    const project = await getProjectByPlatformId('pp-live-1')
     expect(project?.name).toBe('Live Collection')
     expect(project?.domain).toBe('live.example')
     expect(project?.capabilityStatus).toBe('in_sync')

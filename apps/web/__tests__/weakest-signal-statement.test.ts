@@ -6,8 +6,8 @@ import {
 } from '../lib/weakest-signal-statement'
 
 describe('weakest signal statement', () => {
-  it('builds accessibility-aware fallback for live scan-single-1', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('builds accessibility-aware fallback for live scan-single-1', async () => {
+    const overview = await getScanOverview('scan-single-1')
     expect(overview).toBeTruthy()
     const line = buildWeakestSignalFallback(overview!)
     expect(line.toLowerCase()).toMatch(/accessib|contrast|wcag|a11y|finding/)
@@ -15,8 +15,8 @@ describe('weakest signal statement', () => {
     expect(line).not.toMatch(/\n/)
   })
 
-  it('packs opening-spread context for the LLM prompt', () => {
-    const overview = getScanOverview('scan-single-1')
+  it('packs opening-spread context for the LLM prompt', async () => {
+    const overview = await getScanOverview('scan-single-1')
     const ctx = buildWeakestSignalContext(overview!)
     expect(ctx.weakest).toMatchObject({ kind: 'accessibility', value: 0 })
     expect(ctx.generative).toMatchObject({ hasLlmsTxt: false, hasFaqSchema: false })

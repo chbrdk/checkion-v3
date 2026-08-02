@@ -7,12 +7,12 @@ export async function GET(
   context: { params: Promise<{ token: string }> },
 ) {
   const { token } = await context.params
-  const share = getShare(token)
+  const share = await getShare(token)
   if (!share) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   const overview =
     share.resourceType === 'single'
-      ? getScanOverview(share.resourceId)
-      : getDomainOverview(share.resourceId)
+      ? await getScanOverview(share.resourceId)
+      : await getDomainOverview(share.resourceId)
   if (!overview) return NextResponse.json({ error: 'resource_missing' }, { status: 404 })
   return NextResponse.json({ share, overview })
 }
@@ -22,7 +22,7 @@ export async function DELETE(
   context: { params: Promise<{ token: string }> },
 ) {
   const { token } = await context.params
-  const ok = deleteShare(token)
+  const ok = await deleteShare(token)
   if (!ok) return NextResponse.json({ error: 'not_found' }, { status: 404 })
   return NextResponse.json({ ok: true })
 }

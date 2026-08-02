@@ -41,15 +41,15 @@ function buildCorpus(
 }
 
 /** Reconstruct page URL for a virtual domain→single page scan id. */
-export function resolveDomainPageScanUrl(scanId: string): string | null {
+export async function resolveDomainPageScanUrl(scanId: string): Promise<string | null> {
   const parsed = parseDomainPageScanId(scanId)
   if (!parsed) return null
 
-  const issues = getScanIssues(parsed.domainId)
+  const issues = await getScanIssues(parsed.domainId)
   const issue: IssueSummary | undefined = issues.find((i) => i.id === parsed.issueId)
   if (!issue) return null
 
-  const overview = getDomainOverview(parsed.domainId)
+  const overview = await getDomainOverview(parsed.domainId)
   const rootUrl = overview?.scan.rootUrl ?? 'https://example.com'
   const seeds =
     issue.affectedPages?.length
@@ -59,7 +59,7 @@ export function resolveDomainPageScanUrl(scanId: string): string | null {
   return synthesizeAffectedPageUrl(rootUrl, parsed.issueId, parsed.pageIndex, seeds)
 }
 
-export function listIssueAffectedPages(
+export async function listIssueAffectedPages(
   domainId: string,
   issueId: string,
   opts: {
@@ -69,7 +69,7 @@ export function listIssueAffectedPages(
     minIssues?: number
     maxIssues?: number | null
   } = {},
-): IssueAffectedPagesResult | null {
+): Promise<IssueAffectedPagesResult | null> {
   const pageSize = Math.min(100, Math.max(1, opts.pageSize ?? 25))
   const page = Math.max(1, opts.page ?? 1)
   const sort: AffectedPagesSort = opts.sort === 'issues-asc' ? 'issues-asc' : 'issues-desc'
@@ -79,11 +79,11 @@ export function listIssueAffectedPages(
       ? null
       : Math.max(0, opts.maxIssues)
 
-  const issues = getScanIssues(domainId)
+  const issues = await getScanIssues(domainId)
   const issue: IssueSummary | undefined = issues.find((i) => i.id === issueId)
   if (!issue) return null
 
-  const overview = getDomainOverview(domainId)
+  const overview = await getDomainOverview(domainId)
   const rootUrl = overview?.scan.rootUrl ?? 'https://example.com'
   const seeds =
     issue.affectedPages?.length

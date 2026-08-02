@@ -19,7 +19,7 @@ export default async function DomainSectionPage({
   params: Promise<{ id: string; section: string }>
 }) {
   const { id, section: rawSection } = await params
-  const overview = getDomainOverview(id)
+  const overview = await getDomainOverview(id)
   if (!overview) notFound()
 
   if (rawSection === 'scores') {
@@ -31,7 +31,7 @@ export default async function DomainSectionPage({
   }
   const section = rawSection
 
-  const issues = getScanIssues(id)
+  const issues = await getScanIssues(id)
   const actions = (
     <ResultActions
       resourceId={id}

@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { getGeoOverview, listGeoJobs } from '../lib/fixtures/geo-store'
 
 describe('geo fixtures', () => {
-  it('lists completed GEO jobs', () => {
-    const jobs = listGeoJobs()
+  it('lists completed GEO jobs', async () => {
+    const jobs = await listGeoJobs()
     expect(jobs.length).toBeGreaterThanOrEqual(2)
     expect(jobs.every((j) => j.status === 'completed')).toBe(true)
   })
 
-  it('loads Dürr overview with placement matrix and query runs', () => {
-    const overview = getGeoOverview('geo-1')
+  it('loads Dürr overview with placement matrix and query runs', async () => {
+    const overview = await getGeoOverview('geo-1')
     expect(overview).not.toBeNull()
     expect(overview!.targetHost).toBe('durr.com')
     expect(overview!.positionMatrix.length).toBe(4)
@@ -29,8 +29,8 @@ describe('geo fixtures', () => {
     expect(overview!.insights.intents).toHaveLength(overview!.queries.length)
   })
 
-  it('loads solo fixture without field SoV', () => {
-    const overview = getGeoOverview('geo-3')
+  it('loads solo fixture without field SoV', async () => {
+    const overview = await getGeoOverview('geo-3')
     expect(overview).not.toBeNull()
     expect(overview!.presence.rivalSource).toBe('none')
     expect(overview!.presence.field).toBeNull()

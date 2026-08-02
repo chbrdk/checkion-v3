@@ -19,7 +19,7 @@ export default async function GeoSectionPage({
 }) {
   const { id, section: rawSection } = await params
   const { q, model } = await searchParams
-  const overview = getGeoOverview(id)
+  const overview = await getGeoOverview(id)
   if (!overview) notFound()
 
   // Placement nav deferred — keep old links alive via Queries redirect.
