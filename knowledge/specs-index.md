@@ -6,6 +6,7 @@
 | App shell | `specs/domain/app-shell.md` |
 | Project workspace | `specs/domain/project-workspace.md` |
 | Scan modes | `specs/domain/scan-modes.md` |
+| AUDION journey → single scan (spec only) | `specs/domain/audion-journey-scan-trigger.md` |
 | Scan result workspace | `specs/domain/scan-result-workspace.md` |
 | Single-scan rich overview | `specs/domain/single-scan-rich-overview.md` |
 | Domain scan sections | `specs/domain/domain-scan-sections.md` |

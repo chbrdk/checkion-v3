@@ -23,5 +23,8 @@ Magazine band on `/scan`:
 - `POST /api/domain-scans` starts domain crawls; deep `POST /api/scans` delegates to the same start helper.
 - Fixture synthesize remains for local demos and CI (no Chromium).
 
+## Cross-product (spec only)
+AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / Studies) via `POST /api/scans` or `/scan?projectId&mode=single&url=` — see `audion-journey-scan-trigger.md`. That path must **not** use `deep` / domain crawl.
+
 ## Deferred
-Journey agent live, GEO / E-E-A-T job UI, performance-as-primary tab, reuse-cache polish, competitor cron, normalized `scan_issues` tables.
+Journey agent live, GEO / E-E-A-T job UI, performance-as-primary tab, reuse-cache polish, competitor cron, normalized `scan_issues` tables, AUDION single-scan trigger implementation.

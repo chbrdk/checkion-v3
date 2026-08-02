@@ -46,6 +46,9 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 ## Share
 Public landing: `/share/[token]` · API `/api/share`
 
+## Cross-product deep-link (spec only)
+AUDION → single-page scan: `/scan?projectId=&mode=single&url=` · domain `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`
+
 ## API tokens
 Settings CRUD: `/api/tokens` · verify `/api/tokens/verify` · store `api-tokens-store` / Drizzle `api_tokens` · `knowledge/settings-api-tokens.md` · Bearer machine clients on selected APIs (`POST /api/scans`, `POST /api/geo-jobs`, `POST /api/projects`)
 
