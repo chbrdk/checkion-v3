@@ -57,14 +57,28 @@ export function launchModeFromState(
   return wcagDepth
 }
 
-function resolveCapability(fromAudion: boolean, defaultMode: LaunchMode): LaunchCapability {
+/**
+ * Progressive disclosure: cold `/scan` starts with capability tiles only.
+ * Explicit `defaultMode` (deep-link / AUDION) skips ahead to the full chain.
+ */
+export function initialCapability(
+  fromAudion: boolean,
+  defaultMode?: LaunchMode,
+): LaunchCapability | null {
   if (fromAudion) return 'wcag'
-  return capabilityFromLaunchMode(defaultMode)
+  if (defaultMode) return capabilityFromLaunchMode(defaultMode)
+  return null
 }
 
-function resolveWcagDepth(fromAudion: boolean, defaultMode: LaunchMode): WcagDepth {
+export function initialWcagDepth(
+  fromAudion: boolean,
+  defaultMode?: LaunchMode,
+): WcagDepth | null {
   if (fromAudion) return 'single'
-  return wcagDepthFromLaunchMode(defaultMode)
+  if (defaultMode === 'single' || defaultMode === 'deep') {
+    return wcagDepthFromLaunchMode(defaultMode)
+  }
+  return null
 }
 
 const CAPABILITY_CARDS: Array<{
@@ -115,7 +129,7 @@ const WCAG_DEPTH_CARDS: Array<{
 
 export function ScanLaunchForm({
   projects,
-  defaultMode = 'single',
+  defaultMode,
   defaultProjectId,
   defaultUrl,
   correlation,
@@ -123,6 +137,7 @@ export function ScanLaunchForm({
   projectLabel,
 }: {
   projects: Array<{ id: string; name: string }>
+  /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
   defaultMode?: LaunchMode
   defaultProjectId?: string
   defaultUrl?: string
@@ -137,11 +152,11 @@ export function ScanLaunchForm({
   const router = useRouter()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
 
-  const [capability, setCapability] = useState<LaunchCapability>(() =>
-    resolveCapability(fromAudion, defaultMode),
+  const [capability, setCapability] = useState<LaunchCapability | null>(() =>
+    initialCapability(fromAudion, defaultMode),
   )
-  const [wcagDepth, setWcagDepth] = useState<WcagDepth>(() =>
-    resolveWcagDepth(fromAudion, defaultMode),
+  const [wcagDepth, setWcagDepth] = useState<WcagDepth | null>(() =>
+    initialWcagDepth(fromAudion, defaultMode),
   )
   const [url, setUrl] = useState(initialUrl)
   const [projectId, setProjectId] = useState(
@@ -158,6 +173,13 @@ export function ScanLaunchForm({
     projectLabel || projects.find((p) => p.id === projectId)?.name || projectId
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
+
+  const showDepth = activeCapability === 'wcag' && !fromAudion
+  const showCompose =
+    fromAudion ||
+    activeCapability === 'seo' ||
+    activeCapability === 'geo' ||
+    (activeCapability === 'wcag' && activeWcagDepth !== null)
 
   const modeCopy = useMemo(() => {
     if (fromAudion) {
@@ -183,7 +205,7 @@ export function ScanLaunchForm({
           cta: 'Start GEO job',
           loading: 'Starting GEO job…',
         }
-      default:
+      case 'wcag':
         if (activeWcagDepth === 'deep') {
           return {
             title: 'Deep WCAG crawl',
@@ -197,6 +219,13 @@ export function ScanLaunchForm({
           deck: 'One URL, one magazine result — accessibility first, with SEO and performance signals in the same reading.',
           cta: 'Launch single scan',
           loading: 'Starting single-page scan…',
+        }
+      default:
+        return {
+          title: 'Start a run',
+          deck: 'Choose a capability to continue.',
+          cta: 'Launch',
+          loading: 'Starting…',
         }
     }
   }, [activeCapability, activeWcagDepth, fromAudion])
@@ -298,6 +327,8 @@ export function ScanLaunchForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!showCompose || !activeCapability) return
+    if (activeCapability === 'wcag' && !activeWcagDepth) return
     setStatus('submitting')
     setError(null)
     try {
@@ -306,7 +337,7 @@ export function ScanLaunchForm({
       } else if (activeCapability === 'geo') {
         await launchGeo()
       } else {
-        await launchWcagScan(activeWcagDepth)
+        await launchWcagScan(activeWcagDepth!)
       }
     } catch (err) {
       setStatus('error')
@@ -317,6 +348,11 @@ export function ScanLaunchForm({
   const visibleCards = fromAudion
     ? CAPABILITY_CARDS.filter((c) => c.id === 'wcag')
     : CAPABILITY_CARDS
+
+  const composeKey =
+    activeCapability === 'wcag'
+      ? `compose-wcag-${activeWcagDepth ?? 'pending'}`
+      : `compose-${activeCapability ?? 'none'}`
 
   return (
     <article className="checkion-magazine checkion-magazine--launch">
@@ -366,8 +402,11 @@ export function ScanLaunchForm({
             </div>
           </div>
 
-          {activeCapability === 'wcag' && !fromAudion ? (
-            <div className="checkion-launch-depth">
+          {showDepth ? (
+            <div
+              key={`depth-${activeCapability}`}
+              className="checkion-launch-depth checkion-launch-reveal"
+            >
               <div
                 className="checkion-depth-grid"
                 role="radiogroup"
@@ -412,80 +451,82 @@ export function ScanLaunchForm({
             </Hint>
           ) : null}
 
-          <div className="checkion-launch-compose">
-            <div className="checkion-launch-compose__lead">
-              <div className="checkion-launch-compose__row">
-                <Field
-                  className="checkion-launch-compose__url"
-                  label="URL"
-                  size="md"
-                  hint={
-                    activeCapability === 'geo'
-                      ? 'Target host for citation checks'
-                      : activeCapability === 'seo'
-                        ? 'Host root to crawl for SEO coverage'
-                        : 'Page to evaluate'
-                  }
-                >
-                  <Input
-                    value={url}
-                    onChange={(e) => onUrlChange(e.target.value)}
-                    required
-                    block
-                    aria-label="Scan URL"
-                    placeholder="https://"
-                  />
-                </Field>
-
-                {!fromAudion ? (
+          {showCompose ? (
+            <div key={composeKey} className="checkion-launch-compose checkion-launch-reveal">
+              <div className="checkion-launch-compose__lead">
+                <div className="checkion-launch-compose__row">
                   <Field
-                    className="checkion-launch-compose__project"
-                    label="Project"
+                    className="checkion-launch-compose__url"
+                    label="URL"
                     size="md"
-                    hint="CHECKION Collection capability"
+                    hint={
+                      activeCapability === 'geo'
+                        ? 'Target host for citation checks'
+                        : activeCapability === 'seo'
+                          ? 'Host root to crawl for SEO coverage'
+                          : 'Page to evaluate'
+                    }
                   >
-                    <Select
-                      value={projectId}
-                      onChange={setProjectId}
-                      size="md"
-                      options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                      aria-label="Project"
+                    <Input
+                      value={url}
+                      onChange={(e) => onUrlChange(e.target.value)}
+                      required
+                      block
+                      aria-label="Scan URL"
+                      placeholder="https://"
                     />
                   </Field>
+
+                  {!fromAudion ? (
+                    <Field
+                      className="checkion-launch-compose__project"
+                      label="Project"
+                      size="md"
+                      hint="CHECKION Collection capability"
+                    >
+                      <Select
+                        value={projectId}
+                        onChange={setProjectId}
+                        size="md"
+                        options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                        aria-label="Project"
+                      />
+                    </Field>
+                  ) : null}
+                </div>
+
+                {activeCapability === 'geo' ? (
+                  <div className="checkion-launch-compose__geo">
+                    <GeoQueryList
+                      value={geoQueries}
+                      onChange={setGeoQueries}
+                      url={url}
+                      disabled={status === 'submitting'}
+                    />
+                    <GeoModelPicker
+                      value={geoModels}
+                      onChange={setGeoModels}
+                      disabled={status === 'submitting'}
+                    />
+                  </div>
                 ) : null}
               </div>
 
-              {activeCapability === 'geo' ? (
-                <div className="checkion-launch-compose__geo">
-                  <GeoQueryList
-                    value={geoQueries}
-                    onChange={setGeoQueries}
-                    url={url}
-                    disabled={status === 'submitting'}
-                  />
-                  <GeoModelPicker
-                    value={geoModels}
-                    onChange={setGeoModels}
-                    disabled={status === 'submitting'}
-                  />
+              <div className="checkion-launch-compose__footer">
+                <div className="checkion-scan-form__actions checkion-launch-compose__actions">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={status === 'submitting' || !projectId || !url.trim()}
+                  >
+                    {status === 'submitting' ? modeCopy.loading : modeCopy.cta}
+                  </Button>
                 </div>
-              ) : null}
-            </div>
-
-            <div className="checkion-launch-compose__footer">
-              <div className="checkion-scan-form__actions checkion-launch-compose__actions">
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={status === 'submitting' || !projectId || !url.trim()}
-                >
-                  {status === 'submitting' ? modeCopy.loading : modeCopy.cta}
-                </Button>
               </div>
-            </div>
 
-            {error ? <Alert tone="error">{error}</Alert> : null}
-          </div>
+              {error ? <Alert tone="error">{error}</Alert> : null}
+            </div>
+          ) : null}
         </form>
       </Panel>
 

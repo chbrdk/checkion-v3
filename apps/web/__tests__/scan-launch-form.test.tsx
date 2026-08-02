@@ -5,6 +5,8 @@ import {
   ScanLaunchForm,
   capabilityFromLaunchMode,
   defaultGeoQueries,
+  initialCapability,
+  initialWcagDepth,
   launchModeFromState,
   wcagDepthFromLaunchMode,
 } from '../components/scan-launch-form'
@@ -37,6 +39,19 @@ describe('launch mode mapping', () => {
     expect(launchModeFromState('seo', 'single')).toBe('seo')
     expect(launchModeFromState('wcag', 'deep')).toBe('deep')
   })
+
+  it('cold start leaves capability and depth unset; deep-links skip ahead', () => {
+    expect(initialCapability(false)).toBeNull()
+    expect(initialWcagDepth(false)).toBeNull()
+    expect(initialCapability(false, 'seo')).toBe('seo')
+    expect(initialWcagDepth(false, 'seo')).toBeNull()
+    expect(initialCapability(false, 'single')).toBe('wcag')
+    expect(initialWcagDepth(false, 'single')).toBe('single')
+    expect(initialCapability(false, 'deep')).toBe('wcag')
+    expect(initialWcagDepth(false, 'deep')).toBe('deep')
+    expect(initialCapability(true)).toBe('wcag')
+    expect(initialWcagDepth(true)).toBe('single')
+  })
 })
 
 describe('defaultGeoQueries', () => {
@@ -53,7 +68,7 @@ describe('ScanLaunchForm', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders inviting launch IA with WCAG / GEO / SEO capability tiles', () => {
+  it('cold start shows capability tiles only until selection', () => {
     render(<ScanLaunchForm projects={projects} />)
     expect(screen.getByRole('heading', { name: /Start a run/i })).toBeTruthy()
     expect(screen.getByRole('radiogroup', { name: /Capability/i })).toBeTruthy()
@@ -64,14 +79,31 @@ describe('ScanLaunchForm', () => {
       .getAllByRole('radio', { name: /^(WCAG|GEO|SEO)\./i })
       .map((el) => el.getAttribute('aria-label')?.split('.')[0])
     expect(capabilityLabels).toEqual(['WCAG', 'GEO', 'SEO'])
-    expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /Quick single scan/i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /Deep scan/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('radio', { name: /SEO\./i })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Launch single scan/i })).toBeNull()
+    expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
     expect(screen.getByRole('button', { name: /SEO · domain-1/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /GEO · geo-1/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /WCAG · scan-single-1/i })).toBeTruthy()
+  })
+
+  it('reveals WCAG depth then compose after depth choice', () => {
+    render(<ScanLaunchForm projects={projects} />)
+    fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Quick single scan/i })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+    expect(screen.queryByRole('button', { name: /Launch single scan/i })).toBeNull()
+
+    fireEvent.click(screen.getByRole('radio', { name: /Quick single scan/i }))
+    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
+    expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
   })
 
   it('reveals WCAG depth only when WCAG is selected', () => {
@@ -82,6 +114,49 @@ describe('ScanLaunchForm', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
     expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
+    // Depth not yet chosen this session for SEO→WCAG (no prior WCAG depth)
+    expect(screen.queryByRole('button', { name: /Launch single scan/i })).toBeNull()
+
+    fireEvent.click(screen.getByRole('radio', { name: /Deep scan/i }))
+    expect(screen.getByRole('button', { name: /Launch deep scan/i })).toBeTruthy()
+  })
+
+  it('shows compose immediately when returning to WCAG with depth already chosen', () => {
+    render(<ScanLaunchForm projects={projects} />)
+    fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
+    fireEvent.click(screen.getByRole('radio', { name: /Quick single scan/i }))
+    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('radio', { name: /SEO\./i }))
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Launch SEO crawl/i })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
+    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Quick single scan/i })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
+  })
+
+  it('GEO deep-link skips ahead to full GEO compose', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
+    expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
+  })
+
+  it('WCAG single deep-link skips ahead to depth + compose', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="single" />)
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radiogroup', { name: /WCAG depth/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /Quick single scan/i })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
   it('shows GEO fields when GEO capability is selected', () => {

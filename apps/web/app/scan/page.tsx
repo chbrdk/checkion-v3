@@ -17,9 +17,9 @@ function decodeOptionalUrl(raw: string | undefined): string | undefined {
   }
 }
 
-function parseLaunchMode(raw: string | undefined): LaunchMode {
+function parseLaunchMode(raw: string | undefined): LaunchMode | undefined {
   if (raw === 'seo' || raw === 'deep' || raw === 'geo' || raw === 'single') return raw
-  return 'single'
+  return undefined
 }
 
 export default async function ScanPage({
@@ -51,7 +51,7 @@ export default async function ScanPage({
         params.mode !== 'seo'),
   )
   /** AUDION journey handoff always launches WCAG Quick single (never deep / GEO / SEO). */
-  const defaultMode: LaunchMode = fromAudion ? 'single' : parseLaunchMode(params.mode)
+  const defaultMode: LaunchMode | undefined = fromAudion ? 'single' : parseLaunchMode(params.mode)
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined
@@ -71,7 +71,9 @@ export default async function ScanPage({
         ? 'domain SEO coverage'
         : defaultMode === 'deep'
           ? 'WCAG deep crawl'
-          : 'WCAG single page'
+          : defaultMode === 'single'
+            ? 'WCAG single page'
+            : 'choose a capability'
 
   return (
     <AppShell

@@ -1,7 +1,7 @@
 # Scan modes — CHECKION v3
 
 ## Status
-Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO)
+Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`)
 
 ## MVP modes (deep-link / API)
 | Mode | Primary capability | Result |
@@ -18,17 +18,23 @@ Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on 
 ## Launch UX (central magazine)
 One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 
-1. **Capability picker** (primary) — large inviting tiles: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG; default capability is WCAG → Quick single via `defaultMode=single`). No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
-2. **WCAG depth** (secondary, only when WCAG selected) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only); depth grid uses a bottom hairline only (no top rule), same as capability.
-3. **Compose band** — editorial form unit below the pickers:
+1. **Capability picker** (primary) — large inviting tiles: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG). Cold `/scan` (no `mode=`) starts with **capability tiles only** — none pre-selected; depth and compose stay unmounted until the user chooses. No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
+2. **Progressive disclosure** (smooth `checkion-rise` / `checkion-launch-reveal`; `prefers-reduced-motion` disables animation):
+   - **WCAG** → reveal depth tiles (**Quick single scan** · **Deep scan**); after depth is chosen (or immediately if depth was already chosen this session / via deep-link) → reveal compose.
+   - **GEO** → reveal GEO compose (queries, models, URL, project, CTA); skip WCAG depth.
+   - **SEO** → reveal compose (URL, project, CTA); skip depth.
+   - Changing capability swaps/re-animates the secondary sections accordingly.
+   - Deep-links with `mode=seo|geo|single|deep` (and AUDION handoff) **skip ahead** and show the full relevant chain on first paint — no empty trap for AUDION / handoff URLs.
+3. **WCAG depth** (secondary, only when WCAG selected and not AUDION) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only); depth grid uses a bottom hairline only (no top rule), same as capability.
+4. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
    - **URL** — hero input (page or host)
    - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
-4. Fixture demo jumps stay below the stage as quiet secondary links
+5. Fixture demo jumps stay below the stage as quiet secondary links
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 
-Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / `Button` / `SectionChrome` / `Dialog` / `EmptyState` / `Chip` / `ToggleGroup` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · GEO query list (`GeoQueryList` / `checkion-geo-query-list`) · GEO model picker (`GeoModelPicker` / `checkion-geo-model-picker`) · light `checkion-rise` motion.
+Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / `Button` · `SectionChrome` · `Dialog` · `EmptyState` · `Chip` · `ToggleGroup` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · GEO query list (`GeoQueryList` / `checkion-geo-query-list`) · GEO model picker (`GeoModelPicker` / `checkion-geo-model-picker`) · progressive `checkion-launch-reveal` / `checkion-rise` motion.
 
 ### GEO query list + Suggest
 - Default rows: host-derived prompts (`defaultGeoQueries(url)`). Changing URL refreshes defaults only when the list still matches the previous host defaults.
