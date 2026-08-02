@@ -71,6 +71,7 @@ describe('resolveGeoLaunchProjectId', () => {
     const req = new Request('http://localhost/api/geo-jobs', { method: 'POST' })
     const result = await resolveGeoLaunchProjectId(req, {
       url: 'https://acme.example/geo',
+      companyName: 'Acme Robotics',
     })
     expect(result.ok).toBe(true)
     if (result.ok) {
@@ -79,6 +80,6 @@ describe('resolveGeoLaunchProjectId', () => {
     }
     const created = (await listProjects()).find((p) => p.id === (result.ok ? result.projectId : ''))
     expect(created?.domain).toBe('acme.example')
-    expect(created?.name).toMatch(/GEO/)
+    expect(created?.name).toBe('GEO · Acme Robotics')
   })
 })

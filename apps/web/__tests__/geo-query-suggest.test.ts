@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  brandForGeoTarget,
   defaultGeoQueries,
   fixtureSuggestPool,
   mergeQuerySuggestions,
+  normalizeGeoUrl,
   resolveGeoLaunchUrl,
   sameQueryList,
   suggestGeoQueries,
+  urlFromCompanyName,
   urlFromQueryText,
 } from '../lib/geo-query-suggest'
 
@@ -14,6 +17,13 @@ describe('geo-query-suggest helpers', () => {
     const qs = defaultGeoQueries('https://www.bosch-ebike.com/de/')
     expect(qs[0]).toMatch(/bosch-ebike/i)
     expect(qs.length).toBe(3)
+  })
+
+  it('defaultGeoQueries prefers company name brand', () => {
+    const qs = defaultGeoQueries('https://www.bosch-ebike.com/de/', {
+      companyName: 'Bosch eBike Systems',
+    })
+    expect(qs[0]).toBe('Best alternatives to Bosch eBike Systems')
   })
 
   it('fixtureSuggestPool expands beyond launch defaults', () => {
@@ -42,14 +52,25 @@ describe('geo-query-suggest helpers', () => {
     expect(urlFromQueryText('Best alternatives to bosch-ebike')).toBeNull()
   })
 
-  it('resolveGeoLaunchUrl prefers explicit URL, then query host, then fallback', () => {
+  it('urlFromCompanyName and normalizeGeoUrl derive citation targets', () => {
+    expect(urlFromCompanyName('Acme Robotics')).toBe('https://acme-robotics.example/')
+    expect(normalizeGeoUrl('acme.example/path')).toBe('https://acme.example/path')
+    expect(normalizeGeoUrl('')).toBeNull()
+    expect(brandForGeoTarget({ companyName: 'Acme', url: 'https://other.example/' })).toBe('Acme')
+  })
+
+  it('resolveGeoLaunchUrl prefers explicit URL, then company, then query host, then fallback', () => {
     expect(resolveGeoLaunchUrl('https://explicit.example/', ['Compare acme.example'])).toBe(
       'https://explicit.example/',
     )
+    expect(
+      resolveGeoLaunchUrl('', ['No host here'], { companyName: 'Acme Robotics' }),
+    ).toBe('https://acme-robotics.example/')
     expect(resolveGeoLaunchUrl('', ['Who cites acme.example in answers?'])).toBe(
       'https://acme.example/',
     )
     expect(resolveGeoLaunchUrl('', ['No host here'])).toBe('https://www.bosch-ebike.com/de/')
+    expect(resolveGeoLaunchUrl('', ['No host here'], { fallback: null })).toBe('')
   })
 })
 
@@ -73,5 +94,16 @@ describe('suggestGeoQueries', () => {
       defaultGeoQueries('https://www.bosch-ebike.com/de/').map((q) => q.toLowerCase()),
     )
     expect(result.suggestions.every((s) => !existingKeys.has(s.title.toLowerCase()))).toBe(true)
+  })
+
+  it('suggests from company name without url', async () => {
+    vi.stubEnv('OPENAI_API_KEY', '')
+    const result = await suggestGeoQueries({
+      companyName: 'Acme Robotics',
+      project: { name: 'Acme Collection', domain: 'acme.example' },
+      max: 3,
+    })
+    expect(result.source).toBe('fixture')
+    expect(result.suggestions.some((s) => /Acme Robotics/i.test(s.title))).toBe(true)
   })
 })

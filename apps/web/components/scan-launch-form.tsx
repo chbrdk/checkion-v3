@@ -18,8 +18,10 @@ import {
 } from '../lib/geo/model-catalog'
 import {
   defaultGeoQueries,
+  normalizeGeoUrl,
   resolveGeoLaunchUrl,
   sameQueryList,
+  urlFromCompanyName,
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
 import { GeoModelPicker } from './geo-model-picker'
@@ -137,7 +139,7 @@ export function ScanLaunchForm({
   fromAudion = false,
   projectLabel,
 }: {
-  projects: Array<{ id: string; name: string }>
+  projects: Array<{ id: string; name: string; domain?: string }>
   /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
   defaultMode?: LaunchMode
   defaultProjectId?: string
@@ -160,20 +162,29 @@ export function ScanLaunchForm({
     initialWcagDepth(fromAudion, defaultMode),
   )
   const [url, setUrl] = useState(initialUrl)
+  const [companyName, setCompanyName] = useState('')
   const [projectId, setProjectId] = useState(
     defaultProjectId && projects.some((p) => p.id === defaultProjectId)
       ? defaultProjectId
       : (projects[0]?.id ?? ''),
   )
-  const [geoQueries, setGeoQueries] = useState(() => defaultGeoQueries(initialUrl))
+  const [geoQueries, setGeoQueries] = useState(() =>
+    defaultGeoQueries(initialUrl, { companyName: undefined }),
+  )
   const [geoModels, setGeoModels] = useState<string[]>(() => defaultGeoModelIds())
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  const activeProjectName =
-    projectLabel || projects.find((p) => p.id === projectId)?.name || projectId
+  const activeProject = projects.find((p) => p.id === projectId)
+  const activeProjectName = projectLabel || activeProject?.name || projectId
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
+  const geoTargetReady = Boolean(url.trim() || companyName.trim())
+  const geoProjectReady = projects.length === 0 || Boolean(projectId.trim())
+  const geoSuggestUrl =
+    normalizeGeoUrl(url) ||
+    (companyName.trim() ? urlFromCompanyName(companyName) : '') ||
+    resolveGeoLaunchUrl(url, geoQueries, { companyName, fallback: '' })
 
   const showDepth = activeCapability === 'wcag' && !fromAudion
   const showCompose =
@@ -243,11 +254,25 @@ export function ScanLaunchForm({
     setError(null)
   }
 
+  function refreshGeoDefaults(nextUrl: string, nextCompany: string) {
+    if (activeCapability !== 'geo') return
+    const prevDefaults = defaultGeoQueries(url, { companyName: companyName || undefined })
+    if (!sameQueryList(geoQueries, prevDefaults)) return
+    setGeoQueries(
+      defaultGeoQueries(nextUrl || urlFromCompanyName(nextCompany || 'brand'), {
+        companyName: nextCompany || undefined,
+      }),
+    )
+  }
+
   function onUrlChange(next: string) {
     setUrl(next)
-    if (activeCapability === 'geo' && sameQueryList(geoQueries, defaultGeoQueries(url))) {
-      setGeoQueries(defaultGeoQueries(next))
-    }
+    refreshGeoDefaults(next, companyName)
+  }
+
+  function onCompanyNameChange(next: string) {
+    setCompanyName(next)
+    refreshGeoDefaults(url, next)
   }
 
   async function launchWcagScan(launchMode: WcagDepth) {
@@ -314,12 +339,28 @@ export function ScanLaunchForm({
 
   async function launchGeo() {
     const queries = geoQueries.map((q) => q.trim()).filter(Boolean)
-    // URL+Project row is hidden for GEO — resolve silently from deep-link /
-    // state, else first query host, else demo fallback (API requires url).
+    const trimmedCompany = companyName.trim()
+    if (!url.trim() && !trimmedCompany) {
+      throw new Error('Provide a URL or company name to start a GEO check')
+    }
+    if (projects.length > 0 && !projectId.trim()) {
+      throw new Error('Select a Collection project to start a GEO check')
+    }
+    // Prefer explicit URL; company-only derives a normalized citation URL.
     // projectId may be empty on staging DB (no fixtures); API resolves / auto-creates.
-    const resolvedUrl = resolveGeoLaunchUrl(url, queries)
+    const resolvedUrl = resolveGeoLaunchUrl(url, queries, {
+      companyName: trimmedCompany || undefined,
+      fallback: null,
+    })
+    if (!resolvedUrl) {
+      throw new Error('Provide a URL or company name to start a GEO check')
+    }
     const resolvedQueries =
-      queries.length > 0 ? queries : defaultGeoQueries(resolvedUrl)
+      queries.length > 0
+        ? queries
+        : defaultGeoQueries(resolvedUrl, {
+            companyName: trimmedCompany || undefined,
+          })
     const models = modelsForLaunch(geoModels)
     const resolvedProjectId = projectId.trim() || projects[0]?.id || undefined
     const body: Record<string, unknown> = {
@@ -327,6 +368,7 @@ export function ScanLaunchForm({
       queries: resolvedQueries,
       models,
     }
+    if (trimmedCompany) body.companyName = trimmedCompany
     if (resolvedProjectId) body.projectId = resolvedProjectId
 
     const res = await fetch(paths.routes.apiGeoJobs, {
@@ -480,8 +522,62 @@ export function ScanLaunchForm({
           {showCompose ? (
             <div key={composeKey} className="checkion-launch-compose checkion-launch-reveal">
               <div className="checkion-launch-compose__lead">
-                {/* GEO: no URL+Project row — projectId + url resolved silently on submit */}
-                {activeCapability !== 'geo' ? (
+                {activeCapability === 'geo' ? (
+                  <div className="checkion-launch-compose__row checkion-launch-compose__row--geo">
+                    <Field
+                      className="checkion-launch-compose__url"
+                      label="URL"
+                      size="md"
+                      hint="Target host for citation checks (or use company name)"
+                    >
+                      <Input
+                        value={url}
+                        onChange={(e) => onUrlChange(e.target.value)}
+                        block
+                        aria-label="Scan URL"
+                        placeholder="https://"
+                      />
+                    </Field>
+
+                    <Field
+                      className="checkion-launch-compose__company"
+                      label="Company name"
+                      size="md"
+                      hint="Brand when you do not have a URL yet"
+                    >
+                      <Input
+                        value={companyName}
+                        onChange={(e) => onCompanyNameChange(e.target.value)}
+                        block
+                        aria-label="Company name"
+                        placeholder="Acme"
+                      />
+                    </Field>
+
+                    <Field
+                      className="checkion-launch-compose__project"
+                      label="Project"
+                      size="md"
+                      hint={
+                        projects.length === 0
+                          ? 'Auto-create when none exist'
+                          : 'CHECKION Collection capability'
+                      }
+                    >
+                      <Select
+                        value={projectId}
+                        onChange={setProjectId}
+                        size="md"
+                        options={
+                          projects.length > 0
+                            ? projects.map((p) => ({ value: p.id, label: p.name }))
+                            : [{ value: '', label: 'Auto-create on start' }]
+                        }
+                        aria-label="Project"
+                      />
+                    </Field>
+                  </div>
+                ) : (
                   <div className="checkion-launch-compose__row">
                     <Field
                       className="checkion-launch-compose__url"
@@ -520,14 +616,20 @@ export function ScanLaunchForm({
                       </Field>
                     ) : null}
                   </div>
-                ) : null}
+                )}
 
                 {activeCapability === 'geo' ? (
                   <div className="checkion-launch-compose__geo">
                     <GeoQueryList
                       value={geoQueries}
                       onChange={setGeoQueries}
-                      url={resolveGeoLaunchUrl(url, geoQueries)}
+                      url={geoSuggestUrl}
+                      companyName={companyName}
+                      project={
+                        activeProject
+                          ? { name: activeProject.name, domain: activeProject.domain }
+                          : undefined
+                      }
                       disabled={status === 'submitting'}
                     />
                     <GeoModelPicker
@@ -547,7 +649,7 @@ export function ScanLaunchForm({
                     disabled={
                       status === 'submitting' ||
                       (activeCapability === 'geo'
-                        ? !resolveGeoLaunchUrl(url, geoQueries).trim()
+                        ? !geoTargetReady || !geoProjectReady
                         : !projectId || !url.trim())
                     }
                   >
@@ -555,6 +657,10 @@ export function ScanLaunchForm({
                   </Button>
                 </div>
               </div>
+
+              {activeCapability === 'geo' && !geoTargetReady ? (
+                <Alert tone="info">Provide a URL or company name to start a GEO check.</Alert>
+              ) : null}
 
               {activeCapability === 'geo' && !projectId && projects.length === 0 ? (
                 <Alert tone="info">

@@ -141,13 +141,14 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
-  it('GEO deep-link skips ahead to full GEO compose without URL+Project row', () => {
+  it('GEO deep-link skips ahead to full GEO compose with URL+Company+Project', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
-    expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
-    expect(screen.queryByLabelText(/^Project$/i)).toBeNull()
+    expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
+    expect(screen.getByLabelText(/Company name/i)).toBeTruthy()
+    expect(screen.getByLabelText(/^Project$/i)).toBeTruthy()
   })
 
   it('WCAG single deep-link skips ahead to depth + compose', () => {
@@ -179,20 +180,35 @@ describe('ScanLaunchForm', () => {
     // Magazine list rows — host defaults present as editable text buttons
     expect(screen.getByRole('button', { name: /Best alternatives to bosch-ebike/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Add GEO query/i })).toBeTruthy()
-    // URL + Project compose row stays off for GEO (WCAG/SEO still show it)
-    expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
-    expect(screen.queryByLabelText(/^Project$/i)).toBeNull()
+    // URL · Company · Project compose row is visible for GEO
+    expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
+    expect(screen.getByLabelText(/Company name/i)).toBeTruthy()
+    expect(screen.getByLabelText(/^Project$/i)).toBeTruthy()
   })
 
-  it('keeps URL+Project row for WCAG and SEO', () => {
+  it('keeps URL+Project row for WCAG and SEO without company field', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="seo" />)
     expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
     expect(screen.getByLabelText(/^Project$/i)).toBeTruthy()
+    expect(screen.queryByLabelText(/Company name/i)).toBeNull()
 
     fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
     fireEvent.click(screen.getByRole('radio', { name: /Quick single scan/i }))
     expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
     expect(screen.getByLabelText(/^Project$/i)).toBeTruthy()
+    expect(screen.queryByLabelText(/Company name/i)).toBeNull()
+  })
+
+  it('requires URL or company name before GEO start', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    fireEvent.change(screen.getByLabelText(/Scan URL/i), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: '' } })
+    expect(screen.getByText(/Provide a URL or company name/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
+    expect(screen.queryByText(/Provide a URL or company name/i)).toBeNull()
+    expect(screen.getByRole('button', { name: /Start GEO job/i })).not.toBeDisabled()
   })
 
   it('adds GEO models via dialog search and Suggest restores default', () => {
@@ -302,6 +318,7 @@ describe('ScanLaunchForm', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Bosch eBike' } })
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
     fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
     fireEvent.click(screen.getByRole('option', { name: /GPT-5\.6 Luna/i }))
@@ -320,11 +337,13 @@ describe('ScanLaunchForm', () => {
     const body = JSON.parse(String(call?.[1]?.body)) as {
       projectId: string
       url: string
+      companyName?: string
       queries: string[]
       models: string[]
     }
     expect(body.projectId).toBe('proj-1')
     expect(body.url).toContain('http')
+    expect(body.companyName).toBe('Bosch eBike')
     expect(body.queries.length).toBeGreaterThan(0)
     // Live filter drops Anthropic; keeps OpenAI selection
     expect(body.models).toEqual(['gpt-5.4-nano', 'gpt-5.6-luna'])
@@ -333,7 +352,7 @@ describe('ScanLaunchForm', () => {
     })
   })
 
-  it('posts GEO deep-link url and projectId silently without URL+Project row', async () => {
+  it('posts GEO deep-link url and projectId on visible compose row', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({ success: true, jobId: 'geo-dl-1', status: 'completed' }),
@@ -348,8 +367,8 @@ describe('ScanLaunchForm', () => {
         defaultUrl="https://acme.example/geo"
       />,
     )
-    expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
-    expect(screen.queryByLabelText(/^Project$/i)).toBeNull()
+    expect(screen.getByLabelText(/Scan URL/i)).toHaveValue('https://acme.example/geo')
+    expect(screen.getByLabelText(/^Project$/i)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
@@ -360,6 +379,33 @@ describe('ScanLaunchForm', () => {
     expect(body.url).toBe('https://acme.example/geo')
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-dl-1', 'overview'))
+    })
+  })
+
+  it('posts company-only GEO launch with derived url', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ success: true, jobId: 'geo-co-1', status: 'completed' }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    fireEvent.change(screen.getByLabelText(/Scan URL/i), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
+    fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const body = JSON.parse(
+      String(
+        (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock.calls[0]?.[1]
+          ?.body,
+      ),
+    ) as { projectId: string; url: string; companyName: string }
+    expect(body.projectId).toBe('proj-1')
+    expect(body.companyName).toBe('Acme Robotics')
+    expect(body.url).toBe('https://acme-robotics.example/')
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-co-1', 'overview'))
     })
   })
 
@@ -394,6 +440,56 @@ describe('ScanLaunchForm', () => {
     await waitFor(() => {
       expect(screen.getByText(/Could not auto-create a Collection project for GEO/i)).toBeTruthy()
     })
+  })
+
+  it('passes company and project context into Suggest', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const reqUrl = String(input)
+      if (reqUrl.includes('/api/geo/suggest-queries')) {
+        return {
+          ok: true,
+          json: async () => ({
+            suggestions: [
+              {
+                id: 'fixture-1',
+                title: 'Is Acme recommended for professional teams?',
+                description: 'Brand-derived',
+              },
+            ],
+            source: 'fixture',
+            stubbed: true,
+          }),
+        }
+      }
+      return { ok: true, json: async () => ({}) }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <ScanLaunchForm
+        projects={[{ id: 'proj-1', name: 'Demo Project', domain: 'demo.example' }]}
+        defaultMode="geo"
+        defaultProjectId="proj-1"
+        defaultUrl="https://acme.example/"
+      />,
+    )
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme' } })
+    fireEvent.click(screen.getByRole('button', { name: /AI suggest GEO queries/i }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalled()
+    })
+    const suggestCall = (
+      fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }
+    ).mock.calls.find((c) => String(c[0]).includes('/api/geo/suggest-queries'))
+    const body = JSON.parse(String(suggestCall?.[1]?.body)) as {
+      url: string
+      companyName: string
+      project: { name: string; domain: string }
+    }
+    expect(body.url).toBe('https://acme.example/')
+    expect(body.companyName).toBe('Acme')
+    expect(body.project).toEqual({ name: 'Demo Project', domain: 'demo.example' })
   })
 
   it('posts SEO domain crawl and navigates to domain overview', async () => {

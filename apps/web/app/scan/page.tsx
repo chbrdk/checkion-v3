@@ -35,7 +35,11 @@ export default async function ScanPage({
   }>
 }) {
   const params = await searchParams
-  const projects = ((await listProjects())).map((p) => ({ id: p.id, name: p.name }))
+  const projects = ((await listProjects())).map((p) => ({
+    id: p.id,
+    name: p.name,
+    domain: p.domain,
+  }))
   const defaultProjectId =
     params.projectId && projects.some((p) => p.id === params.projectId)
       ? params.projectId

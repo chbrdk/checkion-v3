@@ -1,6 +1,6 @@
 /**
  * GEO launch query defaults + AI / fixture suggestions.
- * Fixture path (no OPENAI_API_KEY): host-derived prompt pool.
+ * Fixture path (no OPENAI_API_KEY): host/brand-derived prompt pool.
  * Live path: OpenAI when key is set (same GEO LLM stack).
  */
 
@@ -19,6 +19,11 @@ export type GeoSuggestQueriesResult = {
   stubbed: boolean
 }
 
+export type GeoSuggestProjectContext = {
+  name?: string
+  domain?: string
+}
+
 export function hostFromUrl(raw: string): string {
   try {
     const host = new URL(raw.trim()).hostname.replace(/^www\./i, '')
@@ -29,6 +34,68 @@ export function hostFromUrl(raw: string): string {
 }
 
 const GEO_LAUNCH_FALLBACK_URL = 'https://www.bosch-ebike.com/de/'
+
+/** Slugify a company / brand label for citation URL derivation. */
+export function slugifyCompanyName(raw: string): string {
+  const slug = raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+  return slug || 'company'
+}
+
+/**
+ * When the user provides only a company name, derive a stable citation-target URL
+ * so `POST /api/geo-jobs` and host helpers still have a usable `url`.
+ */
+export function urlFromCompanyName(companyName: string): string {
+  const slug = slugifyCompanyName(companyName)
+  return `https://${slug}.example/`
+}
+
+/**
+ * Normalize an explicit GEO URL (adds https:// when missing).
+ * Returns null when the value cannot be parsed as a host URL.
+ */
+export function normalizeGeoUrl(raw: string | undefined | null): string | null {
+  const trimmed = raw?.trim() ?? ''
+  if (!trimmed) return null
+  try {
+    const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`)
+    if (!parsed.hostname) return null
+    return parsed.href
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Resolve the citation-target URL for GEO create / Suggest.
+ * Priority: explicit URL → company-derived URL → first query host → optional fallback.
+ */
+export function resolveGeoLaunchUrl(
+  url: string | undefined,
+  queries: string[],
+  opts?: { companyName?: string; fallback?: string | null },
+): string {
+  const fromUrl = normalizeGeoUrl(url)
+  if (fromUrl) return fromUrl
+
+  const company = opts?.companyName?.trim()
+  if (company) return urlFromCompanyName(company)
+
+  for (const q of queries) {
+    const fromQuery = urlFromQueryText(q)
+    if (fromQuery) return fromQuery
+  }
+
+  const fallback = opts?.fallback === undefined ? GEO_LAUNCH_FALLBACK_URL : opts.fallback
+  return fallback ?? ''
+}
 
 /**
  * Extract a usable citation-target URL from free-text query prompts.
@@ -63,42 +130,27 @@ export function urlFromQueryText(raw: string): string | null {
   return null
 }
 
-/**
- * Resolve the URL posted to `POST /api/geo-jobs` when the GEO launch
- * compose row (URL + Project) is hidden.
- *
- * Priority: explicit/deep-link URL → first query that implies a host → fallback.
- */
-export function resolveGeoLaunchUrl(
-  url: string | undefined,
-  queries: string[],
-  fallback = GEO_LAUNCH_FALLBACK_URL,
-): string {
-  const trimmed = url?.trim() ?? ''
-  if (trimmed) {
-    try {
-      const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`)
-      if (parsed.hostname) return parsed.href
-    } catch {
-      /* fall through to query / fallback */
-    }
-  }
-
-  for (const q of queries) {
-    const fromQuery = urlFromQueryText(q)
-    if (fromQuery) return fromQuery
-  }
-
-  return fallback
-}
-
 function brandFromHost(host: string): string {
   return host.split('.')[0] || host
 }
 
-/** Sensible GEO prompt defaults derived from the target host. */
-export function defaultGeoQueries(url: string): string[] {
-  const brand = brandFromHost(hostFromUrl(url))
+export function brandForGeoTarget(opts: {
+  url?: string
+  companyName?: string
+}): string {
+  const company = opts.companyName?.trim()
+  if (company) return company
+  const url = opts.url?.trim()
+  if (url) return brandFromHost(hostFromUrl(url))
+  return 'brand'
+}
+
+/** Sensible GEO prompt defaults derived from the target brand / host. */
+export function defaultGeoQueries(
+  url: string,
+  opts?: { companyName?: string },
+): string[] {
+  const brand = brandForGeoTarget({ url, companyName: opts?.companyName })
   return [
     `Best alternatives to ${brand}`,
     `Who leads in ${brand} category solutions?`,
@@ -106,11 +158,14 @@ export function defaultGeoQueries(url: string): string[] {
   ]
 }
 
-/** Expanded host-derived pool used when OpenAI is unavailable (fixture / CI). */
-export function fixtureSuggestPool(url: string): string[] {
-  const brand = brandFromHost(hostFromUrl(url))
+/** Expanded brand-derived pool used when OpenAI is unavailable (fixture / CI). */
+export function fixtureSuggestPool(
+  url: string,
+  opts?: { companyName?: string },
+): string[] {
+  const brand = brandForGeoTarget({ url, companyName: opts?.companyName })
   return [
-    ...defaultGeoQueries(url),
+    ...defaultGeoQueries(url, opts),
     `Is ${brand} recommended for professional teams?`,
     `What do analysts say about ${brand}?`,
     `${brand} strengths and weaknesses compared to rivals`,
@@ -154,13 +209,19 @@ function extractJsonArray(content: string): string[] | null {
   }
 }
 
-async function suggestViaOpenAI(
-  url: string,
-  existing: string[],
-  max: number,
-): Promise<string[]> {
-  const host = hostFromUrl(url)
-  const brand = brandFromHost(host)
+async function suggestViaOpenAI(opts: {
+  url: string
+  companyName?: string
+  project?: GeoSuggestProjectContext
+  existing: string[]
+  max: number
+}): Promise<string[]> {
+  const brand = brandForGeoTarget({ url: opts.url, companyName: opts.companyName })
+  const host = hostFromUrl(opts.url)
+  const projectBits = [
+    opts.project?.name?.trim() ? `Project name: ${opts.project.name.trim()}` : null,
+    opts.project?.domain?.trim() ? `Project domain: ${opts.project.domain.trim()}` : null,
+  ].filter(Boolean)
   const openai = new OpenAI({ apiKey: getOpenAIKey() })
   const res = await openai.chat.completions.create({
     model: OPENAI_MODEL,
@@ -174,10 +235,14 @@ async function suggestViaOpenAI(
       {
         role: 'user',
         content: [
-          `Target URL: ${url.trim() || 'https://example.com'}`,
-          `Host / brand: ${host} / ${brand}`,
-          existing.length ? `Already selected:\n- ${existing.join('\n- ')}` : 'No queries selected yet.',
-          `Suggest ${max} distinct English prompts a buyer might ask an LLM where this brand might be cited.`,
+          `Target URL: ${opts.url.trim() || 'https://example.com'}`,
+          `Company / brand: ${brand}`,
+          `Host: ${host}`,
+          ...projectBits,
+          opts.existing.length
+            ? `Already selected:\n- ${opts.existing.join('\n- ')}`
+            : 'No queries selected yet.',
+          `Suggest ${opts.max} distinct English prompts a buyer might ask an LLM where this brand might be cited.`,
           'Prefer comparison, recommendation, and category-leadership framings. No numbering.',
         ].join('\n'),
       },
@@ -189,18 +254,25 @@ async function suggestViaOpenAI(
 
 /**
  * Propose GEO queries for launch.
- * Without OPENAI_API_KEY → fixture host pool (CI / local dummy).
+ * Without OPENAI_API_KEY → fixture brand pool (CI / local dummy).
  * With key → OpenAI; falls back to fixture pool on parse/API failure.
  */
 export async function suggestGeoQueries(opts: {
-  url: string
+  url?: string
+  companyName?: string
+  project?: GeoSuggestProjectContext
   existing?: string[]
   max?: number
 }): Promise<GeoSuggestQueriesResult> {
-  const url = opts.url?.trim() || 'https://example.com'
+  const companyName = opts.companyName?.trim() || undefined
+  const url =
+    normalizeGeoUrl(opts.url) ||
+    (companyName ? urlFromCompanyName(companyName) : '') ||
+    'https://example.com'
   const existing = (opts.existing ?? []).map((q) => q.trim()).filter(Boolean)
   const max = Math.min(Math.max(opts.max ?? 4, 1), 8)
   const existingKeys = new Set(existing.map((q) => q.toLowerCase()))
+  const brand = brandForGeoTarget({ url, companyName })
 
   const toSuggestions = (titles: string[], source: 'fixture' | 'openai', stubbed: boolean) => {
     const filtered = titles
@@ -213,8 +285,8 @@ export async function suggestGeoQueries(opts: {
         title,
         description:
           source === 'fixture'
-            ? `Host-derived default for ${hostFromUrl(url)}`
-            : `Suggested for ${hostFromUrl(url)}`,
+            ? `Brand-derived default for ${brand}`
+            : `Suggested for ${brand}`,
       })),
       source,
       stubbed,
@@ -222,14 +294,20 @@ export async function suggestGeoQueries(opts: {
   }
 
   if (!hasOpenAIKey()) {
-    return toSuggestions(fixtureSuggestPool(url), 'fixture', true)
+    return toSuggestions(fixtureSuggestPool(url, { companyName }), 'fixture', true)
   }
 
   try {
-    const live = await suggestViaOpenAI(url, existing, max)
+    const live = await suggestViaOpenAI({
+      url,
+      companyName,
+      project: opts.project,
+      existing,
+      max,
+    })
     if (live.length > 0) return toSuggestions(live, 'openai', false)
   } catch {
     /* fall through to fixture */
   }
-  return toSuggestions(fixtureSuggestPool(url), 'fixture', true)
+  return toSuggestions(fixtureSuggestPool(url, { companyName }), 'fixture', true)
 }

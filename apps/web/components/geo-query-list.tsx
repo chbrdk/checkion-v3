@@ -18,10 +18,19 @@ type Props = {
   value: string[]
   onChange: (next: string[]) => void
   url: string
+  companyName?: string
+  project?: { name?: string; domain?: string }
   disabled?: boolean
 }
 
-export function GeoQueryList({ value, onChange, url, disabled = false }: Props) {
+export function GeoQueryList({
+  value,
+  onChange,
+  url,
+  companyName,
+  project,
+  disabled = false,
+}: Props) {
   const baseId = useId()
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
@@ -111,7 +120,15 @@ export function GeoQueryList({ value, onChange, url, disabled = false }: Props) 
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          url,
+          url: url.trim() || undefined,
+          companyName: companyName?.trim() || undefined,
+          project:
+            project?.name?.trim() || project?.domain?.trim()
+              ? {
+                  name: project.name?.trim() || undefined,
+                  domain: project.domain?.trim() || undefined,
+                }
+              : undefined,
           existing: valueRef.current,
           max: 4,
         }),

@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { getRequestUser } from '../../../lib/auth-api-token'
 import { createGeoJob, listGeoJobs } from '../../../lib/fixtures/geo-store'
 import { resolveGeoLaunchProjectId } from '../../../lib/geo-launch-project'
+import {
+  normalizeGeoUrl,
+  urlFromCompanyName,
+} from '../../../lib/geo-query-suggest'
 import { hasOpenAIKey } from '../../../lib/llm/config'
 import { shouldRunLiveGeo } from '../../../lib/geo-eeat/live-geo-gate'
 import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
@@ -24,6 +28,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as {
     projectId?: string
     url?: string
+    companyName?: string
     queries?: string[]
     models?: string[]
     competitors?: string[]
@@ -33,11 +38,19 @@ export async function POST(request: Request) {
   }
 
   // companyId / platformCompanyId are NOT required on this endpoint (unlike
-  // POST /api/projects federation). Required: url + non-empty queries.
-  // projectId is resolved silently when omitted / empty (GEO launch hides Project).
-  if (!body.url || !Array.isArray(body.queries) || body.queries.length === 0) {
+  // POST /api/projects federation). Required: url and/or companyName + non-empty queries.
+  // projectId is resolved when omitted / empty (auto-create when store empty).
+  const companyName =
+    typeof body.companyName === 'string' ? body.companyName.trim() : ''
+  const resolvedUrl =
+    normalizeGeoUrl(body.url) || (companyName ? urlFromCompanyName(companyName) : null)
+
+  if (!resolvedUrl || !Array.isArray(body.queries) || body.queries.length === 0) {
     return NextResponse.json(
-      { error: 'invalid_body', detail: 'url and non-empty queries are required' },
+      {
+        error: 'invalid_body',
+        detail: 'url or companyName, and non-empty queries, are required',
+      },
       { status: 400 },
     )
   }
@@ -56,7 +69,8 @@ export async function POST(request: Request) {
 
   const resolved = await resolveGeoLaunchProjectId(request, {
     projectId: body.projectId,
-    url: body.url,
+    url: resolvedUrl,
+    companyName: companyName || undefined,
   })
   if (!resolved.ok) {
     return NextResponse.json(
@@ -65,13 +79,18 @@ export async function POST(request: Request) {
     )
   }
 
+  const title =
+    (typeof body.title === 'string' && body.title.trim()) ||
+    companyName ||
+    undefined
+
   const job = await createGeoJob({
     projectId: resolved.projectId,
-    url: body.url,
+    url: resolvedUrl,
     queries,
     models: body.models?.map((m) => String(m).trim()).filter(Boolean),
     competitors: body.competitors?.map((c) => String(c).trim()).filter(Boolean),
-    title: body.title,
+    title,
     includePageScan: body.includePageScan,
     waitForCompletion: body.waitForCompletion === true,
   })

@@ -51,11 +51,11 @@ async function resolveOwnerAndCompany(request: Request): Promise<{
  * Resolve `projectId` for GEO create:
  * 1. Explicit id when the project exists
  * 2. First Collection project in the store
- * 3. Auto-create a project from the target URL (company from demo/session)
+ * 3. Auto-create a project from the target URL / company name (federation company from demo/session)
  */
 export async function resolveGeoLaunchProjectId(
   request: Request,
-  input: { projectId?: string; url: string },
+  input: { projectId?: string; url: string; companyName?: string },
 ): Promise<ResolveGeoLaunchProjectResult> {
   const requested = input.projectId?.trim()
   if (requested) {
@@ -76,11 +76,12 @@ export async function resolveGeoLaunchProjectId(
   }
 
   const host = hostFromUrl(input.url)
+  const label = input.companyName?.trim() || host
   const { ownerPlexonUserId, platformCompanyId } = await resolveOwnerAndCompany(request)
 
   try {
     let project = await createProject({
-      name: `GEO · ${host}`,
+      name: `GEO · ${label}`,
       domain: host,
       description: 'Auto-created for GEO launch when no Collection project existed.',
       ownerPlexonUserId,
