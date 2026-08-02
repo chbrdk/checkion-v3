@@ -2518,7 +2518,7 @@ a { color: inherit; text-decoration: none; }
   color: color-mix(in srgb, var(--ink, var(--fg)) 70%, var(--muted));
 }
 
-/* Compose band — URL · extras · project · CTA; rule + whitespace, no wash */
+/* Compose band — URL · project · extras · CTA; rule + whitespace, no wash */
 .checkion-launch-compose {
   display: grid;
   gap: 1.35rem;
@@ -2534,14 +2534,24 @@ a { color: inherit; text-decoration: none; }
   gap: 1.1rem;
 }
 
-.checkion-launch-compose__url {
+/* URL 60% / Project 40% — stack on narrow */
+.checkion-launch-compose__row {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.checkion-launch-compose__url,
+.checkion-launch-compose__project {
   display: flex;
   width: 100%;
+  min-width: 0;
   max-width: none;
 }
 
-/* Hero URL — larger than Field md; transparent, type + rule only */
-.checkion-launch-compose__url .ds-input {
+/* Hero URL + Project — larger than Field md; transparent, type + rule only */
+.checkion-launch-compose__url .ds-input,
+.checkion-launch-compose__project .ds-select-trigger {
   width: 100%;
   min-height: 3.65rem;
   padding: 0.95rem 1.05rem;
@@ -2550,6 +2560,12 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.3;
   letter-spacing: -0.02em;
   background: transparent;
+}
+
+.checkion-launch-compose__project .ds-select,
+.checkion-launch-compose__project .ds-select-trigger,
+.checkion-launch-compose__project .ds-field {
+  width: 100%;
 }
 
 .checkion-launch-compose__geo {
@@ -2566,20 +2582,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .checkion-launch-compose__footer {
-  display: grid;
-  gap: 1rem;
-  align-items: end;
-}
-
-.checkion-launch-compose__project {
   display: flex;
-  width: 100%;
-  max-width: 22rem;
-}
-
-.checkion-launch-compose__project .ds-select-trigger,
-.checkion-launch-compose__project .ds-field {
-  width: 100%;
+  justify-content: flex-start;
+  align-items: end;
 }
 
 .checkion-launch-compose__actions {
@@ -2629,9 +2634,19 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (min-width: 640px) {
+  .checkion-launch-compose__row {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 0.4fr);
+    gap: 1.25rem 1.35rem;
+    align-items: start;
+  }
+
+  /* AUDION lock: URL alone spans full row */
+  .checkion-launch-compose__row:has(> :only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .checkion-launch-compose__footer {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 1.25rem 1.5rem;
+    justify-content: flex-end;
   }
 
   .checkion-launch-compose__actions {

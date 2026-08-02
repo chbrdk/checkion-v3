@@ -443,27 +443,46 @@ export function ScanLaunchForm({
 
           <div className="checkion-launch-compose">
             <div className="checkion-launch-compose__lead">
-              <Field
-                className="checkion-launch-compose__url"
-                label="URL"
-                size="md"
-                hint={
-                  activeCapability === 'geo'
-                    ? 'Target host for citation checks'
-                    : activeCapability === 'seo'
-                      ? 'Host root to crawl for SEO coverage'
-                      : 'Page to evaluate'
-                }
-              >
-                <Input
-                  value={url}
-                  onChange={(e) => onUrlChange(e.target.value)}
-                  required
-                  block
-                  aria-label="Scan URL"
-                  placeholder="https://"
-                />
-              </Field>
+              <div className="checkion-launch-compose__row">
+                <Field
+                  className="checkion-launch-compose__url"
+                  label="URL"
+                  size="md"
+                  hint={
+                    activeCapability === 'geo'
+                      ? 'Target host for citation checks'
+                      : activeCapability === 'seo'
+                        ? 'Host root to crawl for SEO coverage'
+                        : 'Page to evaluate'
+                  }
+                >
+                  <Input
+                    value={url}
+                    onChange={(e) => onUrlChange(e.target.value)}
+                    required
+                    block
+                    aria-label="Scan URL"
+                    placeholder="https://"
+                  />
+                </Field>
+
+                {!fromAudion ? (
+                  <Field
+                    className="checkion-launch-compose__project"
+                    label="Project"
+                    size="md"
+                    hint="CHECKION Collection capability"
+                  >
+                    <Select
+                      value={projectId}
+                      onChange={setProjectId}
+                      size="md"
+                      options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                      aria-label="Project"
+                    />
+                  </Field>
+                ) : null}
+              </div>
 
               {activeCapability === 'geo' ? (
                 <div className="checkion-launch-compose__geo">
@@ -491,19 +510,6 @@ export function ScanLaunchForm({
             </div>
 
             <div className="checkion-launch-compose__footer">
-              <Field
-                className="checkion-launch-compose__project"
-                label="Project"
-                hint="CHECKION Collection capability"
-              >
-                <Select
-                  value={projectId}
-                  onChange={setProjectId}
-                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                  aria-label="Project"
-                />
-              </Field>
-
               <div className="checkion-scan-form__actions checkion-launch-compose__actions">
                 <Button
                   type="submit"
