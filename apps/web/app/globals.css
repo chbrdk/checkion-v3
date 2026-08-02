@@ -2587,14 +2587,6 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
 }
 
-.checkion-geo-query-list__hint {
-  margin: 0 0 0.35rem;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: var(--muted);
-  max-width: 40rem;
-}
-
 .checkion-magazine-list {
   list-style: none;
   margin: 0.35rem 0 0;

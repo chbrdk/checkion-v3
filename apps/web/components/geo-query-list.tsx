@@ -189,9 +189,6 @@ export function GeoQueryList({ value, onChange, url, disabled = false }: Props) 
           </Button>
         }
       />
-      <p className="checkion-geo-query-list__hint">
-        One prompt per row — edit inline, add more, or ask AI for host-aware ideas.
-      </p>
 
       {value.length ? (
         <ol className="checkion-magazine-list checkion-geo-query-list__items">
