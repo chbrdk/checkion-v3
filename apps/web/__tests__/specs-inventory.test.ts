@@ -21,6 +21,7 @@ const requiredSpecs = [
   'specs/domain/edit-dialogs.md',
   'specs/domain/geo-eeat.md',
   'specs/domain/geo-competitive-presence.md',
+  'specs/domain/geo-model-catalog.md',
   'specs/domain/geo-answer-insights.md',
   'specs/domain/journey-ui.md',
   'specs/domain/project-reports.md',

@@ -85,12 +85,38 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /^GEO queries$/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /AI suggest GEO queries/i })).toBeTruthy()
-    expect(screen.getByLabelText(/GEO models/i)).toBeTruthy()
+    expect(screen.getByRole('group', { name: /^GEO models$/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /GPT-5\.4 nano \(Live\)/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /Suggest default GEO models/i })).toBeTruthy()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     // Magazine list rows — host defaults present as editable text buttons
     expect(screen.getByRole('button', { name: /Best alternatives to bosch-ebike/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Add GEO query/i })).toBeTruthy()
+  })
+
+  it('toggles GEO model chips and Suggest restores default', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    const luna = screen.getByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i })
+    expect(luna).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(luna)
+    expect(luna).toHaveAttribute('aria-pressed', 'true')
+
+    const sonnet = screen.getByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i })
+    fireEvent.click(sonnet)
+    expect(sonnet).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/1 Soon model/i)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Suggest default GEO models/i }))
+    expect(screen.getByRole('button', { name: /GPT-5\.4 nano \(Live\)/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(luna).toHaveAttribute('aria-pressed', 'false')
+    expect(sonnet).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('adds and removes GEO query rows from the list', () => {
@@ -172,6 +198,8 @@ describe('ScanLaunchForm', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    fireEvent.click(screen.getByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i }))
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
 
     await waitFor(() => {
@@ -189,7 +217,8 @@ describe('ScanLaunchForm', () => {
     expect(body.projectId).toBe('proj-1')
     expect(body.url).toContain('http')
     expect(body.queries.length).toBeGreaterThan(0)
-    expect(body.models).toEqual(['gpt-5.4-nano'])
+    // Live filter drops Anthropic; keeps OpenAI selection
+    expect(body.models).toEqual(['gpt-5.4-nano', 'gpt-5.6-luna'])
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-new-1', 'overview'))
     })

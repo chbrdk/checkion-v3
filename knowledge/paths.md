@@ -54,6 +54,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Queries deep-link: `/geo/:id/queries?q=<prompt>&model=<modelId>` (`paths.routes.geoQueriesPrompt`)
 - Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading`
 - Suggest (launch): `POST /api/geo/suggest-queries` (`paths.routes.apiGeoSuggestQueries`) — fixture host pool without `OPENAI_API_KEY`; OpenAI when set
+- Model catalog (launch chips): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; live GEO posts OpenAI-supported ids only (`specs/domain/geo-model-catalog.md`)
 - Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)
 
 ## Share

@@ -13,16 +13,21 @@ import {
 } from '@msqdx/ui'
 import { Select } from '../lib/msqdx-ui-client'
 import {
+  defaultGeoModelIds,
+  modelsForLaunch,
+} from '../lib/geo/model-catalog'
+import {
   defaultGeoQueries,
   sameQueryList,
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
+import { GeoModelChips } from './geo-model-chips'
 import { GeoQueryList } from './geo-query-list'
 
 export { defaultGeoQueries } from '../lib/geo-query-suggest'
+export { defaultGeoModelIds } from '../lib/geo/model-catalog'
 
 const DEFAULT_DEMO_URL = 'https://www.bosch-ebike.com/de/'
-const DEFAULT_GEO_MODEL = 'gpt-5.4-nano'
 
 /** Deep-link / API launch modes preserved across IA rebuilds. */
 export type LaunchMode = 'seo' | 'geo' | 'single' | 'deep'
@@ -32,13 +37,6 @@ export type LaunchCapability = 'seo' | 'geo' | 'wcag'
 
 /** WCAG secondary depth (only when capability = WCAG). */
 export type WcagDepth = 'single' | 'deep'
-
-function parseLines(raw: string): string[] {
-  return raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-}
 
 export function capabilityFromLaunchMode(mode: LaunchMode): LaunchCapability {
   if (mode === 'seo') return 'seo'
@@ -152,7 +150,7 @@ export function ScanLaunchForm({
       : (projects[0]?.id ?? ''),
   )
   const [geoQueries, setGeoQueries] = useState(() => defaultGeoQueries(initialUrl))
-  const [geoModels, setGeoModels] = useState(DEFAULT_GEO_MODEL)
+  const [geoModels, setGeoModels] = useState<string[]>(() => defaultGeoModelIds())
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
@@ -268,13 +266,13 @@ export function ScanLaunchForm({
   async function launchGeo() {
     const queries = geoQueries.map((q) => q.trim()).filter(Boolean)
     const resolvedQueries = queries.length > 0 ? queries : defaultGeoQueries(url)
-    const models = parseLines(geoModels.replace(/,/g, '\n'))
+    const models = modelsForLaunch(geoModels)
     const body: Record<string, unknown> = {
       projectId,
       url,
       queries: resolvedQueries,
+      models,
     }
-    if (models.length > 0) body.models = models
 
     const res = await fetch(paths.routes.apiGeoJobs, {
       method: 'POST',
@@ -478,14 +476,11 @@ export function ScanLaunchForm({
                     url={url}
                     disabled={status === 'submitting'}
                   />
-                  <Field label="Models" hint="Comma or line-separated · default gpt-5.4-nano">
-                    <Input
-                      value={geoModels}
-                      onChange={(e) => setGeoModels(e.target.value)}
-                      aria-label="GEO models"
-                      placeholder={DEFAULT_GEO_MODEL}
-                    />
-                  </Field>
+                  <GeoModelChips
+                    value={geoModels}
+                    onChange={setGeoModels}
+                    disabled={status === 'submitting'}
+                  />
                 </div>
               ) : null}
             </div>
