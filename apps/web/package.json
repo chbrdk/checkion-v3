@@ -1,0 +1,32 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev --webpack --port 3007",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@checkion-v3/contracts": "file:../../packages/contracts",
+    "@msqdx/ui": "file:../../../msqdx-ui/packages/ui",
+    "@msqdx/ui-tokens": "file:../../../msqdx-ui/packages/ui-tokens",
+    "lucide-react": "^1.27.0",
+    "next": "16.1.6",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-driftkit": "^0.7.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.2",
+    "jsdom": "^29.1.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

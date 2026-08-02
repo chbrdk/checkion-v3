@@ -1,0 +1,100 @@
+/** Central path and shell configuration for CHECKION v3 web app. */
+
+export const paths = {
+  railInsetRem: 1,
+  railGapRem: 4,
+  railWidthRem: 4.25,
+  mainGutterRem: 2.5,
+  railDockEdge: 'left' as const,
+  railDockStorageKey: 'checkion.v3.railDock',
+  brandCornerRadiusPx: 32,
+  brandLabel: 'CHECKION',
+  devPort: 3007,
+  defaultDisplayName: 'CHECKION',
+  displayNameStorageKey: 'checkion.v3.displayName',
+  themeStorageKey: 'checkion.v3.theme',
+  localeStorageKey: 'checkion.v3.locale',
+  defaultTheme: 'msqdx-dark' as const,
+  defaultLocale: 'en' as const,
+  themeChoices: ['msqdx', 'msqdx-dark', 'msqdx-v2', 'msqdx-v2-dark'] as const,
+  localeChoices: ['en', 'de'] as const,
+  projectFixturesPath: 'apps/web/lib/fixtures/projects.ts',
+  projectStorePath: 'apps/web/lib/fixtures/project-store.ts',
+  scanFixturesPath: 'apps/web/lib/fixtures/scans.ts',
+  scanStorePath: 'apps/web/lib/fixtures/scan-store.ts',
+  shareStorePath: 'apps/web/lib/fixtures/share-store.ts',
+  apiTokensStorePath: 'apps/web/lib/fixtures/api-tokens-store.ts',
+  apiTokenPrefix: 'checkion_',
+  federationContract: '2026-05-plexon-federation-v3' as const,
+  /** Local demo: fixtures only — no live Plexon / crawl. Override with CHECKION_FEDERATION_MODE=live. */
+  dataSource: 'fixtures' as const,
+  federationMode: 'dummy' as const,
+  envPlexonBase: 'NEXT_PLEXON_BASE_URL',
+  envCheckionPublicUrl: 'NEXT_PUBLIC_CHECKION_URL',
+  envPlexonServiceSecret: 'PLEXON_SERVICE_SECRET',
+  envFederationMode: 'CHECKION_FEDERATION_MODE',
+  envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
+  envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
+  routes: {
+    home: '/',
+    scan: '/scan',
+    projects: '/projects',
+    projectDetail: (id: string) => `/projects/${id}`,
+    results: '/results',
+    resultDetail: (id: string) => `/results/${id}`,
+    resultSection: (id: string, section: 'overview' | 'issues' | 'detail') =>
+      `/results/${id}/${section}`,
+    domain: '/domain',
+    domainDetail: (id: string) => `/domain/${id}`,
+    domainSection: (id: string, section: 'overview' | 'issues' | 'detail') =>
+      `/domain/${id}/${section}`,
+    geo: '/geo',
+    geoDetail: (id: string) => `/geo/${id}`,
+    geoSection: (id: string, section: 'overview' | 'queries') =>
+      `/geo/${id}/${section}`,
+    geoQueriesPrompt: (id: string, query: string, model?: string) => {
+      const base = `/geo/${id}/queries?q=${encodeURIComponent(query)}`
+      return model ? `${base}&model=${encodeURIComponent(model)}` : base
+    },
+    apiGeoReading: (
+      id: string,
+      kind: 'verdict' | 'eeat' | 'placement' | 'queries' | 'query',
+      query?: string,
+    ) => {
+      const base = `/api/geo-jobs/${id}/reading?kind=${kind}`
+      if (kind === 'query' && query) {
+        return `${base}&query=${encodeURIComponent(query)}`
+      }
+      return base
+    },
+    journey: '/journey',
+    reports: '/reports',
+    share: '/share',
+    shareDetail: (token: string) => `/share/${token}`,
+    settings: '/settings',
+    login: '/login',
+    apiHealth: '/api/health',
+    apiProjects: '/api/projects',
+    apiProjectDetail: (id: string) => `/api/projects/${id}`,
+    apiScans: '/api/scans',
+    apiScanDetail: (id: string) => `/api/scans/${id}`,
+    apiScanOverview: (id: string) => `/api/scans/${id}/overview`,
+    apiScanIssues: (id: string) => `/api/scans/${id}/issues`,
+    apiScanScores: (id: string) => `/api/scans/${id}/scores`,
+    apiScanWeakestSignal: (id: string) => `/api/scans/${id}/weakest-signal`,
+    apiDomainScans: '/api/domain-scans',
+    apiDomainScanDetail: (id: string) => `/api/domain-scans/${id}`,
+    apiDomainScanOverview: (id: string) => `/api/domain-scans/${id}/overview`,
+    apiDomainScanIssues: (id: string) => `/api/domain-scans/${id}/issues`,
+    apiDomainIssuePages: (id: string, issueId: string) =>
+      `/api/domain-scans/${id}/issues/${issueId}/pages`,
+    apiDomainTrustReading: (id: string) => `/api/domain-scans/${id}/trust-reading`,
+    apiDomainSeoReading: (id: string) => `/api/domain-scans/${id}/seo-reading`,
+    apiShare: '/api/share',
+    apiShareDetail: (token: string) => `/api/share/${token}`,
+    apiTokens: '/api/tokens',
+    apiFederationHealth: '/api/federation/health',
+  },
+} as const
+
+export type AppPaths = typeof paths

@@ -1,0 +1,5541 @@
+@import '@msqdx/ui/styles.css';
+
+:root {
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg0); color: var(--fg); }
+body { font-family: var(--font-body); }
+a { color: inherit; text-decoration: none; }
+
+.checkion-stage {
+  max-width: none;
+  width: 100%;
+}
+
+.checkion-page-lead {
+  margin: 0 0 0.85rem;
+  color: var(--muted);
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  max-width: 42rem;
+}
+
+.checkion-index-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.checkion-index-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-index-card__meta {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.checkion-status-line {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+/* —— Projects admin + workspace —— */
+.checkion-projects {
+  display: grid;
+  gap: 1rem;
+}
+
+.checkion-projects__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+}
+
+.checkion-projects__toolbar .ds-input {
+  min-width: min(16rem, 100%);
+  flex: 1 1 12rem;
+}
+
+.checkion-projects__empty {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem 0;
+}
+
+.checkion-projects__table th[scope='row'] a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.checkion-projects__table th[scope='row'] a:hover {
+  color: var(--accent, var(--ink));
+  text-decoration: underline;
+}
+
+.checkion-projects__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-projects__table thead th:nth-child(4),
+.checkion-projects__table thead th:nth-child(5) {
+  text-align: right;
+}
+
+.checkion-projects__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.checkion-project-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.checkion-project-form__textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg1, var(--bg0));
+  color: var(--ink, var(--fg));
+  font: inherit;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.checkion-project-form__textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent, var(--ink)) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.checkion-meta-grid--compact {
+  margin-top: 0.25rem;
+}
+
+.checkion-project-workspace {
+  gap: var(--space-5);
+}
+
+.checkion-project-cover {
+  display: grid;
+  gap: 0.55rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.checkion-project-cover__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: var(--weight-medium, 500);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-project-cover__lede {
+  margin: 0;
+  max-width: 40rem;
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.checkion-project-cover__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.1rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.checkion-project-cover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.checkion-project-activity {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.85rem 1.25rem;
+}
+
+.checkion-project-activity__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-project-activity__value {
+  margin: 0;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-project-activity__value--meta {
+  font-size: 0.92rem;
+}
+
+.checkion-project-activity [data-tone='pos'] .checkion-project-activity__value {
+  color: var(--ok, #7dcea0);
+}
+
+.checkion-project-activity [data-tone='low'] .checkion-project-activity__value {
+  color: var(--warn, #c9a227);
+}
+
+.checkion-project-activity [data-tone='neg'] .checkion-project-activity__value {
+  color: var(--danger, #d46a6a);
+}
+
+.checkion-magazine {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.checkion-magazine--scan {
+  gap: 0;
+}
+
+.checkion-magazine--editorial {
+  max-width: 72rem;
+}
+
+.checkion-magazine-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 1rem;
+}
+
+.checkion-magazine-topbar .briefing-nav {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: var(--type-sm);
+}
+
+.checkion-magazine-topbar .briefing-nav-sep {
+  opacity: 0.5;
+}
+
+.checkion-magazine-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ——— Masthead: score + copy + contents as one unit ——— */
+.checkion-masthead {
+  display: grid;
+  gap: 0;
+  margin-bottom: 0.25rem;
+  animation: checkion-rise 0.55s ease-out both;
+}
+
+.checkion-masthead__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  gap: clamp(1.5rem, 3.5vw, 2.75rem);
+  align-items: end;
+  padding-block: clamp(1.75rem, 3.5vw, 2.75rem) clamp(2.5rem, 5vw, 3.75rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-cover__score-col {
+  display: grid;
+  gap: 1.35rem;
+  align-content: end;
+  justify-items: end;
+  border-right: 1px solid var(--line);
+  padding: 0.35rem clamp(1.25rem, 3vw, 2rem) 0.15rem 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.checkion-cover__score {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.checkion-masthead[data-tone='pos'] .checkion-cover__score-num { color: var(--ok, #7dcea0); }
+.checkion-masthead[data-tone='low'] .checkion-cover__score-num { color: var(--warn, #c9a227); }
+.checkion-masthead[data-tone='neg'] .checkion-cover__score-num { color: var(--danger, #d46a6a); }
+
+.checkion-cover__score-num {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(5rem, 11vw, 7.5rem);
+  font-weight: var(--weight-light, 300);
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-cover__score-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.checkion-cover__copy {
+  display: grid;
+  align-content: end;
+  gap: 0;
+  min-width: 0;
+  padding-bottom: 0.2rem;
+}
+
+.checkion-masthead[data-variant='folio'] .checkion-masthead__hero {
+  padding-block: 0.35rem 1.15rem;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+}
+
+.checkion-masthead[data-variant='folio'] .checkion-cover__score-num {
+  font-size: clamp(3.25rem, 7vw, 4.5rem);
+}
+
+.checkion-masthead[data-variant='folio'] .checkion-cover__host {
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+  margin-top: 0;
+}
+
+.checkion-masthead[data-variant='folio'] .checkion-cover__title {
+  margin-top: 0.35rem;
+}
+
+.checkion-cover__host {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-cover__title {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.88rem, 1.2vw, 1rem);
+  font-weight: var(--weight-regular, 400);
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.checkion-cover__deck {
+  margin: 0.9rem 0 1.65rem;
+  max-width: 28rem;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(0.88rem, 1.25vw, 1rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.checkion-cover__tags {
+  margin-top: 0;
+  gap: 0.5rem;
+}
+
+.checkion-cover__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.checkion-cover__metrics > div {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: end;
+  text-align: right;
+  min-width: 0;
+}
+
+.checkion-cover__metrics dt {
+  margin: 0;
+  order: 2;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.checkion-cover__metrics dd {
+  margin: 0;
+  order: 1;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.65rem, 3.2vw, 2.35rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--ink, var(--fg));
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-magazine-facets.geo-places li {
+  min-width: 6rem;
+  font-size: var(--type-sm);
+  padding-top: 0.55rem;
+}
+
+.checkion-magazine-facets li[data-kind='issues'] {
+  border-top-color: var(--danger, #d46a6a);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--danger, #d46a6a) 12%, transparent), transparent);
+}
+
+.checkion-magazine-facets li[data-kind='time'],
+.checkion-magazine-facets li[data-kind='duration'] {
+  border-top-color: #7a9eb0;
+  background: linear-gradient(180deg, rgba(122, 158, 176, 0.12), transparent);
+}
+
+.checkion-magazine-facets li[data-kind='runners'] {
+  border-top-color: var(--accent);
+}
+
+/* ——— Spreads ——— */
+.checkion-magazine-body,
+.checkion-spread {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3.25rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.checkion-spread__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.checkion-spread__headline {
+  margin: 0 0 1rem;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.checkion-spread__headline--story {
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  max-width: 28ch;
+}
+
+.checkion-spread__open {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(11rem, 0.75fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  align-items: start;
+  animation: checkion-rise 0.6s 0.08s ease-out both;
+}
+
+.checkion-spread__open-main {
+  min-width: 0;
+}
+
+.checkion-spread__callout {
+  position: sticky;
+  top: 1rem;
+  padding: 1.25rem 1.15rem 1.35rem;
+  border-left: 3px solid var(--line);
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
+}
+
+.checkion-spread__callout[data-tone='neg'] {
+  border-left-color: var(--danger, #d46a6a);
+}
+
+.checkion-spread__callout[data-tone='low'] {
+  border-left-color: var(--warn, #c9a227);
+}
+
+.checkion-spread__callout[data-tone='pos'] {
+  border-left-color: var(--ok, #7dcea0);
+}
+
+/* Weakest-signal callout: quote only, flush with bottom of scoreline */
+.checkion-spread__callout--signal {
+  border-left: 0;
+  background: none;
+  padding: 0.35rem 0 0.5rem;
+  position: static;
+  align-self: end;
+}
+
+.checkion-spread__signal-quote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.checkion-spread__signal-quote p {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  font-weight: var(--weight-light, 300);
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  color: var(--ink, var(--fg));
+  text-wrap: pretty;
+}
+
+.checkion-spread__callout-num {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(3rem, 6vw, 4.25rem);
+  font-weight: var(--weight-light, 300);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-spread__callout-label {
+  margin: 0.25rem 0 0.75rem;
+  font-size: var(--type-sm);
+  color: var(--muted);
+}
+
+.checkion-spread__callout-body {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  color: var(--ink, var(--fg));
+}
+
+/* Scoreline: weakest row stands out in-list */
+.category-rank-item--weakest .ds-rank-row {
+  padding-block: 0.55rem 0.65rem;
+}
+
+.category-rank-item--weakest .ds-rank-idx {
+  color: var(--ink, var(--fg));
+  font-weight: var(--weight-semibold, 600);
+}
+
+.category-rank-item--weakest .ds-rank-label {
+  font-size: 1.05em;
+  font-weight: var(--weight-semibold, 600);
+  letter-spacing: -0.01em;
+}
+
+.category-rank-item--weakest .ds-rank-value {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.55rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink, var(--fg));
+}
+
+.category-rank-item--weakest .ds-rank-meta-sec {
+  opacity: 0.7;
+}
+
+.category-rank-item--weakest .ds-rank-fill {
+  background: var(--ink, var(--fg));
+  opacity: 0.85;
+}
+
+.category-rank-item--weakest .ds-rank-track {
+  height: 0.28rem;
+}
+
+.checkion-spread__feature {
+  display: grid;
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  padding-block: 0.5rem 0.25rem;
+  border-block: 1px solid var(--line);
+  animation: checkion-rise 0.6s 0.14s ease-out both;
+}
+
+.checkion-spread__feature--story {
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 0;
+}
+
+.checkion-page-spread {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.4fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: stretch;
+  padding-block: clamp(1.5rem, 3.5vw, 2.5rem);
+  animation: checkion-rise 0.6s 0.14s ease-out both;
+}
+
+.checkion-page-spread:not(:has(.checkion-page-spread__reading)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.checkion-page-spread__story {
+  min-width: 0;
+}
+
+.checkion-page-spread__story .checkion-spread__headline--story {
+  max-width: 22ch;
+}
+
+.checkion-page-spread__reading {
+  display: grid;
+  gap: 1.15rem;
+  align-content: space-between;
+  justify-items: end;
+  text-align: right;
+  height: 100%;
+  max-height: 400px;
+  min-height: 0;
+  padding: 1.15rem 2rem 1.15rem 1.25rem;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink, var(--fg)) 4%, var(--bg0, transparent));
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.checkion-page-spread__cefr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: end;
+  margin: 0;
+  width: 100%;
+}
+
+.checkion-page-spread__cefr-mark {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(3.5rem, 8vw, 5.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+  color: var(--ink, var(--fg));
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.12em;
+}
+
+.checkion-page-spread__cefr[data-tone='pos'] .checkion-page-spread__cefr-mark {
+  text-decoration-color: var(--ok, #7dcea0);
+}
+
+.checkion-page-spread__cefr[data-tone='low'] .checkion-page-spread__cefr-mark {
+  text-decoration-color: var(--warn, #c9a227);
+}
+
+.checkion-page-spread__cefr[data-tone='neg'] .checkion-page-spread__cefr-mark {
+  text-decoration-color: var(--danger, #d46a6a);
+}
+
+.checkion-page-spread__cefr-copy {
+  display: grid;
+  gap: 0.2rem;
+  padding-bottom: 0.35rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.checkion-page-spread__cefr-label {
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.checkion-page-spread__cefr-meta {
+  font-size: var(--type-sm);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.checkion-page-spread__clarity,
+.checkion-page-spread__complexity {
+  width: 100%;
+  max-width: 14rem;
+}
+
+.checkion-page-spread__clarity-head,
+.checkion-page-spread__complexity-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.checkion-page-spread__clarity-head strong,
+.checkion-page-spread__complexity-head strong {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.15rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-page-spread__clarity[data-tone='pos'] .checkion-page-spread__clarity-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-page-spread__clarity[data-tone='low'] .checkion-page-spread__clarity-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--warn, #c9a227);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-page-spread__clarity[data-tone='neg'] .checkion-page-spread__clarity-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-page-spread__clarity-track {
+  height: 2px;
+  background: color-mix(in srgb, var(--line) 80%, transparent);
+  overflow: hidden;
+}
+
+.checkion-page-spread__clarity-track span {
+  display: block;
+  height: 100%;
+  background: var(--ink, var(--fg));
+}
+
+.checkion-page-spread__clarity[data-tone='pos'] .checkion-page-spread__clarity-track span {
+  background: var(--ok, #7dcea0);
+}
+
+.checkion-page-spread__clarity[data-tone='low'] .checkion-page-spread__clarity-track span {
+  background: var(--warn, #c9a227);
+}
+
+.checkion-page-spread__clarity[data-tone='neg'] .checkion-page-spread__clarity-track span {
+  background: var(--danger, #d46a6a);
+}
+
+.checkion-page-spread__tiers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.checkion-page-spread__tiers li {
+  height: 0.45rem;
+  background: color-mix(in srgb, var(--line) 75%, transparent);
+}
+
+.checkion-page-spread__tiers li[data-on='true'] {
+  background: var(--ink, var(--fg));
+}
+
+.checkion-page-spread__words {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.checkion-page-spread__words em {
+  font-family: var(--font-display, var(--font-body));
+  font-style: italic;
+  font-weight: var(--weight-light, 300);
+  font-size: 1.35em;
+  letter-spacing: -0.03em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-page-dossier {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1.25rem 0 0;
+  padding-top: 0.85rem;
+  max-width: 36rem;
+}
+
+.checkion-page-dossier__row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  column-gap: 1rem;
+  align-items: baseline;
+  padding: 0;
+}
+
+.checkion-page-dossier__row dt {
+  margin: 0;
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.checkion-page-dossier__row dd {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  color: var(--ink, var(--fg));
+  overflow-wrap: anywhere;
+}
+
+.checkion-page-dossier__row--chips {
+  align-items: center;
+}
+
+.checkion-page-dossier__row--chips .checkion-chip-row {
+  min-width: 0;
+}
+
+.checkion-page-dossier__row--chips .checkion-spread__facts-mono {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.checkion-spread__prose {
+  margin: 0 0 1.15rem;
+  max-width: 38rem;
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 88%, transparent);
+}
+
+.checkion-spread__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.25rem;
+  margin: 0;
+}
+
+.checkion-spread__facts dt {
+  margin: 0;
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.checkion-spread__facts dd {
+  margin: 0.2rem 0 0;
+  font-size: var(--type-sm);
+}
+
+.checkion-spread__facts-mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--type-xs);
+  word-break: break-all;
+}
+
+.checkion-spread__lab {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  animation: checkion-rise 0.55s 0.18s ease-out both;
+}
+
+.checkion-geo-spread {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  padding-block: clamp(1.5rem, 3.5vw, 2.5rem);
+  animation: checkion-rise 0.55s 0.2s ease-out both;
+}
+
+.checkion-geo-spread__head {
+  max-width: 40rem;
+}
+
+.checkion-geo-spread__lede {
+  margin: 0.65rem 0 0;
+  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 82%, transparent);
+}
+
+.checkion-geo-spread__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: end;
+}
+
+.checkion-geo-spread__score {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  justify-items: start;
+}
+
+.checkion-geo-spread__score-num {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(4rem, 9vw, 6rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+  color: var(--ink, var(--fg));
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.12em;
+}
+
+.checkion-geo-spread[data-tone='pos'] .checkion-geo-spread__score-num {
+  text-decoration-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-spread[data-tone='low'] .checkion-geo-spread__score-num {
+  text-decoration-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-spread[data-tone='neg'] .checkion-geo-spread__score-num {
+  text-decoration-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-spread__score-label {
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.checkion-geo-spread__signals {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  max-width: 28rem;
+}
+
+.checkion-geo-spread__meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.checkion-geo-spread__meter-head strong {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.15rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-spread__meter[data-tone='pos'] .checkion-geo-spread__meter-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-geo-spread__meter[data-tone='low'] .checkion-geo-spread__meter-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--warn, #c9a227);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-geo-spread__meter[data-tone='neg'] .checkion-geo-spread__meter-head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-geo-spread__meter-track {
+  height: 2px;
+  background: color-mix(in srgb, var(--line) 80%, transparent);
+  overflow: hidden;
+}
+
+.checkion-geo-spread__meter-track span {
+  display: block;
+  height: 100%;
+  background: var(--ink, var(--fg));
+}
+
+.checkion-geo-spread__meter[data-tone='pos'] .checkion-geo-spread__meter-track span {
+  background: var(--ok, #7dcea0);
+}
+
+.checkion-geo-spread__meter[data-tone='low'] .checkion-geo-spread__meter-track span {
+  background: var(--warn, #c9a227);
+}
+
+.checkion-geo-spread__meter[data-tone='neg'] .checkion-geo-spread__meter-track span {
+  background: var(--danger, #d46a6a);
+}
+
+.checkion-geo-spread__presence {
+  margin-top: 0.25rem;
+}
+
+.checkion-lab-tile {
+  display: grid;
+  gap: 0.2rem;
+  padding: 1.1rem 1rem 1.2rem;
+  border-right: 1px solid var(--line);
+  min-width: 0;
+}
+
+.checkion-lab-tile:last-child {
+  border-right: 0;
+}
+
+.checkion-lab-tile__k {
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.checkion-lab-tile__v {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-lab-tile[data-tone='pos'] .checkion-lab-tile__v {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-lab-tile[data-tone='low'] .checkion-lab-tile__v {
+  text-decoration: underline;
+  text-decoration-color: var(--warn, #c9a227);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-lab-tile[data-tone='neg'] .checkion-lab-tile__v {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-lab-tile__m {
+  font-size: var(--type-xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.checkion-lab-tile__unit {
+  margin-left: 0.05em;
+  font-size: 0.45em;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  vertical-align: 0.35em;
+}
+
+/* Notes/vitals tiles: number first, property under */
+.checkion-spread__lab--notes {
+  grid-template-columns: repeat(var(--notes-cols, 3), minmax(0, 1fr));
+  animation: none;
+  border: 0;
+}
+
+.checkion-spread__lab--notes .checkion-lab-tile {
+  grid-template-areas:
+    'value'
+    'key'
+    'meta';
+  gap: 0.35rem;
+  padding: 1.15rem 0.85rem 1.25rem;
+}
+
+.checkion-spread__lab--notes .checkion-lab-tile__v {
+  grid-area: value;
+  font-size: clamp(1.85rem, 3.2vw, 2.55rem);
+}
+
+.checkion-spread__lab--notes .checkion-lab-tile__k {
+  grid-area: key;
+  color: var(--ink, var(--fg));
+  letter-spacing: 0.12em;
+}
+
+.checkion-spread__lab--notes .checkion-lab-tile__m {
+  grid-area: meta;
+}
+
+.checkion-spread__lab--notes .checkion-lab-tile[data-active='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Combined metrics spread: two chapters, one grid */
+.checkion-metrics-spread {
+  display: grid;
+  gap: 1rem;
+  animation: checkion-rise 0.55s 0.12s ease-out both;
+}
+
+.checkion-domain-overview .checkion-metrics-spread {
+  margin-block: 2.75rem;
+}
+
+.checkion-metrics-spread__head {
+  max-width: 36rem;
+}
+
+.checkion-metrics-spread__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+}
+
+.checkion-metrics-spread__body[data-chapters='both'] {
+  grid-template-rows: auto repeat(var(--metric-tile-rows, 2), auto);
+  align-items: stretch;
+}
+
+.checkion-metrics-spread__body[data-chapters='notes'],
+.checkion-metrics-spread__body[data-chapters='vitals'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.checkion-metrics-spread__chapter {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+}
+
+.checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__chapter {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: subgrid;
+  grid-row: 1 / -1;
+}
+
+.checkion-metrics-spread__chapter[data-chapter='notes'] {
+  border-right: 1.5px solid var(--ink, var(--fg));
+}
+
+.checkion-metrics-spread__body[data-chapters='notes'] .checkion-metrics-spread__chapter[data-chapter='notes'],
+.checkion-metrics-spread__body[data-chapters='vitals'] .checkion-metrics-spread__chapter {
+  border-right: 0;
+}
+
+.checkion-metrics-spread__kicker {
+  margin: 0;
+  padding: 0.85rem 0.85rem 0.45rem;
+  min-height: 2.35rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+.checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__kicker {
+  grid-column: 1 / -1;
+}
+
+.checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__tiles {
+  display: contents;
+}
+
+.checkion-metrics-spread__tiles .checkion-lab-tile {
+  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-right: 1px solid var(--line);
+  min-height: 100%;
+  align-content: start;
+}
+
+.checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 3) {
+  border-top: 0;
+}
+
+.checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(3n),
+.checkion-metrics-spread__tiles .checkion-lab-tile:last-child {
+  border-right: 0;
+}
+
+.checkion-metrics-spread__tiles .checkion-lab-tile__m {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.4em;
+}
+
+.checkion-spread__breaks-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.checkion-spread__breaks {
+  animation: checkion-rise 0.55s 0.22s ease-out both;
+}
+
+.checkion-band-action {
+  color: var(--accent);
+  font-size: var(--type-sm);
+  white-space: nowrap;
+}
+
+@keyframes checkion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes checkion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-masthead,
+  .checkion-spread__open,
+  .checkion-spread__feature,
+  .checkion-page-spread,
+  .checkion-spread__lab,
+  .checkion-geo-spread,
+  .checkion-geo-insights,
+  .checkion-geo-voice,
+  .checkion-geo-recs,
+  .checkion-metrics-spread,
+  .checkion-spread__breaks,
+  .checkion-pullquote--center {
+    animation: none;
+  }
+}
+
+.checkion-section-tabs {
+  margin: 0.75rem 0 0;
+}
+
+.checkion-section-tabs.ds-tablist {
+  display: flex;
+  gap: 0.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+}
+
+.checkion-section-tabs .ds-tab {
+  text-transform: capitalize;
+  text-decoration: none;
+}
+
+/* ——— Contents (editorial nav — primary section switch) ——— */
+.checkion-contents-sentinel {
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.checkion-contents {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem 0 0;
+  /* Opaque underlay — translucent + blur reads as a duplicated tab row while stuck. */
+  background: var(--bg0, var(--bg, #fff));
+  border-bottom: 1px solid var(--line);
+  isolation: isolate;
+  transition:
+    padding 0.18s ease,
+    gap 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.checkion-magazine--geo {
+  --checkion-contents-offset: 6.75rem;
+}
+
+.checkion-magazine--geo:has(.checkion-contents--compact) {
+  --checkion-contents-offset: 4.15rem;
+}
+
+.checkion-contents--compact {
+  gap: 0.2rem;
+  padding: 0.45rem 0 0;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--bg0, #fff) 70%, transparent);
+}
+
+.checkion-contents--compact .checkion-contents__label {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+
+.checkion-contents--compact .checkion-contents__link {
+  gap: 0;
+  padding: 0.4rem 0.75rem 0.5rem 0;
+  border-bottom-width: 2px;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 0.55rem;
+}
+
+.checkion-contents--compact .checkion-contents__item:not(:first-child) .checkion-contents__link {
+  padding-left: 0.75rem;
+}
+
+.checkion-contents--compact .checkion-contents__index {
+  font-size: 0.65rem;
+}
+
+.checkion-contents--compact .checkion-contents__name {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  letter-spacing: -0.02em;
+}
+
+.checkion-contents__label {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-weight: var(--weight-regular, 400);
+  transition: font-size 0.22s ease, opacity 0.22s ease;
+}
+
+.checkion-contents__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.15rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+}
+
+.checkion-contents__item {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+
+.checkion-contents__item:last-child {
+  border-right: 0;
+}
+
+.checkion-contents__link {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem 1.05rem 0;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 55%, var(--muted));
+  border-bottom: 3px solid transparent;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    padding 0.22s ease,
+    gap 0.22s ease;
+}
+
+.checkion-contents__item:first-child .checkion-contents__link {
+  padding-left: 0;
+}
+
+.checkion-contents__item:not(:first-child) .checkion-contents__link {
+  padding-left: 1rem;
+}
+
+.checkion-contents__link:hover {
+  color: var(--ink, var(--fg));
+  background: color-mix(in srgb, var(--line) 35%, transparent);
+}
+
+.checkion-contents__index {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  transition: font-size 0.22s ease;
+}
+
+.checkion-contents__name {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  transition: font-size 0.22s ease, letter-spacing 0.22s ease;
+}
+
+.checkion-contents__link--active {
+  color: var(--ink, var(--fg));
+  border-bottom-color: var(--accent);
+}
+
+.checkion-contents__link--active .checkion-contents__index {
+  color: var(--accent);
+}
+
+.checkion-contents__link--active .checkion-contents__name {
+  color: var(--ink, var(--fg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-contents,
+  .checkion-contents__label,
+  .checkion-contents__link,
+  .checkion-contents__index,
+  .checkion-contents__name {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkion-contents__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkion-contents__item {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .checkion-contents__item:last-child {
+    border-bottom: 0;
+  }
+
+  .checkion-contents__item:not(:first-child) .checkion-contents__link {
+    padding-left: 0;
+  }
+
+  .checkion-contents--compact .checkion-contents__link {
+    grid-template-columns: auto 1fr;
+  }
+}
+
+/* ——— Folio is the same masthead, compact via data-variant ——— */
+.checkion-spread__chapter {
+  max-width: 40rem;
+}
+
+/* ——— Pull quote ——— */
+.checkion-pullquote {
+  margin: 0;
+  padding: 0.25rem 0 0.25rem 1.15rem;
+  border-left: 3px solid var(--accent);
+}
+
+.checkion-pullquote--center {
+  padding: 1.5rem 0;
+  border-left: 0;
+  border-block: 1px solid var(--line);
+  text-align: center;
+  max-width: 36rem;
+  margin-inline: auto;
+  animation: checkion-rise 0.55s 0.2s ease-out both;
+}
+
+.checkion-pullquote__text {
+  margin: 0.35rem 0 0.75rem;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.8vw, 1.9rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-pullquote footer {
+  font-size: var(--type-sm);
+  color: var(--muted);
+}
+
+.checkion-pullquote footer a {
+  color: var(--accent);
+}
+
+/* ——— Issue visual stage (full-width capture + compact rail) ——— */
+.checkion-issues-panel {
+  gap: 0.85rem;
+}
+
+.checkion-issues-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+}
+
+.checkion-issues-panel__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.checkion-issues-workspace--stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .checkion-issues-workspace--stage {
+    grid-template-columns: minmax(0, 1fr) minmax(13.5rem, 20%);
+    gap: 0.85rem 1rem;
+  }
+
+  .checkion-issues-workspace__rail {
+    position: sticky;
+    top: 5.25rem;
+    max-height: calc(100vh - 6.5rem);
+    overflow: auto;
+  }
+}
+
+.checkion-issues-workspace__capture {
+  min-width: 0;
+  width: 100%;
+}
+
+.checkion-issues-workspace--rail-only {
+  max-width: 28rem;
+}
+
+.checkion-issue-capture {
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.checkion-issue-capture__layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.checkion-issue-capture__layer-btn {
+  appearance: none;
+  margin: 0;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.checkion-issue-capture__layer-btn--active,
+.checkion-issue-capture__layer-btn[aria-selected='true'] {
+  color: var(--ink, var(--fg));
+  border-color: color-mix(in srgb, var(--ink, var(--fg)) 35%, transparent);
+  background: color-mix(in srgb, var(--ink, var(--fg)) 6%, transparent);
+}
+
+.checkion-issue-capture__frame {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ink, var(--fg)) 4%, transparent);
+}
+
+.checkion-issue-capture__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+
+.checkion-issue-capture__heatmap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.checkion-issue-capture__scanpath {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: color-mix(in srgb, #fff 80%, #ffb020);
+  opacity: 0.85;
+}
+
+.checkion-issue-capture__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.checkion-page-region {
+  position: absolute;
+  border: 1.5px dashed color-mix(in srgb, var(--accent, #c45c26) 80%, white);
+  background: color-mix(
+    in srgb,
+    var(--accent, #c45c26) calc(var(--prominence, 0.5) * 22%),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.checkion-page-region__label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: 0 -100%;
+  margin-top: -2px;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  padding: 0.12rem 0.3rem;
+  background: color-mix(in srgb, var(--accent, #c45c26) 90%, black);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.checkion-issue-marker {
+  pointer-events: auto;
+  position: absolute;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  color: var(--warn, #c9a227);
+  cursor: pointer;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg, #111) 35%, transparent);
+  transition:
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    outline 0.12s ease;
+}
+
+.checkion-issue-marker[data-tone='neg'] {
+  color: var(--danger, #d46a6a);
+}
+
+.checkion-issue-marker[data-tone='low'] {
+  color: var(--warn, #c9a227);
+}
+
+.checkion-issue-marker[data-tone='ok'] {
+  color: var(--ok, #7dcea0);
+}
+
+.checkion-issue-marker:hover,
+.checkion-issue-marker[data-active='true'] {
+  background: color-mix(in srgb, currentColor 32%, transparent);
+  box-shadow: 0 0 0 2px currentColor;
+  z-index: 2;
+}
+
+.checkion-issue-marker__idx {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: 0 -100%;
+  margin-top: -2px;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  padding: 0.12rem 0.28rem;
+  background: currentColor;
+  color: var(--bg, #111);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-issue-capture__cap {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+/* Compact findings rail */
+.checkion-issue-rail {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.checkion-issue-rail__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.checkion-issue-rail__count {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-issue-rail__filters {
+  flex-wrap: wrap;
+}
+
+.checkion-issue-rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.checkion-issue-rail__list > li {
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.checkion-issue-rail__list > li[data-open='true'] {
+  background: color-mix(in srgb, var(--ink, var(--fg)) 4%, transparent);
+}
+
+.checkion-issue-rail__row {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.4rem;
+  row-gap: 0.1rem;
+  margin: 0;
+  padding: 0.45rem 0.15rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.checkion-issue-rail__row:hover {
+  background: color-mix(in srgb, var(--ink, var(--fg)) 3%, transparent);
+}
+
+.checkion-issue-rail__idx {
+  grid-row: 1 / 3;
+  align-self: start;
+  padding-top: 0.15rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-issue-rail__title {
+  font-size: var(--type-sm);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.checkion-issue-rail__meta {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.checkion-issue-rail__list > li[data-sev='critical'] .checkion-issue-rail__meta,
+.checkion-issue-rail__list > li[data-sev='serious'] .checkion-issue-rail__meta {
+  color: var(--danger, #d46a6a);
+}
+
+.checkion-issue-rail__body {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0 0.15rem 0.65rem 2rem;
+  font-size: var(--type-sm);
+  line-height: 1.35;
+}
+
+.checkion-issue-rail__body p {
+  margin: 0;
+}
+
+.checkion-dossier {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.checkion-severity-tally {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--line);
+}
+
+.checkion-severity-tally__item {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--line);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 0.2rem;
+  padding: 1rem 0.85rem 1.1rem;
+  text-align: left;
+  min-width: 0;
+  transition: background 0.15s ease;
+}
+
+.checkion-severity-tally__item:last-child {
+  border-right: 0;
+}
+
+.checkion-severity-tally__item:hover,
+.checkion-severity-tally__item[data-active='true'] {
+  background: color-mix(in srgb, var(--line) 45%, transparent);
+}
+
+.checkion-severity-tally__item strong {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-severity-tally__item[data-sev='critical'] strong { color: var(--danger, #d46a6a); }
+.checkion-severity-tally__item[data-sev='serious'] strong { color: color-mix(in srgb, var(--danger, #d46a6a) 70%, var(--warn, #c9a227)); }
+.checkion-severity-tally__item[data-sev='moderate'] strong { color: var(--warn, #c9a227); }
+.checkion-severity-tally__item[data-sev='minor'] strong { color: var(--muted); }
+
+.checkion-severity-tally__item span {
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.checkion-dossier__filters {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.checkion-dossier__inspect {
+  display: grid;
+  gap: 0.65rem;
+}
+
+/* ——— Score ledger ——— */
+.checkion-score-ledger {
+  display: grid;
+  gap: 0;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.checkion-score-ledger__cell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  overflow: hidden;
+}
+
+.checkion-score-ledger__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: var(--bar, 0%);
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.checkion-score-ledger__cell[data-tone='pos'] { color: var(--ok, #7dcea0); }
+.checkion-score-ledger__cell[data-tone='low'] { color: var(--warn, #c9a227); }
+.checkion-score-ledger__cell[data-tone='neg'] { color: var(--danger, #d46a6a); }
+
+.checkion-score-ledger__idx {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.checkion-score-ledger__label {
+  color: var(--ink, var(--fg));
+  font-size: var(--type-sm);
+}
+
+.checkion-score-ledger__value {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* ——— Detail report (Chapter 03) ——— */
+.checkion-report {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.checkion-report__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+  margin: 0;
+}
+
+.checkion-report__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.checkion-report__search {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  margin: 0 -0.15rem;
+  background: color-mix(in srgb, var(--bg, #fff) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.checkion-report__search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.checkion-report__search-meta {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.checkion-report__search-meta em {
+  font-style: normal;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-report__ledger {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.checkion-report__range-line {
+  margin: 0.15rem 0 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.checkion-report__range-line strong {
+  color: var(--ink, var(--fg));
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-report__range-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.35rem;
+}
+
+.checkion-report__band {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.checkion-report__band-title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-report__band-head {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.checkion-report__formula {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--type-xs);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.checkion-report__kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-report__table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+  line-height: 1.3;
+}
+
+.checkion-report__table th,
+.checkion-report__table td {
+  padding: 0.32rem 0.65rem 0.32rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  vertical-align: top;
+  text-align: left;
+}
+
+.checkion-report__table th[scope='row'] {
+  width: 58%;
+  font-weight: var(--weight-regular, 400);
+  color: var(--muted);
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.checkion-report__table td {
+  color: var(--ink, var(--fg));
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+
+/* Metric tone: left accent only — values stay ink */
+.checkion-report__table tbody tr[data-tone] td {
+  box-shadow: inset 2px 0 0 transparent;
+  padding-left: 0.55rem;
+}
+
+.checkion-report__table tbody tr[data-tone='pos'] td {
+  box-shadow: inset 2px 0 0 var(--ok, #7dcea0);
+}
+
+.checkion-report__table tbody tr[data-tone='low'] td {
+  box-shadow: inset 2px 0 0 var(--warn, #c9a227);
+}
+
+.checkion-report__table tbody tr[data-tone='neg'] td {
+  box-shadow: inset 2px 0 0 var(--danger, #d46a6a);
+}
+
+.checkion-report__table thead th {
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 0.15rem;
+  padding-bottom: 0.25rem;
+  border-bottom-color: var(--line);
+}
+
+.checkion-report__table--ledger th[scope='row'] {
+  width: auto;
+  color: var(--ink, var(--fg));
+  white-space: normal;
+}
+
+.checkion-report__table--ledger .checkion-report__idx {
+  width: 2rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-report__table--ledger .checkion-report__num {
+  width: 3.25rem;
+  text-align: right;
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.05rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+}
+
+.checkion-report__table--ledger .checkion-report__max {
+  width: 2.75rem;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-report__table--ledger tr[data-tone='pos'] {
+  box-shadow: inset 2px 0 0 var(--ok, #7dcea0);
+}
+
+.checkion-report__table--ledger tr[data-tone='low'] {
+  box-shadow: inset 2px 0 0 var(--warn, #c9a227);
+}
+
+.checkion-report__table--ledger tr[data-tone='neg'] {
+  box-shadow: inset 2px 0 0 var(--danger, #d46a6a);
+}
+
+/* Ledger: tone via row accent only — scores stay ink */
+.checkion-report__table--ledger tbody tr[data-tone] td {
+  box-shadow: none;
+  padding-left: 0;
+}
+
+.checkion-report__shot {
+  margin: 0;
+  grid-column: 1 / -1;
+  max-width: 18rem;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  overflow: hidden;
+}
+
+.checkion-report__shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.checkion-report__cleared {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.checkion-report__help {
+  display: block;
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+.checkion-chip-row--tight {
+  gap: 0.25rem;
+}
+
+@media (min-width: 900px) {
+  .checkion-report {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+    row-gap: 3.25rem;
+  }
+
+  .checkion-report__head,
+  .checkion-report__search,
+  .checkion-report__shot,
+  .checkion-report__ledger,
+  .checkion-report__tags {
+    grid-column: 1 / -1;
+  }
+}
+
+.checkion-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.checkion-meta-grid dt {
+  font-size: var(--type-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.checkion-meta-grid dd {
+  margin: 0.15rem 0 0;
+}
+
+.checkion-issue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkion-scan-form {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 32rem;
+  margin-top: var(--space-3);
+}
+
+.checkion-scan-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.checkion-result-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.checkion-share-landing {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  display: grid;
+  gap: var(--space-5);
+}
+
+.checkion-share-landing__head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.checkion-share-brand {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+}
+
+.checkion-issue-filter {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.checkion-issue-detail {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.checkion-issue-detail-label {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+.checkion-issue-context {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  overflow-x: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--type-xs);
+  line-height: 1.45;
+  color: var(--ink, var(--fg));
+  background: color-mix(in srgb, var(--line) 55%, transparent);
+  border-left: 2px solid var(--accent);
+}
+
+.checkion-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.checkion-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .checkion-masthead__hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .checkion-cover__score-col {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0 0 0.85rem;
+    justify-items: end;
+  }
+
+  .checkion-cover__score {
+    justify-items: end;
+    text-align: right;
+  }
+
+  .checkion-cover__metrics {
+    justify-content: flex-end;
+    gap: 1rem 1.5rem;
+  }
+
+  .checkion-spread__open,
+  .checkion-spread__feature,
+  .checkion-page-spread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkion-page-spread__reading {
+    padding: 1.15rem 1.25rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .checkion-metrics-spread__body[data-chapters='both'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__chapter {
+    display: grid;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    grid-row: auto;
+  }
+
+  .checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .checkion-metrics-spread__body[data-chapters='both'] .checkion-metrics-spread__kicker {
+    grid-column: auto;
+  }
+
+  .checkion-metrics-spread__chapter[data-chapter='notes'] {
+    border-right: 0;
+    border-bottom: 1.5px solid var(--ink, var(--fg));
+  }
+
+  .checkion-metrics-spread__tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .checkion-page-dossier__row {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .checkion-spread__lab {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkion-geo-spread__body {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .checkion-lab-tile:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .checkion-lab-tile:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .checkion-spread__callout {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkion-magazine-topbar {
+    flex-direction: column;
+  }
+
+  .checkion-metrics-spread__tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 3) {
+    border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  }
+
+  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(3n) {
+    border-right: 1px solid var(--line);
+  }
+
+  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(2n),
+  .checkion-metrics-spread__tiles .checkion-lab-tile:last-child {
+    border-right: 0;
+  }
+
+  .checkion-spread__lab {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkion-page-dossier__row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.15rem;
+  }
+
+  .checkion-lab-tile {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .checkion-lab-tile:last-child {
+    border-bottom: 0;
+  }
+
+  .checkion-spread__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkion-severity-tally {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkion-severity-tally__item:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .checkion-severity-tally__item:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* —— Domain magazine (corpus, not single-page) —— */
+.checkion-magazine--domain .checkion-cover__kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted, #8a8a8a);
+}
+
+.checkion-domain-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface, #141414) 92%, transparent);
+}
+
+.checkion-domain-callout__body {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.checkion-domain-callout__link {
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-domain-chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2.75rem;
+}
+
+.checkion-domain-chapter__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.checkion-domain-chapter__head:has(.checkion-domain-reading) {
+  margin-bottom: 1.75rem;
+}
+
+.checkion-domain-chapter__foot {
+  margin: 0;
+}
+
+.checkion-domain-reading {
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  max-width: 52rem;
+}
+
+.checkion-domain-reading__eyebrow {
+  margin: 0 0 0.45rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-domain-reading__quote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.checkion-domain-reading__quote p {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.15rem, 2.1vw, 1.45rem);
+  font-weight: var(--weight-light, 300);
+  font-style: italic;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+  color: var(--ink, var(--fg));
+  text-wrap: pretty;
+}
+
+.checkion-domain-seo__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.3fr) minmax(0, 0.7fr);
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+  align-items: stretch;
+}
+
+.checkion-domain-chapter.checkion-domain-seo {
+  margin-bottom: 2.75rem;
+}
+
+.checkion-domain-seo__lede {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.checkion-domain-seo__lede .checkion-domain-reading {
+  margin: 0;
+  max-width: none;
+}
+
+.checkion-domain-seo__lede .checkion-domain-reading__quote {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.15rem, 1.8vw, 1.4rem);
+  font-weight: var(--weight-light, 300);
+  font-style: italic;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+  color: var(--ink, var(--fg));
+  text-wrap: pretty;
+}
+
+.checkion-domain-seo__meters {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .checkion-domain-seo__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-domain-seo__lede,
+  .checkion-domain-seo__meters {
+    justify-content: flex-start;
+  }
+}
+
+.checkion-domain-overview .checkion-domain-corpus-signal {
+  margin-top: 1.75rem;
+}
+
+.checkion-domain-overview .checkion-spread__open {
+  grid-template-columns: 1fr;
+}
+
+.checkion-domain-rank-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 900px) {
+  .checkion-domain-systemic-rank .ds-rank,
+  .checkion-domain-systemic-rank .category-rank {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.75rem;
+    row-gap: 0.15rem;
+    align-items: start;
+  }
+
+  .checkion-domain-systemic-rank .ds-rank > li:nth-child(odd),
+  .checkion-domain-systemic-rank .category-rank > li:nth-child(odd) {
+    padding-right: 0.75rem;
+  }
+
+  .checkion-domain-systemic-rank .ds-rank > li:nth-child(even),
+  .checkion-domain-systemic-rank .category-rank > li:nth-child(even) {
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--line);
+  }
+}
+
+.checkion-domain-facts--inline {
+  margin-top: 0.5rem;
+}
+
+.checkion-domain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0;
+}
+
+.checkion-domain-grid--dist {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.checkion-domain-grid > .checkion-domain-card {
+  border: none;
+  border-radius: 0;
+  padding: 0.15rem 1.35rem;
+  background: transparent;
+}
+
+.checkion-domain-grid > .checkion-domain-card:first-child {
+  padding-left: 0;
+}
+
+.checkion-domain-grid > .checkion-domain-card:last-child {
+  padding-right: 0;
+}
+
+.checkion-domain-grid > .checkion-domain-card:not(:first-child) {
+  border-left: 1px solid var(--line);
+}
+
+@media (max-width: 1100px) {
+  .checkion-domain-grid--dist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkion-domain-grid--dist > .checkion-domain-card:nth-child(2n + 1) {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .checkion-domain-grid--dist > .checkion-domain-card:nth-child(2n) {
+    padding-right: 0;
+  }
+
+  .checkion-domain-grid--dist > .checkion-domain-card:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .checkion-domain-grid--dist {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-domain-grid--dist > .checkion-domain-card,
+  .checkion-domain-grid--dist > .checkion-domain-card:nth-child(2n + 1),
+  .checkion-domain-grid--dist > .checkion-domain-card:nth-child(2n) {
+    border-left: none;
+    padding-inline: 0;
+  }
+
+  .checkion-domain-grid--dist > .checkion-domain-card:not(:first-child) {
+    border-top: 1px solid var(--line);
+    margin-top: 1.15rem;
+    padding-top: 1.15rem;
+  }
+}
+
+.checkion-domain-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem 1.15rem;
+  border: 1px solid var(--line);
+}
+
+.checkion-domain-card--flush {
+  padding-block: 0.15rem 0.25rem;
+}
+
+/* Soft corpus donuts — thin ring; same status tokens as magazine meters */
+.checkion-donut {
+  --donut-1: var(--ok, #7dcea0);
+  --donut-2: var(--accent);
+  --donut-3: var(--warn, #c9a227);
+  --donut-4: var(--danger, #d46a6a);
+  --donut-5: color-mix(in srgb, var(--ok, #7dcea0) 55%, var(--accent));
+  --donut-6: color-mix(in srgb, var(--warn, #c9a227) 55%, var(--accent));
+  --donut-7: color-mix(in srgb, var(--accent) 70%, var(--muted));
+  --donut-8: color-mix(in srgb, var(--muted) 75%, var(--ink, var(--fg)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+  padding-bottom: 0.75rem;
+}
+
+.checkion-donut__chart {
+  position: relative;
+  width: 10.5rem;
+  height: 10.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.checkion-donut__hole {
+  position: absolute;
+  /* thin stroke: ~8% of diameter */
+  inset: 8%;
+  border-radius: 50%;
+  background: var(--surface, #141414);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.08rem;
+  text-align: center;
+}
+
+.checkion-donut__center-v {
+  font-size: 1.2rem;
+  font-weight: var(--weight-light, 300);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--fg, #eee) 82%, var(--muted));
+}
+
+.checkion-donut__center-k {
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.checkion-donut__legend > li {
+  display: grid;
+  grid-template-columns: 0.4rem minmax(0, 1fr) auto auto;
+  gap: 0.4rem 0.5rem;
+  align-items: baseline;
+  font-size: 0.74rem;
+}
+
+.checkion-donut__swatch {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 50%;
+  align-self: center;
+  background: var(--donut-1);
+  opacity: 0.9;
+}
+
+.checkion-donut__legend > li[data-i='2'] .checkion-donut__swatch { background: var(--donut-2); }
+.checkion-donut__legend > li[data-i='3'] .checkion-donut__swatch { background: var(--donut-3); }
+.checkion-donut__legend > li[data-i='4'] .checkion-donut__swatch { background: var(--donut-4); }
+.checkion-donut__legend > li[data-i='5'] .checkion-donut__swatch { background: var(--donut-5); }
+.checkion-donut__legend > li[data-i='6'] .checkion-donut__swatch { background: var(--donut-6); }
+.checkion-donut__legend > li[data-i='7'] .checkion-donut__swatch { background: var(--donut-7); }
+.checkion-donut__legend > li[data-i='8'] .checkion-donut__swatch { background: var(--donut-8); }
+
+.checkion-donut__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--fg, #eee) 78%, var(--muted));
+}
+
+.checkion-donut__n {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-light, 300);
+}
+
+.checkion-donut__pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 2.4rem;
+  text-align: right;
+}
+
+@media (max-width: 420px) {
+  .checkion-donut__chart {
+    width: 8.5rem;
+    height: 8.5rem;
+  }
+}
+
+.checkion-domain-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.checkion-domain-meter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.checkion-domain-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.checkion-domain-meter__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: var(--type-xs, 0.78rem);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.checkion-domain-meter__head strong {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.05rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-domain-meter[data-tone='pos'] .checkion-domain-meter__head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-domain-meter[data-tone='low'] .checkion-domain-meter__head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--warn, #c9a227);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-domain-meter[data-tone='neg'] .checkion-domain-meter__head strong {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-domain-meter__track {
+  height: 2px;
+  background: color-mix(in srgb, var(--line) 80%, transparent);
+  overflow: hidden;
+}
+
+.checkion-domain-meter__track > span {
+  display: block;
+  height: 100%;
+  background: var(--ink, var(--fg));
+}
+
+.checkion-domain-meter[data-tone='pos'] .checkion-domain-meter__track > span {
+  background: var(--ok, #7dcea0);
+}
+
+.checkion-domain-meter[data-tone='low'] .checkion-domain-meter__track > span {
+  background: var(--warn, #c9a227);
+}
+
+.checkion-domain-meter[data-tone='neg'] .checkion-domain-meter__track > span {
+  background: var(--danger, #d46a6a);
+}
+
+.checkion-domain-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.checkion-domain-facts > div {
+  display: contents;
+}
+
+.checkion-domain-facts dt {
+  margin: 0;
+  color: var(--muted, #8a8a8a);
+}
+
+.checkion-domain-facts dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-domain-grades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--muted, #8a8a8a);
+}
+
+.checkion-domain-systemic,
+.checkion-domain-samples {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.checkion-domain-systemic__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-domain-systemic__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  justify-content: space-between;
+}
+
+.checkion-domain-systemic__title {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.checkion-domain-systemic__bar {
+  height: 0.3rem;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.checkion-domain-systemic__bar > span {
+  display: block;
+  height: 100%;
+  background: var(--danger, #d46a6a);
+}
+
+.checkion-domain-samples__url {
+  display: block;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.checkion-domain-samples__score {
+  font-size: 0.78rem;
+  color: var(--muted, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Domain Issues chapter — denser than magazine spreads */
+.checkion-magazine-body.checkion-domain-issues {
+  gap: 1.1rem;
+  padding-top: 1.25rem;
+}
+
+.checkion-domain-issues__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.checkion-domain-filter {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.checkion-domain-filter:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.checkion-domain-filter[data-active='true'] {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.checkion-domain-issues__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.checkion-domain-issues__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-domain-issues__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(3.5rem, 5.5rem);
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.checkion-domain-issues__row:hover {
+  background: color-mix(in srgb, var(--ink, currentColor) 3%, transparent);
+}
+
+.checkion-domain-issues__row:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 2px;
+}
+
+.checkion-domain-issues__title {
+  flex: none;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: var(--weight-regular, 400);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkion-domain-issues__pages {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: var(--weight-regular, 400);
+  color: var(--muted, #8a8a8a);
+  white-space: nowrap;
+}
+
+.checkion-domain-issues__row .checkion-domain-systemic__bar {
+  height: 0.25rem;
+  margin: 0;
+  min-width: 3.5rem;
+}
+
+.checkion-domain-issues__expand {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0 0 0.75rem;
+  padding-left: 0.15rem;
+}
+
+.checkion-domain-issues__rule {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted, #8a8a8a);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.checkion-domain-issues__detail {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--muted, #8a8a8a);
+  text-wrap: pretty;
+}
+
+.checkion-domain-issues__help {
+  font-size: 0.82rem;
+  color: var(--accent, var(--ink));
+  width: fit-content;
+}
+
+.checkion-domain-issues__affected {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.checkion-domain-issues__affected-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.85rem;
+}
+
+.checkion-domain-issues__affected-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-domain-issues__affected-status {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.checkion-domain-issues__affected-table {
+  margin: 0;
+}
+
+.checkion-domain-issues__affected-table th[scope='row'] {
+  width: auto;
+  max-width: none;
+  color: var(--ink, var(--fg));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkion-domain-issues__affected-table th[scope='row'] a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.checkion-domain-issues__affected-table th[scope='row'] a:hover {
+  color: var(--accent, var(--ink));
+  text-decoration: underline;
+}
+
+.checkion-domain-issues__affected-num {
+  width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-domain-issues__affected-table thead th:not(:first-child) {
+  text-align: right;
+}
+
+/* Tone accent on the page column (row header), not the numeric cells. */
+.checkion-domain-issues__affected-table tbody tr[data-tone] td {
+  box-shadow: none;
+  padding-left: 0;
+}
+
+.checkion-domain-issues__affected-table tbody tr[data-tone] th[scope='row'] {
+  box-shadow: inset 2px 0 0 transparent;
+  padding-left: 0.55rem;
+}
+
+.checkion-domain-issues__affected-table tbody tr[data-tone='pos'] th[scope='row'] {
+  box-shadow: inset 2px 0 0 var(--ok, #7dcea0);
+}
+
+.checkion-domain-issues__affected-table tbody tr[data-tone='low'] th[scope='row'] {
+  box-shadow: inset 2px 0 0 var(--warn, #c9a227);
+}
+
+.checkion-domain-issues__affected-table tbody tr[data-tone='neg'] th[scope='row'] {
+  box-shadow: inset 2px 0 0 var(--danger, #d46a6a);
+}
+
+.checkion-domain-issues__pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 0.35rem;
+}
+
+.checkion-domain-issues__pager--nested {
+  margin-top: 0.25rem;
+}
+
+.checkion-domain-issues__pager-meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted, #8a8a8a);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-domain-issues__pager-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.checkion-domain-issues__pager-actions .checkion-domain-filter {
+  text-transform: none;
+}
+
+@media (max-width: 700px) {
+  .checkion-domain-issues__row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'sev title pages'
+      'bar bar bar';
+  }
+
+  .checkion-domain-issues__row > :first-child {
+    grid-area: sev;
+  }
+
+  .checkion-domain-issues__title {
+    grid-area: title;
+  }
+
+  .checkion-domain-issues__pages {
+    grid-area: pages;
+  }
+
+  .checkion-domain-issues__row .checkion-domain-systemic__bar {
+    grid-area: bar;
+    min-width: 0;
+  }
+}
+
+.checkion-report__tags {
+  margin-top: 2rem;
+}
+
+
+/* ——— GEO magazine ——— */
+.checkion-geo-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.checkion-geo-diagram {
+  margin-top: 0.75rem;
+}
+
+.checkion-geo-diagram__title {
+  margin: 0 0 0.35rem;
+}
+
+.checkion-geo-diagram__deck {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  color: var(--msqdx-text-muted, color-mix(in srgb, var(--msqdx-text, #1a1a1a) 65%, transparent));
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+.checkion-geo-diagram__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.1rem;
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+.checkion-geo-diagram__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.checkion-geo-diagram__swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  background: var(--geo-tone, #5b7c99);
+}
+
+.checkion-geo-diagram__legend [data-tone="a"] { --geo-tone: #3d6b8f; }
+.checkion-geo-diagram__legend [data-tone="b"] { --geo-tone: #6a8f5b; }
+.checkion-geo-diagram__legend [data-tone="c"] { --geo-tone: #a67c52; }
+.checkion-geo-diagram__legend [data-tone="d"] { --geo-tone: #7a5f8f; }
+
+.checkion-geo-diagram__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.checkion-geo-diagram__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 14rem) minmax(0, 1fr);
+  gap: 0.65rem 1rem;
+  align-items: start;
+}
+
+.checkion-geo-diagram__q {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.checkion-geo-diagram__qlabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--msqdx-text-muted, #777);
+}
+
+.checkion-geo-diagram__qtext {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.checkion-geo-diagram__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.checkion-geo-diagram__bar-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2rem;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.checkion-geo-diagram__bar {
+  height: 0.55rem;
+  border-radius: 2px;
+  background: var(--geo-tone, #3d6b8f);
+  min-width: 0.35rem;
+  transition: width 0.35s ease;
+}
+
+.checkion-geo-diagram__bar[data-tone="a"] { --geo-tone: #3d6b8f; }
+.checkion-geo-diagram__bar[data-tone="b"] { --geo-tone: #6a8f5b; }
+.checkion-geo-diagram__bar[data-tone="c"] { --geo-tone: #a67c52; }
+.checkion-geo-diagram__bar[data-tone="d"] { --geo-tone: #7a5f8f; }
+
+.checkion-geo-diagram__bar[data-empty="true"] {
+  background: color-mix(in srgb, var(--msqdx-border, #ccc) 80%, transparent);
+  opacity: 0.55;
+}
+
+.checkion-geo-diagram__pos {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--msqdx-text-muted, #666);
+}
+
+.checkion-geo-diagram__table-cap {
+  margin: 1.25rem 0 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--msqdx-text-muted, #777);
+}
+
+.checkion-geo-matrix-wrap {
+  overflow-x: auto;
+}
+
+.checkion-geo-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.checkion-geo-matrix th,
+.checkion-geo-matrix td {
+  border: 1px solid var(--msqdx-border, color-mix(in srgb, currentColor 14%, transparent));
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.checkion-geo-matrix th {
+  font-weight: 600;
+  color: var(--msqdx-text-muted, #666);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.checkion-geo-matrix td[data-empty="true"] {
+  color: var(--msqdx-text-muted, #999);
+}
+
+.checkion-geo-sov {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkion-geo-sov__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.checkion-geo-sov[data-target],
+.checkion-geo-sov li[data-target="true"] .checkion-geo-sov__head strong {
+  color: inherit;
+}
+
+.checkion-geo-sov li[data-target="true"] .checkion-geo-sov__track > span {
+  background: #3d6b8f;
+}
+
+.checkion-geo-sov__track {
+  height: 0.4rem;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  margin: 0.3rem 0 0.2rem;
+  overflow: hidden;
+}
+
+.checkion-geo-sov__track > span {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.checkion-geo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.checkion-geo-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--msqdx-text-muted, #777);
+}
+
+.checkion-geo-filters select {
+  min-width: 12rem;
+  max-width: min(28rem, 100%);
+  font: inherit;
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--msqdx-border, #ccc);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+
+.checkion-geo-runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.checkion-geo-run {
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.checkion-geo-run:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.checkion-geo-run__meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.checkion-geo-run__query {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+}
+
+.checkion-geo-run__answer {
+  margin: 0 0 0.55rem;
+  line-height: 1.5;
+  max-width: 44rem;
+  font-size: 0.95rem;
+}
+
+.checkion-geo-run__cites {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--msqdx-text-muted, #555);
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .checkion-geo-diagram__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ——— GEO editorial folio ——— */
+.checkion-geo-folio {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  margin-top: 0.5rem;
+}
+
+.checkion-geo-open .checkion-domain-reading--headline {
+  margin: 0;
+}
+
+.checkion-geo-open .checkion-domain-reading__quote {
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 0.25rem 0 0.75rem;
+  max-width: 40rem;
+}
+
+.checkion-geo-eeat-chapter .checkion-domain-seo__layout {
+  margin-top: 0;
+}
+
+.checkion-geo-voice-rank {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.checkion-geo-voice-rank li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+}
+
+.checkion-geo-voice-rank__n {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--msqdx-text-muted, #777);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-geo-voice-rank__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.checkion-geo-voice-rank__body span {
+  font-size: 0.85rem;
+  color: var(--msqdx-text-muted, #666);
+}
+
+.checkion-geo-voice-rank__bar {
+  grid-column: 2;
+  height: 0.35rem;
+  border-radius: 2px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  overflow: hidden;
+}
+
+.checkion-geo-voice-rank__bar > span {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, currentColor 32%, transparent);
+}
+
+.checkion-geo-voice-rank li[data-target='true'] .checkion-geo-voice-rank__bar > span {
+  background: #3d6b8f;
+}
+
+.checkion-geo-brief {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.checkion-geo-brief li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem 0.85rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.checkion-geo-brief li:last-child {
+  border-bottom: 0;
+}
+
+.checkion-geo-brief h4 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+}
+
+.checkion-geo-brief p {
+  margin: 0;
+  max-width: 40rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  color: var(--msqdx-text-muted, #444);
+}
+
+.checkion-geo-brief__foot {
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+}
+
+.checkion-geo-callouts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.checkion-geo-callouts .checkion-spread__callout {
+  margin: 0;
+  min-height: 100%;
+}
+
+.checkion-geo-diagram--compact .checkion-geo-diagram__title {
+  display: none;
+}
+
+.checkion-geo-query-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.checkion-geo-qcard {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.checkion-geo-qcard:last-child {
+  border-bottom: 0;
+}
+
+.checkion-geo-qcard__query {
+  margin: 0.2rem 0 0.55rem;
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  line-height: 1.3;
+  max-width: 40rem;
+}
+
+.checkion-geo-qcard__take {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  max-width: 38rem;
+}
+
+.checkion-geo-qcard__take p {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.checkion-geo-qcard__models {
+  list-style: none;
+  margin: 0 0 0.65rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+}
+
+.checkion-geo-qcard__models li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-geo-qcard__toggle {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+  color: inherit;
+}
+
+.checkion-geo-qcard__answers {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0.85rem 0 0;
+  border-top: 1px dashed color-mix(in srgb, currentColor 14%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkion-cover__deck--folio {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
+  .checkion-geo-callouts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* GEO magazine body — two-column spreads, light type */
+.checkion-geo-spread-layout {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3rem, 7vw, 5rem);
+  margin-top: 0.5rem;
+}
+
+/* Alternating spreads: keep DOM order (main first), flip visually */
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] {
+  grid-template-columns: minmax(11rem, 0.75fr) minmax(0, 1.35fr);
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__open-main {
+  order: 2;
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > aside {
+  order: 1;
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-geo-snapshot {
+  border-left: 0;
+  border-right: 1px solid var(--line);
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout {
+  border-left: 0;
+  border-right: 3px solid var(--line);
+  background:
+    linear-gradient(-165deg, color-mix(in srgb, var(--line) 55%, transparent), transparent 70%);
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout[data-tone='neg'] {
+  border-right-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout[data-tone='low'] {
+  border-right-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout[data-tone='pos'] {
+  border-right-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.5rem;
+  max-width: 40rem;
+}
+
+.checkion-geo-reading__statement {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 88%, transparent);
+}
+
+.checkion-geo-snapshot {
+  display: grid;
+  gap: 0;
+  border-left: 1px solid var(--line);
+  align-self: stretch;
+}
+
+.checkion-geo-snapshot .checkion-lab-tile {
+  border-right: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  padding-inline: 1rem 0.25rem;
+}
+
+.checkion-geo-snapshot .checkion-lab-tile:last-child {
+  border-bottom: 0;
+}
+
+.checkion-lab-tile__v--text {
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  font-weight: var(--weight-regular, 400);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  text-decoration: none !important;
+}
+
+.checkion-geo-sov-aside {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.checkion-geo-sov-aside > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: var(--type-sm);
+  color: color-mix(in srgb, var(--ink, var(--fg)) 78%, transparent);
+}
+
+.checkion-geo-sov-aside__n {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-light, 300);
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-recs {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 1.75rem);
+  padding-block: clamp(0.5rem, 1.5vw, 1rem);
+  animation: checkion-rise 0.65s 0.22s ease-out both;
+}
+
+.checkion-geo-recs__gallery {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.checkion-geo-recs__gallery:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink, var(--fg)) 30%, transparent);
+  outline-offset: 6px;
+}
+
+.checkion-geo-recs__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-geo-recs__count {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--type-sm);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.checkion-geo-recs__count-cur {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-recs__controls {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.checkion-geo-recs__ctrl {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  color: var(--ink, var(--fg));
+  font: inherit;
+  font-size: var(--type-md, 1.05rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.checkion-geo-recs__ctrl:hover {
+  border-bottom-color: currentColor;
+}
+
+.checkion-geo-recs__ctrl:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink, var(--fg)) 35%, transparent);
+  outline-offset: 3px;
+}
+
+.checkion-geo-recs__slide {
+  display: grid;
+  gap: 0.65rem;
+  min-height: 11.5rem;
+  padding: 1.15rem 0 0.35rem;
+  border-left: 3px solid transparent;
+  padding-left: 0.85rem;
+  margin-left: -0.85rem;
+  animation: checkion-rise 0.45s ease-out both;
+}
+
+.checkion-geo-recs__slide[data-tone='neg'] {
+  border-left-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-recs__slide[data-tone='low'] {
+  border-left-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-recs__slide[data-tone='pos'] {
+  border-left-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-recs__slide-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem 1.1rem;
+}
+
+.checkion-geo-recs__idx {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+.checkion-geo-recs__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.75rem;
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-recs__slide[data-tone='neg'] .checkion-geo-recs__sev {
+  color: var(--danger, #b45555);
+}
+
+.checkion-geo-recs__slide[data-tone='low'] .checkion-geo-recs__sev {
+  color: var(--warn, #a8871f);
+}
+
+.checkion-geo-recs__slide[data-tone='pos'] .checkion-geo-recs__sev {
+  color: var(--ok, #4f9a6e);
+}
+
+.checkion-geo-recs__src {
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+.checkion-geo-recs__lead {
+  margin: 0;
+  max-width: 36rem;
+}
+
+.checkion-geo-recs__title,
+.checkion-geo-recs__title-link {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.45rem, 2.8vw, 2rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-recs__title-link {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: background-size 0.22s ease;
+}
+
+.checkion-geo-recs__title-link:hover {
+  background-size: 100% 1px;
+}
+
+.checkion-geo-recs__copy {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(1rem, 1.4vw, 1.12rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 74%, transparent);
+}
+
+.checkion-geo-recs__slide-cta {
+  margin: 0.25rem 0 0;
+}
+
+.checkion-geo-recs__ticks {
+  list-style: none;
+  margin: 0;
+  padding: 0.15rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.checkion-geo-recs__tick {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: 1.35rem;
+  height: 2px;
+  background: color-mix(in srgb, var(--line) 95%, var(--ink, var(--fg)));
+  cursor: pointer;
+  transition: background 0.16s ease, width 0.16s ease;
+}
+
+.checkion-geo-recs__tick[data-active='true'] {
+  width: 2.1rem;
+  background: var(--ink, var(--fg));
+}
+
+.checkion-geo-recs__tick:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink, var(--fg)) 35%, transparent);
+  outline-offset: 3px;
+}
+
+.checkion-geo-recs__empty {
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--type-sm);
+}
+
+.checkion-geo-recs__cta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  font-size: var(--type-sm);
+  color: var(--muted);
+}
+
+.checkion-geo-recs__cta-sep {
+  opacity: 0.55;
+}
+
+.checkion-geo-recs__nav {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: background-size 0.22s ease, color 0.16s ease;
+}
+
+.checkion-geo-recs__nav:hover {
+  color: var(--ink, var(--fg));
+  background-size: 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-geo-recs__slide {
+    animation: none;
+  }
+}
+
+/* ── Share of voice stage (GEO core) ─────────────────────────── */
+.checkion-geo-voice {
+  display: grid;
+  gap: clamp(1.5rem, 3.5vw, 2.25rem);
+  padding-block: clamp(0.5rem, 1.5vw, 1rem);
+  animation: checkion-rise 0.65s 0.12s ease-out both;
+}
+
+.checkion-geo-voice__head {
+  max-width: 40rem;
+}
+
+.checkion-geo-voice__lede {
+  margin: 0.75rem 0 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.015em;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 84%, transparent);
+}
+
+.checkion-geo-voice__duel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  align-items: end;
+  padding: clamp(1.25rem, 3vw, 2rem) 0;
+  border-block: 1px solid var(--line);
+}
+
+.checkion-geo-voice__duel-side {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.checkion-geo-voice__duel-side[data-role='rival'] {
+  text-align: end;
+  justify-items: end;
+}
+
+.checkion-geo-voice__duel-k {
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-voice__duel-num {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  line-height: 0.9;
+}
+
+.checkion-geo-voice__duel-v {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(4.5rem, 12vw, 7.5rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-voice__duel-side[data-role='you'] .checkion-geo-voice__duel-v {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.1em;
+}
+
+.checkion-geo-voice[data-tone='pos'] .checkion-geo-voice__duel-side[data-role='you'] .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-voice[data-tone='low'] .checkion-geo-voice__duel-side[data-role='you'] .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-voice[data-tone='neg'] .checkion-geo-voice__duel-side[data-role='you'] .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-voice__duel-unit {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: var(--weight-light, 300);
+  color: var(--muted);
+}
+
+.checkion-geo-voice__duel-host {
+  margin-top: 0.35rem;
+  font-size: var(--type-sm);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.checkion-geo-voice__duel-mid {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: center;
+  padding-bottom: 0.85rem;
+  min-width: 5.5rem;
+}
+
+.checkion-geo-voice__duel-gap {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.checkion-geo-voice__duel-mid[data-tone='pos'] .checkion-geo-voice__duel-gap {
+  color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-voice__duel-mid[data-tone='low'] .checkion-geo-voice__duel-gap {
+  color: var(--warn, #c9a227);
+}
+
+.checkion-geo-voice__duel-mid[data-tone='neg'] .checkion-geo-voice__duel-gap {
+  color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-voice__duel-gap-l {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.checkion-geo-voice__race {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.15rem;
+}
+
+.checkion-geo-voice__runner {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.checkion-geo-voice__runner-meta {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: baseline;
+}
+
+.checkion-geo-voice__runner-idx {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkion-geo-voice__runner-name {
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+  font-weight: var(--weight-regular, 400);
+  color: var(--ink, var(--fg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__runner-name {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.16em;
+}
+
+.checkion-geo-voice[data-tone='pos'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__runner-name {
+  text-decoration-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-voice[data-tone='low'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__runner-name {
+  text-decoration-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-voice[data-tone='neg'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__runner-name {
+  text-decoration-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-voice__runner-pct {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-voice__track {
+  height: 0.55rem;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+
+.checkion-geo-voice__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: color-mix(in srgb, var(--ink, var(--fg)) 55%, transparent);
+  animation: checkion-geo-voice-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.08s * var(--rank, 1));
+}
+
+.checkion-geo-voice__runner[data-rank='1'] { --rank: 1; }
+.checkion-geo-voice__runner[data-rank='2'] { --rank: 2; }
+.checkion-geo-voice__runner[data-rank='3'] { --rank: 3; }
+.checkion-geo-voice__runner[data-rank='4'] { --rank: 4; }
+.checkion-geo-voice__runner[data-rank='5'] { --rank: 5; }
+.checkion-geo-voice__runner[data-rank='6'] { --rank: 6; }
+
+.checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__fill {
+  background: var(--ink, var(--fg));
+}
+
+.checkion-geo-voice[data-tone='pos'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__fill {
+  background: var(--ok, #7dcea0);
+}
+
+.checkion-geo-voice[data-tone='low'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__fill {
+  background: var(--warn, #c9a227);
+}
+
+.checkion-geo-voice[data-tone='neg'] .checkion-geo-voice__runner[data-target='true'] .checkion-geo-voice__fill {
+  background: var(--danger, #d46a6a);
+}
+
+@keyframes checkion-geo-voice-fill {
+  from { width: 0; }
+  to { width: var(--voice-w, 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-geo-voice__fill {
+    animation: none;
+    width: var(--voice-w, 0%);
+  }
+}
+
+.checkion-geo-voice__runner-sub {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .checkion-geo-voice__duel {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .checkion-geo-voice__duel-side,
+  .checkion-geo-voice__duel-side[data-role='rival'] {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .checkion-geo-voice__duel-mid {
+    order: -1;
+    padding-bottom: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+    padding-bottom: 0.75rem;
+    width: 100%;
+  }
+
+  .checkion-geo-voice__duel-v {
+    font-size: clamp(3.5rem, 18vw, 5rem);
+  }
+
+  .checkion-geo-voice__solo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Solo presence (no rivals) */
+.checkion-geo-voice__solo-hero {
+  display: grid;
+  gap: 0.35rem;
+  padding: clamp(1.25rem, 3vw, 2rem) 0;
+  border-block: 1px solid var(--line);
+}
+
+.checkion-geo-voice--solo .checkion-geo-voice__solo-hero .checkion-geo-voice__duel-v {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.1em;
+}
+
+.checkion-geo-voice--solo[data-tone='pos'] .checkion-geo-voice__solo-hero .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-voice--solo[data-tone='low'] .checkion-geo-voice__solo-hero .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-voice--solo[data-tone='neg'] .checkion-geo-voice__solo-hero .checkion-geo-voice__duel-v {
+  text-decoration-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-voice__solo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 0.5rem;
+  font-size: var(--type-sm);
+  color: var(--muted);
+}
+
+.checkion-geo-voice__solo-meta strong {
+  font-weight: var(--weight-light, 300);
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-voice__solo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  align-items: start;
+}
+
+.checkion-geo-voice__model-strip {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.checkion-geo-voice__model-strip > li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+}
+
+.checkion-geo-voice__model-id {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-voice__model-rate {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.checkion-geo-voice__model-strip > li[data-tone='pos'] .checkion-geo-voice__model-rate {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-geo-voice__model-strip > li[data-tone='neg'] .checkion-geo-voice__model-rate {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+}
+
+/* Softer donut numerals inside GEO */
+.checkion-geo-spread-layout .checkion-donut__center-v,
+.checkion-geo-spread-layout .checkion-donut__n {
+  font-weight: var(--weight-light, 300);
+}
+
+.checkion-geo-spread-layout .checkion-donut {
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  margin-top: 1rem;
+}
+
+.checkion-geo-spread-layout .checkion-donut__chart {
+  width: 8.5rem;
+  height: 8.5rem;
+}
+
+.checkion-geo-spread-layout .checkion-donut__legend {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkion-geo-ds__answers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkion-geo-ds__rec-label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@media (max-width: 720px) {
+  .checkion-geo-spread-layout .checkion-spread__open,
+  .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__open-main,
+  .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > aside {
+    order: unset;
+  }
+
+  .checkion-geo-snapshot,
+  .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-geo-snapshot {
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .checkion-geo-snapshot .checkion-lab-tile {
+    border-bottom: 0;
+    border-right: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+    padding-inline: 0.75rem;
+  }
+
+  .checkion-geo-snapshot .checkion-lab-tile:last-child {
+    border-right: 0;
+  }
+
+  .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout {
+    border-right: 0;
+    border-left: 3px solid var(--line);
+  }
+
+  .checkion-geo-spread-layout .checkion-donut {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ── GEO insights + answer dossier ───────────────────────────── */
+.checkion-geo-insights {
+  display: grid;
+  gap: clamp(1.35rem, 3vw, 2rem);
+  padding-block: clamp(0.5rem, 1.5vw, 1rem);
+  animation: checkion-rise 0.65s 0.18s ease-out both;
+}
+
+.checkion-geo-insights__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(15rem, 0.9fr);
+  gap: clamp(1.5rem, 3.5vw, 2.75rem);
+  align-items: start;
+}
+
+.checkion-geo-insights__col {
+  min-width: 0;
+}
+
+.checkion-geo-insights__col--side {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.85rem);
+  padding-left: clamp(0.75rem, 2vw, 1.25rem);
+  border-left: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+.checkion-geo-insights__empty {
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+  max-width: 36ch;
+  font-size: var(--type-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.checkion-geo-insights__dot {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  user-select: none;
+}
+
+.checkion-geo-insights__pulse {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0 0 0.25rem;
+}
+
+.checkion-geo-insights__pulse-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.checkion-geo-insights__pulse-stat {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: var(--muted);
+  font-size: var(--type-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.checkion-geo-insights__pulse-stat strong {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.85rem, 3.2vw, 2.45rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, var(--fg));
+  line-height: 1;
+  text-transform: none;
+}
+
+.checkion-geo-insights__pulse-rule {
+  display: none;
+}
+
+.checkion-geo-insights__pulse-splits {
+  display: grid;
+  gap: 0.45rem;
+  font-size: var(--type-sm);
+}
+
+.checkion-geo-insights__pulse-k {
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-insights__pulse-splits ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.checkion-geo-insights__pulse-splits a {
+  display: grid;
+  gap: 0.1rem;
+  color: inherit;
+  text-decoration: none;
+  line-height: 1.35;
+}
+
+.checkion-geo-insights__pulse-splits a:hover .checkion-geo-insights__pulse-q {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+}
+
+.checkion-geo-insights__pulse-q {
+  font-size: var(--type-xs);
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.checkion-geo-insights__ops {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.checkion-geo-insights__op {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.05rem 0 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.checkion-geo-insights__op-contrast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.65rem;
+  font-size: var(--type-sm);
+  line-height: 1.3;
+}
+
+.checkion-geo-insights__op-contrast [data-role='rival'] {
+  font-weight: var(--weight-medium, 500);
+  color: var(--danger, #b45555);
+}
+
+.checkion-geo-insights__op-contrast [data-role='you'] {
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.checkion-geo-insights__op-pos {
+  margin-left: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-regular, 400);
+  color: color-mix(in srgb, var(--danger, #b45555) 72%, var(--muted));
+}
+
+.checkion-geo-insights__op-vs {
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+.checkion-geo-insights__op-q {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  max-width: 36rem;
+}
+
+.checkion-geo-insights__op:hover .checkion-geo-insights__op-q {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+}
+
+.checkion-geo-insights__op-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.4rem;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.checkion-geo-insights__op-go {
+  color: color-mix(in srgb, var(--ink, var(--fg)) 72%, var(--muted));
+}
+
+.checkion-geo-insights__op:hover .checkion-geo-insights__op-go {
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-insights__board {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.checkion-geo-insights__board-head {
+  max-width: 40rem;
+}
+
+.checkion-geo-insights__duels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.checkion-geo-insights__duel {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.2rem;
+  align-items: baseline;
+  padding: 0.75rem 0 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.checkion-geo-insights__duel-out {
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.checkion-geo-insights__duel[data-tone='pos'] .checkion-geo-insights__duel-out {
+  color: var(--ok, #5faf82);
+}
+
+.checkion-geo-insights__duel[data-tone='low'] .checkion-geo-insights__duel-out {
+  color: var(--warn, #b8921f);
+}
+
+.checkion-geo-insights__duel[data-tone='neg'] .checkion-geo-insights__duel-out {
+  color: var(--danger, #c45c5c);
+}
+
+.checkion-geo-insights__duel-q {
+  font-size: var(--type-sm);
+  line-height: 1.4;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-insights__duel:hover .checkion-geo-insights__duel-q {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+}
+
+.checkion-geo-insights__duel-stat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.4rem;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.checkion-geo-insights__duel-intent {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+@media (max-width: 900px) {
+  .checkion-geo-insights__split {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .checkion-geo-insights__col--side {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+    padding-top: 1.25rem;
+  }
+}
+
+/* Used by geo-position-diagram (citation map embed) */
+.checkion-geo-place-link,
+.checkion-geo-place-cell {
+  color: inherit;
+  text-decoration: none;
+}
+
+.checkion-geo-place-link {
+  display: inline;
+  font-size: var(--type-sm);
+  line-height: 1.4;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: background-size 0.22s ease;
+}
+
+.checkion-geo-place-link:hover {
+  background-size: 100% 1px;
+}
+
+.checkion-geo-place-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 1.75rem;
+  min-height: 1.5rem;
+  padding: 0.1rem 0.2rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium, 500);
+  border-radius: 2px;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.checkion-geo-place-cell:hover {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  text-decoration: none;
+}
+
+.checkion-geo-place-cell[data-miss='true'] {
+  color: var(--muted);
+  font-weight: var(--weight-regular, 400);
+}
+
+/* ── Queries dossier (master–detail) ─────────────────────────── */
+.checkion-geo-dossier {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.78fr) minmax(0, 1.4fr);
+  gap: clamp(1.5rem, 3.5vw, 2.75rem);
+  align-items: start;
+  animation: checkion-rise 0.55s 0.1s ease-out both;
+}
+
+.checkion-geo-dossier__index {
+  position: sticky;
+  top: var(--checkion-contents-offset, 6.75rem);
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.checkion-geo-dossier__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.checkion-geo-dossier__nav-btn {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.65rem;
+  row-gap: 0.15rem;
+  align-items: baseline;
+  margin: 0;
+  padding: 0.8rem 0.35rem 0.85rem 0.55rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  border-left: 2px solid transparent;
+  margin-left: -0.55rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.checkion-geo-dossier__nav-btn:hover {
+  background: color-mix(in srgb, var(--fg) 3.5%, transparent);
+}
+
+.checkion-geo-dossier__nav-btn[data-active='true'] {
+  border-left-color: var(--ink, var(--fg));
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='pos'][data-active='true'] {
+  border-left-color: var(--ok, #7dcea0);
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='low'][data-active='true'] {
+  border-left-color: var(--warn, #c9a227);
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='neg'][data-active='true'] {
+  border-left-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-dossier__nav-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink, var(--fg)) 30%, transparent);
+  outline-offset: 2px;
+}
+
+.checkion-geo-dossier__nav-idx {
+  grid-row: 1 / span 2;
+  align-self: start;
+  padding-top: 0.15rem;
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1.05rem;
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.checkion-geo-dossier__nav-btn[data-active='true'] .checkion-geo-dossier__nav-idx {
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-dossier__nav-q {
+  font-size: var(--type-sm);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.checkion-geo-dossier__nav-out {
+  grid-column: 2;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='pos'] .checkion-geo-dossier__nav-out {
+  color: var(--ok, #5faf82);
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='low'] .checkion-geo-dossier__nav-out {
+  color: var(--warn, #b8921f);
+}
+
+.checkion-geo-dossier__nav-btn[data-tone='neg'] .checkion-geo-dossier__nav-out {
+  color: var(--danger, #c45c5c);
+}
+
+.checkion-geo-dossier__detail {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.85rem);
+  min-width: 0;
+  animation: checkion-rise 0.4s ease-out both;
+}
+
+.checkion-geo-dossier__head {
+  display: grid;
+  gap: 0.65rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-geo-dossier__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+.checkion-geo-dossier__intent {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.checkion-geo-dossier__outcome {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: var(--weight-medium, 500);
+}
+
+.checkion-geo-dossier__outcome[data-tone='pos'] { color: var(--ok, #5faf82); }
+.checkion-geo-dossier__outcome[data-tone='low'] { color: var(--warn, #b8921f); }
+.checkion-geo-dossier__outcome[data-tone='neg'] { color: var(--danger, #c45c5c); }
+
+.checkion-geo-dossier__cite,
+.checkion-geo-dossier__split {
+  letter-spacing: 0.02em;
+}
+
+.checkion-geo-dossier__prompt {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  max-width: 28ch;
+}
+
+.checkion-geo-dossier__reading {
+  padding: 0.15rem 0 0.25rem;
+  border-left: 2px solid color-mix(in srgb, var(--line) 90%, transparent);
+  padding-left: 1rem;
+}
+
+.checkion-geo-dossier__reading .checkion-geo-reading__statement {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.05rem, 1.6vw, 1.22rem);
+  font-weight: var(--weight-light, 300);
+  font-style: italic;
+  letter-spacing: -0.015em;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 78%, transparent);
+  max-width: 42rem;
+}
+
+.checkion-geo-dossier__answers {
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Compact model placement switcher (scales to ~10 models) */
+.checkion-geo-models {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.25rem 0 0.15rem;
+}
+
+.checkion-geo-models__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+
+.checkion-geo-models__count {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-models__strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.75rem, 1fr));
+  gap: 0.45rem;
+}
+
+.checkion-geo-models__cell {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.55rem 0.6rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 3.6rem;
+  box-sizing: border-box;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.checkion-geo-models__cell:hover {
+  border-color: color-mix(in srgb, var(--ink, var(--fg)) 28%, var(--line));
+}
+
+.checkion-geo-models__cell[data-active='true'] {
+  border-color: var(--ink, var(--fg));
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.checkion-geo-models__cell[data-miss='true'] {
+  border-style: dashed;
+}
+
+.checkion-geo-models__cell[data-miss='true'][data-active='true'] {
+  border-style: solid;
+  border-color: var(--danger, #d46a6a);
+}
+
+.checkion-geo-models__cell[data-preferred='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink, var(--fg)) 22%, transparent);
+}
+
+.checkion-geo-models__cell:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink, var(--fg)) 30%, transparent);
+  outline-offset: 2px;
+}
+
+.checkion-geo-models__id {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkion-geo-models__cell[data-active='true'] .checkion-geo-models__id {
+  color: color-mix(in srgb, var(--ink, var(--fg)) 72%, var(--muted));
+}
+
+.checkion-geo-models__rank {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-models__rank[data-miss='true'] {
+  color: var(--muted);
+}
+
+.checkion-geo-models__steal {
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--danger, #c45c5c) 85%, var(--muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkion-geo-answer {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem 0 0.25rem;
+  border-top: 1px solid var(--line);
+  animation: checkion-rise 0.35s ease-out both;
+}
+
+.checkion-geo-answer[data-stolen='true'],
+.checkion-geo-answer[data-miss='true'] {
+  border-left: 3px solid color-mix(in srgb, var(--danger, #d46a6a) 85%, transparent);
+  padding-left: 0.95rem;
+  margin-left: -0.95rem;
+}
+
+.checkion-geo-answer__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 1rem;
+}
+
+.checkion-geo-answer__model {
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-answer__flag {
+  font-size: var(--type-xs);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.checkion-geo-answer__pos {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-answer__pos[data-miss='true'] {
+  color: var(--danger, #c45c5c);
+  text-transform: lowercase;
+  font-size: clamp(1.15rem, 1.8vw, 1.4rem);
+  letter-spacing: 0.02em;
+}
+
+.checkion-geo-answer__stolen {
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--danger, #c45c5c) 80%, var(--muted));
+}
+
+.checkion-geo-answer__prose {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 1.55vw, 1.18rem);
+  font-weight: var(--weight-regular, 400);
+  font-style: normal;
+  line-height: 1.6;
+  max-width: 58ch;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-geo-answer__empty {
+  margin: 0;
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+.checkion-geo-answer__cites {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.65rem;
+  margin-top: 0.15rem;
+  border-top: 1px dashed color-mix(in srgb, var(--line) 90%, transparent);
+}
+
+.checkion-geo-answer__cites-k {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-geo-answer__rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.checkion-geo-answer__rail li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: baseline;
+  font-size: var(--type-sm);
+}
+
+.checkion-geo-answer__rail-pos {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display, var(--font-body));
+  font-weight: var(--weight-light, 300);
+  color: var(--muted);
+}
+
+.checkion-geo-answer__rail-host {
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: -0.01em;
+}
+
+.checkion-geo-answer__rail li[data-role='you'] .checkion-geo-answer__rail-host {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.checkion-geo-answer__rail li[data-role='rival'] .checkion-geo-answer__rail-host {
+  color: var(--danger, #b45555);
+}
+
+.checkion-geo-answer__rail-ctx {
+  color: var(--muted);
+  font-size: var(--type-xs);
+}
+
+@media (max-width: 900px) {
+  .checkion-geo-dossier {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .checkion-geo-dossier__index {
+    position: static;
+  }
+
+  .checkion-geo-dossier__nav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    border-top: 0;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .checkion-geo-dossier__nav li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .checkion-geo-dossier__nav-btn {
+    width: min(16rem, 72vw);
+    border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+    border-left-width: 2px;
+    padding: 0.65rem 0.75rem;
+    margin: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .checkion-geo-dossier {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .checkion-geo-dossier__index {
+    position: static;
+  }
+
+  .checkion-geo-dossier__nav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    border-top: 0;
+    padding-bottom: 0.35rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .checkion-geo-dossier__nav li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .checkion-geo-dossier__nav-btn {
+    width: min(16rem, 72vw);
+    border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+    border-left-width: 2px;
+    padding: 0.65rem 0.75rem;
+    margin: 0;
+  }
+
+  .checkion-geo-models__strip {
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkion-geo-dossier__detail,
+  .checkion-geo-answer {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkion-geo-insights__pulse-rule {
+    display: none;
+  }
+
+  .checkion-geo-insights__duel {
+    grid-template-columns: 3.1rem minmax(0, 1fr);
+    column-gap: 0.7rem;
+  }
+
+  .checkion-geo-answer[data-stolen='true'] {
+    padding-left: 0.75rem;
+  }
+
+  .checkion-geo-answer__rail li {
+    grid-template-columns: 1.85rem minmax(0, 1fr);
+  }
+}

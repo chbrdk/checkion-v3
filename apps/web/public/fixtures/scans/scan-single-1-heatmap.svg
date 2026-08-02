@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="Dummy saliency heatmap">
+  <defs>
+    <radialGradient id="hot1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff3b1f" stop-opacity="0.72"/>
+      <stop offset="45%" stop-color="#ffb020" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffb020" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hot2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff5a2a" stop-opacity="0.55"/>
+      <stop offset="50%" stop-color="#ffcc33" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ffcc33" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hot3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff8a1a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ff8a1a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Transparent canvas; hotspots over hero CTA, right media, product tiles -->
+  <ellipse cx="148" cy="316" rx="160" ry="90" fill="url(#hot1)"/>
+  <ellipse cx="1040" cy="260" rx="280" ry="200" fill="url(#hot2)"/>
+  <ellipse cx="260" cy="620" rx="200" ry="140" fill="url(#hot3)"/>
+  <ellipse cx="700" cy="620" rx="180" ry="130" fill="url(#hot3)"/>
+</svg>
