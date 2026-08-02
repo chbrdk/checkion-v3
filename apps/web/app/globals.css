@@ -2503,13 +2503,13 @@ a { color: inherit; text-decoration: none; }
   color: color-mix(in srgb, var(--ink, var(--fg)) 70%, var(--muted));
 }
 
-/* Compose band — URL · project · extras · CTA; rule + whitespace, no wash */
+/* Compose band — URL · project · extras · CTA; whitespace only (no top hairline) */
 .checkion-launch-compose {
   display: grid;
   gap: 1.35rem;
   margin-top: 0.35rem;
   padding-top: 1.35rem;
-  border-top: 1px solid var(--line);
+  border-top: 0;
   background: transparent;
 }
 
