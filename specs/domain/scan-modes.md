@@ -22,13 +22,20 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 2. **WCAG depth** (secondary, only when WCAG selected) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip)
 3. **Compose band** — editorial form unit below the pickers:
    - **URL** — hero input (page or host)
-   - **GEO extras** (when capability = GEO) — queries · optional models
+   - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · optional models
    - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
 4. Fixture demo jumps stay below the stage as quiet secondary links
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 
-Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Textarea` / `Select` / `Button` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · light `checkion-rise` motion.
+Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / `Button` / `SectionChrome` / `Dialog` / `EmptyState` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · GEO query list (`GeoQueryList` / `checkion-geo-query-list`) · light `checkion-rise` motion.
+
+### GEO query list + Suggest
+- Default rows: host-derived prompts (`defaultGeoQueries(url)`). Changing URL refreshes defaults only when the list still matches the previous host defaults.
+- **Suggest** → `POST /api/geo/suggest-queries` `{ url, existing?, max? }` → dialog to Add / Add all.
+- **Fixture behavior** (no `OPENAI_API_KEY`, CI / local dummy): returns host-derived pool beyond the three launch defaults; response `source: "fixture"`, `stubbed: true`.
+- **Live Suggest** (`OPENAI_API_KEY` set): OpenAI prompt suggestions (`source: "openai"`); falls back to fixture pool on failure.
+- Submit still posts `queries: string[]` to `POST /api/geo-jobs` (empty list falls back to host defaults client-side).
 
 Deep-links (`paths.routes.scanLaunch`):
 - `projectId`, `mode=seo|geo|single|deep`, `url`
@@ -50,6 +57,7 @@ Deep-links (`paths.routes.scanLaunch`):
 - Gate: `lib/geo-eeat/live-geo-gate.ts` — live when `DATABASE_URL` **or** `CHECKION_LIVE_GEO=1`; `CHECKION_LIVE_GEO=0` forces synthesize.
 - Live requires `OPENAI_API_KEY`; fixture path synthesizes a completed magazine overview instantly.
 - Create: `POST /api/geo-jobs` with `{ projectId, url, queries[], models?, competitors?, title? }`.
+- Suggest (launch only): `POST /api/geo/suggest-queries` with `{ url, existing?, max? }` — see GEO query list above.
 
 ## Cross-product (AUDION)
 AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / Studies) via `POST /api/scans` or `/scan?projectId&mode=single&url=` — see `audion-journey-scan-trigger.md`. That path must **not** use `deep`, domain crawl, `geo`, or `seo`.

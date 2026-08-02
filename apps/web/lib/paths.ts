@@ -51,6 +51,8 @@ export const paths = {
   routes: {
     apiGeoJobs: '/api/geo-jobs',
     apiGeoJobDetail: (id: string) => `/api/geo-jobs/${id}`,
+    /** GEO launch — AI / fixture query suggestions for `/scan`. */
+    apiGeoSuggestQueries: '/api/geo/suggest-queries',
     apiAuthNextAuth: '/api/auth',
     home: '/',
     scan: '/scan',

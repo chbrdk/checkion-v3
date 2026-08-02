@@ -30,6 +30,7 @@ const requiredSpecs = [
   'specs/api/domain-scan-payload.md',
   'specs/api/share.md',
   'specs/api/tokens.md',
+  'specs/api/geo-suggest-queries.md',
   'knowledge/specs-index.md',
   'knowledge/paths.md',
   'knowledge/settings-api-tokens.md',
@@ -77,6 +78,7 @@ describe('specs inventory', () => {
     expect(paths.routes.geoQueriesPrompt('geo-1', 'Best paint', 'gpt-5.4')).toBe(
       '/geo/geo-1/queries?q=Best%20paint&model=gpt-5.4',
     )
+    expect(paths.routes.apiGeoSuggestQueries).toBe('/api/geo/suggest-queries')
     expect(paths.routes.journey).toBe('/journey')
     expect(paths.routes.reports).toBe('/reports')
     expect(paths.federationContract).toBe('2026-05-plexon-federation-v3')

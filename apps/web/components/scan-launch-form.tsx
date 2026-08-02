@@ -10,10 +10,16 @@ import {
   Input,
   Panel,
   Text,
-  Textarea,
 } from '@msqdx/ui'
 import { Select } from '../lib/msqdx-ui-client'
+import {
+  defaultGeoQueries,
+  sameQueryList,
+} from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
+import { GeoQueryList } from './geo-query-list'
+
+export { defaultGeoQueries } from '../lib/geo-query-suggest'
 
 const DEFAULT_DEMO_URL = 'https://www.bosch-ebike.com/de/'
 const DEFAULT_GEO_MODEL = 'gpt-5.4-nano'
@@ -26,26 +32,6 @@ export type LaunchCapability = 'seo' | 'geo' | 'wcag'
 
 /** WCAG secondary depth (only when capability = WCAG). */
 export type WcagDepth = 'single' | 'deep'
-
-function hostFromUrl(raw: string): string {
-  try {
-    const host = new URL(raw.trim()).hostname.replace(/^www\./i, '')
-    return host || 'example.com'
-  } catch {
-    return 'example.com'
-  }
-}
-
-/** Sensible GEO prompt defaults derived from the target host. */
-export function defaultGeoQueries(url: string): string[] {
-  const host = hostFromUrl(url)
-  const brand = host.split('.')[0] || host
-  return [
-    `Best alternatives to ${brand}`,
-    `Who leads in ${brand} category solutions?`,
-    `${brand} vs competitors for enterprise buyers`,
-  ]
-}
 
 function parseLines(raw: string): string[] {
   return raw
@@ -165,7 +151,7 @@ export function ScanLaunchForm({
       ? defaultProjectId
       : (projects[0]?.id ?? ''),
   )
-  const [geoQueries, setGeoQueries] = useState(() => defaultGeoQueries(initialUrl).join('\n'))
+  const [geoQueries, setGeoQueries] = useState(() => defaultGeoQueries(initialUrl))
   const [geoModels, setGeoModels] = useState(DEFAULT_GEO_MODEL)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -231,8 +217,8 @@ export function ScanLaunchForm({
 
   function onUrlChange(next: string) {
     setUrl(next)
-    if (activeCapability === 'geo' && geoQueries.trim() === defaultGeoQueries(url).join('\n')) {
-      setGeoQueries(defaultGeoQueries(next).join('\n'))
+    if (activeCapability === 'geo' && sameQueryList(geoQueries, defaultGeoQueries(url))) {
+      setGeoQueries(defaultGeoQueries(next))
     }
   }
 
@@ -280,7 +266,7 @@ export function ScanLaunchForm({
   }
 
   async function launchGeo() {
-    const queries = parseLines(geoQueries)
+    const queries = geoQueries.map((q) => q.trim()).filter(Boolean)
     const resolvedQueries = queries.length > 0 ? queries : defaultGeoQueries(url)
     const models = parseLines(geoModels.replace(/,/g, '\n'))
     const body: Record<string, unknown> = {
@@ -486,17 +472,12 @@ export function ScanLaunchForm({
 
               {activeCapability === 'geo' ? (
                 <div className="checkion-launch-compose__geo">
-                  <Field
-                    label="Queries"
-                    hint="One prompt per line — leave as-is for host defaults"
-                  >
-                    <Textarea
-                      value={geoQueries}
-                      onChange={(e) => setGeoQueries(e.target.value)}
-                      rows={4}
-                      aria-label="GEO queries"
-                    />
-                  </Field>
+                  <GeoQueryList
+                    value={geoQueries}
+                    onChange={setGeoQueries}
+                    url={url}
+                    disabled={status === 'submitting'}
+                  />
                   <Field label="Models" hint="Comma or line-separated · default gpt-5.4-nano">
                     <Input
                       value={geoModels}

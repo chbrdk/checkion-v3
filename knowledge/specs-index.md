@@ -33,6 +33,7 @@
 | Domain payload | `specs/api/domain-scan-payload.md` |
 | Share | `specs/api/share.md` |
 | API tokens | `specs/api/tokens.md` |
+| GEO suggest queries | `specs/api/geo-suggest-queries.md` |
 
 ## Knowledge
 | Doc | Path |

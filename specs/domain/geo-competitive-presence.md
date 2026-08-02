@@ -32,7 +32,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 
 ### Launch defaults
 From `/scan` GEO mode the form may send:
-- `queries` — user list (one prompt per line), or host-derived defaults when empty after trim
+- `queries` — editable magazine list (one prompt per row via `GeoQueryList`), or host-derived defaults when empty after trim; **Suggest** uses `POST /api/geo/suggest-queries` (fixture host pool without `OPENAI_API_KEY`, OpenAI when keyed)
 - `models` — optional; server defaults to `OPENAI_MODEL` / `gpt-5.4-nano` when omitted
 - `url` + `projectId` — required
 

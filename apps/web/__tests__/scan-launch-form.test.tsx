@@ -83,10 +83,67 @@ describe('ScanLaunchForm', () => {
   it('shows GEO fields when GEO capability is selected', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
-    expect(screen.getByLabelText(/GEO queries/i )).toBeTruthy()
+    expect(screen.getByRole('group', { name: /^GEO queries$/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /AI suggest GEO queries/i })).toBeTruthy()
     expect(screen.getByLabelText(/GEO models/i)).toBeTruthy()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
+    // Magazine list rows — host defaults present as editable text buttons
+    expect(screen.getByRole('button', { name: /Best alternatives to bosch-ebike/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Add GEO query/i })).toBeTruthy()
+  })
+
+  it('adds and removes GEO query rows from the list', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    const before = screen.getAllByRole('button', { name: /Remove GEO query/i }).length
+    fireEvent.click(screen.getByRole('button', { name: /Add GEO query/i }))
+    expect(screen.getByLabelText(/Edit GEO query/i)).toBeTruthy()
+    fireEvent.change(screen.getByLabelText(/Edit GEO query/i), {
+      target: { value: 'Custom GEO prompt' },
+    })
+    fireEvent.blur(screen.getByLabelText(/Edit GEO query/i))
+    expect(screen.getByRole('button', { name: /Custom GEO prompt/i })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Remove GEO query/i }).length).toBe(before + 1)
+    fireEvent.click(screen.getAllByRole('button', { name: /Remove GEO query/i })[0]!)
+    expect(screen.getAllByRole('button', { name: /Remove GEO query/i }).length).toBe(before)
+  })
+
+  it('opens Suggest dialog and merges fixture suggestions', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/api/geo/suggest-queries')) {
+        return {
+          ok: true,
+          json: async () => ({
+            suggestions: [
+              {
+                id: 'fixture-1',
+                title: 'Is bosch-ebike recommended for professional teams?',
+                description: 'Host-derived',
+              },
+            ],
+            source: 'fixture',
+            stubbed: true,
+          }),
+        }
+      }
+      return { ok: true, json: async () => ({}) }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    fireEvent.click(screen.getByRole('button', { name: /AI suggest GEO queries/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Suggest queries/i })).toBeTruthy()
+    })
+    expect(screen.getByText(/Fixture · host-derived/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/i }))
+    expect(
+      screen.getByRole('button', {
+        name: /Is bosch-ebike recommended for professional teams/i,
+      }),
+    ).toBeTruthy()
   })
 
   it('locks AUDION handoff to WCAG Quick single', () => {
