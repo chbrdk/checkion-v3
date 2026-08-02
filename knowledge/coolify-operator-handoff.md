@@ -17,9 +17,10 @@ Repo-side work for this slice is done (Dockerfile clones `msqdx-ui`, docs, packa
    PORT=3007
    HOSTNAME=0.0.0.0
    ```
-5. Deploy → smoke URLs in `knowledge/staging-coolify.md`
-6. Confirm prod `https://checkion.projects-a.plygrnd.tech` unchanged
-7. **After smoke:** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` (Wave B registry → v3)
+5. For auth/DB secrets (`PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, `AUTH_SECRET` ≥32 chars, `DATABASE_URL`, …): set as **runtime-only** (do **not** enable “Available at Buildtime”). Redeploy after changing env.
+6. Deploy → smoke URLs in `knowledge/staging-coolify.md` · `/login` should show the form when Plexon auth env is set
+7. Confirm prod `https://checkion.projects-a.plygrnd.tech` unchanged
+8. **After smoke:** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` (Wave B registry → v3)
 
 Full checklist: [knowledge/staging-coolify.md](./staging-coolify.md)
 

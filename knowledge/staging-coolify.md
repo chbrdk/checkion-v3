@@ -33,7 +33,9 @@ PORT=3007
 HOSTNAME=0.0.0.0
 ```
 
-**Build-time vs runtime:** keep secrets (`DATABASE_URL`, `AUTH_SECRET`, `OPENAI_API_KEY`, `PLEXON_SERVICE_SECRET`, …) as **runtime-only** in Coolify (do not enable “Available at Buildtime”). Coolify otherwise injects `ARG`/`ENV` into the Dockerfile (`SecretsUsedInArgOrEnv` warnings) and `DATABASE_URL` makes Next SSG query Postgres during `npm run build` → deploy fails. The Dockerfile also blanks those vars immediately before `RUN npm run build` as a safety net; store-backed pages use `dynamic = 'force-dynamic'`.
+**Build-time vs runtime (Coolify UI tip):** mark secrets (`DATABASE_URL`, `AUTH_SECRET`, `OPENAI_API_KEY`, `PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, …) as **runtime-only** — leave **“Available at Buildtime” unchecked**. Coolify otherwise injects `ARG`/`ENV` into the Dockerfile (`SecretsUsedInArgOrEnv` warnings) and `DATABASE_URL` makes Next SSG query Postgres during `npm run build` → deploy fails. The Dockerfile blanks those vars **only on the `npm run build` RUN** (not as image `ENV`), so the runner stage stays clean and Coolify container env is honored. Login + store pages use `dynamic = 'force-dynamic'` so auth flags are read at request time (not baked empty at compile).
+
+**After redeploy, verify:** container has non-empty `PLEXON_AUTH_URL` + `PLEXON_SERVICE_SECRET` at runtime; `AUTH_SECRET` is ≥32 chars (entrypoint refuses to start when Plexon auth is set and secret is missing/short); open `/login` and confirm the sign-in form (not the “Plexon auth is not configured” fixture hint). Names are exact — no `NEXT_PUBLIC_` prefix on the auth URL/secret.
 
 Optional Auth / DB / live federation:
 

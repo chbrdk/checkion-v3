@@ -25,13 +25,26 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
   })
 
-  it('blanks runtime secrets before next build (Coolify build-time ARG leak)', () => {
+  it('blanks runtime secrets only on the next build RUN (Coolify build-time ARG leak)', () => {
     const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
-    const buildIdx = df.indexOf('RUN npm run build')
-    expect(buildIdx).toBeGreaterThan(0)
-    const beforeBuild = df.slice(0, buildIdx)
-    expect(beforeBuild).toContain('ENV DATABASE_URL=')
-    expect(beforeBuild).toContain('npm ci --no-audit --no-fund --include=dev')
+    expect(df).toContain('npm ci --no-audit --no-fund --include=dev')
+    // Scoped to the compile process — not ENV instructions that could poison layers.
+    expect(df).toMatch(
+      /RUN DATABASE_URL=\s*\\\s*\n\s*OPENAI_API_KEY=\s*\\\s*\n\s*PLEXON_SERVICE_SECRET=\s*\\\s*\n\s*PLEXON_AUTH_URL=\s*\\\s*\n\s*AUTH_SECRET=\s*\\\s*\n\s*npm run build/,
+    )
+    const runnerIdx = df.indexOf('AS runner')
+    expect(runnerIdx).toBeGreaterThan(0)
+    const runner = df.slice(runnerIdx)
+    expect(runner).not.toMatch(/ENV PLEXON_AUTH_URL=/)
+    expect(runner).not.toMatch(/ENV PLEXON_SERVICE_SECRET=/)
+    expect(runner).not.toMatch(/ENV AUTH_SECRET=/)
+    expect(runner).not.toMatch(/ENV DATABASE_URL=/)
+  })
+
+  it('keeps /login force-dynamic so Coolify runtime auth env is honored', () => {
+    const login = readFileSync(resolve(repoRoot, 'apps/web/app/login/page.tsx'), 'utf8')
+    expect(login).toContain("export const dynamic = 'force-dynamic'")
+    expect(login).toContain('isPlexonAuthConfigured()')
   })
 
   it('keeps DataTable off the RSC @msqdx/ui barrel', () => {

@@ -80,15 +80,17 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=6144
 # Coolify often marks app secrets "available at buildtime" (SecretsUsedInArgOrEnv).
 # DATABASE_URL during `next build` makes SSG pages query Postgres → ECONNREFUSED → exit 1.
-# Runtime secrets belong on the runner only; blank them for the production compile.
-ENV DATABASE_URL=
-ENV OPENAI_API_KEY=
-ENV PLEXON_SERVICE_SECRET=
-ENV PLEXON_AUTH_URL=
-ENV AUTH_SECRET=
-RUN npm run build
+# Blank ONLY for this RUN (do not ENV= into the image layer — runner is a fresh FROM, but
+# empty ENV instructions can confuse Coolify / image inspect; Coolify runtime -e must win).
+RUN DATABASE_URL= \
+    OPENAI_API_KEY= \
+    PLEXON_SERVICE_SECRET= \
+    PLEXON_AUTH_URL= \
+    AUTH_SECRET= \
+    npm run build
 
 # ---- Runner ----
+# Fresh base image — no builder ENV. Runtime secrets come from Coolify container env only.
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /workspace/checkion-v3
 
