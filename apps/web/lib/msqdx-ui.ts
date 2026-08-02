@@ -24,3 +24,5 @@ export { TopStatus } from '../../../../msqdx-ui/packages/ui/src/components/TopSt
 export type { TopStatusLevel, TopStatusProps } from '../../../../msqdx-ui/packages/ui/src/components/TopStatus'
 export { Tabs } from '../../../../msqdx-ui/packages/ui/src/components/Tabs'
 export type { TabItem, TabsProps } from '../../../../msqdx-ui/packages/ui/src/components/Tabs'
+export { ToggleGroup } from '../../../../msqdx-ui/packages/ui/src/components/ToggleGroup'
+export type { ToggleGroupProps, ToggleOption } from '../../../../msqdx-ui/packages/ui/src/components/ToggleGroup'

@@ -1,59 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Button, Field, Panel, SectionChrome, Text } from '@msqdx/ui'
-import { Select } from '../lib/msqdx-ui-client'
+import { useState } from 'react'
+import { Button, Field, Input, SectionChrome, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import type { ApiTokenStub } from '@checkion-v3/contracts'
-
-export function SettingsAppearance() {
-  const [theme, setTheme] = useState<string>(paths.defaultTheme)
-  const [locale, setLocale] = useState<string>(paths.defaultLocale)
-
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem(paths.themeStorageKey)
-    const storedLocale = window.localStorage.getItem(paths.localeStorageKey)
-    if (storedTheme && (paths.themeChoices as readonly string[]).includes(storedTheme)) {
-      setTheme(storedTheme)
-    }
-    if (storedLocale && (paths.localeChoices as readonly string[]).includes(storedLocale)) {
-      setLocale(storedLocale)
-    }
-  }, [])
-
-  function applyTheme(next: string) {
-    setTheme(next)
-    window.localStorage.setItem(paths.themeStorageKey, next)
-    document.documentElement.setAttribute('data-theme', next)
-  }
-
-  function applyLocale(next: string) {
-    setLocale(next)
-    window.localStorage.setItem(paths.localeStorageKey, next)
-  }
-
-  return (
-    <Panel>
-      <SectionChrome title="Appearance" />
-      <div className="checkion-scan-form">
-        <Field label="Theme">
-          <Select
-            value={theme}
-            onChange={applyTheme}
-            options={paths.themeChoices.map((t) => ({ value: t, label: t }))}
-          />
-        </Field>
-        <Field label="Locale">
-          <Select
-            value={locale}
-            onChange={applyLocale}
-            options={paths.localeChoices.map((l) => ({ value: l, label: l }))}
-          />
-        </Field>
-      </div>
-    </Panel>
-  )
-}
 
 export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub[] }) {
   const [tokens, setTokens] = useState(initialTokens)
@@ -93,6 +43,7 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
   }
 
   async function revokeToken(tokenId: string) {
+    if (!window.confirm('Revoke this API token? Scripts using it will stop working.')) return
     setBusy(true)
     setError(null)
     try {
@@ -108,29 +59,79 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
     }
   }
 
+  function handleCopySecret() {
+    if (!rawSecret) return
+    void navigator.clipboard.writeText(rawSecret)
+  }
+
   return (
-    <Panel>
-      <SectionChrome title="API tokens" meta={paths.apiTokenPrefix} />
-      <Text role="meta">
+    <section className="checkion-settings-section" data-testid="settings-tokens">
+      <SectionChrome quiet title="API tokens" as="h2" />
+      <Text role="body" className="checkion-settings-help">
         Personal Bearer tokens for MCP/CLI. Raw secret shown once on create; only the hash is stored.
-        Use <code>Authorization: Bearer checkion_…</code> on selected APIs (
+        Use <code>Authorization: Bearer {paths.apiTokenPrefix}…</code> on selected APIs (
         <code>POST /api/scans</code>, <code>POST /api/geo-jobs</code>, <code>POST /api/projects</code>).
       </Text>
-      {tokens.length === 0 ? (
-        <Text role="meta">No tokens.</Text>
+
+      {rawSecret ? (
+        <div className="checkion-settings-token-reveal">
+          <Text role="title">Copy your token now</Text>
+          <code className="checkion-settings-token-code" data-testid="settings-token-secret">
+            {rawSecret}
+          </code>
+          <Text role="hint">This value will not be shown again.</Text>
+          <div className="checkion-settings-actions">
+            <Button type="button" variant="ghost" size="sm" onClick={handleCopySecret}>
+              Copy
+            </Button>
+            <Button type="button" variant="link" size="sm" onClick={() => setRawSecret(null)}>
+              Close
+            </Button>
+          </div>
+        </div>
       ) : (
-        <ul className="checkion-issue-list">
+        <div className="checkion-settings-token-create">
+          <Field label="Label" size="sm">
+            <Input
+              data-testid="settings-token-label"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="Local CLI"
+              block
+            />
+          </Field>
+          <Button
+            type="button"
+            variant="primary"
+            disabled={busy}
+            data-testid="settings-token-create"
+            onClick={() => void createToken()}
+          >
+            {busy ? 'Creating…' : 'Create token'}
+          </Button>
+        </div>
+      )}
+
+      <Text role="label">Your tokens</Text>
+      {tokens.length === 0 ? (
+        <Text role="meta">No tokens yet.</Text>
+      ) : (
+        <ul className="checkion-settings-token-list">
           {tokens.map((token) => (
-            <li key={token.id}>
-              <strong>{token.label}</strong> · {token.prefix}…
-              {token.lastUsedAt ? ` · used ${token.lastUsedAt.slice(0, 10)}` : ''}
+            <li key={token.id} className="checkion-settings-token-row">
+              <div>
+                <Text role="body">{token.label}</Text>
+                <Text role="meta">
+                  {token.prefix}…
+                  {token.lastUsedAt ? ` · used ${token.lastUsedAt.slice(0, 10)}` : ''}
+                </Text>
+              </div>
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
+                variant="danger"
                 disabled={busy}
                 onClick={() => void revokeToken(token.id)}
-                style={{ marginLeft: '0.5rem' }}
               >
                 Revoke
               </Button>
@@ -138,31 +139,11 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
           ))}
         </ul>
       )}
-      {rawSecret ? (
-        <Text role="meta" data-testid="settings-token-secret">
-          Copy now — will not be shown again: <code>{rawSecret}</code>
+      {error ? (
+        <Text role="meta" data-testid="settings-token-error">
+          {error}
         </Text>
       ) : null}
-      {error ? <Text role="meta">{error}</Text> : null}
-      <div className="checkion-scan-form" style={{ marginTop: '0.75rem' }}>
-        <Field label="Label">
-          <input
-            data-testid="settings-token-label"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="Local CLI"
-          />
-        </Field>
-        <Button
-          type="button"
-          size="sm"
-          disabled={busy}
-          data-testid="settings-token-create"
-          onClick={() => void createToken()}
-        >
-          Create token
-        </Button>
-      </div>
-    </Panel>
+    </section>
   )
 }

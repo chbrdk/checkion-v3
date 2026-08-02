@@ -14,8 +14,9 @@ import {
   type RailDockEdge,
 } from '../lib/msqdx-ui-shell'
 import { Avatar } from '@msqdx/ui'
-import { NavIconOverview, NavIconProjects, NavIconResults, NavIconScan, NavIconSettings } from './nav-icons'
+import { NavIconOverview, NavIconProjects, NavIconResults, NavIconScan } from './nav-icons'
 import { paths } from '../lib/paths'
+import { useUserPrefs } from '../lib/user-prefs'
 
 const PRIMARY_NAV = [
   { id: 'home', href: paths.routes.home, label: 'Home', icon: <NavIconOverview /> },
@@ -38,6 +39,7 @@ export function AppShell({
   status?: ReactNode
 }) {
   const pathname = usePathname()
+  const { displayName } = useUserPrefs()
   const [railEdge, setRailEdge] = useState<RailDockEdge>(paths.railDockEdge)
 
   const frameStyle = useMemo(
@@ -77,9 +79,7 @@ export function AppShell({
               href: paths.routes.settings,
               active: isActive(paths.routes.settings),
               ariaLabel: 'Settings',
-              icon: (
-                <Avatar name={paths.defaultDisplayName} size="sm" className="rail-avatar" />
-              ),
+              icon: <Avatar name={displayName} size="sm" className="rail-avatar" />,
             },
           ]}
         />
@@ -92,10 +92,6 @@ export function AppShell({
           <div className="topbar-right">
             {status}
             {actions}
-            <Link href={paths.routes.settings} aria-label="Settings">
-              <span className="sr-only">Settings</span>
-              <NavIconSettings />
-            </Link>
           </div>
         </>
       }

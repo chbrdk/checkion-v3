@@ -11,7 +11,7 @@ Personal Bearer tokens under Settings. Fixture store or Postgres `api_tokens`.
 
 | Piece | Path |
 |-------|------|
-| UI | `/settings` · `SettingsTokens` |
+| UI | `/settings` · `SettingsPage` tokens band (`SettingsTokens`) |
 | Store | `apps/web/lib/fixtures/api-tokens-store.ts` |
 | DB | `apps/web/lib/db/api-tokens.ts` · schema `api_tokens` |
 | Lib | `apps/web/lib/api-tokens.ts` · `apps/web/lib/auth-api-token.ts` |

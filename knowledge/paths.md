@@ -54,6 +54,11 @@ Public landing: `/share/[token]` · API `/api/share`
 - Domain: `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`
 - Staging base for AUDION links: `NEXT_PUBLIC_CHECKION_URL` / `URL_CHECKION_V3` = `https://checkion-v3.projects-a.plygrnd.tech`
 
+## Settings
+- Route: `/settings` (`paths.routes.settings`) — Account, Profile, Appearance, Language, API tokens, Federation
+- Spec: `specs/domain/settings.md` · composition mirrors audion-v3 / plexon-v3 section bands
+- Rail footer avatar entry; prefs via `paths.displayNameStorageKey` / `themeStorageKey` / `localeStorageKey`
+
 ## API tokens
 Settings CRUD: `/api/tokens` · verify `/api/tokens/verify` · store `api-tokens-store` / Drizzle `api_tokens` · `knowledge/settings-api-tokens.md` · Bearer machine clients on selected APIs (`POST /api/scans`, `POST /api/geo-jobs`, `POST /api/projects`)
 
