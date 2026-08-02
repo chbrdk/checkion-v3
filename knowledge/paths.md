@@ -21,8 +21,11 @@
 | `PLEXON_SERVICE_SECRET` | Shared service secret for auth + federation |
 | `NEXT_PUBLIC_PLEXON_REGISTER_URL` | Optional public Plexon register page |
 | `AUTH_SECRET` | NextAuth JWT secret (≥32 chars; required when Plexon auth configured in Docker) |
-| `DATABASE_URL` | Product Postgres; when unset, stores use in-memory fixtures. Also enables live scans unless `CHECKION_LIVE_SCANS=0` |
+| `DATABASE_URL` | Product Postgres; when unset, stores use in-memory fixtures. Also enables live scans / live GEO unless the matching `CHECKION_LIVE_*=0` flag is set |
 | `CHECKION_LIVE_SCANS` | `1` force live Puppeteer pipeline; `0` force fixture synthesize |
+| `CHECKION_LIVE_GEO` | `1` force live GEO LLM pipeline; `0` force fixture synthesize |
+| `OPENAI_API_KEY` | Required for live GEO LLM stages + queryRuns |
+| `OPENAI_MODEL` | Optional default model (default `gpt-5.4-nano`) |
 | `CHECKION_FEDERATION_MODE` | `dummy` (default) or `live` |
 | `PLEXON_DEMO_OWNER_USER_ID` | Fallback owner for origin registration without session |
 | `PLEXON_DEMO_COMPANY_ID` | Fallback company for origin registration without session |
@@ -36,7 +39,8 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 ## GEO routes
 - Magazine: `/geo/:id/overview` · `/queries` (Placement nav deferred; legacy `/placement` redirects to Queries)
 - Queries deep-link: `/geo/:id/queries?q=<prompt>&model=<modelId>` (`paths.routes.geoQueriesPrompt`)
-- Live LLM job launch: **deferred** (see `knowledge/dummy-data-mode.md`)
+- Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading`
+- Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)
 
 ## Share
 Public landing: `/share/[token]` · API `/api/share`

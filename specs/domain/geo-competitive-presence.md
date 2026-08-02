@@ -1,7 +1,7 @@
 # GEO Competitive Presence — CHECKION v3
 
 ## Status
-Accepted (spec-driven). Fixtures + derive helpers land with this spec. Live LLM launch later.
+Accepted (spec-driven). Fixtures + derive helpers land with this spec. **Phase 3 live GEO** lands job create + OpenAI queryRuns → same `finalize` / presence helpers (`CHECKION_LIVE_GEO` / `DATABASE_URL` + `OPENAI_API_KEY`). Multi-provider competitive cron remains deferred.
 
 ## Purpose
 Answer: **Where do we appear in answer engines?** — citations, placement, model/query coverage — not on-page page quality.
@@ -119,7 +119,7 @@ Legacy `shareOfVoice[]` on `GeoOverview` remains as a convenience mirror of `fie
 - Editable meters / sliders for scores
 - Live Plexon federation (deferred)
 - Per-answer live LLM (prompt-level reading only)
-- **Live GEO job pipeline** — launching real LLM query runs via Plexon / workers is deferred. Fixtures + `finalize()` derive presence/insights only. Stub note: `knowledge/dummy-data-mode.md` (“GEO live LLM launch later”).
+- **Multi-provider competitive cron** (Claude + Gemini + history reruns) — deferred; Phase 3 uses OpenAI query×model runs only. See `knowledge/dummy-data-mode.md` (“Live GEO pipeline”).
 
 ## Contracts
 `GeoPresenceSolo`, `GeoPresenceField`, `GeoRivalSource`, `GeoPresence` in `@checkion-v3/contracts`; `GeoOverview.presence`.  

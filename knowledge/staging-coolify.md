@@ -40,8 +40,11 @@ PLEXON_AUTH_URL=https://plexon-v3.projects-a.plygrnd.tech
 PLEXON_SERVICE_SECRET=<shared>
 AUTH_SECRET=<≥32 chars>          # required by entrypoint when PLEXON_AUTH_URL + secret set
 NEXT_PUBLIC_PLEXON_REGISTER_URL=https://plexon-v3.projects-a.plygrnd.tech/register
-DATABASE_URL=postgres://…        # triggers drizzle-kit push on start; also enables live scans unless CHECKION_LIVE_SCANS=0
+DATABASE_URL=postgres://…        # triggers drizzle-kit push on start; also enables live scans / GEO unless CHECKION_LIVE_*=0
 CHECKION_LIVE_SCANS=1            # force live Puppeteer scans (even without DB — results stay in-memory)
+CHECKION_LIVE_GEO=1              # force live GEO LLM pipeline (requires OPENAI_API_KEY)
+OPENAI_API_KEY=sk-…              # required for live GEO stages + queryRuns
+OPENAI_MODEL=gpt-5.4-nano        # optional
 CHECKION_FEDERATION_MODE=live
 PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
 PLEXON_DEMO_COMPANY_ID=…
@@ -67,7 +70,8 @@ The root `Dockerfile` installs common Chromium shared libraries on **builder bas
 2. `GET …/api/federation/health` → contract present; `deferred: true` in dummy; live probes plexon
 3. Browser: `/geo/geo-1/overview` and `/geo/geo-1/queries` (fixture magazine)
 4. Optional: launch fixture scan from UI → result overview
-5. Confirm **prod** `https://checkion.projects-a.plygrnd.tech` untouched
+5. Optional live GEO: set `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY` → `POST /api/geo-jobs` → open `/geo/<jobId>/overview`
+6. Confirm **prod** `https://checkion.projects-a.plygrnd.tech` untouched
 
 ## Local Docker smoke
 

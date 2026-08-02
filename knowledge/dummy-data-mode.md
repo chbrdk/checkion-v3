@@ -9,6 +9,7 @@ Default local development uses **in-memory fixtures**. No crawler workers, no sh
 | `paths.federationMode` | `dummy` (override with `CHECKION_FEDERATION_MODE=live`) |
 | Persistence | Fixtures when `DATABASE_URL` unset; Postgres when set |
 | Live scans | Off unless `DATABASE_URL` is set **or** `CHECKION_LIVE_SCANS=1`; force fixture with `CHECKION_LIVE_SCANS=0` |
+| Live GEO | Off unless `DATABASE_URL` is set **or** `CHECKION_LIVE_GEO=1`; force fixture with `CHECKION_LIVE_GEO=0`. Live path requires `OPENAI_API_KEY`. |
 
 ## Corpus
 - 3 projects (Bosch, Docs, Shop)
@@ -47,5 +48,23 @@ When `PLEXON_AUTH_URL` / `PLEXON_SERVICE_SECRET` are unset, middleware stays ope
 ## Federation
 Live wiring is accepted (`specs/domain/plexon-federation.md`); keep fixtures as fallback for local and Staging Shell.
 
-### GEO live LLM launch later
-No job-create / worker path yet — GEO results are fixture-only (`lib/fixtures/geo-jobs.ts` → `finalize()` derives presence + insights). When live launch lands: accept target URL, queries, models, optional competitors → enqueue LLM queryRuns → same derive helpers.
+## Live GEO pipeline (Phase 3)
+When live GEO is on (`shouldRunLiveGeo()` in `lib/geo-eeat/live-geo-gate.ts`):
+
+1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → OpenAI query×model runs → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures).
+2. Payload persists as `GeoOverview` jsonb on `geo_jobs`.
+3. Magazine UI `/geo/:id/...` and `GET /api/geo-jobs/:id/reading` read live or fixture data via `geo-store`.
+
+Local live example:
+
+```bash
+export CHECKION_LIVE_GEO=1
+export OPENAI_API_KEY=sk-…
+# optional: export DATABASE_URL=postgres://…
+npm run dev -w web
+curl -X POST http://localhost:3007/api/geo-jobs \
+  -H 'content-type: application/json' \
+  -d '{"projectId":"proj-1","url":"https://example.com","queries":["best widgets"],"models":["gpt-5.4-nano"],"competitors":["rival.com"]}'
+```
+
+CI / unit tests keep the fixture path (no OpenAI). Inject stubs via `setGeoPageScanRunnerForTests` / `setQueryRunChatClientForTests`. Seeded fixtures `geo-1` / `geo-2` / `geo-3` remain when live GEO is off.

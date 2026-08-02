@@ -1,7 +1,7 @@
 # GEO On-page E-E-A-T — CHECKION v3
 
 ## Status
-Accepted as **optional appendix** to a GEO competitive job. Live launch later.
+Accepted as **optional appendix** to a GEO competitive job. Phase 3 live GEO attaches on-page EEAT/GEO-fitness via stage1 page scan + LLM stages when the job runs live (`includePageScan`, default on).
 
 ## Scope
 On-page Experience / Expertise / Authoritativeness / Trustworthiness / GEO fitness scores when a **page reading** is attached to a GEO job.
