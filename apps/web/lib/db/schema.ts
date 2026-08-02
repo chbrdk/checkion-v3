@@ -142,8 +142,13 @@ export type ShareLinkRow = typeof shareLinks.$inferSelect
 
 export const apiTokens = pgTable('api_tokens', {
   id: text('id').primaryKey(),
+  /** Plexon / session user id (no local users FK). */
+  ownerId: text('owner_id').notNull(),
   label: text('label').notNull(),
+  /** Visible prefix only (`checkion_` + 4 hex); never the full secret. */
   prefix: text('prefix').notNull(),
+  /** SHA-256 hex of raw Bearer token. */
+  tokenHash: text('token_hash').notNull(),
   createdAt: text('created_at').notNull(),
   lastUsedAt: text('last_used_at'),
   payload: jsonb('payload').$type<Partial<ApiTokenStub>>().notNull().default({}),

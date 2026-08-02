@@ -72,6 +72,9 @@ The root `Dockerfile` installs common Chromium shared libraries on **builder bas
 4. Optional: launch fixture scan from UI → result overview
 5. Optional live GEO: set `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY` → `POST /api/geo-jobs` → open `/geo/<jobId>/overview`
 6. Confirm **prod** `https://checkion.projects-a.plygrnd.tech` untouched
+7. **Plexon registry (operator):** after smoke passes, set on **plexon-v3** Coolify:
+   `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech`
+   (Wave B — point Collection / product links at checkion-v3, not prod CHECKION). Do not change Coolify from this repo.
 
 ## Local Docker smoke
 
@@ -86,6 +89,6 @@ docker run --rm -p 3007:3007 \
 
 ## Status
 
-Dockerfile + entrypoint + runbook ready. Live Coolify deploy requires GitHub remote + Coolify credentials (not in-repo).
+Dockerfile + entrypoint + runbook ready. Live Coolify deploy requires GitHub remote + Coolify credentials (not in-repo). Phase 4 Collection surface: API tokens + richer provisioning GET (`geoJobCount` + catalogs) — see `knowledge/settings-api-tokens.md`.
 
 Operator shortlist: [`coolify-operator-handoff.md`](./coolify-operator-handoff.md).

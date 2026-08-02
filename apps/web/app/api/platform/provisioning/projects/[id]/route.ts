@@ -9,11 +9,12 @@ import {
   upsertByPlatformProjectId,
 } from '../../../../../../lib/fixtures/project-store'
 import { listDomainScans, listScans } from '../../../../../../lib/fixtures/scan-store'
+import { listGeoJobs } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
 const PLEXON_USER_HEADER = 'X-Plexon-User-Id'
 
-/** Dashboard BFF: scan summary for a platform project mirror. */
+/** Dashboard BFF: scan + GEO summary for a platform project mirror. */
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
@@ -40,14 +41,18 @@ export async function GET(
 
   const scans = await listScans(project.id)
   const domains = await listDomainScans(project.id)
+  const geoJobs = (await listGeoJobs()).filter((j) => j.projectId === project.id)
   const standalone = scans.filter((s) => s.mode === 'single').slice(0, CATALOG_LIMIT)
   const domainCatalog = domains.slice(0, CATALOG_LIMIT)
+  const geoCatalog = geoJobs.slice(0, CATALOG_LIMIT)
 
   return jsonWithContract({
     externalProjectId: project.id,
+    platformProjectId,
     scanCount: scans.length + domains.length,
     domainScanCount: domains.length,
     standaloneScanCount: standalone.length,
+    geoJobCount: geoJobs.length,
     domainScans: domainCatalog.map((d) => ({
       id: d.id,
       domain: d.rootUrl,
@@ -61,6 +66,15 @@ export async function GET(
       url: s.url,
       score: s.overallScore ?? 0,
       timestamp: s.completedAt ?? s.startedAt,
+    })),
+    geoJobs: geoCatalog.map((j) => ({
+      id: j.id,
+      title: j.title,
+      url: j.url,
+      status: j.status,
+      score: j.overallScore ?? 0,
+      timestamp: j.completedAt,
+      citedShare: j.citedShare,
     })),
   })
 }

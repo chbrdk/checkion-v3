@@ -15,6 +15,7 @@
 | Journey agent island | `specs/domain/journey-agent-island.md` |
 | Share links | `specs/domain/share-links.md` |
 | Settings | `specs/domain/settings.md` |
+| Settings API tokens | `specs/domain/settings-api-tokens.md` |
 | Edit dialogs | `specs/domain/edit-dialogs.md` |
 | GEO competitive presence | `specs/domain/geo-competitive-presence.md` |
 | GEO answer insights | `specs/domain/geo-answer-insights.md` |
@@ -30,11 +31,13 @@
 | Domain scans | `specs/api/domain-scans.md` |
 | Domain payload | `specs/api/domain-scan-payload.md` |
 | Share | `specs/api/share.md` |
+| API tokens | `specs/api/tokens.md` |
 
 ## Knowledge
 | Doc | Path |
 |-----|------|
 | Paths | `knowledge/paths.md` |
+| Settings API tokens | `knowledge/settings-api-tokens.md` |
 | Slice pattern | `knowledge/workspace-slice-pattern.md` |
 | V2/V3 separation | `knowledge/v2-v3-runtime-separation.md` |
 | Scan migration | `knowledge/scan-migration-map.md` |

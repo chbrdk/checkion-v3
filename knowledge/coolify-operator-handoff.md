@@ -19,6 +19,7 @@ Repo-side work for this slice is done (Dockerfile clones `msqdx-ui`, docs, packa
    ```
 5. Deploy → smoke URLs in `knowledge/staging-coolify.md`
 6. Confirm prod `https://checkion.projects-a.plygrnd.tech` unchanged
+7. **After smoke:** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` (Wave B registry → v3)
 
 Full checklist: [knowledge/staging-coolify.md](./staging-coolify.md)
 

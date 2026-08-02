@@ -9,7 +9,7 @@
 ## Directions
 | Direction | Endpoint | Notes |
 |-----------|----------|-------|
-| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Upsert / catalog via project-store (Postgres when `DATABASE_URL` set) |
+| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Upsert / Collection dashboard summary (scans, domain, GEO) via stores |
 | CHECKION → Plexon | `POST …/checkion-project-origin` via `registerCheckionProjectOnPlexon` | Called from `POST /api/projects` when live + owner/company available |
 
 ## Mode
@@ -20,7 +20,7 @@
 ## Auth (NextAuth + Plexon)
 - NextAuth credentials provider validates against plexon `POST /api/auth/validate-credentials`
 - Env: `PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, `AUTH_SECRET` (≥32), optional `NEXT_PUBLIC_PLEXON_REGISTER_URL`
-- Middleware requires login when Plexon auth is configured; public: `/login`, `/api/auth/*`, `/api/health`, `/api/federation/health`, `/api/platform/provisioning/*`, `/share/*`
+- Middleware requires login when Plexon auth is configured; public: `/login`, `/api/auth/*`, `/api/health`, `/api/federation/health`, `/api/platform/provisioning/*`, `/api/tokens/verify`, `/share/*`, plus `/api/*` with `Authorization: Bearer` (validated in-route)
 - Local bypass (“Continue to app”) only when Plexon auth unset
 
 ## Env

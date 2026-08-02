@@ -4,6 +4,8 @@ import {
   getProjectByPlatformId,
   resetProjectStore,
 } from '../lib/fixtures/project-store'
+import { createScan } from '../lib/fixtures/scan-store'
+import { createGeoJob, resetGeoStoreForTests } from '../lib/fixtures/geo-store'
 
 vi.mock('../lib/runtime-config', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/runtime-config')>()
@@ -25,6 +27,7 @@ function authHeaders(extra?: Record<string, string>): HeadersInit {
 describe('platform provisioning projects', () => {
   beforeEach(() => {
     resetProjectStore()
+    resetGeoStoreForTests()
   })
 
   afterEach(() => {
@@ -99,5 +102,57 @@ describe('platform provisioning projects', () => {
     const body = await res.json()
     expect(typeof body.externalProjectId).toBe('string')
     expect(body.scanCount).toBe(0)
+    expect(body.domainScanCount).toBe(0)
+    expect(body.geoJobCount).toBe(0)
+    expect(body.standaloneScans).toEqual([])
+    expect(body.geoJobs).toEqual([])
+  })
+
+  it('GET returns real store counts after scans and GEO jobs', async () => {
+    const { PUT, GET } = await import('../app/api/platform/provisioning/projects/[id]/route')
+    await PUT(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-counts', {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          contractVersion: PLEXON_FEDERATION_CONTRACT_VERSION,
+          name: 'Counts',
+          domain: 'counts.example',
+          platformCompanyId: 'comp-1',
+          ownerUserId: 'user-1',
+        }),
+      }),
+      { params: Promise.resolve({ id: 'pp-counts' }) },
+    )
+
+    const project = await getProjectByPlatformId('pp-counts')
+    expect(project).toBeTruthy()
+
+    await createScan({
+      projectId: project!.id,
+      mode: 'single',
+      url: 'https://counts.example/page',
+    })
+    await createGeoJob({
+      projectId: project!.id,
+      url: 'https://counts.example/',
+      queries: ['best widgets'],
+      title: 'Counts GEO',
+    })
+
+    const res = await GET(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-counts', {
+        headers: authHeaders({ 'X-Plexon-User-Id': 'user-1' }),
+      }),
+      { params: Promise.resolve({ id: 'pp-counts' }) },
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.scanCount).toBeGreaterThanOrEqual(1)
+    expect(body.standaloneScanCount).toBeGreaterThanOrEqual(1)
+    expect(body.geoJobCount).toBeGreaterThanOrEqual(1)
+    expect(body.standaloneScans[0]?.url).toContain('counts.example')
+    expect(body.geoJobs[0]?.title).toBe('Counts GEO')
+    expect(body.platformProjectId).toBe('pp-counts')
   })
 })

@@ -9,6 +9,7 @@
 - Public: `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`)
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
 - Attach runbook: `knowledge/staging-coolify.md`
+- **Operator (after smoke):** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` so Collection dashboard / registry deep-links target v3 (do not leave prod `checkion.projects-a…`). See `plexon-v3/knowledge/coolify-v3-staging-runbook.md` §4.3 Wave B note.
 - Image: root `Dockerfile` clones sibling `chbrdk/msqdx-ui` into `/workspace/msqdx-ui` (same layout as local `GITHUB/checkion-v3` + `GITHUB/msqdx-ui`)
 - Entrypoint: `scripts/docker-entrypoint.sh` (optional drizzle push; AUTH_SECRET required only when Plexon auth configured)
 
@@ -44,6 +45,12 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 
 ## Share
 Public landing: `/share/[token]` · API `/api/share`
+
+## API tokens
+Settings CRUD: `/api/tokens` · verify `/api/tokens/verify` · store `api-tokens-store` / Drizzle `api_tokens` · `knowledge/settings-api-tokens.md` · Bearer machine clients on selected APIs (`POST /api/scans`, `POST /api/geo-jobs`, `POST /api/projects`)
+
+## Federation / Collection summary
+`GET /api/platform/provisioning/projects/{id}` — Plexon Collection dashboard BFF: `scanCount`, `domainScanCount`, `standaloneScanCount`, `geoJobCount`, recent domain/standalone/geo catalogs
 
 ## DS
 Sibling `file:../../../msqdx-ui/packages/{ui,ui-tokens}` + barrels `lib/msqdx-ui*.ts`. Docker build clones the same sibling tree (see `Dockerfile`).

@@ -6,15 +6,20 @@ import { paths } from './lib/paths'
 
 const gated = auth((req) => {
   const { pathname } = req.nextUrl
+  const authHeader = req.headers.get('authorization')?.toLowerCase() ?? ''
+  const hasBearer = authHeader.startsWith('bearer ')
   const isPublic =
     pathname === paths.routes.login ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/federation/health') ||
     pathname.startsWith('/api/platform/provisioning') ||
+    pathname.startsWith('/api/tokens/verify') ||
     pathname.startsWith('/share') ||
     pathname.startsWith('/_next') ||
-    pathname === '/favicon.ico'
+    pathname === '/favicon.ico' ||
+    /** Machine clients: Bearer validated in-route via getRequestUser. */
+    (pathname.startsWith('/api/') && hasBearer)
 
   if (isPublic) {
     return NextResponse.next()

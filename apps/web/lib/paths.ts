@@ -24,7 +24,11 @@ export const paths = {
   scanStorePath: 'apps/web/lib/fixtures/scan-store.ts',
   shareStorePath: 'apps/web/lib/fixtures/share-store.ts',
   apiTokensStorePath: 'apps/web/lib/fixtures/api-tokens-store.ts',
+  /** Personal Bearer token prefix (`checkion_` + 64 hex). */
   apiTokenPrefix: 'checkion_',
+  apiTokenBytes: 32,
+  /** Owner when session absent (local / fixture mode). */
+  apiTokenFixtureOwnerId: 'local-admin',
   federationContract: '2026-05-plexon-federation-v3' as const,
   /** Local demo: fixtures only — no live Plexon / crawl. Override with CHECKION_FEDERATION_MODE=live. */
   dataSource: 'fixtures' as const,
@@ -105,6 +109,8 @@ export const paths = {
     apiShare: '/api/share',
     apiShareDetail: (token: string) => `/api/share/${token}`,
     apiTokens: '/api/tokens',
+    apiTokenDetail: (tokenId: string) => `/api/tokens/${tokenId}`,
+    apiTokensVerify: '/api/tokens/verify',
     apiFederationHealth: '/api/federation/health',
   },
 } as const

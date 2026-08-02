@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { CreateProjectInput } from '@checkion-v3/contracts'
 import { auth } from '../../../auth'
+import { getRequestUser } from '../../../lib/auth-api-token'
 import {
   applyPlatformBinding,
   createProject,
@@ -43,8 +44,10 @@ export async function POST(request: Request) {
 
   try {
     const session = await auth()
+    const requestUser = await getRequestUser(request)
     const ownerPlexonUserId =
       body.ownerPlexonUserId?.trim() ||
+      requestUser?.id ||
       session?.user?.id ||
       getPlexonDemoOwnerUserId() ||
       undefined

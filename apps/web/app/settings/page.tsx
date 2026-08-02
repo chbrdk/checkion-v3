@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { Button, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from '../../components/app-shell'
 import { SettingsAppearance, SettingsTokens } from '../../components/settings-panels'
-import { listApiTokens } from '../../lib/fixtures/api-tokens-store'
+import { auth } from '../../auth'
+import { listApiTokensForOwner, toApiTokenOwnerId } from '../../lib/api-tokens'
 import { paths } from '../../lib/paths'
 import { plexonBaseUrl } from '../../lib/runtime-config'
 
 export default async function SettingsPage() {
-  const tokens = await listApiTokens()
+  const session = await auth()
+  const { items: tokens } = await listApiTokensForOwner(toApiTokenOwnerId(session?.user))
 
   return (
     <AppShell title="Settings" description="Local fixture mode — projects, scans, domain, GEO.">

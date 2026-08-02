@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { getRequestUser } from '../../../lib/auth-api-token'
 import { createGeoJob, listGeoJobs } from '../../../lib/fixtures/geo-store'
 import { hasOpenAIKey } from '../../../lib/llm/config'
 import { shouldRunLiveGeo } from '../../../lib/geo-eeat/live-geo-gate'
+import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -11,6 +13,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (isPlexonAuthConfigured()) {
+    const user = await getRequestUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+  }
+
   const body = (await request.json()) as {
     projectId?: string
     url?: string
