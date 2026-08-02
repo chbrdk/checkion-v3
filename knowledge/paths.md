@@ -25,6 +25,9 @@
 | `DATABASE_URL` | Product Postgres; when unset, stores use in-memory fixtures. Also enables live scans / live GEO unless the matching `CHECKION_LIVE_*=0` flag is set |
 | `CHECKION_LIVE_SCANS` | `1` force live Puppeteer pipeline; `0` force fixture synthesize |
 | `CHECKION_LIVE_GEO` | `1` force live GEO LLM pipeline; `0` force fixture synthesize |
+| `PUPPETEER_CACHE_DIR` | Docker runner: `/opt/puppeteer` (Chrome installed at image build). Optional local override |
+| `PUPPETEER_EXECUTABLE_PATH` | Optional; only if using system Chromium instead of Puppeteer-bundled Chrome |
+| `PUPPETEER_SKIP_DOWNLOAD` | Image builder skips npm Chrome download; runner installs via `npx puppeteer browsers install chrome`. Do not set `true` in Coolify for the Docker build |
 | `OPENAI_API_KEY` | Required for live GEO LLM stages + queryRuns |
 | `OPENAI_MODEL` | Optional default model (default `gpt-5.4-nano`) |
 | `CHECKION_FEDERATION_MODE` | `dummy` (default) or `live` |

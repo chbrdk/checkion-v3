@@ -22,7 +22,22 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('apps/web/drizzle.config.ts')
     expect(df).toContain('libnss3')
     expect(df).toContain('PUPPETEER_SKIP_DOWNLOAD')
+    expect(df).toContain('PUPPETEER_CACHE_DIR')
+    expect(df).toContain('puppeteer browsers install chrome')
     expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
+  })
+
+  it('installs Puppeteer Chrome in the runner stage (not only OS libs)', () => {
+    const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
+    const runnerIdx = df.indexOf('AS runner')
+    expect(runnerIdx).toBeGreaterThan(0)
+    const runner = df.slice(runnerIdx)
+    expect(runner).toContain('puppeteer browsers install chrome')
+    expect(runner).toContain('PUPPETEER_CACHE_DIR=/opt/puppeteer')
+    expect(runner).toMatch(/PUPPETEER_SKIP_DOWNLOAD=false/)
+    // Builder base skips download; Chrome must not be assumed from copied node_modules alone.
+    const base = df.slice(0, runnerIdx)
+    expect(base).toMatch(/PUPPETEER_SKIP_DOWNLOAD=true/)
   })
 
   it('blanks runtime secrets only on the next build RUN (Coolify build-time ARG leak)', () => {

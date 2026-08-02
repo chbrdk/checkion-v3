@@ -13,7 +13,7 @@ Deploy **checkion-v3** into Coolify island **msqdx-v3-staging** next to plexon-v
 | Dockerfile | repo root `Dockerfile` (clones `chbrdk/msqdx-ui`) |
 | Container port | **3007** |
 | Data mode | Fixtures by default (`CHECKION_FEDERATION_MODE=dummy`); optional Postgres via `DATABASE_URL` |
-| Live scans | On when `DATABASE_URL` set or `CHECKION_LIVE_SCANS=1`; Chromium OS deps installed in Dockerfile runner |
+| Live scans | On when `DATABASE_URL` set or `CHECKION_LIVE_SCANS=1`; runner installs Puppeteer Chrome + OS deps |
 
 Hierarchy and Wave B notes: `plexon-v3/knowledge/coolify-v3-staging-runbook.md`.
 
@@ -56,7 +56,13 @@ PLEXON_DEMO_COMPANY_ID=…
 
 ### Chromium / Puppeteer
 
-The root `Dockerfile` installs common Chromium shared libraries on **builder base + runner** and prefers **puppeteer-bundled Chrome** (`PUPPETEER_SKIP_DOWNLOAD=false`). Coolify may instead use a browser-capable base image; if you swap the base, keep equivalent libs (or document the image). Live scans need enough RAM for headless Chrome (~512MB+ spare).
+Live GEO stage1 / accessibility scans launch Puppeteer in-process. The multi-stage image must ship a **browser binary in the runner**, not only shared libraries:
+
+1. **OS libs** on builder base + runner (`libnss3`, `libgbm1`, fonts, …) so headless Chrome can start.
+2. **Chrome install in the runner:** `npx puppeteer browsers install chrome` into `PUPPETEER_CACHE_DIR=/opt/puppeteer` (cache is outside `node_modules`; a fresh `FROM` never inherits the builder’s `/root/.cache/puppeteer`).
+3. Builder sets `PUPPETEER_SKIP_DOWNLOAD=true` so `npm ci` stays light; runner sets `PUPPETEER_SKIP_DOWNLOAD=false` and installs Chrome explicitly.
+
+**Coolify:** redeploy after this Dockerfile lands — no extra browser env vars required. Do **not** set `PUPPETEER_SKIP_DOWNLOAD=true` as a Coolify build/runtime env (it can block the runner install layer if injected at build). Optional override: `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium` only if you switch the image to system Chromium instead of the bundled install. Live scans need enough RAM for headless Chrome (~512MB+ spare). Local fixture mode is unchanged (`CHECKION_LIVE_SCANS=0` / no `DATABASE_URL`).
 
 ## Coolify attach checklist
 

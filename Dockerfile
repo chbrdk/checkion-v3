@@ -17,10 +17,13 @@ ARG NODE_IMAGE=node:22-bookworm-slim
 # ---- Base ----
 # Chromium OS deps for Puppeteer-bundled Chrome (live scans). Coolify may use a
 # browser-capable base instead; keep these packages when staying on node slim.
+# Browser binary itself is installed in the **runner** stage (cache is not in
+# node_modules; a fresh FROM would otherwise miss /root/.cache/puppeteer).
 FROM ${NODE_IMAGE} AS base
 WORKDIR /workspace
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PUPPETEER_SKIP_DOWNLOAD=false
+# Skip Chrome during npm ci — build does not launch scanners; runner installs it.
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
@@ -99,7 +102,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3007
 ENV HOSTNAME=0.0.0.0
 ENV CHECKION_FEDERATION_MODE=dummy
+# Live scans need the browser binary in this stage (not only OS libs / builder cache).
 ENV PUPPETEER_SKIP_DOWNLOAD=false
+ENV PUPPETEER_CACHE_DIR=/opt/puppeteer
 EXPOSE 3007
 
 # Puppeteer OS libraries (same set as builder base) for live scans.
@@ -147,6 +152,11 @@ COPY --from=builder /workspace/checkion-v3/apps/web/public ./apps/web/public
 COPY --from=builder /workspace/checkion-v3/apps/web/drizzle.config.ts ./apps/web/drizzle.config.ts
 COPY --from=builder /workspace/checkion-v3/apps/web/lib/db ./apps/web/lib/db
 COPY --from=builder /workspace/checkion-v3/scripts ./scripts
+
+# Chrome revision matching the installed puppeteer package (GEO stage1 / live scans).
+# Must run in the runner — Puppeteer cache is outside node_modules and is lost on fresh FROM.
+RUN npx --yes puppeteer browsers install chrome \
+    && test -d "${PUPPETEER_CACHE_DIR}"
 
 RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/check-database-url.mjs
 
