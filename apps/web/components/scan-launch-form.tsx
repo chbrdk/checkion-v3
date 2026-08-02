@@ -370,21 +370,14 @@ export function ScanLaunchForm({
                 )
               })}
             </div>
-            <p className="checkion-launch-capability__hint" aria-live="polite">
-              <strong>{modeCopy.title}</strong>
-              <span> — {modeCopy.deck}</span>
-            </p>
           </div>
 
           {activeCapability === 'wcag' && !fromAudion ? (
             <div className="checkion-launch-depth">
-              <span className="checkion-launch-depth__label" id="checkion-launch-depth-label">
-                WCAG depth
-              </span>
               <div
                 className="checkion-depth-grid"
                 role="radiogroup"
-                aria-labelledby="checkion-launch-depth-label"
+                aria-label="WCAG depth"
               >
                 {WCAG_DEPTH_CARDS.map((card) => {
                   const selected = activeWcagDepth === card.id

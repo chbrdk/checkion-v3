@@ -2331,8 +2331,7 @@ a { color: inherit; text-decoration: none; }
   gap: 0.65rem;
 }
 
-.checkion-launch-capability__label,
-.checkion-launch-depth__label {
+.checkion-launch-capability__label {
   font-size: 0.68rem;
   font-weight: var(--weight-medium, 500);
   letter-spacing: 0.1em;
@@ -2345,7 +2344,8 @@ a { color: inherit; text-decoration: none; }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
-  border-block: 1px solid var(--line);
+  /* Bottom rule only — no top hairline on the capability boxes */
+  border-bottom: 1px solid var(--line);
 }
 
 .checkion-capability-tile {
@@ -2421,18 +2421,6 @@ a { color: inherit; text-decoration: none; }
 
 .checkion-capability-tile--selected .checkion-capability-tile__deck {
   color: color-mix(in srgb, var(--ink, var(--fg)) 70%, var(--muted));
-}
-
-.checkion-launch-capability__hint {
-  margin: 0;
-  font-size: var(--type-sm, 0.9rem);
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.checkion-launch-capability__hint strong {
-  color: var(--ink, var(--fg));
-  font-weight: var(--weight-medium, 500);
 }
 
 /* Secondary WCAG depth — compact siblings, same rule language */
