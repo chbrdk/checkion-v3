@@ -5,7 +5,7 @@ Accepted — implemented (AUDION journey → single-page scan handoff).
 Companion (AUDION): `audion-v3/specs/domain/checkion-single-scan-trigger.md`.
 
 ## Decision
-AUDION owns Explore / UX Journey. CHECKION owns Scan / a11y. When AUDION optionally hands off a **step URL**, CHECKION runs a normal **`mode: single`** scan on the Collection’s CHECKION binding — not a domain crawl and not a Journey UI.
+AUDION owns Explore / UX Journey. CHECKION owns Scan / a11y. When AUDION optionally hands off a **step URL**, CHECKION runs a normal **`mode: single`** (WCAG Quick single) scan on the Collection’s CHECKION binding — not a domain crawl, SEO launch, GEO job, or Journey UI.
 
 ## Ownership
 | Concern | Owner |
@@ -57,7 +57,7 @@ Bases: `knowledge/paths.md` (`NEXT_PUBLIC_CHECKION_URL` / staging `URL_CHECKION_
 ## Non-goals
 - No live Journey Agent UI / Customer Journey map in CHECKION (see `journey-ui.md`, `journey-agent-island.md`)
 - No agent soft-fork into CHECKION for this path
-- No domain crawl (`deep` / `POST /api/domain-scans`) from this trigger
+- No domain crawl (`deep` / `seo` / `POST /api/domain-scans`) or GEO job from this trigger
 
 ## Phasing
 Spec · deep-link `/scan` prefill · correlation on `POST /api/scans` · results “From Audion” chrome — **done**. AUDION BFF Bearer path remains optional.

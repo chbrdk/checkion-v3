@@ -54,10 +54,10 @@ export const paths = {
     apiAuthNextAuth: '/api/auth',
     home: '/',
     scan: '/scan',
-    /** Collection / AUDION deep-link into central launch form (single · deep · geo). */
+    /** Collection / AUDION deep-link into central launch form (seo · geo · single · deep). */
     scanLaunch: (q: {
       projectId?: string
-      mode?: 'single' | 'deep' | 'geo'
+      mode?: 'seo' | 'geo' | 'single' | 'deep'
       url?: string
       platformProjectId?: string
       audionRunId?: string

@@ -1,7 +1,13 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { ScanLaunchForm, defaultGeoQueries } from '../components/scan-launch-form'
+import {
+  ScanLaunchForm,
+  capabilityFromLaunchMode,
+  defaultGeoQueries,
+  launchModeFromState,
+  wcagDepthFromLaunchMode,
+} from '../components/scan-launch-form'
 import { paths } from '../lib/paths'
 
 const push = vi.fn()
@@ -20,6 +26,19 @@ const projects = [
   { id: 'proj-2', name: 'Other' },
 ]
 
+describe('launch mode mapping', () => {
+  it('maps deep-links into capability + WCAG depth', () => {
+    expect(capabilityFromLaunchMode('seo')).toBe('seo')
+    expect(capabilityFromLaunchMode('geo')).toBe('geo')
+    expect(capabilityFromLaunchMode('single')).toBe('wcag')
+    expect(capabilityFromLaunchMode('deep')).toBe('wcag')
+    expect(wcagDepthFromLaunchMode('deep')).toBe('deep')
+    expect(wcagDepthFromLaunchMode('single')).toBe('single')
+    expect(launchModeFromState('seo', 'single')).toBe('seo')
+    expect(launchModeFromState('wcag', 'deep')).toBe('deep')
+  })
+})
+
 describe('defaultGeoQueries', () => {
   it('derives host-aware prompts', () => {
     const qs = defaultGeoQueries('https://www.bosch-ebike.com/de/')
@@ -34,28 +53,43 @@ describe('ScanLaunchForm', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders inviting launch IA with Single / Deep / GEO modes', () => {
+  it('renders inviting launch IA with SEO / GEO / WCAG capability tiles', () => {
     render(<ScanLaunchForm projects={projects} />)
     expect(screen.getByRole('heading', { name: /Start a run/i })).toBeTruthy()
-    expect(screen.getByRole('group', { name: /Launch mode/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Single' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Deep' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'GEO' })).toBeTruthy()
+    expect(screen.getByRole('radiogroup', { name: /Capability/i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /SEO\./i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('group', { name: /WCAG scan depth/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Quick single scan/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Deep scan/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Single · scan-single-1/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /SEO · domain-1/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /GEO · geo-1/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /WCAG · scan-single-1/i })).toBeTruthy()
   })
 
-  it('shows GEO fields when GEO mode is selected', () => {
+  it('reveals WCAG depth only when WCAG is selected', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="seo" />)
+    expect(screen.getByRole('radio', { name: /SEO\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Launch SEO crawl/i })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('radio', { name: /WCAG\./i }))
+    expect(screen.getByRole('group', { name: /WCAG scan depth/i })).toBeTruthy()
+  })
+
+  it('shows GEO fields when GEO capability is selected', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
     expect(screen.getByLabelText(/GEO queries/i)).toBeTruthy()
     expect(screen.getByLabelText(/GEO models/i)).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'GEO' })).toHaveAttribute('aria-pressed', 'true')
-    expect(document.querySelector('.checkion-launch-mode__hint')).toBeTruthy()
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
   })
 
-  it('locks AUDION handoff to single mode', () => {
+  it('locks AUDION handoff to WCAG Quick single', () => {
     render(
       <ScanLaunchForm
         projects={projects}
@@ -66,9 +100,11 @@ describe('ScanLaunchForm', () => {
       />,
     )
     expect(screen.getByRole('heading', { name: /Scan this page/i })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'GEO' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Deep' })).toBeNull()
-    expect(screen.getByRole('button', { name: 'Single' })).toBeTruthy()
+    expect(screen.queryByRole('radio', { name: /GEO\./i })).toBeNull()
+    expect(screen.queryByRole('radio', { name: /SEO\./i })).toBeNull()
+    expect(screen.getByRole('radio', { name: /WCAG\./i })).toBeTruthy()
+    expect(screen.queryByRole('group', { name: /WCAG scan depth/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
   it('posts GEO job and navigates to overview', async () => {
@@ -102,6 +138,35 @@ describe('ScanLaunchForm', () => {
     })
   })
 
+  it('posts SEO domain crawl and navigates to domain overview', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ id: 'domain-seo-1' }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <ScanLaunchForm
+        projects={projects}
+        defaultMode="seo"
+        defaultProjectId="proj-1"
+        defaultUrl="https://example.com/"
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Launch SEO crawl/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const call = (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock
+      .calls[0]
+    expect(call?.[0]).toBe(paths.routes.apiDomainScans)
+    const body = JSON.parse(String(call?.[1]?.body)) as { projectId: string; url: string }
+    expect(body.projectId).toBe('proj-1')
+    expect(body.url).toBe('https://example.com/')
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith(paths.routes.domainSection('domain-seo-1', 'overview'))
+    })
+  })
+
   it('posts single scan and navigates to results overview', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
@@ -117,7 +182,7 @@ describe('ScanLaunchForm', () => {
         defaultUrl="https://example.com/"
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /Launch single scan/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Launch single scan$/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     const call = (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock
@@ -130,12 +195,43 @@ describe('ScanLaunchForm', () => {
       expect(push).toHaveBeenCalledWith(paths.routes.resultSection('scan-new-1', 'overview'))
     })
   })
+
+  it('posts deep WCAG scan when Deep scan is selected', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ id: 'scan-deep-1' }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <ScanLaunchForm
+        projects={projects}
+        defaultMode="deep"
+        defaultProjectId="proj-1"
+        defaultUrl="https://example.com/"
+      />,
+    )
+    expect(screen.getByRole('button', { name: /^Deep scan$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Launch deep scan/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const call = (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock
+      .calls[0]
+    const body = JSON.parse(String(call?.[1]?.body)) as { mode: string }
+    expect(body.mode).toBe('deep')
+  })
 })
 
 describe('scanLaunch deep-links', () => {
-  it('supports mode=geo', () => {
+  it('supports mode=geo and mode=seo', () => {
     expect(paths.routes.scanLaunch({ projectId: 'p1', mode: 'geo', url: 'https://a.com' })).toBe(
       '/scan?projectId=p1&mode=geo&url=https%3A%2F%2Fa.com',
     )
+    expect(paths.routes.scanLaunch({ mode: 'seo' })).toBe('/scan?mode=seo')
+    expect(paths.routes.scanLaunch({ mode: 'single' })).toBe('/scan?mode=single')
+    expect(paths.routes.scanLaunch({ mode: 'deep' })).toBe('/scan?mode=deep')
   })
 })

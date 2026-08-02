@@ -38,9 +38,14 @@ Login `/login` · NextAuth `/api/auth/*` · Plexon `validate-credentials` — se
 Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dummy` for fixture-only local / Staging Shell.
 
 ## Central launch (`/scan`)
-- Route: `/scan` (`paths.routes.scan`) — Single, Deep, and GEO from one magazine form (`ScanLaunchForm`)
-- Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'single'|'deep'|'geo', url, … })`
-- Modes: `mode=single` → `POST /api/scans` → `/results/:id/overview` · `mode=deep` → same + domain payload · `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview`
+- Route: `/scan` (`paths.routes.scan`) — capability-first magazine form (`ScanLaunchForm`): **SEO · GEO · WCAG**
+- Primary tiles: SEO · GEO · WCAG; WCAG reveals secondary **Quick single** · **Deep scan** (`ToggleGroup`)
+- Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, … })`
+- Modes:
+  - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
+  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview`
+  - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
+  - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
 - Spec: `specs/domain/scan-modes.md`
 
 ## GEO routes
@@ -55,7 +60,7 @@ Public landing: `/share/[token]` · API `/api/share`
 
 ## Cross-product deep-link (AUDION → single-page scan)
 - Launch: `paths.routes.scanLaunch({ projectId, mode: 'single', url, platformProjectId?, audionRunId?, stepUrl? })` → `/scan?projectId=&mode=single&url=`
-- Prefills project, mode, URL; optional AUDION correlation posted on launch; handoff **locks** mode to single (no deep/GEO)
+- Prefills project, mode, URL; optional AUDION correlation posted on launch; handoff **locks** to WCAG Quick single (no deep / GEO / SEO)
 - After submit → `/results/[id]/overview` (`paths.routes.resultSection`)
 - Machine: `POST /api/scans` with Bearer `checkion_…` + optional `platformProjectId` / `audionRunId` / `stepUrl` (persisted on `ScanSummary` / payload jsonb)
 - Domain: `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`

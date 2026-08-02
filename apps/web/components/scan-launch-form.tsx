@@ -21,7 +21,14 @@ import { paths } from '../lib/paths'
 const DEFAULT_DEMO_URL = 'https://www.bosch-ebike.com/de/'
 const DEFAULT_GEO_MODEL = 'gpt-5.4-nano'
 
-export type LaunchMode = 'single' | 'deep' | 'geo'
+/** Deep-link / API launch modes preserved across IA rebuilds. */
+export type LaunchMode = 'seo' | 'geo' | 'single' | 'deep'
+
+/** Primary capability on the magazine picker. */
+export type LaunchCapability = 'seo' | 'geo' | 'wcag'
+
+/** WCAG secondary depth (only when capability = WCAG). */
+export type WcagDepth = 'single' | 'deep'
 
 function hostFromUrl(raw: string): string {
   try {
@@ -50,13 +57,60 @@ function parseLines(raw: string): string[] {
     .filter(Boolean)
 }
 
-function resolveLaunchMode(
-  fromAudion: boolean,
-  defaultMode: LaunchMode,
-): LaunchMode {
-  if (fromAudion) return 'single'
-  return defaultMode
+export function capabilityFromLaunchMode(mode: LaunchMode): LaunchCapability {
+  if (mode === 'seo') return 'seo'
+  if (mode === 'geo') return 'geo'
+  return 'wcag'
 }
+
+export function wcagDepthFromLaunchMode(mode: LaunchMode): WcagDepth {
+  return mode === 'deep' ? 'deep' : 'single'
+}
+
+export function launchModeFromState(
+  capability: LaunchCapability,
+  wcagDepth: WcagDepth,
+): LaunchMode {
+  if (capability === 'seo') return 'seo'
+  if (capability === 'geo') return 'geo'
+  return wcagDepth
+}
+
+function resolveCapability(fromAudion: boolean, defaultMode: LaunchMode): LaunchCapability {
+  if (fromAudion) return 'wcag'
+  return capabilityFromLaunchMode(defaultMode)
+}
+
+function resolveWcagDepth(fromAudion: boolean, defaultMode: LaunchMode): WcagDepth {
+  if (fromAudion) return 'single'
+  return wcagDepthFromLaunchMode(defaultMode)
+}
+
+const CAPABILITY_CARDS: Array<{
+  id: LaunchCapability
+  label: string
+  kicker: string
+  deck: string
+}> = [
+  {
+    id: 'seo',
+    label: 'SEO',
+    kicker: 'Findability',
+    deck: 'Titles, meta, headings, and corpus coverage across the host.',
+  },
+  {
+    id: 'geo',
+    label: 'GEO',
+    kicker: 'Answer engines',
+    deck: 'Citations, placement, and share of voice in LLM answers.',
+  },
+  {
+    id: 'wcag',
+    label: 'WCAG',
+    kicker: 'Accessibility',
+    deck: 'Page or domain — contrast, structure, and assistive tech readiness.',
+  },
+]
 
 export function ScanLaunchForm({
   projects,
@@ -81,8 +135,14 @@ export function ScanLaunchForm({
 }) {
   const router = useRouter()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
+
+  const [capability, setCapability] = useState<LaunchCapability>(() =>
+    resolveCapability(fromAudion, defaultMode),
+  )
+  const [wcagDepth, setWcagDepth] = useState<WcagDepth>(() =>
+    resolveWcagDepth(fromAudion, defaultMode),
+  )
   const [url, setUrl] = useState(initialUrl)
-  const [mode, setMode] = useState<LaunchMode>(resolveLaunchMode(fromAudion, defaultMode))
   const [projectId, setProjectId] = useState(
     defaultProjectId && projects.some((p) => p.id === defaultProjectId)
       ? defaultProjectId
@@ -95,7 +155,8 @@ export function ScanLaunchForm({
 
   const activeProjectName =
     projectLabel || projects.find((p) => p.id === projectId)?.name || projectId
-  const activeMode = fromAudion ? 'single' : mode
+  const activeCapability = fromAudion ? 'wcag' : capability
+  const activeWcagDepth = fromAudion ? 'single' : wcagDepth
 
   const modeCopy = useMemo(() => {
     if (fromAudion) {
@@ -104,15 +165,17 @@ export function ScanLaunchForm({
         deck: 'AUDION handed off this step URL. Confirm the Collection project, then launch a single-page accessibility scan.',
         cta: 'Launch single scan',
         loading: 'Starting single-page scan…',
+        destination: '→ /results/…/overview',
       }
     }
-    switch (activeMode) {
-      case 'deep':
+    switch (activeCapability) {
+      case 'seo':
         return {
-          title: 'Deep crawl',
-          deck: 'Spider the domain from this URL and open a light corpus magazine alongside the page result.',
-          cta: 'Launch deep crawl',
-          loading: 'Starting deep crawl…',
+          title: 'SEO coverage',
+          deck: 'Crawl the host and open the domain magazine where SEO coverage is a first-class chapter — titles, meta, H1s, and keyword density across pages.',
+          cta: 'Launch SEO crawl',
+          loading: 'Starting SEO domain crawl…',
+          destination: '→ /domain/…/overview',
         }
       case 'geo':
         return {
@@ -120,33 +183,50 @@ export function ScanLaunchForm({
           deck: 'Ask answer engines where this host shows up — citations, placement, and competitive share of voice.',
           cta: 'Start GEO job',
           loading: 'Starting GEO job…',
+          destination: '→ /geo/…/overview',
         }
       default:
+        if (activeWcagDepth === 'deep') {
+          return {
+            title: 'Deep WCAG crawl',
+            deck: 'Spider the domain from this URL and open a light corpus magazine alongside the page result.',
+            cta: 'Launch deep scan',
+            loading: 'Starting deep crawl…',
+            destination: '→ /results/…/overview',
+          }
+        }
         return {
-          title: 'Single page',
-          deck: 'One URL, one magazine result — accessibility, SEO, performance, and more in one reading.',
+          title: 'Quick single scan',
+          deck: 'One URL, one magazine result — accessibility first, with SEO and performance signals in the same reading.',
           cta: 'Launch single scan',
           loading: 'Starting single-page scan…',
+          destination: '→ /results/…/overview',
         }
     }
-  }, [activeMode, fromAudion])
+  }, [activeCapability, activeWcagDepth, fromAudion])
 
-  function onModeChange(next: string) {
+  function onCapabilityChange(next: LaunchCapability) {
     if (fromAudion) return
-    if (next === 'single' || next === 'deep' || next === 'geo') {
-      setMode(next)
+    setCapability(next)
+    setError(null)
+  }
+
+  function onWcagDepthChange(next: string) {
+    if (fromAudion) return
+    if (next === 'single' || next === 'deep') {
+      setWcagDepth(next)
       setError(null)
     }
   }
 
   function onUrlChange(next: string) {
     setUrl(next)
-    if (activeMode === 'geo' && geoQueries.trim() === defaultGeoQueries(url).join('\n')) {
+    if (activeCapability === 'geo' && geoQueries.trim() === defaultGeoQueries(url).join('\n')) {
       setGeoQueries(defaultGeoQueries(next).join('\n'))
     }
   }
 
-  async function launchScan(launchMode: 'single' | 'deep') {
+  async function launchWcagScan(launchMode: WcagDepth) {
     const body: Record<string, unknown> = { projectId, mode: launchMode, url }
     if (correlation?.platformProjectId) {
       body.platformProjectId = correlation.platformProjectId
@@ -165,6 +245,28 @@ export function ScanLaunchForm({
     if (!res.ok) throw new Error(`Launch failed (${res.status})`)
     const data = (await res.json()) as { id: string }
     router.push(paths.routes.resultSection(data.id, 'overview'))
+  }
+
+  async function launchSeo() {
+    const res = await fetch(paths.routes.apiDomainScans, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ projectId, url }),
+    })
+    if (!res.ok) {
+      let detail = `SEO launch failed (${res.status})`
+      try {
+        const errBody = (await res.json()) as { detail?: string; error?: string }
+        if (errBody.detail) detail = errBody.detail
+        else if (errBody.error) detail = errBody.error
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail)
+    }
+    const data = (await res.json()) as { id: string }
+    if (!data.id) throw new Error('SEO launch returned no domain id')
+    router.push(paths.routes.domainSection(data.id, 'overview'))
   }
 
   async function launchGeo() {
@@ -205,10 +307,12 @@ export function ScanLaunchForm({
     setStatus('submitting')
     setError(null)
     try {
-      if (activeMode === 'geo') {
+      if (activeCapability === 'seo') {
+        await launchSeo()
+      } else if (activeCapability === 'geo') {
         await launchGeo()
       } else {
-        await launchScan(activeMode)
+        await launchWcagScan(activeWcagDepth)
       }
     } catch (err) {
       setStatus('error')
@@ -216,13 +320,9 @@ export function ScanLaunchForm({
     }
   }
 
-  const modeOptions = fromAudion
-    ? [{ value: 'single', label: 'Single' }]
-    : [
-        { value: 'single', label: 'Single' },
-        { value: 'deep', label: 'Deep' },
-        { value: 'geo', label: 'GEO' },
-      ]
+  const visibleCards = fromAudion
+    ? CAPABILITY_CARDS.filter((c) => c.id === 'wcag')
+    : CAPABILITY_CARDS
 
   return (
     <article className="checkion-magazine checkion-magazine--launch">
@@ -234,28 +334,71 @@ export function ScanLaunchForm({
         <p className="checkion-launch-hero__deck">
           {fromAudion
             ? 'Single-page accessibility for this AUDION step — results live in CHECKION.'
-            : 'Pick a mode, drop a URL, launch. Single page, deep crawl, or GEO presence — one place to begin.'}
+            : 'Choose a capability, drop a URL, launch. SEO coverage, GEO presence, or WCAG — one magazine to begin.'}
         </p>
       </header>
 
       <Panel className="checkion-launch-stage">
         <form className="checkion-scan-form checkion-scan-form--launch" onSubmit={onSubmit}>
-          <div className="checkion-launch-mode">
-            <span className="checkion-launch-mode__label" id="checkion-launch-mode-label">
-              Mode
+          <div className="checkion-launch-capability">
+            <span
+              className="checkion-launch-capability__label"
+              id="checkion-launch-capability-label"
+            >
+              Capability
             </span>
-            <ToggleGroup
-              aria-label="Launch mode"
-              value={activeMode}
-              onChange={onModeChange}
-              size="md"
-              options={modeOptions}
-            />
-            <p className="checkion-launch-mode__hint" aria-live="polite">
+            <div
+              className="checkion-capability-grid"
+              role="radiogroup"
+              aria-labelledby="checkion-launch-capability-label"
+            >
+              {visibleCards.map((card) => {
+                const selected = activeCapability === card.id
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={`${card.label}. ${card.deck}`}
+                    className={
+                      selected
+                        ? 'checkion-capability-tile checkion-capability-tile--selected'
+                        : 'checkion-capability-tile'
+                    }
+                    disabled={fromAudion}
+                    onClick={() => onCapabilityChange(card.id)}
+                  >
+                    <span className="checkion-capability-tile__kicker">{card.kicker}</span>
+                    <span className="checkion-capability-tile__label">{card.label}</span>
+                    <span className="checkion-capability-tile__deck">{card.deck}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="checkion-launch-capability__hint" aria-live="polite">
               <strong>{modeCopy.title}</strong>
               <span> — {modeCopy.deck}</span>
             </p>
           </div>
+
+          {activeCapability === 'wcag' && !fromAudion ? (
+            <div className="checkion-launch-depth">
+              <span className="checkion-launch-depth__label" id="checkion-launch-depth-label">
+                WCAG depth
+              </span>
+              <ToggleGroup
+                aria-label="WCAG scan depth"
+                value={activeWcagDepth}
+                onChange={onWcagDepthChange}
+                size="md"
+                options={[
+                  { value: 'single', label: 'Quick single scan' },
+                  { value: 'deep', label: 'Deep scan' },
+                ]}
+              />
+            </div>
+          ) : null}
 
           {fromAudion && projectId ? (
             <Hint panel>
@@ -270,7 +413,16 @@ export function ScanLaunchForm({
             </Hint>
           ) : null}
 
-          <Field label="URL" hint={activeMode === 'geo' ? 'Target host for citation checks' : 'Page to evaluate'}>
+          <Field
+            label="URL"
+            hint={
+              activeCapability === 'geo'
+                ? 'Target host for citation checks'
+                : activeCapability === 'seo'
+                  ? 'Host root to crawl for SEO coverage'
+                  : 'Page to evaluate'
+            }
+          >
             <Input
               value={url}
               onChange={(e) => onUrlChange(e.target.value)}
@@ -280,7 +432,7 @@ export function ScanLaunchForm({
             />
           </Field>
 
-          {activeMode === 'geo' ? (
+          {activeCapability === 'geo' ? (
             <>
               <Field
                 label="Queries"
@@ -322,17 +474,7 @@ export function ScanLaunchForm({
               </Button>
             )}
             {status === 'idle' ? (
-              <TopStatus
-                level="ok"
-                primary="Ready"
-                secondary={
-                  fromAudion
-                    ? '→ /results/…/overview'
-                    : activeMode === 'geo'
-                      ? '→ /geo/…/overview'
-                      : '→ /results/…/overview'
-                }
-              />
+              <TopStatus level="ok" primary="Ready" secondary={modeCopy.destination} />
             ) : null}
             {status === 'error' ? (
               <TopStatus level="critical" primary="Launch failed" secondary="retry" />
@@ -349,9 +491,9 @@ export function ScanLaunchForm({
           <Button
             type="button"
             variant="ghost"
-            onClick={() => router.push(paths.routes.resultSection('scan-single-1', 'overview'))}
+            onClick={() => router.push(paths.routes.domainSection('domain-1', 'overview'))}
           >
-            Single · scan-single-1
+            SEO · domain-1
           </Button>
           <Button
             type="button"
@@ -360,8 +502,16 @@ export function ScanLaunchForm({
           >
             GEO · geo-1
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.push(paths.routes.resultSection('scan-single-1', 'overview'))}
+          >
+            WCAG · scan-single-1
+          </Button>
         </nav>
       ) : null}
+
     </article>
   )
 }

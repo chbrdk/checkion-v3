@@ -18,7 +18,7 @@ function decodeOptionalUrl(raw: string | undefined): string | undefined {
 }
 
 function parseLaunchMode(raw: string | undefined): LaunchMode {
-  if (raw === 'deep' || raw === 'geo' || raw === 'single') return raw
+  if (raw === 'seo' || raw === 'deep' || raw === 'geo' || raw === 'single') return raw
   return 'single'
 }
 
@@ -44,9 +44,13 @@ export default async function ScanPage({
   const fromAudion = Boolean(
     params.audionRunId?.trim() ||
       params.platformProjectId?.trim() ||
-      (defaultUrl && params.projectId?.trim() && params.mode !== 'deep' && params.mode !== 'geo'),
+      (defaultUrl &&
+        params.projectId?.trim() &&
+        params.mode !== 'deep' &&
+        params.mode !== 'geo' &&
+        params.mode !== 'seo'),
   )
-  /** AUDION journey handoff always launches single-page (never deep / GEO). */
+  /** AUDION journey handoff always launches WCAG Quick single (never deep / GEO / SEO). */
   const defaultMode: LaunchMode = fromAudion ? 'single' : parseLaunchMode(params.mode)
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
@@ -56,14 +60,18 @@ export default async function ScanPage({
     ? 'AUDION handoff'
     : defaultMode === 'geo'
       ? 'GEO launch'
-      : 'Launch'
+      : defaultMode === 'seo'
+        ? 'SEO launch'
+        : 'Launch'
   const statusSecondary = fromAudion
-    ? 'single-page · CHECKION'
+    ? 'WCAG single · CHECKION'
     : defaultMode === 'geo'
       ? 'competitive presence'
-      : defaultMode === 'deep'
-        ? 'deep crawl'
-        : 'single page'
+      : defaultMode === 'seo'
+        ? 'domain SEO coverage'
+        : defaultMode === 'deep'
+          ? 'WCAG deep crawl'
+          : 'WCAG single page'
 
   return (
     <AppShell
