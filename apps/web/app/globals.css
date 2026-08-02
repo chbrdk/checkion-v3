@@ -2591,7 +2591,6 @@ a { color: inherit; text-decoration: none; }
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0;
-  border-top: 1px solid var(--line);
 }
 
 .checkion-magazine-list > li {
@@ -2601,15 +2600,6 @@ a { color: inherit; text-decoration: none; }
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--line);
   align-items: center;
-}
-
-/* GEO query list: bottom-only hairlines — no top rule above first row */
-.checkion-geo-query-list .checkion-magazine-list {
-  border-top: none;
-}
-
-.checkion-geo-query-list .checkion-geo-query-list__row {
-  border-top: none;
 }
 
 .checkion-magazine-list-num {
