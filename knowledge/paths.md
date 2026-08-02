@@ -43,7 +43,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, … })`
 - Modes:
   - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
-  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview`
+  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (URL+Project row hidden; `projectId`/`url` resolved silently — see `scan-modes.md`)
   - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
   - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
 - Spec: `specs/domain/scan-modes.md`

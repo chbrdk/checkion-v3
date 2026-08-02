@@ -18,6 +18,7 @@ import {
 } from '../lib/geo/model-catalog'
 import {
   defaultGeoQueries,
+  resolveGeoLaunchUrl,
   sameQueryList,
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
@@ -294,11 +295,15 @@ export function ScanLaunchForm({
 
   async function launchGeo() {
     const queries = geoQueries.map((q) => q.trim()).filter(Boolean)
-    const resolvedQueries = queries.length > 0 ? queries : defaultGeoQueries(url)
+    // URL+Project row is hidden for GEO — resolve silently from deep-link /
+    // state, else first query host, else demo fallback (API requires url).
+    const resolvedUrl = resolveGeoLaunchUrl(url, queries)
+    const resolvedQueries =
+      queries.length > 0 ? queries : defaultGeoQueries(resolvedUrl)
     const models = modelsForLaunch(geoModels)
     const body: Record<string, unknown> = {
       projectId,
-      url,
+      url: resolvedUrl,
       queries: resolvedQueries,
       models,
     }
@@ -454,53 +459,54 @@ export function ScanLaunchForm({
           {showCompose ? (
             <div key={composeKey} className="checkion-launch-compose checkion-launch-reveal">
               <div className="checkion-launch-compose__lead">
-                <div className="checkion-launch-compose__row">
-                  <Field
-                    className="checkion-launch-compose__url"
-                    label="URL"
-                    size="md"
-                    hint={
-                      activeCapability === 'geo'
-                        ? 'Target host for citation checks'
-                        : activeCapability === 'seo'
+                {/* GEO: no URL+Project row — projectId + url resolved silently on submit */}
+                {activeCapability !== 'geo' ? (
+                  <div className="checkion-launch-compose__row">
+                    <Field
+                      className="checkion-launch-compose__url"
+                      label="URL"
+                      size="md"
+                      hint={
+                        activeCapability === 'seo'
                           ? 'Host root to crawl for SEO coverage'
                           : 'Page to evaluate'
-                    }
-                  >
-                    <Input
-                      value={url}
-                      onChange={(e) => onUrlChange(e.target.value)}
-                      required
-                      block
-                      aria-label="Scan URL"
-                      placeholder="https://"
-                    />
-                  </Field>
-
-                  {!fromAudion ? (
-                    <Field
-                      className="checkion-launch-compose__project"
-                      label="Project"
-                      size="md"
-                      hint="CHECKION Collection capability"
+                      }
                     >
-                      <Select
-                        value={projectId}
-                        onChange={setProjectId}
-                        size="md"
-                        options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                        aria-label="Project"
+                      <Input
+                        value={url}
+                        onChange={(e) => onUrlChange(e.target.value)}
+                        required
+                        block
+                        aria-label="Scan URL"
+                        placeholder="https://"
                       />
                     </Field>
-                  ) : null}
-                </div>
+
+                    {!fromAudion ? (
+                      <Field
+                        className="checkion-launch-compose__project"
+                        label="Project"
+                        size="md"
+                        hint="CHECKION Collection capability"
+                      >
+                        <Select
+                          value={projectId}
+                          onChange={setProjectId}
+                          size="md"
+                          options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                          aria-label="Project"
+                        />
+                      </Field>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {activeCapability === 'geo' ? (
                   <div className="checkion-launch-compose__geo">
                     <GeoQueryList
                       value={geoQueries}
                       onChange={setGeoQueries}
-                      url={url}
+                      url={resolveGeoLaunchUrl(url, geoQueries)}
                       disabled={status === 'submitting'}
                     />
                     <GeoModelPicker
@@ -517,7 +523,13 @@ export function ScanLaunchForm({
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={status === 'submitting' || !projectId || !url.trim()}
+                    disabled={
+                      status === 'submitting' ||
+                      !projectId ||
+                      (activeCapability === 'geo'
+                        ? !resolveGeoLaunchUrl(url, geoQueries).trim()
+                        : !url.trim())
+                    }
                   >
                     {status === 'submitting' ? modeCopy.loading : modeCopy.cta}
                   </Button>

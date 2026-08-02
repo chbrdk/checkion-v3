@@ -3,8 +3,10 @@ import {
   defaultGeoQueries,
   fixtureSuggestPool,
   mergeQuerySuggestions,
+  resolveGeoLaunchUrl,
   sameQueryList,
   suggestGeoQueries,
+  urlFromQueryText,
 } from '../lib/geo-query-suggest'
 
 describe('geo-query-suggest helpers', () => {
@@ -30,6 +32,24 @@ describe('geo-query-suggest helpers', () => {
   it('sameQueryList compares ordered lists', () => {
     expect(sameQueryList(['a', 'b'], ['a', 'b'])).toBe(true)
     expect(sameQueryList(['a', 'b'], ['b', 'a'])).toBe(false)
+  })
+
+  it('urlFromQueryText extracts absolute URLs and bare hosts', () => {
+    expect(urlFromQueryText('See https://acme.example/path for rivals')).toBe(
+      'https://acme.example/path',
+    )
+    expect(urlFromQueryText('Compare acme.example vs rivals')).toBe('https://acme.example/')
+    expect(urlFromQueryText('Best alternatives to bosch-ebike')).toBeNull()
+  })
+
+  it('resolveGeoLaunchUrl prefers explicit URL, then query host, then fallback', () => {
+    expect(resolveGeoLaunchUrl('https://explicit.example/', ['Compare acme.example'])).toBe(
+      'https://explicit.example/',
+    )
+    expect(resolveGeoLaunchUrl('', ['Who cites acme.example in answers?'])).toBe(
+      'https://acme.example/',
+    )
+    expect(resolveGeoLaunchUrl('', ['No host here'])).toBe('https://www.bosch-ebike.com/de/')
   })
 })
 

@@ -21,16 +21,27 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 1. **Capability picker** (primary) — large inviting tiles: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG). Cold `/scan` (no `mode=`) starts with **capability tiles only** — none pre-selected; depth and compose stay unmounted until the user chooses. No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
 2. **Progressive disclosure** (smooth `checkion-rise` / `checkion-launch-reveal`; `prefers-reduced-motion` disables animation):
    - **WCAG** → reveal depth tiles (**Quick single scan** · **Deep scan**); after depth is chosen (or immediately if depth was already chosen this session / via deep-link) → reveal compose.
-   - **GEO** → reveal GEO compose (queries, models, URL, project, CTA); skip WCAG depth.
+   - **GEO** → reveal GEO compose (**queries**, **models**, CTA only); skip WCAG depth; **no URL + Project row** (see silent GEO fields below).
    - **SEO** → reveal compose (URL, project, CTA); skip depth.
    - Changing capability swaps/re-animates the secondary sections accordingly.
    - Deep-links with `mode=seo|geo|single|deep` (and AUDION handoff) **skip ahead** and show the full relevant chain on first paint — no empty trap for AUDION / handoff URLs.
 3. **WCAG depth** (secondary, only when WCAG selected and not AUDION) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only); depth grid uses a bottom hairline only (no top rule), same as capability.
 4. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
-   - **URL** — hero input (page or host)
+   - **URL** — hero input (page or host) — **WCAG / SEO only** (hidden for GEO)
    - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
-   - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
+   - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO; GEO CTA alone (project silent); destination status stays quiet
 5. Fixture demo jumps stay below the stage as quiet secondary links
+
+### GEO silent URL + project (no compose row)
+`POST /api/geo-jobs` still requires `{ projectId, url, queries[] }`. When the URL+Project row is hidden:
+
+| Field | How GEO launch fills it |
+|-------|-------------------------|
+| `projectId` | Silent state: deep-link `projectId` if it matches a known project, else the first / currently selected Collection project. No Project select UI. |
+| `url` | `resolveGeoLaunchUrl()` — deep-link / prefilled `url` when present; else first query text that implies an `http(s)` URL or bare hostname; else demo fallback `https://www.bosch-ebike.com/de/` (same seed used for default queries). Suggest still receives this resolved URL. |
+| `queries` / `models` | Visible GEO extras; empty queries fall back to `defaultGeoQueries(resolvedUrl)` client-side. |
+
+Deep-links (`/scan?mode=geo&projectId=&url=`) still apply silently — they seed state and POST body without showing the row.
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 

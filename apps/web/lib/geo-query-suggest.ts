@@ -28,6 +28,70 @@ export function hostFromUrl(raw: string): string {
   }
 }
 
+const GEO_LAUNCH_FALLBACK_URL = 'https://www.bosch-ebike.com/de/'
+
+/**
+ * Extract a usable citation-target URL from free-text query prompts.
+ * Prefers an explicit http(s) URL; otherwise a bare hostname with a TLD.
+ */
+export function urlFromQueryText(raw: string): string | null {
+  const text = raw.trim()
+  if (!text) return null
+
+  const absolute = text.match(/https?:\/\/[^\s<>"']+/i)
+  if (absolute) {
+    try {
+      const cleaned = absolute[0]!.replace(/[),.;:!?]+$/g, '')
+      const parsed = new URL(cleaned)
+      if (parsed.hostname) return parsed.href
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // Require ≥2-char label + ≥2-char TLD to avoid tokens like "e.g."
+  const bare = text.match(/\b(?:www\.)?[a-z0-9][a-z0-9-]{1,}(?:\.[a-z]{2,})+\b/i)
+  if (bare) {
+    try {
+      const parsed = new URL(`https://${bare[0]!.toLowerCase()}/`)
+      if (parsed.hostname.includes('.')) return parsed.href
+    } catch {
+      /* fall through */
+    }
+  }
+
+  return null
+}
+
+/**
+ * Resolve the URL posted to `POST /api/geo-jobs` when the GEO launch
+ * compose row (URL + Project) is hidden.
+ *
+ * Priority: explicit/deep-link URL → first query that implies a host → fallback.
+ */
+export function resolveGeoLaunchUrl(
+  url: string | undefined,
+  queries: string[],
+  fallback = GEO_LAUNCH_FALLBACK_URL,
+): string {
+  const trimmed = url?.trim() ?? ''
+  if (trimmed) {
+    try {
+      const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`)
+      if (parsed.hostname) return parsed.href
+    } catch {
+      /* fall through to query / fallback */
+    }
+  }
+
+  for (const q of queries) {
+    const fromQuery = urlFromQueryText(q)
+    if (fromQuery) return fromQuery
+  }
+
+  return fallback
+}
+
 function brandFromHost(host: string): string {
   return host.split('.')[0] || host
 }
