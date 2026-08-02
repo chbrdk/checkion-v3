@@ -3,6 +3,9 @@ import { ScanLaunchForm } from '../../components/scan-launch-form'
 import { listProjects } from '../../lib/fixtures/project-store'
 import { TopStatus } from '@msqdx/ui'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function ScanPage({
   searchParams,
 }: {

@@ -15,6 +15,9 @@ import {
 import { paths } from '../../../../lib/paths'
 import { statusTopLevel } from '../../../../lib/scan-display'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function ResultSectionPage({
   params,
 }: {

@@ -6,6 +6,9 @@ import { listDomainScans, listScans } from '../lib/fixtures/scan-store'
 import { listShares } from '../lib/fixtures/share-store'
 import { paths } from '../lib/paths'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const projects = await listProjects()
   const scans = ((await listScans())).filter((s) => s.status === 'completed').slice(0, 5)

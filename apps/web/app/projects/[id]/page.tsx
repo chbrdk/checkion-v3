@@ -4,6 +4,9 @@ import { ProjectWorkspace } from '../../../components/project-panels'
 import { getProject } from '../../../lib/fixtures/project-store'
 import { listDomainScans, listScans } from '../../../lib/fixtures/scan-store'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function ProjectDetailPage({
   params,
 }: {

@@ -33,6 +33,8 @@ PORT=3007
 HOSTNAME=0.0.0.0
 ```
 
+**Build-time vs runtime:** keep secrets (`DATABASE_URL`, `AUTH_SECRET`, `OPENAI_API_KEY`, `PLEXON_SERVICE_SECRET`, …) as **runtime-only** in Coolify (do not enable “Available at Buildtime”). Coolify otherwise injects `ARG`/`ENV` into the Dockerfile (`SecretsUsedInArgOrEnv` warnings) and `DATABASE_URL` makes Next SSG query Postgres during `npm run build` → deploy fails. The Dockerfile also blanks those vars immediately before `RUN npm run build` as a safety net; store-backed pages use `dynamic = 'force-dynamic'`.
+
 Optional Auth / DB / live federation:
 
 ```

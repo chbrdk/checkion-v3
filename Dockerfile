@@ -67,8 +67,10 @@ COPY --from=ds /workspace/msqdx-ui /workspace/msqdx-ui
 COPY . /workspace/checkion-v3
 WORKDIR /workspace/checkion-v3
 
+# --include=dev: Coolify may inject NODE_ENV=production as a build ARG before this
+# stage; without it, typescript/devDeps are omitted and `next build` fails.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --no-audit --no-fund --include=dev
 
 # Sibling layout: …/workspace/checkion-v3 + …/workspace/msqdx-ui
 RUN test -d /workspace/msqdx-ui/packages/ui/src \
@@ -76,6 +78,14 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
 
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=6144
+# Coolify often marks app secrets "available at buildtime" (SecretsUsedInArgOrEnv).
+# DATABASE_URL during `next build` makes SSG pages query Postgres → ECONNREFUSED → exit 1.
+# Runtime secrets belong on the runner only; blank them for the production compile.
+ENV DATABASE_URL=
+ENV OPENAI_API_KEY=
+ENV PLEXON_SERVICE_SECRET=
+ENV PLEXON_AUTH_URL=
+ENV AUTH_SECRET=
 RUN npm run build
 
 # ---- Runner ----

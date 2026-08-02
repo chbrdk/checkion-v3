@@ -1,3 +1,4 @@
+/** @vitest-environment node */
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -22,6 +23,23 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('libnss3')
     expect(df).toContain('PUPPETEER_SKIP_DOWNLOAD')
     expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
+  })
+
+  it('blanks runtime secrets before next build (Coolify build-time ARG leak)', () => {
+    const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
+    const buildIdx = df.indexOf('RUN npm run build')
+    expect(buildIdx).toBeGreaterThan(0)
+    const beforeBuild = df.slice(0, buildIdx)
+    expect(beforeBuild).toContain('ENV DATABASE_URL=')
+    expect(beforeBuild).toContain('npm ci --no-audit --no-fund --include=dev')
+  })
+
+  it('keeps DataTable off the RSC @msqdx/ui barrel', () => {
+    const barrel = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui.ts'), 'utf8')
+    const client = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui-client.ts'), 'utf8')
+    expect(barrel).not.toMatch(/export \{[^}]*DataTable/)
+    expect(client).toContain("'use client'")
+    expect(client).toContain('DataTable')
   })
 
   it('keeps health path for Traefik probes', () => {

@@ -7,6 +7,9 @@ import { listApiTokensForOwner, toApiTokenOwnerId } from '../../lib/api-tokens'
 import { paths } from '../../lib/paths'
 import { plexonBaseUrl } from '../../lib/runtime-config'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function SettingsPage() {
   const session = await auth()
   const { items: tokens } = await listApiTokensForOwner(toApiTokenOwnerId(session?.user))

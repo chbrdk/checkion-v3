@@ -5,6 +5,9 @@ import { listProjects } from '../../lib/fixtures/project-store'
 import { listScans } from '../../lib/fixtures/scan-store'
 import { paths } from '../../lib/paths'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function ResultsIndexPage() {
   const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
   const scans = await listScans()

@@ -6,6 +6,9 @@ import { getShare } from '../../../lib/fixtures/share-store'
 import { getDomainOverview, getScanOverview } from '../../../lib/fixtures/scan-store'
 import { paths } from '../../../lib/paths'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default async function ShareLandingPage({
   params,
 }: {

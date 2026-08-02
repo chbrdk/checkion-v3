@@ -1,6 +1,9 @@
 import { DeferredJobsPage } from '../../components/deferred-jobs-page'
 import { JOURNEY_JOB_FIXTURES } from '../../lib/fixtures/deferred-jobs'
 
+/** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
+export const dynamic = 'force-dynamic'
+
 export default function JourneyPage() {
   return (
     <DeferredJobsPage
