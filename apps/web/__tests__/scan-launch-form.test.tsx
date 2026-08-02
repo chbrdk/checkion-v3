@@ -85,9 +85,10 @@ describe('ScanLaunchForm', () => {
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /Launch single scan/i })).toBeNull()
     expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
-    expect(screen.getByRole('button', { name: /SEO · domain-1/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /GEO · geo-1/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /WCAG · scan-single-1/i })).toBeTruthy()
+    expect(screen.queryByRole('navigation', { name: /Open fixture demos/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /SEO · domain-1/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /GEO · geo-1/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /WCAG · scan-single-1/i })).toBeNull()
   })
 
   it('reveals WCAG depth then compose after depth choice', () => {

@@ -30,7 +30,6 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
    - **URL** — hero input (page or host) — **WCAG / SEO only** (hidden for GEO)
    - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO; GEO CTA alone (project silent); destination status stays quiet
-5. Fixture demo jumps stay below the stage as quiet secondary links
 
 ### GEO silent URL + project (no compose row)
 `POST /api/geo-jobs` still requires `{ projectId, url, queries[] }`. When the URL+Project row is hidden:

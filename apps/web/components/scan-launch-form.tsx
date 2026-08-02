@@ -542,33 +542,6 @@ export function ScanLaunchForm({
         </form>
       </Panel>
 
-      {!fromAudion ? (
-        <nav className="checkion-launch-demos" aria-label="Open fixture demos">
-          <span className="checkion-launch-demos__label">Try a finished fixture</span>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push(paths.routes.domainSection('domain-1', 'overview'))}
-          >
-            SEO · domain-1
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push(paths.routes.geoSection('geo-1', 'overview'))}
-          >
-            GEO · geo-1
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push(paths.routes.resultSection('scan-single-1', 'overview'))}
-          >
-            WCAG · scan-single-1
-          </Button>
-        </nav>
-      ) : null}
-
     </article>
   )
 }
