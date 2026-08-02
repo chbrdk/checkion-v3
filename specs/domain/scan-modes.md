@@ -26,7 +26,9 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
    - **Project** + **CTA** — Collection select beside launch action; destination status stays quiet
 4. Fixture demo jumps stay below the stage as quiet secondary links
 
-Primitives: `Panel` (stage shell) · `Field` / `Input` / `Textarea` / `Select` / `Button` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · light `checkion-rise` motion.
+**Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
+
+Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Textarea` / `Select` / `Button` · `Text` · `TopStatus` · `LoadingText` · `Alert` · capability + depth tiles as app composition (`checkion-capability-grid`, `checkion-depth-grid`, `checkion-launch-compose`) · light `checkion-rise` motion.
 
 Deep-links (`paths.routes.scanLaunch`):
 - `projectId`, `mode=seo|geo|single|deep`, `url`

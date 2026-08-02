@@ -2314,7 +2314,14 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
+/* Stage shell: Panel primitive without surface fill — type + rules only */
+.checkion-launch-stage.ds-panel,
 .checkion-launch-stage {
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   animation: checkion-rise 0.6s 0.08s ease-out both;
 }
 
@@ -2333,10 +2340,12 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
+/* Capability / depth: magazine columns — hairlines + underline, no fills */
 .checkion-capability-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0;
+  border-block: 1px solid var(--line);
 }
 
 .checkion-capability-tile {
@@ -2344,43 +2353,39 @@ a { color: inherit; text-decoration: none; }
   gap: 0.35rem;
   align-content: start;
   min-height: 8.5rem;
-  padding: 1rem 1.05rem 1.1rem;
+  padding: 1rem 1.05rem 1.15rem 0;
+  margin: 0;
   text-align: left;
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
-  border-radius: calc(var(--radius-lg, 12px) + 2px);
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--panel, var(--bg)) 88%, var(--accent, #6b8) 12%) 0%,
-      color-mix(in srgb, var(--panel, var(--bg)) 96%, transparent) 55%,
-      var(--panel, var(--bg)) 100%
-    );
-  color: inherit;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 55%, var(--muted));
   transition:
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.checkion-capability-tile:not(:first-child) {
+  padding-left: 1.05rem;
+}
+
+.checkion-capability-tile:last-child {
+  border-right: 0;
 }
 
 .checkion-capability-tile:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent, var(--ink)) 45%, var(--line));
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink, #000) 8%, transparent);
+  color: var(--ink, var(--fg));
 }
 
 .checkion-capability-tile--selected {
-  border-color: color-mix(in srgb, var(--accent, var(--ink)) 70%, var(--line));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent, var(--ink)) 35%, transparent),
-    0 12px 32px color-mix(in srgb, var(--ink, #000) 10%, transparent);
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--accent, #6b8) 18%, var(--panel, var(--bg))) 0%,
-      var(--panel, var(--bg)) 70%
-    );
+  color: var(--ink, var(--fg));
+  border-bottom-color: var(--accent, var(--ink));
+  background: transparent;
+  box-shadow: none;
 }
 
 .checkion-capability-tile:disabled {
@@ -2395,19 +2400,27 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
+.checkion-capability-tile--selected .checkion-capability-tile__kicker {
+  color: var(--accent, var(--muted));
+}
+
 .checkion-capability-tile__label {
   font-family: var(--font-display, var(--font-body));
   font-size: clamp(1.65rem, 3.2vw, 2.1rem);
   font-weight: var(--weight-light, 300);
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--ink, var(--fg));
+  color: inherit;
 }
 
 .checkion-capability-tile__deck {
   font-size: var(--type-sm, 0.88rem);
   line-height: 1.4;
   color: var(--muted);
+}
+
+.checkion-capability-tile--selected .checkion-capability-tile__deck {
+  color: color-mix(in srgb, var(--ink, var(--fg)) 70%, var(--muted));
 }
 
 .checkion-launch-capability__hint {
@@ -2422,7 +2435,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: var(--weight-medium, 500);
 }
 
-/* Secondary WCAG depth — compact siblings of capability tiles */
+/* Secondary WCAG depth — compact siblings, same rule language */
 .checkion-launch-depth {
   padding-top: 0.15rem;
   animation: checkion-rise 0.45s ease-out both;
@@ -2431,7 +2444,8 @@ a { color: inherit; text-decoration: none; }
 .checkion-depth-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0;
+  border-block: 1px solid var(--line);
 }
 
 .checkion-depth-tile {
@@ -2439,43 +2453,39 @@ a { color: inherit; text-decoration: none; }
   gap: 0.3rem;
   align-content: start;
   min-height: 6.25rem;
-  padding: 0.9rem 1rem 1rem;
+  padding: 0.9rem 1rem 1.05rem 0;
+  margin: 0;
   text-align: left;
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
-  border-radius: calc(var(--radius-lg, 12px) + 2px);
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--panel, var(--bg)) 90%, var(--accent, #6b8) 10%) 0%,
-      color-mix(in srgb, var(--panel, var(--bg)) 97%, transparent) 60%,
-      var(--panel, var(--bg)) 100%
-    );
-  color: inherit;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 55%, var(--muted));
   transition:
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.checkion-depth-tile:not(:first-child) {
+  padding-left: 1rem;
+}
+
+.checkion-depth-tile:last-child {
+  border-right: 0;
 }
 
 .checkion-depth-tile:hover {
-  border-color: color-mix(in srgb, var(--accent, var(--ink)) 45%, var(--line));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--ink, #000) 7%, transparent);
+  color: var(--ink, var(--fg));
 }
 
 .checkion-depth-tile--selected {
-  border-color: color-mix(in srgb, var(--accent, var(--ink)) 70%, var(--line));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent, var(--ink)) 35%, transparent),
-    0 10px 28px color-mix(in srgb, var(--ink, #000) 9%, transparent);
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--accent, #6b8) 16%, var(--panel, var(--bg))) 0%,
-      var(--panel, var(--bg)) 72%
-    );
+  color: var(--ink, var(--fg));
+  border-bottom-color: var(--accent, var(--ink));
+  background: transparent;
+  box-shadow: none;
 }
 
 .checkion-depth-tile__kicker {
@@ -2485,13 +2495,17 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
+.checkion-depth-tile--selected .checkion-depth-tile__kicker {
+  color: var(--accent, var(--muted));
+}
+
 .checkion-depth-tile__label {
   font-family: var(--font-display, var(--font-body));
   font-size: clamp(1.15rem, 2.4vw, 1.45rem);
   font-weight: var(--weight-light, 300);
   line-height: 1.1;
   letter-spacing: -0.025em;
-  color: var(--ink, var(--fg));
+  color: inherit;
 }
 
 .checkion-depth-tile__deck {
@@ -2500,13 +2514,18 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
-/* Compose band — URL · extras · project · CTA as one editorial unit */
+.checkion-depth-tile--selected .checkion-depth-tile__deck {
+  color: color-mix(in srgb, var(--ink, var(--fg)) 70%, var(--muted));
+}
+
+/* Compose band — URL · extras · project · CTA; rule + whitespace, no wash */
 .checkion-launch-compose {
   display: grid;
   gap: 1.35rem;
   margin-top: 0.35rem;
   padding-top: 1.35rem;
-  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-top: 1px solid var(--line);
+  background: transparent;
   animation: checkion-rise 0.5s 0.06s ease-out both;
 }
 
@@ -2616,6 +2635,25 @@ a { color: inherit; text-decoration: none; }
   .checkion-capability-tile,
   .checkion-depth-tile {
     min-height: 0;
+    border-right: 0;
+    padding-left: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .checkion-capability-tile:not(:first-child),
+  .checkion-depth-tile:not(:first-child) {
+    padding-left: 0;
+  }
+
+  .checkion-capability-tile--selected,
+  .checkion-depth-tile--selected {
+    border-bottom-color: var(--accent, var(--ink));
+    border-bottom-width: 3px;
+  }
+
+  .checkion-capability-tile:last-child:not(.checkion-capability-tile--selected),
+  .checkion-depth-tile:last-child:not(.checkion-depth-tile--selected) {
+    border-bottom-color: transparent;
   }
 }
 
@@ -2630,11 +2668,6 @@ a { color: inherit; text-decoration: none; }
   .checkion-depth-tile {
     animation: none;
     transition: none;
-  }
-
-  .checkion-capability-tile:hover:not(:disabled),
-  .checkion-depth-tile:hover {
-    transform: none;
   }
 }
 
