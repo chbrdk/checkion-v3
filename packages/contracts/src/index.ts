@@ -84,6 +84,19 @@ export interface ScanSummary {
   runners?: ScanRunner[]
   durationMs?: number | null
   issueStats?: IssueStats
+  /** Plexon Collection id (AUDION → CHECKION single-scan correlation). */
+  platformProjectId?: string | null
+  /** AUDION Chat inspect job id or Studies wave run id. */
+  audionRunId?: string | null
+  /** Explored step URL when distinct from `url`. */
+  stepUrl?: string | null
+}
+
+/** Optional correlation on POST /api/scans (AUDION journey handoff). */
+export type ScanCorrelationInput = {
+  platformProjectId?: string
+  audionRunId?: string
+  stepUrl?: string
 }
 
 export interface ScoreCard {

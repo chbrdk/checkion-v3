@@ -13,6 +13,7 @@ import type {
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { paths } from '../lib/paths'
 import { formatScanInstant, scoreTone } from '../lib/scan-display'
+import { hasAudionCorrelation } from '../lib/scan-correlation'
 
 function capabilityLevel(status: CapabilitySyncStatus) {
   if (status === 'in_sync') return 'ok' as const
@@ -237,7 +238,7 @@ export function ProjectWorkspace({
         </div>
         <div className="checkion-project-cover__actions">
           <Link
-            href={`${paths.routes.scan}?projectId=${encodeURIComponent(project.id)}`}
+            href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}
             className="ds-btn ds-btn--primary ds-btn--sm"
           >
             <span className="ds-btn__label">New scan</span>
@@ -286,6 +287,7 @@ export function ProjectWorkspace({
             <thead>
               <tr>
                 <th scope="col">Page</th>
+                <th scope="col">Source</th>
                 <th scope="col">Status</th>
                 <th scope="col">Score</th>
                 <th scope="col">Completed</th>
@@ -295,10 +297,19 @@ export function ProjectWorkspace({
               {singleScans.map((scan) => (
                 <tr key={scan.id} data-tone={scoreTone(scan.overallScore)}>
                   <th scope="row">
-                    <Link href={paths.routes.resultDetail(scan.id)} title={scan.url}>
+                    <Link href={paths.routes.resultSection(scan.id, 'overview')} title={scan.url}>
                       {compactUrl(scan.url)}
                     </Link>
                   </th>
+                  <td>
+                    {hasAudionCorrelation(scan) ? (
+                      <span title={scan.audionRunId ? `AUDION run ${scan.audionRunId}` : 'AUDION journey'}>
+                        From Audion
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td>{scan.status}</td>
                   <td className="checkion-projects__num">
                     {scan.overallScore != null ? scan.overallScore : '—'}

@@ -19,6 +19,7 @@ import type {
 import { paths } from '../lib/paths'
 import { scoreTone, severityRank } from '../lib/scan-display'
 import { getProject } from '../lib/fixtures/project-store'
+import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { IssuesWorkspace } from './issues-workspace'
 import { ResultSectionNav } from './result-section-nav'
 import { ScoresPanel } from './scores-panel'
@@ -204,6 +205,16 @@ export async function ResultMagazineShell({
           </div>
         </div>
       </header>
+
+      {hasAudionCorrelation(scan) ? (
+        <Hint panel>
+          From Audion
+          {scan.audionRunId ? ` · run ${scan.audionRunId}` : ''}
+          {scan.stepUrl && scan.stepUrl !== scan.url ? ` · step ${scan.stepUrl}` : ''}
+          {scan.platformProjectId ? ` · Collection ${scan.platformProjectId}` : ''}
+          . Results live in CHECKION for this Collection project.
+        </Hint>
+      ) : null}
 
       <ResultSectionNav scanId={scan.id} active={activeSection} base={sectionBase} />
 

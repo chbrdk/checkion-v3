@@ -1,7 +1,7 @@
 # API — Scans
 
 ## Status
-Accepted (Phase 1) · Correlation fields **spec-only** until AUDION ↔ CHECKION single-scan trigger ships (`specs/domain/audion-journey-scan-trigger.md`)
+Accepted (Phase 1) · Correlation fields implemented with AUDION ↔ CHECKION single-scan trigger (`specs/domain/audion-journey-scan-trigger.md`)
 
 ## Endpoints
 | Method | Path | Notes |
@@ -22,7 +22,7 @@ See also `specs/api/domain-scan-payload.md`.
 | `mode` | yes | `single` \| `deep` — AUDION journey handoff **must** use `single` |
 | `url` | yes | Page to scan |
 | `waitForCompletion` | no | Boolean; existing |
-| `platformProjectId` | no | Plexon Collection id (correlation; implement with trigger wave) |
+| `platformProjectId` | no | Plexon Collection id (correlation) |
 | `audionRunId` | no | AUDION Chat/Studies run id (correlation) |
 | `stepUrl` | no | Explored step URL when distinct from `url` |
 

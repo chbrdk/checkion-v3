@@ -4,6 +4,7 @@ import type {
   DomainScanLight,
   DomainSystemicIssue,
   IssueSummary,
+  ScanCorrelationInput,
   ScanOverview,
   ScanSummary,
   ScoreCard,
@@ -21,6 +22,7 @@ import {
 import { shouldRunLiveScans } from '../scan/live-scan-gate'
 import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
+import { withScanCorrelation } from '../scan-correlation'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 
@@ -248,6 +250,7 @@ export async function dbCreateScan(input: {
   url: string
   /** Await live crawl before returning (tests). */
   waitForCompletion?: boolean
+  correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
   if (!shouldRunLiveScans()) {
     return dbCreateSynthesizedScan(input)
@@ -259,23 +262,29 @@ async function dbCreateSynthesizedScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
   const id = `scan-${input.mode}-${Date.now()}`
-  const synthesized = synthesizeCompletedScan({ ...input, id })
+  const synthesized = synthesizeCompletedScan({
+    ...input,
+    id,
+    ...input.correlation,
+  })
+  const scan = withScanCorrelation(synthesized.scan, input.correlation)
   const now = new Date()
   const db = getDb()
   await db.insert(scans).values({
     id,
     projectId: input.projectId,
-    mode: synthesized.scan.mode,
-    url: synthesized.scan.url,
-    status: synthesized.scan.status,
-    startedAt: synthesized.scan.startedAt,
-    completedAt: synthesized.scan.completedAt,
-    overallScore: synthesized.scan.overallScore,
-    issueCount: synthesized.scan.issueCount,
+    mode: scan.mode,
+    url: scan.url,
+    status: scan.status,
+    startedAt: scan.startedAt,
+    completedAt: scan.completedAt,
+    overallScore: scan.overallScore,
+    issueCount: scan.issueCount,
     payload: {
-      scan: synthesized.scan,
+      scan,
       issues: enrichIssueInspect(synthesized.issues),
       scores: synthesized.scores,
     },
@@ -291,10 +300,10 @@ async function dbCreateSynthesizedScan(input: {
       rootUrl: input.url,
       status: 'completed',
       pageCount: 12 + (input.url.length % 40),
-      overallScore: synthesized.scan.overallScore,
+      overallScore: scan.overallScore,
       issueCount: synthesized.issues.length,
-      startedAt: synthesized.scan.startedAt,
-      completedAt: synthesized.scan.completedAt,
+      startedAt: scan.startedAt,
+      completedAt: scan.completedAt,
       payload: {
         issues: synthesized.issues.map((i, idx) => ({
           ...i,
@@ -308,7 +317,7 @@ async function dbCreateSynthesizedScan(input: {
     })
   }
 
-  return synthesized.scan
+  return scan
 }
 
 async function dbCreateLiveScan(input: {
@@ -316,23 +325,27 @@ async function dbCreateLiveScan(input: {
   mode: 'single' | 'deep'
   url: string
   waitForCompletion?: boolean
+  correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
   const id = `scan-${input.mode}-${Date.now()}`
   const startedAt = new Date().toISOString()
   const now = new Date()
   const db = getDb()
 
-  const queued: ScanSummary = {
-    id,
-    projectId: input.projectId,
-    mode: input.mode,
-    url: input.url,
-    status: 'queued',
-    startedAt,
-    completedAt: null,
-    overallScore: null,
-    issueCount: 0,
-  }
+  const queued: ScanSummary = withScanCorrelation(
+    {
+      id,
+      projectId: input.projectId,
+      mode: input.mode,
+      url: input.url,
+      status: 'queued',
+      startedAt,
+      completedAt: null,
+      overallScore: null,
+      issueCount: 0,
+    },
+    input.correlation,
+  )
 
   await db.insert(scans).values({
     id,
@@ -478,15 +491,16 @@ async function dbCreateLiveScan(input: {
         url: input.url,
         mode: 'single',
       })
+      const completed = withScanCorrelation(bundle.scan, input.correlation)
       await db
         .update(scans)
         .set({
-          status: bundle.scan.status,
-          completedAt: bundle.scan.completedAt,
-          overallScore: bundle.scan.overallScore,
-          issueCount: bundle.scan.issueCount,
+          status: completed.status,
+          completedAt: completed.completedAt,
+          overallScore: completed.overallScore,
+          issueCount: completed.issueCount,
           payload: {
-            scan: bundle.scan,
+            scan: completed,
             issues: enrichIssueInspect(bundle.issues),
             scores: bundle.scores,
             overview: bundle.overview,

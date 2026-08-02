@@ -262,6 +262,9 @@ export function synthesizeCompletedScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  platformProjectId?: string
+  audionRunId?: string
+  stepUrl?: string
 }): { scan: ScanSummary; scores: ScoreCard[]; issues: IssueSummary[] } {
   const seed = input.url.length + (input.mode === 'deep' ? 17 : 3)
   const accessibility = 55 + (seed % 40)
@@ -329,6 +332,9 @@ export function synthesizeCompletedScan(input: {
       completedAt: now,
       overallScore: overall,
       issueCount: issues.length,
+      ...(input.platformProjectId ? { platformProjectId: input.platformProjectId } : {}),
+      ...(input.audionRunId ? { audionRunId: input.audionRunId } : {}),
+      ...(input.stepUrl ? { stepUrl: input.stepUrl } : {}),
     },
     scores: DEFAULT_SCORES(accessibility, seo, best, perf),
     issues,

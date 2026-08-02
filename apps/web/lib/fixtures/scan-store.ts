@@ -3,6 +3,7 @@ import type {
   DomainScanLight,
   DomainSystemicIssue,
   IssueSummary,
+  ScanCorrelationInput,
   ScanOverview,
   ScanSummary,
   ScoreCard,
@@ -25,6 +26,7 @@ import { isDatabaseConfigured } from '../db/config'
 import { shouldRunLiveScans } from '../scan/live-scan-gate'
 import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
+import { withScanCorrelation } from '../scan-correlation'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 
@@ -196,10 +198,16 @@ function memoryCreateSynthesizedScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  correlation?: ScanCorrelationInput
 }): ScanSummary {
   const id = `scan-${input.mode}-${Date.now()}`
-  const synthesized = synthesizeCompletedScan({ ...input, id })
-  scans = [synthesized.scan, ...scans]
+  const synthesized = synthesizeCompletedScan({
+    ...input,
+    id,
+    ...input.correlation,
+  })
+  const scan = withScanCorrelation(synthesized.scan, input.correlation)
+  scans = [scan, ...scans]
   issuesByScan[id] = enrichIssueInspect(synthesized.issues)
   scoresByScan[id] = synthesized.scores
 
@@ -212,10 +220,10 @@ function memoryCreateSynthesizedScan(input: {
         rootUrl: input.url,
         status: 'completed',
         pageCount: 12 + (input.url.length % 40),
-        overallScore: synthesized.scan.overallScore,
+        overallScore: scan.overallScore,
         issueCount: synthesized.issues.length,
-        startedAt: synthesized.scan.startedAt,
-        completedAt: synthesized.scan.completedAt,
+        startedAt: scan.startedAt,
+        completedAt: scan.completedAt,
       },
       ...domainScans,
     ]
@@ -227,7 +235,7 @@ function memoryCreateSynthesizedScan(input: {
     scoresByScan[domainId] = [...synthesized.scores]
   }
 
-  return synthesized.scan
+  return scan
 }
 
 async function memoryCreateLiveScan(input: {
@@ -235,20 +243,24 @@ async function memoryCreateLiveScan(input: {
   mode: 'single' | 'deep'
   url: string
   waitForCompletion?: boolean
+  correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
   const id = `scan-${input.mode}-${Date.now()}`
   const startedAt = new Date().toISOString()
-  const queued: ScanSummary = {
-    id,
-    projectId: input.projectId,
-    mode: input.mode,
-    url: input.url,
-    status: 'queued',
-    startedAt,
-    completedAt: null,
-    overallScore: null,
-    issueCount: 0,
-  }
+  const queued: ScanSummary = withScanCorrelation(
+    {
+      id,
+      projectId: input.projectId,
+      mode: input.mode,
+      url: input.url,
+      status: 'queued',
+      startedAt,
+      completedAt: null,
+      overallScore: null,
+      issueCount: 0,
+    },
+    input.correlation,
+  )
   scans = [queued, ...scans]
   issuesByScan[id] = []
   scoresByScan[id] = []
@@ -272,7 +284,8 @@ async function memoryCreateLiveScan(input: {
         url: input.url,
         mode: 'single',
       })
-      scans = scans.map((s) => (s.id === id ? bundle.scan : s))
+      const completed = withScanCorrelation(bundle.scan, input.correlation)
+      scans = scans.map((s) => (s.id === id ? completed : s))
       issuesByScan[id] = enrichIssueInspect(bundle.issues)
       scoresByScan[id] = bundle.scores
       overviewByScan[id] = bundle.overview
@@ -396,6 +409,7 @@ function memoryCreateScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  correlation?: ScanCorrelationInput
 }): ScanSummary {
   return memoryCreateSynthesizedScan(input)
 }
@@ -479,6 +493,7 @@ export async function createScan(input: {
   mode: 'single' | 'deep'
   url: string
   waitForCompletion?: boolean
+  correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
   if (isDatabaseConfigured()) {
     return (await dbApi()).dbCreateScan(input)

@@ -1,7 +1,7 @@
 # AUDION journey → single-page scan trigger — CHECKION v3
 
 ## Status
-Accepted — **spec only** (implement post Wave B staging / Wave X).  
+Accepted — implemented (AUDION journey → single-page scan handoff).  
 Companion (AUDION): `audion-v3/specs/domain/checkion-single-scan-trigger.md`.
 
 ## Decision
@@ -58,7 +58,6 @@ Bases: `knowledge/paths.md` (`NEXT_PUBLIC_CHECKION_URL` / staging `URL_CHECKION_
 - No live Journey Agent UI / Customer Journey map in CHECKION (see `journey-ui.md`, `journey-agent-island.md`)
 - No agent soft-fork into CHECKION for this path
 - No domain crawl (`deep` / `POST /api/domain-scans`) from this trigger
-- No implementation in this doc wave
 
 ## Phasing
-Spec now · implement later (post Wave B staging / Wave X) alongside AUDION CTA + env.
+Spec · deep-link `/scan` prefill · correlation on `POST /api/scans` · results “From Audion” chrome — **done**. AUDION BFF Bearer path remains optional.

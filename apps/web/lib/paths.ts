@@ -54,6 +54,25 @@ export const paths = {
     apiAuthNextAuth: '/api/auth',
     home: '/',
     scan: '/scan',
+    /** AUDION / Collection deep-link into launch form. */
+    scanLaunch: (q: {
+      projectId?: string
+      mode?: 'single' | 'deep'
+      url?: string
+      platformProjectId?: string
+      audionRunId?: string
+      stepUrl?: string
+    }) => {
+      const params = new URLSearchParams()
+      if (q.projectId) params.set('projectId', q.projectId)
+      if (q.mode) params.set('mode', q.mode)
+      if (q.url) params.set('url', q.url)
+      if (q.platformProjectId) params.set('platformProjectId', q.platformProjectId)
+      if (q.audionRunId) params.set('audionRunId', q.audionRunId)
+      if (q.stepUrl) params.set('stepUrl', q.stepUrl)
+      const qs = params.toString()
+      return qs ? `/scan?${qs}` : '/scan'
+    },
     projects: '/projects',
     projectDetail: (id: string) => `/projects/${id}`,
     results: '/results',

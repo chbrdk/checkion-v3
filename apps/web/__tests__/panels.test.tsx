@@ -92,7 +92,7 @@ describe('panels smoke', () => {
     expect(screen.getByText(/Workspace lede/i)).toBeTruthy()
     expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
       'href',
-      '/scan?projectId=p1',
+      '/scan?projectId=p1&mode=single',
     )
     expect(screen.getByRole('table', { name: /Recent single scans/i })).toBeTruthy()
     expect(screen.getByRole('table', { name: /Domain crawls/i })).toBeTruthy()
