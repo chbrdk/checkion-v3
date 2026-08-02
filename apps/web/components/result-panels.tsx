@@ -17,16 +17,15 @@ import type {
   VisualLayersSnapshot,
 } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
-import {
-  scoreTone,
-  severityRank,
-  worstScore,
-} from '../lib/scan-display'
+import { scoreTone, severityRank } from '../lib/scan-display'
 import { getProject } from '../lib/fixtures/project-store'
 import { IssuesWorkspace } from './issues-workspace'
 import { ResultSectionNav } from './result-section-nav'
+import { ScoresPanel } from './scores-panel'
 import { WeakestSignalCallout } from './weakest-signal-callout'
 import { buildWeakestSignalFallback } from '../lib/weakest-signal-statement'
+
+export { ScoresPanel } from './scores-panel'
 
 function msParts(value: number): { n: string; unit: string } {
   if (value >= 1000) {
@@ -812,30 +811,6 @@ export function IssueList({ issues }: { issues: IssueSummary[] }) {
             severityRank(issue.severity) * 0.55 + (issue.affectedCount / maxAffected) * 45,
             8,
           )}
-        />
-      ))}
-    </RankedList>
-  )
-}
-
-export function ScoresPanel({ scores }: { scores: ScoreCard[] }) {
-  if (scores.length === 0) {
-    return <EmptyState>No score cards yet.</EmptyState>
-  }
-
-  const weakestKind = worstScore(scores)?.kind
-
-  return (
-    <RankedList hint={<Hint>Read-only category strip — weakest first.</Hint>}>
-      {scores.map((score, index) => (
-        <RankedRow
-          key={score.kind}
-          index={index + 1}
-          label={score.label}
-          value={score.value}
-          secondary={`/ ${score.max}`}
-          barPct={score.value}
-          className={score.kind === weakestKind ? 'category-rank-item--weakest' : undefined}
         />
       ))}
     </RankedList>

@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { DataTable, Hint, Panel, SectionChrome, Text, type DataTableColumn } from '@msqdx/ui'
+import { Hint, Panel, SectionChrome, Text } from '@msqdx/ui'
+import { DataTable, type DataTableColumn } from '../lib/msqdx-ui-client'
 import type { GeoOverview, GeoPositionRow } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
 

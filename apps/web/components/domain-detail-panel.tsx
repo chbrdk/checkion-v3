@@ -111,16 +111,15 @@ function ScoreLedgerStrip({
   query: DetailSearchQuery
 }) {
   const sorted = [...scores].sort((a, b) => a.value - b.value)
-  const filtered = sorted.filter((score) => {
-    const tone = scoreTone(score.value)
-    return scoreMatches(
+  const filtered = sorted.filter((score) =>
+    scoreMatches(
       score.label,
       score.kind,
       score.value,
-      tone === 'default' ? undefined : tone,
+      scoreMetricTone(score.value),
       query,
-    )
-  })
+    ),
+  )
   if (filtered.length === 0) return null
 
   const worst = filtered[0]
@@ -454,16 +453,9 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
     { id: 'report-samples', title: 'Page samples', aliases: ['samples', 'pages'], formulaKey: 'samples', rows: sampleRows },
   ]
 
-  const ledgerVisible = scores.some((s) => {
-    const tone = scoreTone(s.value)
-    return scoreMatches(
-      s.label,
-      s.kind,
-      s.value,
-      tone === 'default' ? undefined : tone,
-      query,
-    )
-  })
+  const ledgerVisible = scores.some((s) =>
+    scoreMatches(s.label, s.kind, s.value, scoreMetricTone(s.value), query),
+  )
 
   const visibleBands = bands
     .map((band) => {

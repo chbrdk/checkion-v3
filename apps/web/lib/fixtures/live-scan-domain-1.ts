@@ -778,42 +778,34 @@ export const LIVE_DOMAIN_OVERVIEW: DomainOverview = {
     {
       url: "https://www.durr.com/es/servicio/plantas-de-pintura-y-sistemas-de-aplicacion",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/it/service/impianti-diverniciatura-e-tecnologie-di-applicazione",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/jp/service/paint-shop-application-technology",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/de/media/news/news-detail/view/duerr-gewinnt-mit-ecopaintjet-den-deutschen-innovationspreis-78813/",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/de/unternehmen/events/events-detail/view/automotive-supply-forum-93850",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/en/media/news",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/fr/presse/news",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/es/medios/noticias",
       score: 10,
-      errors: null
     },
     {
       url: "https://www.durr.com/cn/",

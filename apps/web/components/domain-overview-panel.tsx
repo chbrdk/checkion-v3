@@ -20,7 +20,7 @@ import { scoreTone, worstScore } from '../lib/scan-display'
 import { DistributionDonut } from './distribution-donut'
 import { DomainSeoReading } from './domain-seo-reading'
 import { DomainTrustGeoReading } from './domain-trust-geo-reading'
-import { ScoresPanel } from './result-panels'
+import { ScoresPanel } from './scores-panel'
 import { buildSeoReadingFallback } from '../lib/domain-seo-reading'
 import { buildTrustGeoReadingFallback } from '../lib/domain-trust-reading'
 

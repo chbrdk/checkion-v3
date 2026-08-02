@@ -89,7 +89,8 @@ export function cleanerThanTone(pct: number | null | undefined): MetricTone | un
 
 export function scoreMetricTone(value: number | null | undefined): MetricTone | undefined {
   const tone = scoreTone(value)
-  return tone === 'default' ? undefined : tone
+  if (tone === 'pos' || tone === 'low' || tone === 'neg') return tone
+  return undefined
 }
 
 /** Clarity 0–100 (magazine readability score). */
