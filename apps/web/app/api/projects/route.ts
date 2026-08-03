@@ -68,7 +68,8 @@ export async function POST(request: Request) {
       platformCompanyId,
     })
 
-    if (ownerPlexonUserId && platformCompanyId && isPlexonFederationConfigured()) {
+    // Always register on Plexon when live — owner/company optional (Plexon auto-resolves).
+    if (isPlexonFederationConfigured()) {
       const origin = await registerCheckionProjectOnPlexon({
         checkionProjectId: project.id,
         name: project.name,

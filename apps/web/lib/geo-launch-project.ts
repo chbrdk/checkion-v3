@@ -82,7 +82,7 @@ export async function resolveGeoLaunchProjectId(
       platformCompanyId,
     })
 
-    if (ownerPlexonUserId && platformCompanyId && isPlexonFederationConfigured()) {
+    if (isPlexonFederationConfigured()) {
       const origin = await registerCheckionProjectOnPlexon({
         checkionProjectId: project.id,
         name: project.name,

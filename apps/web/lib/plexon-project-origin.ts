@@ -10,18 +10,20 @@ export type CheckionProjectOriginResult = {
   platformProjectId: string
   audionProjectId?: string
   platformCompanyId?: string
+  ownerPlexonUserId?: string
 }
 
 /**
  * Register a CHECKION-origin project on the Plexon control plane.
+ * Owner/company optional — Plexon auto-resolves when omitted (service secret).
  * Returns null when not configured / dummy mode / on failure (caller must not block create).
  */
 export async function registerCheckionProjectOnPlexon(params: {
   checkionProjectId: string
   name: string
   domain?: string | null
-  ownerPlexonUserId: string
-  platformCompanyId: string
+  ownerPlexonUserId?: string | null
+  platformCompanyId?: string | null
 }): Promise<CheckionProjectOriginResult | null> {
   if (getFederationMode() !== 'live') return null
   if (!isPlexonFederationConfigured()) return null
@@ -30,6 +32,18 @@ export async function registerCheckionProjectOnPlexon(params: {
   const secret = getPlexonServiceSecret()
   const url = `${base}/api/platform/provisioning/checkion-project-origin`
 
+  const body: Record<string, string | null> = {
+    checkionProjectId: params.checkionProjectId,
+    name: params.name,
+    domain: params.domain ?? null,
+  }
+  if (params.ownerPlexonUserId?.trim()) {
+    body.ownerPlexonUserId = params.ownerPlexonUserId.trim()
+  }
+  if (params.platformCompanyId?.trim()) {
+    body.platformCompanyId = params.platformCompanyId.trim()
+  }
+
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -37,13 +51,7 @@ export async function registerCheckionProjectOnPlexon(params: {
         'Content-Type': 'application/json',
         ...getPlexonContractHeaders(secret),
       },
-      body: JSON.stringify({
-        checkionProjectId: params.checkionProjectId,
-        name: params.name,
-        domain: params.domain ?? null,
-        ownerPlexonUserId: params.ownerPlexonUserId,
-        platformCompanyId: params.platformCompanyId,
-      }),
+      body: JSON.stringify(body),
     })
     if (!res.ok) {
       console.warn(
@@ -64,6 +72,8 @@ export async function registerCheckionProjectOnPlexon(params: {
         typeof data.audionProjectId === 'string' ? data.audionProjectId : undefined,
       platformCompanyId:
         typeof data.platformCompanyId === 'string' ? data.platformCompanyId : undefined,
+      ownerPlexonUserId:
+        typeof data.ownerPlexonUserId === 'string' ? data.ownerPlexonUserId : undefined,
     }
   } catch (e) {
     console.warn(
