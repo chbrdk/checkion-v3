@@ -23,6 +23,7 @@ const requiredSpecs = [
   'specs/domain/geo-competitive-presence.md',
   'specs/domain/geo-model-catalog.md',
   'specs/domain/geo-answer-insights.md',
+  'specs/domain/geo-knowledge-consume.md',
   'specs/domain/journey-ui.md',
   'specs/domain/project-reports.md',
   'specs/api/projects.md',

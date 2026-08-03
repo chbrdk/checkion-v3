@@ -22,6 +22,7 @@
 | GEO model catalog (compact picker) | `specs/domain/geo-model-catalog.md` |
 | GEO answer insights | `specs/domain/geo-answer-insights.md` |
 | GEO on-page E-E-A-T (appendix) | `specs/domain/geo-eeat.md` |
+| GEO ↔ Collection Knowledge Pack | `specs/domain/geo-knowledge-consume.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |
 | Project reports (deferred) | `specs/domain/project-reports.md` |
 
@@ -50,3 +51,4 @@
 | CI | `knowledge/ci.md` |
 | DS gaps (product view) | `knowledge/ds-component-gaps.md` |
 | Dummy data mode | `knowledge/dummy-data-mode.md` |
+| Collection Knowledge Pack (Plexon) | `plexon-v3/specs/domain/collection-knowledge-pack.md` · consume/publish `specs/domain/geo-knowledge-consume.md` |

@@ -10,6 +10,8 @@ On-page E-E-A-T / GEO fitness is an **optional appendix** only when a page readi
 
 Actionable prompt/answer insights (miss-vs-rival, head-to-head, answer dossier, auto moves, intents, co-citation, model disagreement) are specified in [`geo-answer-insights.md`](./geo-answer-insights.md).
 
+Shared Collection brief (pull Suggest defaults / publish findability distillates — not `queryRuns`) is specified in [`geo-knowledge-consume.md`](./geo-knowledge-consume.md).
+
 ## Job type
 GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 

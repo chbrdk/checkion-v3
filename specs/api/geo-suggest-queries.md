@@ -3,6 +3,8 @@
 ## Status
 Accepted (Phase 3 launch assist; Phase 6 brand context)
 
+**Collection Knowledge Pack:** Suggest/Create may pull shared facets when a Collection is selected — `specs/domain/geo-knowledge-consume.md` (additive `platformProjectId` / `knowledge` body; does not replace this endpoint).
+
 ## Endpoint
 `POST /api/geo/suggest-queries` (`paths.routes.apiGeoSuggestQueries`)
 
