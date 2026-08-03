@@ -9,6 +9,7 @@ import { GeoQueriesPanel } from '../../../../components/geo-queries-panel'
 import type { GeoSectionId } from '../../../../components/geo-section-nav'
 import { isGeoJobInProgress } from '../../../../lib/geo-job-display'
 import { getGeoOverview } from '../../../../lib/fixtures/geo-store'
+import { getProject } from '../../../../lib/fixtures/project-store'
 import { paths } from '../../../../lib/paths'
 import { statusTopLevel } from '../../../../lib/scan-display'
 
@@ -26,6 +27,12 @@ export default async function GeoSectionPage({
   const { q, model } = await searchParams
   const overview = await getGeoOverview(id)
   if (!overview) notFound()
+
+  const project = await getProject(overview.job.projectId)
+  const canPublishKnowledge = Boolean(
+    project?.platformProjectId &&
+      !project.platformProjectId.startsWith('plx-local-'),
+  )
 
   // Placement nav deferred — keep old links alive via Queries redirect.
   if (rawSection === 'placement') {
@@ -70,7 +77,9 @@ export default async function GeoSectionPage({
         variant={section === 'overview' ? 'cover' : 'folio'}
         activeSection={section}
       >
-        {section === 'overview' ? <GeoOverviewPanel overview={overview} /> : null}
+        {section === 'overview' ? (
+          <GeoOverviewPanel overview={overview} canPublishKnowledge={canPublishKnowledge} />
+        ) : null}
         {section === 'queries' ? (
           <GeoQueriesPanel overview={overview} initialQuery={q} initialModel={model} />
         ) : null}

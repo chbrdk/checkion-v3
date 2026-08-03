@@ -427,6 +427,13 @@ export function ScanLaunchForm({
     }
     if (trimmedCompany) body.companyName = trimmedCompany
     if (resolvedProjectId) body.projectId = resolvedProjectId
+    const platformProjectId =
+      correlation?.platformProjectId?.trim() ||
+      (activeProject?.platformProjectId &&
+      !activeProject.platformProjectId.startsWith('plx-local-')
+        ? activeProject.platformProjectId
+        : undefined)
+    if (platformProjectId) body.platformProjectId = platformProjectId
 
     const res = await fetch(paths.routes.apiGeoJobs, {
       method: 'POST',
@@ -690,6 +697,14 @@ export function ScanLaunchForm({
                       onChange={setGeoQueries}
                       url={geoSuggestUrl}
                       companyName={companyName}
+                      projectId={projectId || undefined}
+                      platformProjectId={
+                        correlation?.platformProjectId ||
+                        (activeProject?.platformProjectId &&
+                        !activeProject.platformProjectId.startsWith('plx-local-')
+                          ? activeProject.platformProjectId
+                          : undefined)
+                      }
                       project={
                         activeProject
                           ? { name: activeProject.name, domain: activeProject.domain }

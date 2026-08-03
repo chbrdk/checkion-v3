@@ -24,6 +24,13 @@ export type GeoSuggestProjectContext = {
   domain?: string
 }
 
+export type GeoSuggestKnowledgeContext = {
+  profile?: { displayName?: string; industry?: string | null; tagline?: string | null }
+  competitive?: { category?: string | null; hosts?: string[] }
+  researchBrief?: { summary?: string | null; topics?: string[] }
+  geoContext?: { queryThemes?: string[]; seedQueries?: string[] }
+}
+
 export function hostFromUrl(raw: string): string {
   try {
     const host = new URL(raw.trim()).hostname.replace(/^www\./i, '')
@@ -213,6 +220,7 @@ async function suggestViaOpenAI(opts: {
   url: string
   companyName?: string
   project?: GeoSuggestProjectContext
+  knowledge?: GeoSuggestKnowledgeContext
   existing: string[]
   max: number
 }): Promise<string[]> {
@@ -222,6 +230,36 @@ async function suggestViaOpenAI(opts: {
     opts.project?.name?.trim() ? `Project name: ${opts.project.name.trim()}` : null,
     opts.project?.domain?.trim() ? `Project domain: ${opts.project.domain.trim()}` : null,
   ].filter(Boolean)
+  const knowledgeBits: string[] = []
+  if (opts.knowledge?.profile?.displayName) {
+    knowledgeBits.push(`Shared display name: ${opts.knowledge.profile.displayName}`)
+  }
+  if (opts.knowledge?.profile?.industry) {
+    knowledgeBits.push(`Industry: ${opts.knowledge.profile.industry}`)
+  }
+  if (opts.knowledge?.profile?.tagline) {
+    knowledgeBits.push(`Tagline: ${opts.knowledge.profile.tagline}`)
+  }
+  if (opts.knowledge?.competitive?.category) {
+    knowledgeBits.push(`Category: ${opts.knowledge.competitive.category}`)
+  }
+  if (opts.knowledge?.competitive?.hosts?.length) {
+    knowledgeBits.push(`Known rivals: ${opts.knowledge.competitive.hosts.join(', ')}`)
+  }
+  if (opts.knowledge?.researchBrief?.summary) {
+    knowledgeBits.push(`Research brief: ${opts.knowledge.researchBrief.summary.slice(0, 600)}`)
+  }
+  if (opts.knowledge?.researchBrief?.topics?.length) {
+    knowledgeBits.push(`Topics: ${opts.knowledge.researchBrief.topics.join(', ')}`)
+  }
+  if (opts.knowledge?.geoContext?.queryThemes?.length) {
+    knowledgeBits.push(`Prior GEO themes: ${opts.knowledge.geoContext.queryThemes.join(', ')}`)
+  }
+  if (opts.knowledge?.geoContext?.seedQueries?.length) {
+    knowledgeBits.push(
+      `Prior seed queries:\n- ${opts.knowledge.geoContext.seedQueries.slice(0, 8).join('\n- ')}`,
+    )
+  }
   const openai = new OpenAI({ apiKey: getOpenAIKey() })
   const res = await openai.chat.completions.create({
     model: OPENAI_MODEL,
@@ -239,6 +277,7 @@ async function suggestViaOpenAI(opts: {
           `Company / brand: ${brand}`,
           `Host: ${host}`,
           ...projectBits,
+          ...knowledgeBits,
           opts.existing.length
             ? `Already selected:\n- ${opts.existing.join('\n- ')}`
             : 'No queries selected yet.',
@@ -261,10 +300,14 @@ export async function suggestGeoQueries(opts: {
   url?: string
   companyName?: string
   project?: GeoSuggestProjectContext
+  knowledge?: GeoSuggestKnowledgeContext
   existing?: string[]
   max?: number
-}): Promise<GeoSuggestQueriesResult> {
-  const companyName = opts.companyName?.trim() || undefined
+}): Promise<GeoSuggestQueriesResult & { usedCollectionKnowledge?: boolean }> {
+  const companyName =
+    opts.companyName?.trim() ||
+    opts.knowledge?.profile?.displayName?.trim() ||
+    undefined
   const url =
     normalizeGeoUrl(opts.url) ||
     (companyName ? urlFromCompanyName(companyName) : '') ||
@@ -273,11 +316,22 @@ export async function suggestGeoQueries(opts: {
   const max = Math.min(Math.max(opts.max ?? 4, 1), 8)
   const existingKeys = new Set(existing.map((q) => q.toLowerCase()))
   const brand = brandForGeoTarget({ url, companyName })
+  const usedCollectionKnowledge = Boolean(
+    opts.knowledge &&
+      (opts.knowledge.profile?.displayName ||
+        opts.knowledge.competitive?.hosts?.length ||
+        opts.knowledge.researchBrief?.summary ||
+        opts.knowledge.geoContext?.seedQueries?.length ||
+        opts.knowledge.geoContext?.queryThemes?.length),
+  )
 
   const toSuggestions = (titles: string[], source: 'fixture' | 'openai', stubbed: boolean) => {
-    const filtered = titles
+    const seedBoost = opts.knowledge?.geoContext?.seedQueries ?? []
+    const combined = [...seedBoost, ...titles]
+    const filtered = combined
       .map((t) => t.trim())
       .filter((t) => t && !existingKeys.has(t.toLowerCase()))
+      .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i)
       .slice(0, max)
     return {
       suggestions: filtered.map((title, i) => ({
@@ -290,7 +344,8 @@ export async function suggestGeoQueries(opts: {
       })),
       source,
       stubbed,
-    } satisfies GeoSuggestQueriesResult
+      usedCollectionKnowledge,
+    }
   }
 
   if (!hasOpenAIKey()) {
@@ -302,6 +357,7 @@ export async function suggestGeoQueries(opts: {
       url,
       companyName,
       project: opts.project,
+      knowledge: opts.knowledge,
       existing,
       max,
     })

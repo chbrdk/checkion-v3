@@ -8,6 +8,11 @@ import {
 } from '../../../lib/geo-query-suggest'
 import { hasOpenAIKey } from '../../../lib/llm/config'
 import { shouldRunLiveGeo } from '../../../lib/geo-eeat/live-geo-gate'
+import { getProject } from '../../../lib/fixtures/project-store'
+import {
+  competitorHostsFromEnrichment,
+  resolveKnowledgeEnrichment,
+} from '../../../lib/plexon-knowledge-pack'
 import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
@@ -27,6 +32,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as {
     projectId?: string
+    platformProjectId?: string
     url?: string
     companyName?: string
     queries?: string[]
@@ -37,15 +43,35 @@ export async function POST(request: Request) {
     waitForCompletion?: boolean
   }
 
-  // companyId / platformCompanyId are NOT required on this endpoint (unlike
-  // POST /api/projects federation). Required: url and/or companyName + non-empty queries.
-  // projectId is resolved when omitted / empty (auto-create from URL / company).
   const companyName =
     typeof body.companyName === 'string' ? body.companyName.trim() : ''
   const resolvedUrl =
     normalizeGeoUrl(body.url) || (companyName ? urlFromCompanyName(companyName) : null)
 
-  if (!resolvedUrl || !Array.isArray(body.queries) || body.queries.length === 0) {
+  let platformProjectId =
+    typeof body.platformProjectId === 'string' ? body.platformProjectId.trim() : ''
+  if (!platformProjectId && body.projectId?.trim()) {
+    const local = await getProject(body.projectId.trim())
+    if (local?.platformProjectId && !local.platformProjectId.startsWith('plx-local-')) {
+      platformProjectId = local.platformProjectId
+    }
+  }
+
+  const knowledge = await resolveKnowledgeEnrichment({
+    platformProjectId: platformProjectId || null,
+  })
+
+  const packCompetitors = competitorHostsFromEnrichment(knowledge)
+  const packSeeds = knowledge?.geoContext?.seedQueries ?? []
+
+  let queries = Array.isArray(body.queries)
+    ? body.queries.map((q) => String(q).trim()).filter(Boolean)
+    : []
+  if (queries.length === 0 && packSeeds.length > 0) {
+    queries = packSeeds.slice(0, 8)
+  }
+
+  if (!resolvedUrl || queries.length === 0) {
     return NextResponse.json(
       {
         error: 'invalid_body',
@@ -53,11 +79,6 @@ export async function POST(request: Request) {
       },
       { status: 400 },
     )
-  }
-
-  const queries = body.queries.map((q) => String(q).trim()).filter(Boolean)
-  if (queries.length === 0) {
-    return NextResponse.json({ error: 'invalid_body', detail: 'queries must be non-empty' }, { status: 400 })
   }
 
   if (shouldRunLiveGeo() && !hasOpenAIKey()) {
@@ -70,7 +91,10 @@ export async function POST(request: Request) {
   const resolved = await resolveGeoLaunchProjectId(request, {
     projectId: body.projectId,
     url: resolvedUrl,
-    companyName: companyName || undefined,
+    companyName:
+      companyName ||
+      knowledge?.profile?.displayName ||
+      undefined,
   })
   if (!resolved.ok) {
     return NextResponse.json(
@@ -82,14 +106,20 @@ export async function POST(request: Request) {
   const title =
     (typeof body.title === 'string' && body.title.trim()) ||
     companyName ||
+    knowledge?.profile?.displayName ||
     undefined
+
+  const explicitCompetitors =
+    body.competitors?.map((c) => String(c).trim()).filter(Boolean) ?? []
+  const competitors =
+    explicitCompetitors.length > 0 ? explicitCompetitors : packCompetitors
 
   const job = await createGeoJob({
     projectId: resolved.projectId,
     url: resolvedUrl,
     queries,
     models: body.models?.map((m) => String(m).trim()).filter(Boolean),
-    competitors: body.competitors?.map((c) => String(c).trim()).filter(Boolean),
+    competitors,
     title,
     includePageScan: body.includePageScan,
     waitForCompletion: body.waitForCompletion === true,
@@ -103,6 +133,7 @@ export async function POST(request: Request) {
       job,
       projectId: resolved.projectId,
       projectCreated: resolved.created,
+      usedCollectionKnowledge: Boolean(knowledge && (packCompetitors.length || packSeeds.length)),
     },
     { status: 202 },
   )

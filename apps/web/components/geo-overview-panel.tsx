@@ -11,12 +11,19 @@ import {
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
 import { buildGeoReadingFallback } from '../lib/geo-readings'
+import { GeoPublishKnowledgeCta } from './geo-publish-knowledge-cta'
 import { GeoReading } from './geo-reading'
 import { GeoPresenceStage } from './geo-share-of-voice'
 import { GeoInsightsPanel } from './geo-insights-panel'
 import { GeoMovesGallery } from './geo-moves-gallery'
 
-export function GeoOverviewPanel({ overview }: { overview: GeoOverview }) {
+export function GeoOverviewPanel({
+  overview,
+  canPublishKnowledge = false,
+}: {
+  overview: GeoOverview
+  canPublishKnowledge?: boolean
+}) {
   const { eeat, recommendations, job, presence } = overview
   const inProgress = isGeoJobInProgress(job.status)
   const failed = isGeoOverviewFailed(overview)
@@ -161,6 +168,9 @@ export function GeoOverviewPanel({ overview }: { overview: GeoOverview }) {
             Read answers
           </Link>
         </p>
+        {job.status === 'completed' ? (
+          <GeoPublishKnowledgeCta jobId={job.id} canPublish={canPublishKnowledge} />
+        ) : null}
       </section>
 
       {eeat ? (

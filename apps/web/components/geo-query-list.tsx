@@ -20,6 +20,8 @@ type Props = {
   url: string
   companyName?: string
   project?: { name?: string; domain?: string }
+  projectId?: string
+  platformProjectId?: string
   disabled?: boolean
 }
 
@@ -29,6 +31,8 @@ export function GeoQueryList({
   url,
   companyName,
   project,
+  projectId,
+  platformProjectId,
   disabled = false,
 }: Props) {
   const baseId = useId()
@@ -40,6 +44,7 @@ export function GeoQueryList({
   const [suggestError, setSuggestError] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<GeoQuerySuggestion[]>([])
   const [suggestSource, setSuggestSource] = useState<'fixture' | 'openai' | null>(null)
+  const [usedCollectionKnowledge, setUsedCollectionKnowledge] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const skipBlurSave = useRef(false)
   const valueRef = useRef(value)
@@ -115,6 +120,7 @@ export function GeoQueryList({
     setSuggestError(null)
     setSuggestions([])
     setSuggestSource(null)
+    setUsedCollectionKnowledge(false)
     try {
       const response = await fetch(paths.routes.apiGeoSuggestQueries, {
         method: 'POST',
@@ -122,6 +128,8 @@ export function GeoQueryList({
         body: JSON.stringify({
           url: url.trim() || undefined,
           companyName: companyName?.trim() || undefined,
+          projectId: projectId?.trim() || undefined,
+          platformProjectId: platformProjectId?.trim() || undefined,
           project:
             project?.name?.trim() || project?.domain?.trim()
               ? {
@@ -136,11 +144,13 @@ export function GeoQueryList({
       const data = (await response.json().catch(() => null)) as {
         suggestions?: GeoQuerySuggestion[]
         source?: 'fixture' | 'openai'
+        usedCollectionKnowledge?: boolean
         error?: string
       } | null
       if (!response.ok) throw new Error(data?.error || `Suggest failed (${response.status})`)
       setSuggestions(data?.suggestions ?? [])
       setSuggestSource(data?.source ?? null)
+      setUsedCollectionKnowledge(Boolean(data?.usedCollectionKnowledge))
     } catch (e) {
       setSuggestError(e instanceof Error ? e.message : 'Suggest failed')
     } finally {
@@ -185,6 +195,7 @@ export function GeoQueryList({
       : suggestSource === 'fixture'
         ? 'Fixture · host-derived defaults (no OPENAI_API_KEY)'
         : null
+  const knowledgeHint = usedCollectionKnowledge ? 'Using Collection knowledge' : null
 
   return (
     <div className="checkion-geo-query-list" role="group" aria-label="GEO queries">
@@ -340,6 +351,11 @@ export function GeoQueryList({
           {sourceHint ? (
             <p className="checkion-geo-suggest-dialog__source" title={sourceHint}>
               {sourceHint}
+            </p>
+          ) : null}
+          {knowledgeHint ? (
+            <p className="checkion-geo-suggest-dialog__source" data-knowledge="true">
+              {knowledgeHint}
             </p>
           ) : null}
           {suggestError ? (

@@ -55,9 +55,10 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Launch: `/scan?mode=geo` (canonical create entry; index `/geo` catalogs finished jobs)
 - Magazine: `/geo/:id/overview` · `/queries` (Placement nav deferred; legacy `/placement` redirects to Queries)
 - Queries deep-link: `/geo/:id/queries?q=<prompt>&model=<modelId>` (`paths.routes.geoQueriesPrompt`)
-- Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading` (`url` and/or `companyName`; `projectId` optional — when omitted, auto-created from URL / company; no federation `companyId`)
-- Suggest (launch): `POST /api/geo/suggest-queries` (`paths.routes.apiGeoSuggestQueries`) — body `{ url?, companyName?, project?, existing?, max? }`; fixture pool without `OPENAI_API_KEY`; OpenAI when set
-- Collection Knowledge Pack (spec): pull facets for Suggest/Create + optional publish `geo_context` / `competitive` — `specs/domain/geo-knowledge-consume.md` · Plexon SoT `plexon-v3/specs/domain/collection-knowledge-pack.md`
+- Suggest (launch): `POST /api/geo/suggest-queries` (`paths.routes.apiGeoSuggestQueries`) — body `{ url?, companyName?, project?, projectId?, platformProjectId?, knowledge?, existing?, max? }`; server pulls Collection Knowledge Pack in live federation when Collection bound; fixture pool without `OPENAI_API_KEY`; OpenAI when set
+- Create: `POST /api/geo-jobs` prefill competitors / seed queries from pack when Collection bound
+- Publish: `POST /api/geo-jobs/:id/publish-knowledge` (`paths.routes.apiGeoJobPublishKnowledge`) — geo_context + competitive merge to plexon-v3
+- Collection Knowledge Pack: `apps/web/lib/plexon-knowledge-pack.ts` · `specs/domain/geo-knowledge-consume.md` · Plexon SoT `plexon-v3/specs/domain/collection-knowledge-pack.md`
 - Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); live GEO posts OpenAI-supported ids only (`specs/domain/geo-model-catalog.md`)
 - Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)
 

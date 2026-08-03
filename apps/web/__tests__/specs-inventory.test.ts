@@ -81,6 +81,9 @@ describe('specs inventory', () => {
       '/geo/geo-1/queries?q=Best%20paint&model=gpt-5.4',
     )
     expect(paths.routes.apiGeoSuggestQueries).toBe('/api/geo/suggest-queries')
+    expect(paths.routes.apiGeoJobPublishKnowledge('geo-1')).toBe(
+      '/api/geo-jobs/geo-1/publish-knowledge',
+    )
     expect(paths.routes.journey).toBe('/journey')
     expect(paths.routes.reports).toBe('/reports')
     expect(paths.federationContract).toBe('2026-05-plexon-federation-v3')
