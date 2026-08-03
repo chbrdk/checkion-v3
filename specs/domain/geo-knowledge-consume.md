@@ -1,8 +1,9 @@
 # GEO ↔ Collection Knowledge Pack — consume & publish
 
-**Status:** Accepted (spec only) — 2026-08-03  
+**Status:** Accepted — implemented — 2026-08-03  
 **Plexon SoT:** `plexon-v3/specs/domain/collection-knowledge-pack.md`  
 **API:** `plexon-v3/specs/api/collection-knowledge-pack.md`  
+**Sync:** `plexon-v3/knowledge/collection-knowledge-sync.md`  
 **Local GEO:** `specs/domain/geo-competitive-presence.md` · `specs/api/geo-suggest-queries.md` · `specs/domain/scan-modes.md`  
 **Federation:** `specs/domain/plexon-federation.md`
 
@@ -14,7 +15,6 @@ CHECKION GEO jobs remain the **capability-local** system of record for query×mo
 
 - Uploading `queryRuns`, full answers, or issue lists into the pack
 - Making Tenant-Company the default knowledge bucket for client GEO
-- Auto-writing the pack on every fixture GEO without user/service intent
 - Changing `PlatformProjectUpsertPayload`
 
 ## Consume (pull-on-use)
@@ -48,9 +48,11 @@ Extend suggest API body (additive, non-breaking):
 
 Client may pass `knowledge` after fetching the pack, **or** server resolves `platformProjectId` via service GET to plexon-v3 when `CHECKION_FEDERATION_MODE=live`. Prefer server resolve in live mode to avoid stale client copies.
 
-## Publish (explicit)
+## Publish (autosync)
 
-After a **completed** GEO job, optional CTA: **“Save findability context to Collection”**.
+After a **completed** GEO job with Collection binding and `CHECKION_FEDERATION_MODE=live`, Checkion **autosyncs** findability context to the pack. Soft-skip when unbound, dummy mode, or pack unreachable.
+
+Manual **Re-sync** CTA remains on the GEO overview. Kill-switch: `KNOWLEDGE_PACK_AUTOSYNC=0`.
 
 Publishes:
 
@@ -82,10 +84,7 @@ Never publish raw `queryRuns`.
 
 | Phase | Notes |
 |-------|-------|
-| Spec | this doc |
-| After Plexon Pack CRUD | Suggest pull + create prefill |
-| Same / follow-on | Publish CTA from GEO overview |
-| Brandion | may later read `competitive`; Checkion does not write `brand` |
+| Implemented | autosync on GEO complete (live) + Re-sync CTA + suggest pull |
 
 ## Paths
 

@@ -8,6 +8,12 @@ import { buildQueuedGeoOverview } from '../geo-eeat/finalize-overview'
 import { executeLiveGeoPipeline, newGeoJobId } from '../geo-eeat/pipeline'
 import { synthesizeFixtureGeoOverview } from '../geo-eeat/synthesize-fixture'
 
+function triggerGeoAutosync(jobId: string): void {
+  void import('../knowledge-pack-autosync').then(({ scheduleGeoKnowledgeAutosync }) => {
+    scheduleGeoKnowledgeAutosync(jobId)
+  })
+}
+
 function rowToOverview(row: GeoJobRow): GeoOverview {
   const overview = structuredClone(row.payload.overview)
   overview.job = {
@@ -105,6 +111,7 @@ export async function dbCreateGeoJob(input: {
       title: input.title,
     })
     await dbUpsertGeoOverview(overview)
+    triggerGeoAutosync(jobId)
     return overview.job
   }
 
@@ -130,8 +137,9 @@ export async function dbCreateGeoJob(input: {
         competitors,
         title: input.title,
         includePageScan: input.includePageScan,
-        onStatus: async (_status, overview) => {
+        onStatus: async (status, overview) => {
           await dbUpsertGeoOverview(overview)
+          if (status === 'completed') triggerGeoAutosync(jobId)
         },
       })
     } catch (err) {

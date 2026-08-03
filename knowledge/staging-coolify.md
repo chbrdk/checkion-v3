@@ -54,6 +54,8 @@ PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
 PLEXON_DEMO_COMPANY_ID=…
 ```
 
+**Knowledge sync:** with `live` + secret, GEO suggest/create pulls the Collection pack; post-GEO CTA publishes `geo_context` / `competitive`. If `NEXT_PLEXON_BASE_URL` is omitted, runtime uses `PLEXON_AUTH_URL`. See `plexon-v3/knowledge/collection-knowledge-sync.md`.
+
 ### Chromium / Puppeteer
 
 Live GEO stage1 / accessibility scans launch Puppeteer in-process. The multi-stage image must ship a **browser binary in the runner**, not only shared libraries:

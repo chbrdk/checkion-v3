@@ -210,38 +210,49 @@ export async function publishGeoContextToPack(opts: {
     return { ok: false, status: 503, error: 'federation_not_live' }
   }
   const secret = getPlexonServiceSecret()
+  let expectedRevision = opts.expectedRevision
   try {
-    const res = await fetch(facetPublishPath(opts.platformProjectId, 'geo_context'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getPlexonContractHeaders(secret),
-      },
-      body: JSON.stringify({
-        mode: 'replace',
-        expectedRevision: opts.expectedRevision,
-        provenance: {
-          actorType: 'service',
-          productId: 'checkion',
-          runId: opts.geoJobId,
-          note: 'post-geo publish',
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await fetch(facetPublishPath(opts.platformProjectId, 'geo_context'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getPlexonContractHeaders(secret),
         },
-        data: {
-          queryThemes: opts.queryThemes.slice(0, 48),
-          seedQueries: opts.seedQueries.slice(0, 24),
-          knownCompetitors: opts.knownCompetitors.slice(0, 25),
-          targetHosts: opts.targetHosts.slice(0, 32),
-          lastGeoJobId: opts.geoJobId,
-          notes: opts.notes ?? null,
-        },
-      }),
-    })
-    if (!res.ok) {
+        body: JSON.stringify({
+          mode: 'replace',
+          expectedRevision,
+          provenance: {
+            actorType: 'service',
+            productId: 'checkion',
+            runId: opts.geoJobId,
+            note: 'post-geo publish',
+          },
+          data: {
+            queryThemes: opts.queryThemes.slice(0, 48),
+            seedQueries: opts.seedQueries.slice(0, 24),
+            knownCompetitors: opts.knownCompetitors.slice(0, 25),
+            targetHosts: opts.targetHosts.slice(0, 32),
+            lastGeoJobId: opts.geoJobId,
+            notes: opts.notes ?? null,
+          },
+        }),
+      })
+      if (res.ok) {
+        const body = (await res.json()) as { revision?: number }
+        return { ok: true, revision: body.revision ?? expectedRevision + 1 }
+      }
+      if (res.status === 409 && attempt === 0) {
+        const fresh = await fetchCollectionKnowledgePack(opts.platformProjectId)
+        if (fresh) {
+          expectedRevision = fresh.revision
+          continue
+        }
+      }
       const text = await res.text().catch(() => '')
       return { ok: false, status: res.status, error: text || res.statusText }
     }
-    const body = (await res.json()) as { revision?: number }
-    return { ok: true, revision: body.revision ?? opts.expectedRevision + 1 }
+    return { ok: false, status: 409, error: 'revision_conflict' }
   } catch (e) {
     return {
       ok: false,
@@ -262,38 +273,49 @@ export async function publishCompetitiveMergeToPack(opts: {
     return { ok: false, status: 503, error: 'federation_not_live' }
   }
   const secret = getPlexonServiceSecret()
+  let expectedRevision = opts.expectedRevision
   try {
-    const res = await fetch(facetPublishPath(opts.platformProjectId, 'competitive'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getPlexonContractHeaders(secret),
-      },
-      body: JSON.stringify({
-        mode: 'merge',
-        expectedRevision: opts.expectedRevision,
-        provenance: {
-          actorType: 'service',
-          productId: 'checkion',
-          runId: opts.geoJobId,
-          note: 'post-geo competitive merge',
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await fetch(facetPublishPath(opts.platformProjectId, 'competitive'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getPlexonContractHeaders(secret),
         },
-        data: {
-          category: opts.category ?? null,
-          competitors: opts.hosts.slice(0, 25).map((host) => ({
-            host,
-            source: 'checkion' as const,
-          })),
-          notes: null,
-        },
-      }),
-    })
-    if (!res.ok) {
+        body: JSON.stringify({
+          mode: 'merge',
+          expectedRevision,
+          provenance: {
+            actorType: 'service',
+            productId: 'checkion',
+            runId: opts.geoJobId,
+            note: 'post-geo competitive merge',
+          },
+          data: {
+            category: opts.category ?? null,
+            competitors: opts.hosts.slice(0, 25).map((host) => ({
+              host,
+              source: 'checkion' as const,
+            })),
+            notes: null,
+          },
+        }),
+      })
+      if (res.ok) {
+        const body = (await res.json()) as { revision?: number }
+        return { ok: true, revision: body.revision ?? expectedRevision + 1 }
+      }
+      if (res.status === 409 && attempt === 0) {
+        const fresh = await fetchCollectionKnowledgePack(opts.platformProjectId)
+        if (fresh) {
+          expectedRevision = fresh.revision
+          continue
+        }
+      }
       const text = await res.text().catch(() => '')
       return { ok: false, status: res.status, error: text || res.statusText }
     }
-    const body = (await res.json()) as { revision?: number }
-    return { ok: true, revision: body.revision ?? opts.expectedRevision + 1 }
+    return { ok: false, status: 409, error: 'revision_conflict' }
   } catch (e) {
     return {
       ok: false,

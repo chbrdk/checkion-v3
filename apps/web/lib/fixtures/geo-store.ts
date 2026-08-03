@@ -7,6 +7,12 @@ import { buildQueuedGeoOverview } from '../geo-eeat/finalize-overview'
 import { executeLiveGeoPipeline, newGeoJobId } from '../geo-eeat/pipeline'
 import { synthesizeFixtureGeoOverview } from '../geo-eeat/synthesize-fixture'
 
+function triggerGeoAutosync(jobId: string): void {
+  void import('../knowledge-pack-autosync').then(({ scheduleGeoKnowledgeAutosync }) => {
+    scheduleGeoKnowledgeAutosync(jobId)
+  })
+}
+
 /** GEO store: fixtures by default; live LLM pipeline when `shouldRunLiveGeo()`. */
 
 async function dbApi() {
@@ -70,6 +76,7 @@ async function memoryCreateGeoJob(input: {
       title: input.title,
     })
     memoryUpsert(overview)
+    triggerGeoAutosync(jobId)
     return overview.job
   }
 
@@ -95,8 +102,9 @@ async function memoryCreateGeoJob(input: {
         competitors,
         title: input.title,
         includePageScan: input.includePageScan,
-        onStatus: async (_status, overview) => {
+        onStatus: async (status, overview) => {
           memoryUpsert(overview)
+          if (status === 'completed') triggerGeoAutosync(jobId)
         },
       })
     } catch (err) {

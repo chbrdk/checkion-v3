@@ -2,8 +2,17 @@
 
 import { paths } from './paths'
 
+/**
+ * plexon-v3 API base for federation / knowledge pack.
+ * Prefer NEXT_PLEXON_BASE_URL; fall back to PLEXON_AUTH_URL when ops only set auth
+ * (same host in staging); last resort localhost for local fixture probes.
+ */
 export function plexonBaseUrl(): string {
-  return process.env[paths.envPlexonBase]?.trim() || 'http://localhost:3000'
+  const explicit = process.env[paths.envPlexonBase]?.trim()
+  if (explicit) return explicit.replace(/\/$/, '')
+  const auth = process.env[paths.envPlexonAuthUrl]?.trim()
+  if (auth) return auth.replace(/\/$/, '')
+  return 'http://localhost:3000'
 }
 
 export function checkionPublicUrl(): string {

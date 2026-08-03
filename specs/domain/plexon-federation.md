@@ -14,8 +14,14 @@
 
 ## Mode
 - Default `paths.federationMode = dummy` — local CRUD / fixtures
-- Override with `CHECKION_FEDERATION_MODE=live` + `PLEXON_SERVICE_SECRET` (+ `NEXT_PLEXON_BASE_URL`)
+- Override with `CHECKION_FEDERATION_MODE=live` + `PLEXON_SERVICE_SECRET` (+ `NEXT_PLEXON_BASE_URL` or `PLEXON_AUTH_URL`)
 - `/api/federation/health` reports `deferred: false` when live and configured; probes plexon `/api/health`
+
+## Collection Knowledge Pack
+- Pull: GEO suggest/create enrich from pack when live (`specs/domain/geo-knowledge-consume.md`)
+- Publish: autosync on GEO complete (live) → `geo_context` + `competitive`; Re-sync CTA (revision retry on 409)
+- Ops: `plexon-v3/knowledge/collection-knowledge-sync.md`
+- Base URL: `plexonBaseUrl()` prefers `NEXT_PLEXON_BASE_URL`, else `PLEXON_AUTH_URL`
 
 ## Auth (NextAuth + Plexon)
 - NextAuth credentials provider validates against plexon `POST /api/auth/validate-credentials`

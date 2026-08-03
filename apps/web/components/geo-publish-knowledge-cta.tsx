@@ -35,8 +35,8 @@ export function GeoPublishKnowledgeCta({ jobId, canPublish }: Props) {
       setStatus('done')
       setMessage(
         typeof body?.revision === 'number'
-          ? `Saved to Collection knowledge (rev ${body.revision}).`
-          : 'Saved to Collection knowledge.',
+          ? `Re-synced findability context to Collection (rev ${body.revision}).`
+          : 'Re-synced findability context to Collection.',
       )
     } catch (e) {
       setStatus('error')
@@ -47,20 +47,16 @@ export function GeoPublishKnowledgeCta({ jobId, canPublish }: Props) {
   return (
     <div className="checkion-geo-publish-knowledge" data-section="geo-publish-knowledge">
       <Text role="meta">
-        Shared · Save findability context to the Collection Knowledge Pack (not the full GEO
-        runs).
+        Autosync · Completed GEO jobs publish findability context to the Collection Knowledge Pack
+        when federation is live. Use re-sync if needed.
       </Text>
       <Button
         variant="ghost"
         size="sm"
-        disabled={status === 'busy' || status === 'done'}
+        disabled={status === 'busy'}
         onClick={() => void onPublish()}
       >
-        {status === 'busy'
-          ? 'Publishing…'
-          : status === 'done'
-            ? 'Saved to Collection'
-            : 'Save findability context to Collection'}
+        {status === 'busy' ? 'Syncing…' : 'Re-sync to Collection'}
       </Button>
       {message ? (
         <Text role="meta" data-tone={status === 'error' ? 'danger' : undefined}>

@@ -16,7 +16,7 @@
 ## Env
 | Key | Purpose |
 |-----|---------|
-| `NEXT_PLEXON_BASE_URL` | plexon-v3 base (federation + health probe) |
+| `NEXT_PLEXON_BASE_URL` | plexon-v3 base (federation + knowledge pack); falls back to `PLEXON_AUTH_URL` if unset |
 | `NEXT_PUBLIC_CHECKION_URL` | Public checkion-v3 URL |
 | `PLEXON_AUTH_URL` | plexon-v3 auth base for validate-credentials (often same as plexon base) |
 | `PLEXON_SERVICE_SECRET` | Shared service secret for auth + federation |
