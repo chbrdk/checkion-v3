@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, EmptyState, Input, Panel, SectionChrome, StatusDot, Text } from '@msqdx/ui'
+import { Button, CardActions, EmptyState, Input, Panel, SectionChrome, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -120,7 +120,7 @@ function ProjectCollectionCard({
         />
       </div>
 
-      <div className="checkion-collection-card-actions">
+      <CardActions className="checkion-collection-card-actions">
         <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
           <Button variant="ghost" size="md">
             Open
@@ -136,7 +136,7 @@ function ProjectCollectionCard({
             Delete
           </Button>
         </span>
-      </div>
+      </CardActions>
     </article>
   )
 }
