@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   // companyId / platformCompanyId are NOT required on this endpoint (unlike
   // POST /api/projects federation). Required: url and/or companyName + non-empty queries.
-  // projectId is resolved when omitted / empty (auto-create when store empty).
+  // projectId is resolved when omitted / empty (auto-create from URL / company).
   const companyName =
     typeof body.companyName === 'string' ? body.companyName.trim() : ''
   const resolvedUrl =

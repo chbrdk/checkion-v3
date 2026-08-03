@@ -50,15 +50,20 @@ describe('resolveGeoLaunchProjectId', () => {
     }
   })
 
-  it('falls back to the first Collection project when projectId omitted', async () => {
+  it('auto-creates a project when projectId is omitted (even if projects exist)', async () => {
+    const before = await listProjects()
+    expect(before.length).toBeGreaterThan(0)
+
     const req = new Request('http://localhost/api/geo-jobs', { method: 'POST' })
     const result = await resolveGeoLaunchProjectId(req, {
-      url: 'https://example.com',
+      url: 'https://new-brand.example/geo',
+      companyName: 'New Brand',
     })
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.created).toBe(false)
+      expect(result.created).toBe(true)
       expect(result.projectId).toMatch(/^proj-/)
+      expect(before.some((p) => p.id === result.projectId)).toBe(false)
     }
   })
 

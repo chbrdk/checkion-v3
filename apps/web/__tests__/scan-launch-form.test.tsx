@@ -6,6 +6,7 @@ import {
   capabilityFromLaunchMode,
   defaultGeoQueries,
   initialCapability,
+  initialProjectId,
   initialWcagDepth,
   launchModeFromState,
   wcagDepthFromLaunchMode,
@@ -51,6 +52,16 @@ describe('launch mode mapping', () => {
     expect(initialWcagDepth(false, 'deep')).toBe('deep')
     expect(initialCapability(true)).toBe('wcag')
     expect(initialWcagDepth(true)).toBe('single')
+  })
+
+  it('GEO starts with empty projectId unless deep-linked; WCAG/SEO pick first', () => {
+    expect(initialProjectId(projects, { defaultMode: 'geo' })).toBe('')
+    expect(initialProjectId(projects, { defaultMode: 'geo', defaultProjectId: 'proj-2' })).toBe(
+      'proj-2',
+    )
+    expect(initialProjectId(projects, { defaultMode: 'seo' })).toBe('proj-1')
+    expect(initialProjectId(projects, { defaultMode: 'single' })).toBe('proj-1')
+    expect(initialProjectId(projects, {})).toBe('proj-1')
   })
 })
 
@@ -211,6 +222,23 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Start GEO job/i })).not.toBeDisabled()
   })
 
+  it('GEO project defaults empty with placeholder and New project affordance', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    const projectTrigger = screen.getByRole('combobox', { name: /^Project$/i })
+    expect(projectTrigger).toHaveTextContent(/Select or create project/i)
+    expect(screen.getByRole('button', { name: /\+ New project/i })).toBeTruthy()
+    expect(screen.getByText(/No project selected — Start will auto-create/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Start GEO job/i })).not.toBeDisabled()
+  })
+
+  it('opens New project dialog from GEO compose', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
+    fireEvent.click(screen.getByRole('button', { name: /\+ New project/i }))
+    expect(screen.getByRole('heading', { name: /New project/i })).toBeTruthy()
+    expect(screen.getByLabelText(/Project name/i)).toHaveValue('Acme Robotics')
+  })
+
   it('adds GEO models via dialog search and Suggest restores default', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
@@ -310,14 +338,19 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
-  it('posts GEO job and navigates to overview', async () => {
+  it('posts GEO job without projectId when none selected (API auto-creates)', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
-      json: async () => ({ success: true, jobId: 'geo-new-1', status: 'completed' }),
+      json: async () => ({
+        success: true,
+        jobId: 'geo-new-1',
+        status: 'completed',
+        projectId: 'proj-auto-1',
+      }),
     })) as unknown as typeof fetch & { mock: { calls: Array<[unknown, RequestInit?]> } }
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Bosch eBike' } })
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
     fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
@@ -335,13 +368,13 @@ describe('ScanLaunchForm', () => {
     expect(call?.[0]).toBe(paths.routes.apiGeoJobs)
     expect(call?.[1]?.method).toBe('POST')
     const body = JSON.parse(String(call?.[1]?.body)) as {
-      projectId: string
+      projectId?: string
       url: string
       companyName?: string
       queries: string[]
       models: string[]
     }
-    expect(body.projectId).toBe('proj-1')
+    expect(body.projectId).toBeUndefined()
     expect(body.url).toContain('http')
     expect(body.companyName).toBe('Bosch eBike')
     expect(body.queries.length).toBeGreaterThan(0)
@@ -350,6 +383,26 @@ describe('ScanLaunchForm', () => {
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-new-1', 'overview'))
     })
+  })
+
+  it('posts GEO job with explicit project when selected', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ success: true, jobId: 'geo-sel-1', status: 'completed' }),
+    })) as unknown as typeof fetch & { mock: { calls: Array<[unknown, RequestInit?]> } }
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const body = JSON.parse(
+      String(
+        (fetchMock as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock.calls[0]?.[1]
+          ?.body,
+      ),
+    ) as { projectId: string }
+    expect(body.projectId).toBe('proj-1')
   })
 
   it('posts GEO deep-link url and projectId on visible compose row', async () => {
@@ -382,14 +435,14 @@ describe('ScanLaunchForm', () => {
     })
   })
 
-  it('posts company-only GEO launch with derived url', async () => {
+  it('posts company-only GEO launch with derived url and omits projectId when empty', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({ success: true, jobId: 'geo-co-1', status: 'completed' }),
     }))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     fireEvent.change(screen.getByLabelText(/Scan URL/i), { target: { value: '' } })
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
@@ -400,8 +453,8 @@ describe('ScanLaunchForm', () => {
         (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock.calls[0]?.[1]
           ?.body,
       ),
-    ) as { projectId: string; url: string; companyName: string }
-    expect(body.projectId).toBe('proj-1')
+    ) as { projectId?: string; url: string; companyName: string }
+    expect(body.projectId).toBeUndefined()
     expect(body.companyName).toBe('Acme Robotics')
     expect(body.url).toBe('https://acme-robotics.example/')
     await waitFor(() => {
@@ -422,7 +475,7 @@ describe('ScanLaunchForm', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ScanLaunchForm projects={[]} defaultMode="geo" />)
-    expect(screen.getByText(/No Collection project yet/i)).toBeTruthy()
+    expect(screen.getByText(/No project selected — Start will auto-create/i)).toBeTruthy()
     const start = screen.getByRole('button', { name: /Start GEO job/i })
     expect(start).not.toBeDisabled()
     fireEvent.click(start)

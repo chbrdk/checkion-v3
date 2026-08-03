@@ -30,6 +30,7 @@ export function ProjectFormDialog({
   mode,
   initial,
   platformProjectId,
+  redirectOnCreate = true,
   onClose,
   onSaved,
 }: {
@@ -38,6 +39,8 @@ export function ProjectFormDialog({
   initial?: Pick<ProjectDetail, 'id' | 'name' | 'domain' | 'description' | 'platformProjectId' | 'capabilityStatus'>
   /** Bind create to an existing Plexon collection id. */
   platformProjectId?: string
+  /** When false, stay on the current page after create (e.g. GEO launch). Default true. */
+  redirectOnCreate?: boolean
   onClose: () => void
   onSaved?: (project: ProjectDetail) => void
 }) {
@@ -72,7 +75,9 @@ export function ProjectFormDialog({
         const project = (await res.json()) as ProjectDetail
         onClose()
         onSaved?.(project)
-        router.push(paths.routes.projectDetail(project.id))
+        if (redirectOnCreate) {
+          router.push(paths.routes.projectDetail(project.id))
+        }
         router.refresh()
         return
       }

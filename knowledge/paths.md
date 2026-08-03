@@ -46,7 +46,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, … })`
 - Modes:
   - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
-  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; auto-creates project when store empty; optional `companyName` on GEO body — see `scan-modes.md`)
+  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; Project defaults empty — select / create, or auto-create on submit when omitted; optional `companyName` on GEO body — see `scan-modes.md`)
   - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
   - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
 - Spec: `specs/domain/scan-modes.md`
@@ -55,7 +55,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Launch: `/scan?mode=geo` (canonical create entry; index `/geo` catalogs finished jobs)
 - Magazine: `/geo/:id/overview` · `/queries` (Placement nav deferred; legacy `/placement` redirects to Queries)
 - Queries deep-link: `/geo/:id/queries?q=<prompt>&model=<modelId>` (`paths.routes.geoQueriesPrompt`)
-- Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading` (`url` and/or `companyName`; `projectId` optional when store empty — resolved / auto-created; no federation `companyId`)
+- Create: `POST /api/geo-jobs` · list `GET /api/geo-jobs` · detail `GET /api/geo-jobs/:id` · reading `GET /api/geo-jobs/:id/reading` (`url` and/or `companyName`; `projectId` optional — when omitted, auto-created from URL / company; no federation `companyId`)
 - Suggest (launch): `POST /api/geo/suggest-queries` (`paths.routes.apiGeoSuggestQueries`) — body `{ url?, companyName?, project?, existing?, max? }`; fixture pool without `OPENAI_API_KEY`; OpenAI when set
 - Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); live GEO posts OpenAI-supported ids only (`specs/domain/geo-model-catalog.md`)
 - Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)

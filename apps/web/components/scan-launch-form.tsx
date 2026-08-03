@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Alert,
@@ -11,6 +11,7 @@ import {
   Panel,
   Text,
 } from '@msqdx/ui'
+import type { ProjectDetail } from '@checkion-v3/contracts'
 import { Select } from '../lib/msqdx-ui-client'
 import {
   defaultGeoModelIds,
@@ -18,6 +19,7 @@ import {
 } from '../lib/geo/model-catalog'
 import {
   defaultGeoQueries,
+  hostFromUrl,
   normalizeGeoUrl,
   resolveGeoLaunchUrl,
   sameQueryList,
@@ -26,6 +28,7 @@ import {
 import { paths } from '../lib/paths'
 import { GeoModelPicker } from './geo-model-picker'
 import { GeoQueryList } from './geo-query-list'
+import { ProjectFormDialog } from './project-form-dialog'
 
 export { defaultGeoQueries } from '../lib/geo-query-suggest'
 export { defaultGeoModelIds } from '../lib/geo/model-catalog'
@@ -82,6 +85,23 @@ export function initialWcagDepth(
     return wcagDepthFromLaunchMode(defaultMode)
   }
   return null
+}
+
+/** GEO starts empty unless deep-linked; WCAG / SEO still auto-pick first Collection. */
+export function initialProjectId(
+  projects: Array<{ id: string }>,
+  opts: {
+    fromAudion?: boolean
+    defaultMode?: LaunchMode
+    defaultProjectId?: string
+  },
+): string {
+  const { fromAudion = false, defaultMode, defaultProjectId } = opts
+  if (defaultProjectId && projects.some((p) => p.id === defaultProjectId)) {
+    return defaultProjectId
+  }
+  if (initialCapability(fromAudion, defaultMode) === 'geo') return ''
+  return projects[0]?.id ?? ''
 }
 
 const CAPABILITY_CARDS: Array<{
@@ -163,11 +183,14 @@ export function ScanLaunchForm({
   )
   const [url, setUrl] = useState(initialUrl)
   const [companyName, setCompanyName] = useState('')
-  const [projectId, setProjectId] = useState(
-    defaultProjectId && projects.some((p) => p.id === defaultProjectId)
-      ? defaultProjectId
-      : (projects[0]?.id ?? ''),
+  const [projectOptions, setProjectOptions] = useState(projects)
+  const [projectId, setProjectId] = useState(() =>
+    initialProjectId(projects, { fromAudion, defaultMode, defaultProjectId }),
   )
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [createProjectPrefill, setCreateProjectPrefill] = useState<
+    Pick<ProjectDetail, 'name' | 'domain' | 'description'> | undefined
+  >(undefined)
   const [geoQueries, setGeoQueries] = useState(() =>
     defaultGeoQueries(initialUrl, { companyName: undefined }),
   )
@@ -175,16 +198,35 @@ export function ScanLaunchForm({
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  const activeProject = projects.find((p) => p.id === projectId)
+  useEffect(() => {
+    setProjectOptions(projects)
+  }, [projects])
+
+  const activeProject = projectOptions.find((p) => p.id === projectId)
   const activeProjectName = projectLabel || activeProject?.name || projectId
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
-  const geoProjectReady = projects.length === 0 || Boolean(projectId.trim())
   const geoSuggestUrl =
     normalizeGeoUrl(url) ||
     (companyName.trim() ? urlFromCompanyName(companyName) : '') ||
     resolveGeoLaunchUrl(url, geoQueries, { companyName, fallback: '' })
+  const geoCreatePrefill = useMemo(() => {
+    const host =
+      hostFromUrl(normalizeGeoUrl(url) || urlFromCompanyName(companyName) || url) ||
+      hostFromUrl(urlFromCompanyName(companyName.trim() || 'brand'))
+    const name = companyName.trim() || (host ? `GEO · ${host}` : '')
+    return {
+      name,
+      domain: host,
+      description: '',
+    }
+  }, [url, companyName])
+
+  function openCreateProject() {
+    setCreateProjectPrefill(geoCreatePrefill)
+    setCreateProjectOpen(true)
+  }
 
   const showDepth = activeCapability === 'wcag' && !fromAudion
   const showCompose =
@@ -246,6 +288,24 @@ export function ScanLaunchForm({
     if (fromAudion) return
     setCapability(next)
     setError(null)
+    // GEO: empty project by default. WCAG / SEO: keep / restore a Collection pick.
+    if (next === 'geo') {
+      if (!(defaultProjectId && projectOptions.some((p) => p.id === defaultProjectId))) {
+        setProjectId('')
+      } else {
+        setProjectId(defaultProjectId)
+      }
+    } else if (!projectId.trim() && projectOptions[0]?.id) {
+      setProjectId(projectOptions[0].id)
+    }
+  }
+
+  function onProjectCreated(project: ProjectDetail) {
+    setProjectOptions((prev) => {
+      if (prev.some((p) => p.id === project.id)) return prev
+      return [...prev, { id: project.id, name: project.name, domain: project.domain }]
+    })
+    setProjectId(project.id)
   }
 
   function onWcagDepthChange(next: WcagDepth) {
@@ -343,11 +403,8 @@ export function ScanLaunchForm({
     if (!url.trim() && !trimmedCompany) {
       throw new Error('Provide a URL or company name to start a GEO check')
     }
-    if (projects.length > 0 && !projectId.trim()) {
-      throw new Error('Select a Collection project to start a GEO check')
-    }
     // Prefer explicit URL; company-only derives a normalized citation URL.
-    // projectId may be empty on staging DB (no fixtures); API resolves / auto-creates.
+    // Empty projectId → API auto-creates from URL / company (never silent first-project pick).
     const resolvedUrl = resolveGeoLaunchUrl(url, queries, {
       companyName: trimmedCompany || undefined,
       fallback: null,
@@ -362,7 +419,7 @@ export function ScanLaunchForm({
             companyName: trimmedCompany || undefined,
           })
     const models = modelsForLaunch(geoModels)
-    const resolvedProjectId = projectId.trim() || projects[0]?.id || undefined
+    const resolvedProjectId = projectId.trim() || undefined
     const body: Record<string, unknown> = {
       url: resolvedUrl,
       queries: resolvedQueries,
@@ -558,23 +615,31 @@ export function ScanLaunchForm({
                       className="checkion-launch-compose__project"
                       label="Project"
                       size="md"
-                      hint={
-                        projects.length === 0
-                          ? 'Auto-create when none exist'
-                          : 'CHECKION Collection capability'
-                      }
+                      hint="Optional — select, create, or auto-create on Start"
                     >
-                      <Select
-                        value={projectId}
-                        onChange={setProjectId}
-                        size="md"
-                        options={
-                          projects.length > 0
-                            ? projects.map((p) => ({ value: p.id, label: p.name }))
-                            : [{ value: '', label: 'Auto-create on start' }]
-                        }
-                        aria-label="Project"
-                      />
+                      <div className="checkion-launch-compose__project-stack">
+                        <Select
+                          value={projectId}
+                          onChange={setProjectId}
+                          size="md"
+                          placeholder="Select or create project…"
+                          options={projectOptions.map((p) => ({
+                            value: p.id,
+                            label: p.name,
+                          }))}
+                          aria-label="Project"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="checkion-launch-compose__new-project"
+                          onClick={openCreateProject}
+                          disabled={status === 'submitting'}
+                        >
+                          + New project
+                        </Button>
+                      </div>
                     </Field>
                   </div>
                 ) : (
@@ -610,7 +675,7 @@ export function ScanLaunchForm({
                           value={projectId}
                           onChange={setProjectId}
                           size="md"
-                          options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                          options={projectOptions.map((p) => ({ value: p.id, label: p.name }))}
                           aria-label="Project"
                         />
                       </Field>
@@ -649,7 +714,7 @@ export function ScanLaunchForm({
                     disabled={
                       status === 'submitting' ||
                       (activeCapability === 'geo'
-                        ? !geoTargetReady || !geoProjectReady
+                        ? !geoTargetReady
                         : !projectId || !url.trim())
                     }
                   >
@@ -662,10 +727,10 @@ export function ScanLaunchForm({
                 <Alert tone="info">Provide a URL or company name to start a GEO check.</Alert>
               ) : null}
 
-              {activeCapability === 'geo' && !projectId && projects.length === 0 ? (
+              {activeCapability === 'geo' && geoTargetReady && !projectId.trim() ? (
                 <Alert tone="info">
-                  No Collection project yet — Start will auto-create one from the target host
-                  (company from session or PLEXON_DEMO_COMPANY_ID when federating).
+                  No project selected — Start will auto-create one from the target URL or company
+                  name (federation company from session or PLEXON_DEMO_COMPANY_ID when set).
                 </Alert>
               ) : null}
 
@@ -675,6 +740,27 @@ export function ScanLaunchForm({
         </form>
       </Panel>
 
+      {activeCapability === 'geo' ? (
+        <ProjectFormDialog
+          open={createProjectOpen}
+          mode="create"
+          initial={
+            createProjectPrefill
+              ? {
+                  id: '',
+                  name: createProjectPrefill.name,
+                  domain: createProjectPrefill.domain,
+                  description: createProjectPrefill.description,
+                  platformProjectId: '',
+                  capabilityStatus: 'pending',
+                }
+              : undefined
+          }
+          redirectOnCreate={false}
+          onClose={() => setCreateProjectOpen(false)}
+          onSaved={onProjectCreated}
+        />
+      ) : null}
     </article>
   )
 }

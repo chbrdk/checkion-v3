@@ -67,6 +67,6 @@ curl -X POST http://localhost:3007/api/geo-jobs \
   -d '{"projectId":"proj-demo-1","url":"https://example.com","queries":["best widgets"],"models":["gpt-5.4-nano"],"competitors":["rival.com"]}'
 ```
 
-`projectId` may be omitted — the API resolves the first Collection project or auto-creates one from the URL host (federation company from session / `PLEXON_DEMO_COMPANY_ID`). There is no `companyId` field on GEO jobs.
+`projectId` may be omitted — the API auto-creates a Collection project from the URL host / company name (federation company from session / `PLEXON_DEMO_COMPANY_ID`). There is no `companyId` field on GEO jobs.
 
 CI / unit tests keep the fixture path (no OpenAI). Inject stubs via `setGeoPageScanRunnerForTests` / `setQueryRunChatClientForTests`. Seeded fixtures `geo-1` / `geo-2` / `geo-3` remain when live GEO is off.

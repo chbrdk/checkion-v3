@@ -2567,6 +2567,19 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
 }
 
+.checkion-launch-compose__project-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.checkion-launch-compose__new-project {
+  align-self: flex-start;
+  padding-inline: 0.15rem;
+}
+
 .checkion-launch-compose__geo {
   display: grid;
   gap: 1rem;

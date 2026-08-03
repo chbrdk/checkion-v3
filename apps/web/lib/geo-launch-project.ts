@@ -10,7 +10,6 @@ import {
   applyPlatformBinding,
   createProject,
   getProject,
-  listProjects,
 } from './fixtures/project-store'
 import { hostFromUrl } from './geo-query-suggest'
 import { getPlexonProfile } from './plexon-auth'
@@ -50,8 +49,8 @@ async function resolveOwnerAndCompany(request: Request): Promise<{
 /**
  * Resolve `projectId` for GEO create:
  * 1. Explicit id when the project exists
- * 2. First Collection project in the store
- * 3. Auto-create a project from the target URL / company name (federation company from demo/session)
+ * 2. Otherwise auto-create from the target URL / company name
+ *    (federation company from demo/session) — never silently pick another Collection
  */
 export async function resolveGeoLaunchProjectId(
   request: Request,
@@ -64,15 +63,10 @@ export async function resolveGeoLaunchProjectId(
       return {
         ok: false,
         error: 'project_not_found',
-        detail: `No Collection project with id "${requested}". Pick an existing project or omit projectId to auto-resolve.`,
+        detail: `No Collection project with id "${requested}". Pick an existing project or omit projectId to auto-create.`,
       }
     }
     return { ok: true, projectId: existing.id, created: false }
-  }
-
-  const listed = await listProjects()
-  if (listed[0]?.id) {
-    return { ok: true, projectId: listed[0].id, created: false }
   }
 
   const host = hostFromUrl(input.url)
@@ -83,7 +77,7 @@ export async function resolveGeoLaunchProjectId(
     let project = await createProject({
       name: `GEO · ${label}`,
       domain: host,
-      description: 'Auto-created for GEO launch when no Collection project existed.',
+      description: 'Auto-created for GEO launch when no Collection project was selected.',
       ownerPlexonUserId,
       platformCompanyId,
     })

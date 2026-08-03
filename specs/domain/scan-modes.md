@@ -38,7 +38,7 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 | Field | Rule |
 |-------|------|
 | URL **or** Company name | At least one required (clear validation / disabled Start when both empty). URL alone is enough; company alone is enough (server derives a normalized citation URL from the company slug and stores `companyName` for brand / title / Suggest). |
-| Project | Required when Collection projects exist (select visible). When the store is empty (staging / fresh DB), Start stays enabled and the API **auto-creates** a project from the target host / company (session / `PLEXON_DEMO_COMPANY_ID` for federation) — same fallback as before, shown via info Alert. |
+| Project | Optional. Defaults to **no selection** (placeholder “Select or create project…”). Dropdown lists existing Collection projects; **+ New project** opens the shared create dialog (name / domain / description, prefilled from company or host when available) and selects the created id. Start stays enabled when URL or company is set; when Project is still empty on submit, omit `projectId` and the API **auto-creates** from the target host / company (session / `PLEXON_DEMO_COMPANY_ID` for federation) — info Alert documents this. Deep-link `projectId` still prefills when valid. WCAG / SEO project select is unchanged (still auto-picks first when present). |
 | `queries` / `models` | Visible GEO extras; empty queries fall back to brand-derived defaults client-side (`defaultGeoQueries`, preferring company name when set). |
 
 Deep-links (`/scan?mode=geo&projectId=&url=`) still prefill URL + Project on the **visible** compose row — not silent-only.
@@ -83,7 +83,7 @@ Deep-links (`paths.routes.scanLaunch`):
 ### GEO (`geo`)
 - Gate: `lib/geo-eeat/live-geo-gate.ts` — live when `DATABASE_URL` **or** `CHECKION_LIVE_GEO=1`; `CHECKION_LIVE_GEO=0` forces synthesize.
 - Live requires `OPENAI_API_KEY`; fixture path synthesizes a completed magazine overview instantly.
-- Create: `POST /api/geo-jobs` with `{ url?, companyName?, queries[], projectId?, models?, competitors?, title? }`. At least one of `url` / `companyName` required; when only `companyName`, server derives a normalized citation URL. `projectId` is required when projects exist (form); when omitted with an empty store, API auto-creates from URL / company (session/`PLEXON_DEMO_COMPANY_ID`). **`companyId` is not a GEO-job field** — company name is a brand hint, not a federation id. Live requires `OPENAI_API_KEY`.
+- Create: `POST /api/geo-jobs` with `{ url?, companyName?, queries[], projectId?, models?, competitors?, title? }`. At least one of `url` / `companyName` required; when only `companyName`, server derives a normalized citation URL. `projectId` is optional — when omitted / empty, API **auto-creates** a Collection project from URL / company (session/`PLEXON_DEMO_COMPANY_ID`); when provided, must exist. Form does not pre-select or silently substitute another project. **`companyId` is not a GEO-job field** — company name is a brand hint, not a federation id. Live requires `OPENAI_API_KEY`.
 - Suggest (launch only): `POST /api/geo/suggest-queries` with `{ url?, companyName?, project?, existing?, max? }` — see GEO query list above.
 
 ## Cross-product (AUDION)
