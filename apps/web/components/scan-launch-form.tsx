@@ -159,7 +159,7 @@ export function ScanLaunchForm({
   fromAudion = false,
   projectLabel,
 }: {
-  projects: Array<{ id: string; name: string; domain?: string }>
+  projects: Array<{ id: string; name: string; domain?: string; platformProjectId?: string }>
   /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
   defaultMode?: LaunchMode
   defaultProjectId?: string
