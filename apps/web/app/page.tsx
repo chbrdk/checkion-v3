@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Button, Chip, Panel, SectionChrome, StatLede, StatLedeGroup, Text } from '@msqdx/ui'
+import { Button, Chip, Panel, SectionChrome, Lede, LedeStrip, Text } from '@msqdx/ui'
 import { AppShell } from '../components/app-shell'
 import { listProjects } from '../lib/fixtures/project-store'
 import { listDomainScans, listScans } from '../lib/fixtures/scan-store'
@@ -23,12 +23,12 @@ export default async function HomePage() {
       <div className="checkion-magazine">
         <Panel>
           <SectionChrome title="Demo snapshot" meta="fixtures" />
-          <StatLedeGroup>
-            <StatLede label="Projects" value={projects.length} />
-            <StatLede label="Scans" value={((await listScans())).length} />
-            <StatLede label="Domain" value={((await listDomainScans())).length} />
-            <StatLede label="Shares" value={shares.length} />
-          </StatLedeGroup>
+          <LedeStrip>
+            <Lede label="Projects" value={projects.length} />
+            <Lede label="Scans" value={((await listScans())).length} />
+            <Lede label="Domain" value={((await listDomainScans())).length} />
+            <Lede label="Shares" value={shares.length} />
+          </LedeStrip>
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             <Link href={paths.routes.scan}>
               <Button>New scan</Button>

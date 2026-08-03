@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, CardActions, EmptyState, Input, StatusDot, Text } from '@msqdx/ui'
+import { Button, CardActions, Chip, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -123,17 +123,15 @@ function ProjectCollectionCard({
 
       <CardActions className="checkion-collection-card-actions">
         <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
-          <Button variant="ghost" size="md">
-            Open
-          </Button>
+          <Button variant="ghost">Open</Button>
         </Link>
         <span className="checkion-collection-card-link">
-          <Button variant="ghost" size="md" type="button" onClick={() => onEdit(project)}>
+          <Button variant="ghost" type="button" onClick={() => onEdit(project)}>
             Edit
           </Button>
         </span>
         <span className="checkion-collection-card-link">
-          <Button variant="ghost" size="md" type="button" onClick={() => onDelete(project)}>
+          <Button variant="ghost" type="button" onClick={() => onDelete(project)}>
             Delete
           </Button>
         </span>
@@ -211,7 +209,7 @@ export function ProjectListPanel({
           placeholder="Search name or domain"
           aria-label="Search projects"
         />
-        <div className="checkion-chip-row" role="group" aria-label="Filter by capability">
+        <FilterRow role="group" aria-label="Filter by capability">
           {(
             [
               ['all', 'All'],
@@ -220,17 +218,16 @@ export function ProjectListPanel({
               ['error', 'Error'],
             ] as const
           ).map(([id, label]) => (
-            <button
+            <Chip
               key={id}
-              type="button"
-              className="checkion-domain-filter"
-              data-active={capFilter === id ? 'true' : undefined}
+              size="sm"
+              selected={capFilter === id}
               onClick={() => setCapFilter(id)}
             >
               {label}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </FilterRow>
       </div>
 
       <div className="checkion-collection-list">
@@ -396,17 +393,15 @@ export function ProjectWorkspace({
           ) : null}
         </div>
         <div className="checkion-project-cover__actions">
-          <Link
-            href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}
-            className="ds-btn ds-btn--primary ds-btn--lg"
-          >
-            <span className="ds-btn__label">New scan</span>
+          <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
+            <Button variant="primary" size="lg">
+              New scan
+            </Button>
           </Link>
-          <Link
-            href={geoHref}
-            className="ds-btn ds-btn--ghost ds-btn--lg"
-          >
-            <span className="ds-btn__label">{latestGeo ? 'Open GEO' : 'Start GEO'}</span>
+          <Link href={geoHref}>
+            <Button variant="ghost" size="lg">
+              {latestGeo ? 'Open GEO' : 'Start GEO'}
+            </Button>
           </Link>
         </div>
       </header>

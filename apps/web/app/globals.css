@@ -3357,16 +3357,22 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 }
 
 .checkion-launch-compose__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
   padding-top: 0.15rem;
 }
 
-/* Magazine-scale primary CTA — larger than ds-btn--lg default */
-.checkion-launch-compose__actions .ds-btn {
-  min-height: 3.25rem;
-  padding: 0.85rem 1.45rem;
-  font-size: clamp(1rem, 1.8vw, 1.15rem);
-  font-weight: var(--weight-medium, 500);
-  letter-spacing: -0.01em;
+/* Launch CTAs use Button size=lg (magazine defaults in @msqdx/ui) */
+.checkion-launch-compose__actions > a {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+.checkion-project-cover__actions > a {
+  text-decoration: none;
+  display: inline-flex;
 }
 
 .checkion-launch-compose .ds-field {

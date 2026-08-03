@@ -4,9 +4,9 @@ import type {
   ScanStatus,
   ScoreCard,
 } from '@checkion-v3/contracts'
-import type { StatLedeTone, TopStatusLevel } from '@msqdx/ui'
+import type { LedeTone, TopStatusLevel } from '@msqdx/ui'
 
-export function scoreTone(value: number | null | undefined): StatLedeTone {
+export function scoreTone(value: number | null | undefined): LedeTone {
   if (value == null) return 'default'
   if (value >= 80) return 'pos'
   if (value >= 60) return 'low'

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
+import { Button, Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from './app-shell'
 import { listGeoJobs } from '../lib/fixtures/geo-store'
 import { listProjects } from '../lib/fixtures/project-store'
@@ -23,11 +23,8 @@ export async function GeoIndexPage() {
             the central launch form.
           </Text>
           <div className="checkion-scan-form__actions checkion-scan-form__actions--after-copy">
-            <Link
-              href={paths.routes.scanLaunch({ mode: 'geo' })}
-              className="ds-btn ds-btn--primary ds-btn--sm"
-            >
-              <span className="ds-btn__label">Start GEO job</span>
+            <Link href={paths.routes.scanLaunch({ mode: 'geo' })}>
+              <Button variant="primary">Start GEO job</Button>
             </Link>
           </div>
         </Panel>

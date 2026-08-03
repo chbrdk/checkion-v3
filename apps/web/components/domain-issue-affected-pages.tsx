@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Button, Chip, FilterRow } from '@msqdx/ui'
 import type { IssueAffectedPagesResult } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
@@ -110,25 +111,23 @@ export function DomainIssueAffectedPages({
     <div className="checkion-domain-issues__affected">
       <div className="checkion-domain-issues__affected-toolbar">
         <p className="checkion-domain-issues__affected-label">Affected pages</p>
-        <div className="checkion-chip-row" role="group" aria-label="Sort affected pages">
-          <button
-            type="button"
-            className="checkion-domain-filter"
-            data-active={sort === 'issues-desc' ? 'true' : undefined}
+        <FilterRow role="group" aria-label="Sort affected pages">
+          <Chip
+            size="sm"
+            selected={sort === 'issues-desc'}
             onClick={() => setSort('issues-desc')}
           >
             Most issues
-          </button>
-          <button
-            type="button"
-            className="checkion-domain-filter"
-            data-active={sort === 'issues-asc' ? 'true' : undefined}
+          </Chip>
+          <Chip
+            size="sm"
+            selected={sort === 'issues-asc'}
             onClick={() => setSort('issues-asc')}
           >
             Fewest issues
-          </button>
-        </div>
-        <div className="checkion-chip-row" role="group" aria-label="Filter by issue density">
+          </Chip>
+        </FilterRow>
+        <FilterRow role="group" aria-label="Filter by issue density">
           {(
             [
               ['all', 'All'],
@@ -137,17 +136,16 @@ export function DomainIssueAffectedPages({
               ['light', 'Light'],
             ] as const
           ).map(([id, label]) => (
-            <button
+            <Chip
               key={id}
-              type="button"
-              className="checkion-domain-filter"
-              data-active={density === id ? 'true' : undefined}
+              size="sm"
+              selected={density === id}
               onClick={() => setDensity(id)}
             >
               {label}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </FilterRow>
       </div>
 
       {loading && !data ? (
@@ -199,22 +197,22 @@ export function DomainIssueAffectedPages({
             {total.toLocaleString()}
           </p>
           <div className="checkion-domain-issues__pager-actions">
-            <button
-              type="button"
-              className="checkion-domain-filter"
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={page <= 1 || loading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               Previous
-            </button>
-            <button
-              type="button"
-              className="checkion-domain-filter"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={page >= pageCount || loading}
               onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             >
               Next
-            </button>
+            </Button>
           </div>
         </nav>
       ) : null}

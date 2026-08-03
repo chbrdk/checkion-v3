@@ -1,7 +1,7 @@
 'use client'
 
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { Chip, EmptyState, Input } from '@msqdx/ui'
+import { Button, Chip, EmptyState, FilterRow, Input } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
 import { DomainIssueAffectedPages } from './domain-issue-affected-pages'
 
@@ -81,19 +81,13 @@ export function DomainIssuesPanel({
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <div className="checkion-chip-row" role="group" aria-label="Severity filter">
+        <FilterRow role="group" aria-label="Severity filter">
           {SEVERITIES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="checkion-domain-filter"
-              data-active={severity === s ? 'true' : undefined}
-              onClick={() => setSeverity(s)}
-            >
+            <Chip key={s} size="sm" selected={severity === s} onClick={() => setSeverity(s)}>
               {s}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </FilterRow>
       </div>
 
       {filtered.length === 0 ? (
@@ -178,22 +172,22 @@ export function DomainIssuesPanel({
               {total.toLocaleString()}
             </p>
             <div className="checkion-domain-issues__pager-actions">
-              <button
-                type="button"
-                className="checkion-domain-filter"
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 Previous
-              </button>
-              <button
-                type="button"
-                className="checkion-domain-filter"
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 disabled={page >= pageCount}
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
               >
                 Next
-              </button>
+              </Button>
             </div>
           </nav>
         </>
