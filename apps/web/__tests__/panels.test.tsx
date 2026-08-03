@@ -80,7 +80,7 @@ describe('panels smoke', () => {
     expect(screen.getByRole('heading', { name: 'Synced' })).toBeTruthy()
   })
 
-  it('renders project workspace cover and tables', async () => {
+  it('renders project workspace magazine cover and chapters', async () => {
     render(
       <ProjectWorkspace
         project={{
@@ -121,16 +121,57 @@ describe('panels smoke', () => {
             completedAt: '2026-07-31T00:00:00.000Z',
           },
         ]}
+        geoJobs={[
+          {
+            id: 'geo-x',
+            title: 'Example GEO',
+            projectId: 'p1',
+            url: 'https://example.com',
+            status: 'completed',
+            overallScore: 61,
+            completedAt: '2026-07-30T18:00:00.000Z',
+            queryCount: 4,
+            modelCount: 2,
+            citedShare: 40,
+          },
+        ]}
       />,
     )
+    expect(document.querySelector('.checkion-project-workspace')).toBeTruthy()
+    expect(document.querySelector('.ds-panel')).toBeNull()
     expect(screen.getByRole('heading', { name: /Demo Workspace/i })).toBeTruthy()
     expect(screen.getByText(/Workspace lede/i)).toBeTruthy()
+    expect(document.querySelector('.checkion-project-cover__host')?.textContent).toBe('example.com')
+    expect(screen.getByText(/In sync/i)).toBeTruthy()
+    expect(screen.getByTitle('Plexon collection id')).toHaveTextContent('plx-1')
+    expect(screen.getByRole('heading', { name: /Corpus pulse/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Single scans/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Domain crawls/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /GEO runs/i })).toBeTruthy()
     expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
       'href',
       '/scan?projectId=p1&mode=single',
     )
-    expect(screen.getByRole('table', { name: /Recent single scans/i })).toBeTruthy()
-    expect(screen.getByRole('table', { name: /Domain crawls/i })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /Open GEO/i })).toHaveAttribute(
+      'href',
+      '/geo/geo-x/overview',
+    )
+    expect(screen.getByRole('list', { name: /Recent single scans/i })).toBeTruthy()
+    expect(screen.getByRole('list', { name: /Domain crawls/i })).toBeTruthy()
+    expect(screen.getByRole('list', { name: /GEO runs/i })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /example\.com\/page/i })).toHaveAttribute(
+      'href',
+      '/results/scan-1/overview',
+    )
+    expect(
+      screen.getByRole('link', { name: /^example\.com$/i }),
+    ).toHaveAttribute('href', '/domain/domain-x/overview')
+    expect(screen.getByRole('link', { name: /Example GEO/i })).toHaveAttribute(
+      'href',
+      '/geo/geo-x/overview',
+    )
+    expect(screen.getByRole('button', { name: /^Edit$/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Delete$/i })).toBeTruthy()
   })
 
   it('renders domain corpus magazine (distinct from single)', async () => {

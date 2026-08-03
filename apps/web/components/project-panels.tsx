@@ -2,10 +2,11 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, CardActions, EmptyState, Input, Panel, SectionChrome, StatusDot, Text } from '@msqdx/ui'
+import { Button, CardActions, EmptyState, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
+  GeoJobSummary,
   ProjectDetail,
   ProjectSummary,
   ScanSummary,
@@ -275,48 +276,85 @@ export function ProjectListPanel({
   )
 }
 
+function WorkspaceChapter({
+  eyebrow,
+  title,
+  deck,
+  meta,
+  children,
+}: {
+  eyebrow: string
+  title: string
+  deck?: string
+  meta?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="checkion-project-chapter">
+      <header className="checkion-project-chapter__head">
+        <div>
+          <p className="checkion-spread__eyebrow">{eyebrow}</p>
+          <h2 className="checkion-spread__headline">{title}</h2>
+          {deck ? <p className="checkion-project-chapter__deck">{deck}</p> : null}
+        </div>
+        {meta ? (
+          <Text role="meta" as="p" className="checkion-project-chapter__meta">
+            {meta}
+          </Text>
+        ) : null}
+      </header>
+      {children}
+    </section>
+  )
+}
+
 export function ProjectWorkspace({
   project,
   recentScans,
   domains,
+  geoJobs = [],
 }: {
   project: ProjectDetail
   recentScans: ScanSummary[]
   domains: DomainScanLight[]
+  geoJobs?: GeoJobSummary[]
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const singleScans = recentScans.filter((s) => s.mode === 'single')
   const deepScans = recentScans.filter((s) => s.mode === 'deep')
+  const domainCount = domains.length || deepScans.length
+  const latestGeo = geoJobs[0] ?? null
   const latestScore =
     recentScans.find((s) => s.overallScore != null)?.overallScore ??
     domains.find((d) => d.overallScore != null)?.overallScore ??
+    latestGeo?.overallScore ??
     null
+  const geoHref = latestGeo
+    ? paths.routes.geoSection(latestGeo.id, 'overview')
+    : paths.routes.scanLaunch({
+        projectId: project.id,
+        mode: 'geo',
+        url: project.domain.startsWith('http') ? project.domain : `https://${project.domain}`,
+      })
+  const syncLabel = capabilityLabel(project.capabilityStatus)
+  const syncHint = capabilityHint(project.capabilityStatus)
 
   return (
-    <div className="checkion-magazine checkion-project-workspace">
-      <header className="checkion-project-cover">
-        <p className="checkion-spread__eyebrow">Project</p>
-        <h1 className="checkion-project-cover__title">{project.name}</h1>
-        <p className="checkion-project-cover__lede">
-          {project.description || `Capability mirror for ${project.domain}.`}
-        </p>
-        <div className="checkion-project-cover__meta">
-          <span>{project.domain}</span>
-          <span className="checkion-status-line">
-            <StatusDot level={capabilityLevel(project.capabilityStatus)} />
-            {project.capabilityStatus}
+    <article
+      className="checkion-magazine checkion-magazine--editorial checkion-project-workspace"
+      data-section="project-workspace"
+    >
+      <div className="checkion-magazine-topbar">
+        <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
+          <Link href={paths.routes.projects}>Projects</Link>
+          <span className="briefing-nav-sep" aria-hidden>
+            /
           </span>
-          <span title="Plexon collection id">{project.platformProjectId}</span>
-        </div>
-        <div className="checkion-project-cover__actions">
-          <Link
-            href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}
-            className="ds-btn ds-btn--primary ds-btn--sm"
-          >
-            <span className="ds-btn__label">New scan</span>
-          </Link>
+          <span>{project.name}</span>
+        </nav>
+        <div className="checkion-magazine-topbar-actions">
           <Button type="button" size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
             Edit
           </Button>
@@ -324,111 +362,220 @@ export function ProjectWorkspace({
             Delete
           </Button>
         </div>
+      </div>
+
+      <header className="checkion-project-cover">
+        <div className="checkion-project-cover__copy">
+          <p className="checkion-cover__kicker">CHECKION capability</p>
+          <h1 className="checkion-project-cover__title">{project.name}</h1>
+          <p className="checkion-project-cover__host">{project.domain}</p>
+          <p className="checkion-project-cover__lede">
+            {project.description || `Capability mirror for ${project.domain}.`}
+          </p>
+          <ul className="checkion-magazine-facets geo-places" aria-label="Project attributes">
+            <li data-kind={project.capabilityStatus}>
+              <span className="meta">Capability</span>
+              <span className="checkion-status-line">
+                <StatusDot level={capabilityLevel(project.capabilityStatus)} />
+                {syncLabel}
+              </span>
+            </li>
+            <li data-kind="collection">
+              <span className="meta">Collection</span>
+              <span title="Plexon collection id">{project.platformProjectId}</span>
+            </li>
+            <li data-kind="time">
+              <span className="meta">Last activity</span>
+              <span>{formatScanInstant(project.lastScanAt)}</span>
+            </li>
+          </ul>
+          {syncHint ? (
+            <Text role="meta" as="p" className="checkion-project-cover__hint">
+              {syncHint}
+            </Text>
+          ) : null}
+        </div>
+        <div className="checkion-project-cover__actions">
+          <Link
+            href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}
+            className="ds-btn ds-btn--primary ds-btn--lg"
+          >
+            <span className="ds-btn__label">New scan</span>
+          </Link>
+          <Link
+            href={geoHref}
+            className="ds-btn ds-btn--ghost ds-btn--lg"
+          >
+            <span className="ds-btn__label">{latestGeo ? 'Open GEO' : 'Start GEO'}</span>
+          </Link>
+        </div>
       </header>
 
-      <Panel>
-        <SectionChrome title="Activity" meta="Corpus pulse" />
-        <div className="checkion-project-activity">
-          <div>
-            <p className="checkion-project-activity__label">Single scans</p>
-            <p className="checkion-project-activity__value">{singleScans.length}</p>
+      <WorkspaceChapter
+        eyebrow="01 · Pulse"
+        title="Corpus pulse"
+        deck="How this capability has been reading the site — singles, crawls, and answer-engine presence."
+      >
+        <div className="checkion-project-pulse" aria-label="Corpus pulse">
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{singleScans.length}</p>
+            <p className="checkion-project-pulse__label">Single scans</p>
           </div>
-          <div>
-            <p className="checkion-project-activity__label">Domain crawls</p>
-            <p className="checkion-project-activity__value">{domains.length || deepScans.length}</p>
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{domainCount}</p>
+            <p className="checkion-project-pulse__label">Domain crawls</p>
           </div>
-          <div>
-            <p className="checkion-project-activity__label">Last scan</p>
-            <p className="checkion-project-activity__value checkion-project-activity__value--meta">
-              {formatScanInstant(project.lastScanAt)}
-            </p>
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{geoJobs.length}</p>
+            <p className="checkion-project-pulse__label">GEO runs</p>
           </div>
-          <div data-tone={scoreTone(latestScore)}>
-            <p className="checkion-project-activity__label">Latest score</p>
-            <p className="checkion-project-activity__value">
+          <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
+            <p className="checkion-project-pulse__value">
               {latestScore != null ? latestScore : '—'}
             </p>
+            <p className="checkion-project-pulse__label">Latest score</p>
           </div>
         </div>
-      </Panel>
+      </WorkspaceChapter>
 
-      <Panel>
-        <SectionChrome title="Recent single scans" meta={`${singleScans.length}`} />
+      <WorkspaceChapter
+        eyebrow="02 · Pages"
+        title="Single scans"
+        deck="One URL, one magazine — WCAG and page signals."
+        meta={`${singleScans.length}`}
+      >
         {singleScans.length === 0 ? (
-          <Text role="meta">No single-page scans yet.</Text>
+          <EmptyState className="checkion-project-chapter__empty">
+            No single-page scans yet.{' '}
+            <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
+              Start one
+            </Link>
+            .
+          </EmptyState>
         ) : (
-          <table className="checkion-report__table checkion-projects__table" aria-label="Recent single scans">
-            <thead>
-              <tr>
-                <th scope="col">Page</th>
-                <th scope="col">Source</th>
-                <th scope="col">Status</th>
-                <th scope="col">Score</th>
-                <th scope="col">Completed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {singleScans.map((scan) => (
-                <tr key={scan.id} data-tone={scoreTone(scan.overallScore)}>
-                  <th scope="row">
-                    <Link href={paths.routes.resultSection(scan.id, 'overview')} title={scan.url}>
-                      {compactUrl(scan.url)}
-                    </Link>
-                  </th>
-                  <td>
-                    {hasAudionCorrelation(scan) ? (
-                      <span title={scan.audionRunId ? `AUDION run ${scan.audionRunId}` : 'AUDION journey'}>
-                        From Audion
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td>{scan.status}</td>
-                  <td className="checkion-projects__num">
-                    {scan.overallScore != null ? scan.overallScore : '—'}
-                  </td>
-                  <td>{formatScanInstant(scan.completedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ol className="checkion-magazine-list checkion-project-run-list" aria-label="Recent single scans">
+            {singleScans.map((scan, index) => (
+              <li key={scan.id} data-tone={scoreTone(scan.overallScore)}>
+                <span className="checkion-magazine-list-num" aria-hidden>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="checkion-project-run-list__main">
+                  <Link
+                    href={paths.routes.resultSection(scan.id, 'overview')}
+                    className="checkion-project-run-list__title"
+                    title={scan.url}
+                  >
+                    {compactUrl(scan.url)}
+                  </Link>
+                  <Text role="meta" as="p" className="checkion-project-run-list__meta">
+                    {scan.status}
+                    {hasAudionCorrelation(scan) ? ' · From Audion' : null}
+                    {' · '}
+                    {formatScanInstant(scan.completedAt)}
+                  </Text>
+                </div>
+                <span className="checkion-project-run-list__score" data-tone={scoreTone(scan.overallScore)}>
+                  {scan.overallScore != null ? scan.overallScore : '—'}
+                </span>
+              </li>
+            ))}
+          </ol>
         )}
-      </Panel>
+      </WorkspaceChapter>
 
-      <Panel>
-        <SectionChrome title="Domain crawls" meta={`${domains.length}`} />
+      <WorkspaceChapter
+        eyebrow="03 · Corpus"
+        title="Domain crawls"
+        deck="Spider the host into a light corpus magazine."
+        meta={`${domains.length}`}
+      >
         {domains.length === 0 ? (
-          <Text role="meta">No domain fixtures for this project.</Text>
+          <EmptyState className="checkion-project-chapter__empty">
+            No domain crawls yet.{' '}
+            <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'deep' })}>
+              Launch a crawl
+            </Link>
+            .
+          </EmptyState>
         ) : (
-          <table className="checkion-report__table checkion-projects__table" aria-label="Domain crawls">
-            <thead>
-              <tr>
-                <th scope="col">Root</th>
-                <th scope="col">Pages</th>
-                <th scope="col">Score</th>
-                <th scope="col">Issues</th>
-              </tr>
-            </thead>
-            <tbody>
-              {domains.map((d) => (
-                <tr key={d.id} data-tone={scoreTone(d.overallScore)}>
-                  <th scope="row">
-                    <Link href={paths.routes.domainDetail(d.id)} title={d.rootUrl}>
-                      {compactUrl(d.rootUrl)}
-                    </Link>
-                  </th>
-                  <td className="checkion-projects__num">{d.pageCount.toLocaleString()}</td>
-                  <td className="checkion-projects__num">
-                    {d.overallScore != null ? d.overallScore : '—'}
-                  </td>
-                  <td className="checkion-projects__num">{d.issueCount.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ol className="checkion-magazine-list checkion-project-run-list" aria-label="Domain crawls">
+            {domains.map((d, index) => (
+              <li key={d.id} data-tone={scoreTone(d.overallScore)}>
+                <span className="checkion-magazine-list-num" aria-hidden>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="checkion-project-run-list__main">
+                  <Link
+                    href={paths.routes.domainSection(d.id, 'overview')}
+                    className="checkion-project-run-list__title"
+                    title={d.rootUrl}
+                  >
+                    {compactUrl(d.rootUrl)}
+                  </Link>
+                  <Text role="meta" as="p" className="checkion-project-run-list__meta">
+                    {d.pageCount.toLocaleString()} pages · {d.issueCount.toLocaleString()} issues
+                    {' · '}
+                    {formatScanInstant(d.completedAt)}
+                  </Text>
+                </div>
+                <span className="checkion-project-run-list__score" data-tone={scoreTone(d.overallScore)}>
+                  {d.overallScore != null ? d.overallScore : '—'}
+                </span>
+              </li>
+            ))}
+          </ol>
         )}
-      </Panel>
+      </WorkspaceChapter>
+
+      <WorkspaceChapter
+        eyebrow="04 · Presence"
+        title="GEO runs"
+        deck="Where answer engines place this domain."
+        meta={`${geoJobs.length}`}
+      >
+        {geoJobs.length === 0 ? (
+          <EmptyState className="checkion-project-chapter__empty">
+            No GEO magazines yet.{' '}
+            <Link
+              href={paths.routes.scanLaunch({
+                projectId: project.id,
+                mode: 'geo',
+                url: project.domain.startsWith('http') ? project.domain : `https://${project.domain}`,
+              })}
+            >
+              Start GEO
+            </Link>
+            .
+          </EmptyState>
+        ) : (
+          <ol className="checkion-magazine-list checkion-project-run-list" aria-label="GEO runs">
+            {geoJobs.map((job, index) => (
+              <li key={job.id} data-tone={scoreTone(job.overallScore)}>
+                <span className="checkion-magazine-list-num" aria-hidden>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="checkion-project-run-list__main">
+                  <Link
+                    href={paths.routes.geoSection(job.id, 'overview')}
+                    className="checkion-project-run-list__title"
+                    title={job.url}
+                  >
+                    {job.title}
+                  </Link>
+                  <Text role="meta" as="p" className="checkion-project-run-list__meta">
+                    {job.status} · {job.queryCount} queries · {job.citedShare}% cited
+                    {' · '}
+                    {formatScanInstant(job.completedAt)}
+                  </Text>
+                </div>
+                <span className="checkion-project-run-list__score" data-tone={scoreTone(job.overallScore)}>
+                  {job.overallScore != null ? job.overallScore : '—'}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </WorkspaceChapter>
 
       <ProjectFormDialog
         open={editOpen}
@@ -441,6 +588,6 @@ export function ProjectWorkspace({
         project={project}
         onClose={() => setDeleteOpen(false)}
       />
-    </div>
+    </article>
   )
 }
