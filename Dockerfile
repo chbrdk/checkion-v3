@@ -7,8 +7,8 @@
 #           -e CHECKION_FEDERATION_MODE=dummy \
 #           checkion-v3
 #
-# Sibling design system: clones github.com/chbrdk/msqdx-ui next to the app
-# so file: deps, webpack aliases (`../../../msqdx-ui/…`), and barrels resolve.
+# Sibling design system: fetches github.com/chbrdk/msqdx-ui at MSQDX_UI_REF next
+# to the app so file: deps, webpack aliases (`../../../msqdx-ui/…`), and barrels resolve.
 # Coolify: Dockerfile path `Dockerfile`, domain https://checkion-v3.projects-a.plygrnd.tech
 # (see knowledge/staging-coolify.md). Fixture mode needs no AUTH/DB; live auth+DB via entrypoint.
 
@@ -55,11 +55,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && corepack enable
 
 # ---- Design system (msqdx-ui) ----
+# Pin a commit (not floating `main`) so Coolify/Docker cannot reuse a stale `ds`
+# layer that predates barrel targets like CardActions / Lede — that surfaces as:
+#   ./lib/msqdx-ui.ts Module not found: …/components/CardActions
+# Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-ARG MSQDX_UI_BRANCH=main
-RUN git clone --depth 1 -b "${MSQDX_UI_BRANCH}" "${MSQDX_UI_REPO}" /workspace/msqdx-ui \
+ARG MSQDX_UI_REF=30431337663b5a89d0fae6bbd01a0d5667433b3b
+RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
+    && git remote add origin "${MSQDX_UI_REPO}" \
+    && git fetch --depth 1 origin "${MSQDX_UI_REF}" \
+    && git checkout --force FETCH_HEAD \
+    && test "$(git rev-parse HEAD)" = "${MSQDX_UI_REF}" \
     && pnpm install --frozen-lockfile \
     && pnpm build
 
@@ -76,8 +84,12 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund --include=dev
 
 # Sibling layout: …/workspace/checkion-v3 + …/workspace/msqdx-ui
+# Assert barrel source targets exist (RSC alias re-exports deep src paths, not package dist).
 RUN test -d /workspace/msqdx-ui/packages/ui/src \
-    && test -f /workspace/msqdx-ui/packages/ui-tokens/dist/index.js
+    && test -f /workspace/msqdx-ui/packages/ui-tokens/dist/index.js \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/CardActions.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/Lede.tsx \
+    && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts
 
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=6144

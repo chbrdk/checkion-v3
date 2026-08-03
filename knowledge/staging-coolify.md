@@ -10,7 +10,7 @@ Deploy **checkion-v3** into Coolify island **msqdx-v3-staging** next to plexon-v
 | Environment | `staging` |
 | App name | `checkion-v3` (never touch prod CHECKION) |
 | Domain | `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`) |
-| Dockerfile | repo root `Dockerfile` (clones `chbrdk/msqdx-ui`) |
+| Dockerfile | repo root `Dockerfile` (pins `chbrdk/msqdx-ui` via `MSQDX_UI_REF`) |
 | Container port | **3007** |
 | Data mode | Fixtures by default (`CHECKION_FEDERATION_MODE=dummy`); optional Postgres via `DATABASE_URL` |
 | Live scans | On when `DATABASE_URL` set or `CHECKION_LIVE_SCANS=1`; runner installs Puppeteer Chrome + OS deps |

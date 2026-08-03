@@ -17,7 +17,9 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('checkion-v3.projects-a.plygrnd.tech')
     expect(df).toContain('msqdx-ui')
     expect(df).toContain('EXPOSE 3007')
-    expect(df).toContain('git clone')
+    expect(df).toContain('MSQDX_UI_REF=')
+    expect(df).toMatch(/git fetch --depth 1 origin "\$\{MSQDX_UI_REF\}"/)
+    expect(df).toContain('CardActions.tsx')
     expect(df).toContain('docker-entrypoint.sh')
     expect(df).toContain('apps/web/drizzle.config.ts')
     expect(df).toContain('libnss3')
@@ -25,6 +27,19 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('PUPPETEER_CACHE_DIR')
     expect(df).toContain('puppeteer browsers install chrome')
     expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
+  })
+
+  it('pins msqdx-ui to a full commit SHA (busts stale Coolify ds cache)', () => {
+    const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
+    const match = df.match(/ARG MSQDX_UI_REF=([0-9a-f]{40})/)
+    expect(match?.[1]).toMatch(/^[0-9a-f]{40}$/)
+  })
+
+  it('re-exports CardActions from the curated @msqdx/ui barrel', () => {
+    const barrel = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui.ts'), 'utf8')
+    expect(barrel).toContain("export { CardActions } from '../../../../msqdx-ui/packages/ui/src/components/CardActions'")
+    const cardActions = resolve(repoRoot, '../msqdx-ui/packages/ui/src/components/CardActions.tsx')
+    expect(existsSync(cardActions)).toBe(true)
   })
 
   it('installs Puppeteer Chrome in the runner stage (not only OS libs)', () => {
