@@ -44,6 +44,8 @@ export const paths = {
   envFederationMode: 'CHECKION_FEDERATION_MODE',
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
+  /** Cap for POST /api/fetch-page bodyTextExcerpt (matches scanner bodyTextExcerpt). */
+  fetchPageMaxChars: 6000,
   envOpenAiApiKey: 'OPENAI_API_KEY',
   envOpenAiModel: 'OPENAI_MODEL',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
@@ -116,6 +118,8 @@ export const paths = {
     apiProjects: '/api/projects',
     apiProjectDetail: (id: string) => `/api/projects/${id}`,
     apiScans: '/api/scans',
+    /** Thin Chromium page text for AUDION research (no axe/Pa11y). */
+    apiFetchPage: '/api/fetch-page',
     apiScanDetail: (id: string) => `/api/scans/${id}`,
     apiScanOverview: (id: string) => `/api/scans/${id}/overview`,
     apiScanIssues: (id: string) => `/api/scans/${id}/issues`,

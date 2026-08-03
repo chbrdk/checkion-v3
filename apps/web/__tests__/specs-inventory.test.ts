@@ -28,6 +28,7 @@ const requiredSpecs = [
   'specs/domain/project-reports.md',
   'specs/api/projects.md',
   'specs/api/scans.md',
+  'specs/api/fetch-page.md',
   'specs/api/domain-scans.md',
   'specs/api/domain-scan-payload.md',
   'specs/api/share.md',
@@ -69,6 +70,8 @@ describe('specs inventory', () => {
     expect(paths.routes.domainSection('d1', 'issues')).toBe('/domain/d1/issues')
     expect(paths.routes.domainSection('d1', 'detail')).toBe('/domain/d1/detail')
     expect(paths.routes.apiScans).toBe('/api/scans')
+    expect(paths.routes.apiFetchPage).toBe('/api/fetch-page')
+    expect(paths.fetchPageMaxChars).toBe(6000)
     expect(paths.routes.shareDetail('tok')).toBe('/share/tok')
     expect(paths.routes.apiShare).toBe('/api/share')
     expect(paths.dataSource).toBe('fixtures')

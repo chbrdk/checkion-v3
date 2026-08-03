@@ -89,5 +89,7 @@ Deep-links (`paths.routes.scanLaunch`):
 ## Cross-product (AUDION)
 AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / Studies) via `POST /api/scans` or `/scan?projectId&mode=single&url=` — see `audion-journey-scan-trigger.md`. That path must **not** use `deep`, domain crawl, `geo`, or `seo`.
 
+AUDION research may call **`POST /api/fetch-page`** for Chromium page text when HTTP crawl is blocked — see `specs/api/fetch-page.md` (not a WCAG scan).
+
 ## Deferred
 Dedicated SEO-only crawl (without full domain magazine), Journey agent live, performance-as-primary tab, reuse-cache polish, competitor cron, normalized `scan_issues` tables, multi-provider GEO cron.

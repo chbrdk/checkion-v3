@@ -31,6 +31,7 @@
 |------|------|
 | Projects | `specs/api/projects.md` |
 | Scans | `specs/api/scans.md` |
+| Fetch page (thin Chromium) | `specs/api/fetch-page.md` |
 | Domain scans | `specs/api/domain-scans.md` |
 | Domain payload | `specs/api/domain-scan-payload.md` |
 | Share | `specs/api/share.md` |

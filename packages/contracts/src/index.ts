@@ -753,3 +753,17 @@ export interface ApiTokenStub {
   createdAt: string
   lastUsedAt: string | null
 }
+
+/** Thin Chromium page text — POST /api/fetch-page (no WCAG). */
+export type FetchPageRequest = {
+  url: string
+}
+
+export type FetchPageResponse = {
+  url: string
+  finalUrl: string
+  title: string | null
+  bodyTextExcerpt: string
+  httpStatus: number | null
+  stubbed: boolean
+}

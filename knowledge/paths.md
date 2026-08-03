@@ -70,12 +70,13 @@ Public landing: `/share/[token]` · API `/api/share`
 - Prefills project, mode, URL; optional AUDION correlation posted on launch; handoff **locks** to WCAG Quick single (no deep / GEO / SEO)
 - After submit → `/results/[id]/overview` (`paths.routes.resultSection`)
 - Machine: `POST /api/scans` with Bearer `checkion_…` + optional `platformProjectId` / `audionRunId` / `stepUrl` (persisted on `ScanSummary` / payload jsonb)
+- Thin page text (AUDION research fallback): `POST /api/fetch-page` (`paths.routes.apiFetchPage`) — Chromium `innerText` only, no WCAG — `specs/api/fetch-page.md` · `knowledge/fetch-page-2026-08-03.md`
 - Domain: `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`
 - Staging base for AUDION links: `NEXT_PUBLIC_CHECKION_URL` / `URL_CHECKION_V3` = `https://checkion-v3.projects-a.plygrnd.tech`
 
 ## Projects
 - Route: `/projects` (`paths.routes.projects`) — magazine collection hub (plexon-v3 Collection card composition)
-- Detail: `/projects/:id` (`paths.routes.projectDetail`) — cover + activity + scan/crawl tables
+- Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists
 - Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
 - Spec: `specs/domain/project-workspace.md`
 
