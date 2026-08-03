@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 describe('panels smoke', () => {
-  it('renders project list', async () => {
+  it('renders project magazine collection cards', async () => {
     const projects: ProjectSummary[] = [
       {
         id: 'p1',
@@ -40,9 +40,44 @@ describe('panels smoke', () => {
       },
     ]
     render(<ProjectListPanel projects={projects} />)
-    expect(screen.getByRole('table', { name: /Projects/i })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Demo' })).toBeTruthy()
+    expect(document.querySelector('.checkion-collection-grid')).toBeTruthy()
+    expect(document.querySelectorAll('.checkion-collection-card').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('heading', { name: 'Demo' })).toBeTruthy()
+    expect(screen.getByText('example.com')).toBeTruthy()
+    expect(document.querySelector('.checkion-collection-card-badge[data-status="in_sync"]')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/projects/p1')
     expect(screen.getByRole('button', { name: /New project/i })).toBeTruthy()
+  })
+
+  it('filters magazine cards by capability', async () => {
+    const projects: ProjectSummary[] = [
+      {
+        id: 'p1',
+        name: 'Synced',
+        domain: 'a.com',
+        status: 'active',
+        platformProjectId: 'plx-1',
+        capabilityStatus: 'in_sync',
+        lastScanAt: null,
+        scanCount: 1,
+      },
+      {
+        id: 'p2',
+        name: 'Pending',
+        domain: 'b.com',
+        status: 'pending_sync',
+        platformProjectId: 'plx-2',
+        capabilityStatus: 'pending',
+        lastScanAt: null,
+        scanCount: 0,
+      },
+    ]
+    render(<ProjectListPanel projects={projects} />)
+    fireEvent.click(screen.getByRole('button', { name: /^Pending$/i }))
+    expect(screen.getByRole('heading', { name: 'Pending' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Synced' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /^All$/i }))
+    expect(screen.getByRole('heading', { name: 'Synced' })).toBeTruthy()
   })
 
   it('renders project workspace cover and tables', async () => {

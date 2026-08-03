@@ -73,6 +73,12 @@ Public landing: `/share/[token]` · API `/api/share`
 - Domain: `specs/domain/audion-journey-scan-trigger.md` · AUDION companion `audion-v3/specs/domain/checkion-single-scan-trigger.md`
 - Staging base for AUDION links: `NEXT_PUBLIC_CHECKION_URL` / `URL_CHECKION_V3` = `https://checkion-v3.projects-a.plygrnd.tech`
 
+## Projects
+- Route: `/projects` (`paths.routes.projects`) — magazine collection hub (plexon-v3 Collection card composition)
+- Detail: `/projects/:id` (`paths.routes.projectDetail`) — cover + activity + scan/crawl tables
+- Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
+- Spec: `specs/domain/project-workspace.md`
+
 ## Settings
 - Route: `/settings` (`paths.routes.settings`) — Account, Profile, Appearance, Language, API tokens, Federation
 - Spec: `specs/domain/settings.md` · composition mirrors audion-v3 / plexon-v3 section bands

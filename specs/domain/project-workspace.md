@@ -14,10 +14,12 @@ A CHECKION project is the **local capability record** for the same Collection as
 Dummy mode owns full CRUD in the fixture store. Plexon live federation is deferred.
 
 ## Administration (`/projects`)
-- Ledger table: name · domain · capability · scan count · last scan
-- Search + capability filter + **New project**
-- Row actions: Open · Edit · Delete (`ConfirmDialog` danger)
-- Create/Edit via `Dialog`: name, domain, description
+Magazine collection hub (same composition as plexon-v3 Collection cards — rebuild, not ledger skin):
+
+- Hairline **collection grid**: create tile first, then project tiles
+- Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (scans · last scan) · **ghost actions** (Open · Edit · Delete)
+- Magazine band: search + capability filters (All · In sync · Pending · Error) — not a Panel table
+- Create via dashed create card → `Dialog`: name, domain, description
 - Deep-link: `/projects?platformProjectId=` → detail when bound; otherwise opens create with that collection id
 
 ## Workspace (`/projects/:id`)

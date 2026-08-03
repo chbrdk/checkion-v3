@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, Input, Panel, SectionChrome, StatusDot, Text } from '@msqdx/ui'
+import { Button, EmptyState, Input, Panel, SectionChrome, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -11,14 +11,27 @@ import type {
   ScanSummary,
 } from '@checkion-v3/contracts'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
+import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { paths } from '../lib/paths'
-import { formatScanInstant, scoreTone } from '../lib/scan-display'
+import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 
 function capabilityLevel(status: CapabilitySyncStatus) {
   if (status === 'in_sync') return 'ok' as const
   if (status === 'error') return 'critical' as const
   return 'warn' as const
+}
+
+function capabilityLabel(status: CapabilitySyncStatus): string {
+  if (status === 'in_sync') return 'In sync'
+  if (status === 'error') return 'Error'
+  return 'Pending'
+}
+
+function capabilityHint(status: CapabilitySyncStatus): string | null {
+  if (status === 'pending') return 'Waiting on Plexon capability sync.'
+  if (status === 'error') return 'Capability sync reported an error.'
+  return null
 }
 
 function compactUrl(url: string): string {
@@ -33,6 +46,118 @@ function compactUrl(url: string): string {
 }
 
 type CapFilter = 'all' | CapabilitySyncStatus
+
+function ProjectMetric({
+  icon,
+  value,
+  label,
+  linked = true,
+}: {
+  icon: ReactNode
+  value: string
+  label: string
+  linked?: boolean
+}) {
+  return (
+    <div className="checkion-collection-metric" data-linked={linked ? 'true' : 'false'}>
+      <span className="checkion-collection-metric-icon" aria-hidden>
+        {icon}
+      </span>
+      <span className="checkion-collection-metric-value">{value}</span>
+      <span className="checkion-collection-metric-label">{label}</span>
+    </div>
+  )
+}
+
+function ProjectCollectionCard({
+  project,
+  onEdit,
+  onDelete,
+}: {
+  project: ProjectSummary
+  onEdit: (project: ProjectSummary) => void
+  onDelete: (project: ProjectSummary) => void
+}) {
+  const hint = capabilityHint(project.capabilityStatus)
+  const domain = project.domain?.trim() || null
+
+  return (
+    <article className="checkion-collection-card">
+      <header className="checkion-collection-card-head">
+        <Text role="meta" as="p" className="checkion-collection-card-kicker">
+          {domain ?? '\u00a0'}
+        </Text>
+        <span
+          className="checkion-collection-card-badge"
+          data-status={project.capabilityStatus}
+          title={`Capability ${capabilityLabel(project.capabilityStatus).toLowerCase()}`}
+        >
+          {capabilityLabel(project.capabilityStatus)}
+        </span>
+      </header>
+
+      <Text role="headline" as="h3" className="checkion-collection-card-title">
+        {project.name}
+      </Text>
+
+      {hint ? (
+        <Text role="meta" as="p" className="checkion-collection-card-hint">
+          {hint}
+        </Text>
+      ) : null}
+
+      <div className="checkion-collection-card-stats" aria-label="Project metrics">
+        <ProjectMetric
+          icon={<MetricIconScans />}
+          value={String(project.scanCount)}
+          label="Scans"
+        />
+        <ProjectMetric
+          icon={<MetricIconLastScan />}
+          value={formatScanShort(project.lastScanAt)}
+          label="Last scan"
+          linked={project.lastScanAt != null}
+        />
+      </div>
+
+      <div className="checkion-collection-card-actions">
+        <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
+          <Button variant="ghost" size="md">
+            Open
+          </Button>
+        </Link>
+        <span className="checkion-collection-card-link">
+          <Button variant="ghost" size="md" type="button" onClick={() => onEdit(project)}>
+            Edit
+          </Button>
+        </span>
+        <span className="checkion-collection-card-link">
+          <Button variant="ghost" size="md" type="button" onClick={() => onDelete(project)}>
+            Delete
+          </Button>
+        </span>
+      </div>
+    </article>
+  )
+}
+
+function CreateProjectCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      className="checkion-collection-card checkion-collection-card--create"
+      onClick={onClick}
+    >
+      <span className="checkion-collection-card-kicker">{'\u00a0'}</span>
+      <Text role="headline" as="span" className="checkion-collection-card-title">
+        New project
+      </Text>
+      <Text role="meta" as="span" className="checkion-collection-card-hint">
+        Local CHECKION record for a Plexon collection.
+      </Text>
+    </button>
+  )
+}
 
 export function ProjectListPanel({
   projects,
@@ -77,8 +202,8 @@ export function ProjectListPanel({
   }
 
   return (
-    <div className="checkion-projects">
-      <div className="checkion-projects__toolbar">
+    <div className="checkion-magazine checkion-projects" data-section="projects-hub">
+      <div className="checkion-projects-band">
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -105,80 +230,29 @@ export function ProjectListPanel({
             </button>
           ))}
         </div>
-        <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
-          New project
-        </Button>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="checkion-projects__empty">
-          <Text role="meta">
+      <div className="checkion-collection-list">
+        <div className="checkion-collection-grid" aria-label="Projects">
+          <CreateProjectCard onClick={() => setCreateOpen(true)} />
+          {filtered.map((project) => (
+            <ProjectCollectionCard
+              key={project.id}
+              project={project}
+              onEdit={(p) => void openEdit(p)}
+              onDelete={setDeleteTarget}
+            />
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState className="checkion-collection-list-status">
             {projects.length === 0
               ? 'No projects yet. Create one locally or open a collection deep-link from Plexon.'
               : 'No projects match this filter.'}
-          </Text>
-          {projects.length === 0 ? (
-            <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
-              New project
-            </Button>
-          ) : null}
-        </div>
-      ) : (
-        <table className="checkion-report__table checkion-projects__table" aria-label="Projects">
-          <thead>
-            <tr>
-              <th scope="col">Project</th>
-              <th scope="col">Domain</th>
-              <th scope="col">Capability</th>
-              <th scope="col">Scans</th>
-              <th scope="col">Last scan</th>
-              <th scope="col">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((project) => (
-              <tr key={project.id}>
-                <th scope="row">
-                  <Link href={paths.routes.projectDetail(project.id)}>{project.name}</Link>
-                </th>
-                <td>{project.domain}</td>
-                <td>
-                  <span className="checkion-status-line">
-                    <StatusDot level={capabilityLevel(project.capabilityStatus)} />
-                    <span>{project.capabilityStatus}</span>
-                  </span>
-                </td>
-                <td className="checkion-projects__num">{project.scanCount}</td>
-                <td>{formatScanInstant(project.lastScanAt)}</td>
-                <td className="checkion-projects__actions">
-                  <Link
-                    href={paths.routes.projectDetail(project.id)}
-                    className="checkion-domain-filter"
-                  >
-                    Open
-                  </Link>
-                  <button
-                    type="button"
-                    className="checkion-domain-filter"
-                    onClick={() => void openEdit(project)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="checkion-domain-filter"
-                    onClick={() => setDeleteTarget(project)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          </EmptyState>
+        ) : null}
+      </div>
 
       <ProjectFormDialog
         open={createOpen}

@@ -23,10 +23,7 @@ export default async function ProjectsPage({
 
   const projects = await listProjects()
   return (
-    <AppShell
-      title="Projects"
-      description="Local CHECKION records for the same collections as in Plexon."
-    >
+    <AppShell title="Projects">
       <ProjectListPanel projects={projects} bindPlatformProjectId={bindPlatformProjectId} />
     </AppShell>
   )

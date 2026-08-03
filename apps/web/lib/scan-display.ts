@@ -50,3 +50,13 @@ export function formatScanInstant(iso: string | null): string {
     return iso.slice(0, 16)
   }
 }
+
+/** Compact date for magazine collection metrics. */
+export function formatScanShort(iso: string | null): string {
+  if (!iso) return '—'
+  try {
+    return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(iso))
+  } catch {
+    return iso.slice(0, 10)
+  }
+}

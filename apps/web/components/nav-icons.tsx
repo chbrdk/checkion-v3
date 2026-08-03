@@ -68,3 +68,23 @@ export function NavIconSettings() {
     </NavSvg>
   )
 }
+
+/** Collection magazine metric — scans. */
+export function MetricIconScans() {
+  return (
+    <NavSvg>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </NavSvg>
+  )
+}
+
+/** Collection magazine metric — last scan. */
+export function MetricIconLastScan() {
+  return (
+    <NavSvg>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7v5l3 2" />
+    </NavSvg>
+  )
+}

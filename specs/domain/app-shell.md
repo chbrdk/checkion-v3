@@ -15,7 +15,7 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 |----|-------|-------|
 | home | `/` | Empty/home lede |
 | scan | `/scan` | Launch single/deep |
-| projects | `/projects` | Collection capability list |
+| projects | `/projects` | Collection capability magazine grid |
 | settings | `/settings` | Quiet federation/auth page (footer/rail) |
 
 Deferred nav: Deep-Scans hub, Developers, GEO, Journey Agent live.
