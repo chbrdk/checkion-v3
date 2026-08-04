@@ -61,7 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-ARG MSQDX_UI_REF=30431337663b5a89d0fae6bbd01a0d5667433b3b
+ARG MSQDX_UI_REF=8fc9bd8426929349403e28485314e6cd027e7bed
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
@@ -89,7 +89,9 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && test -f /workspace/msqdx-ui/packages/ui-tokens/dist/index.js \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/CardActions.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/Lede.tsx \
-    && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/InfoTip.tsx \
+    && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts
 
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=6144

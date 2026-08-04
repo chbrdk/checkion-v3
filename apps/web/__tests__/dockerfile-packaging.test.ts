@@ -20,6 +20,7 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('MSQDX_UI_REF=')
     expect(df).toMatch(/git fetch --depth 1 origin "\$\{MSQDX_UI_REF\}"/)
     expect(df).toContain('CardActions.tsx')
+    expect(df).toContain('InfoTip.tsx')
     expect(df).toContain('docker-entrypoint.sh')
     expect(df).toContain('apps/web/drizzle.config.ts')
     expect(df).toContain('libnss3')
