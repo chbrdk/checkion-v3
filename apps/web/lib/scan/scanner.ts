@@ -199,8 +199,9 @@ export async function runScan(
         userId,
         onProgress,
         sharedBrowser,
+        id: explicitId,
     } = options;
-    const scanId = uuidv4();
+    const scanId = explicitId?.trim() || uuidv4();
 
     const report = (phase: ScanDevicePhase) => onProgress?.({ phase, device });
 

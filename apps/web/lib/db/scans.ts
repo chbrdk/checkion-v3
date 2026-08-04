@@ -23,6 +23,7 @@ import { shouldRunLiveScans } from '../scan/live-scan-gate'
 import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
 import { withScanCorrelation } from '../scan-correlation'
+import { selectTopIssueGroups } from '../issue-groups'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 const WORKER_SESSION_ID = crypto.randomUUID()
@@ -281,7 +282,10 @@ export async function dbGetScanOverview(id: string): Promise<ScanOverview | null
       ...stored,
       scan,
       scores: row.payload.scores ?? stored.scores ?? [],
-      topIssues: enrichIssueInspect(row.payload.issues ?? stored.topIssues ?? []).slice(0, 8),
+      topIssues: selectTopIssueGroups(
+        enrichIssueInspect(row.payload.issues ?? stored.topIssues ?? []),
+        8,
+      ),
       ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
     }
   }

@@ -1044,6 +1044,8 @@ export interface ScanRequest {
 
 export interface ScanOptions {
     url: string;
+    /** Persist/result id; when set, screenshot is keyed under this id (DB scan id). */
+    id?: string;
     standard?: WcagStandard;
     device?: Device;
     runners?: Runner[];

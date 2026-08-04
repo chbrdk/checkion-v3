@@ -17,6 +17,8 @@ import type {
 } from '@checkion-v3/contracts'
 import type { DomainScanResultWithFullPages, Issue, ScanResult } from './types'
 import { normalizeUxReadability } from '../readability-cefr'
+import { apiScanScreenshot } from './constants'
+import { selectTopIssueGroups } from '../issue-groups'
 
 function mapSeverity(type: Issue['type']): IssueSeverity {
   if (type === 'error') return 'critical'
@@ -212,7 +214,7 @@ export function buildOverviewFromResult(
   return {
     scan,
     scores,
-    topIssues: issues.slice(0, 8),
+    topIssues: selectTopIssueGroups(issues, 8),
     lede: `Live scan of ${result.url} — ${result.stats.errors} errors, ${result.stats.warnings} warnings (${result.durationMs}ms).`,
     performance: result.performance
       ? {
@@ -354,7 +356,7 @@ export function buildOverviewFromResult(
           tagTiers: result.pageClassification.tagTiers,
         }
       : undefined,
-    screenshotUrl: result.screenshot || null,
+    screenshotUrl: result.screenshot ? apiScanScreenshot(scan.id) : null,
     passedChecks: (result.passes ?? []).slice(0, 20).map((p) => ({
       id: p.id,
       description: p.description,

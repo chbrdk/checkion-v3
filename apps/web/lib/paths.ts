@@ -124,6 +124,7 @@ export const paths = {
     apiScanOverview: (id: string) => `/api/scans/${id}/overview`,
     apiScanIssues: (id: string) => `/api/scans/${id}/issues`,
     apiScanScores: (id: string) => `/api/scans/${id}/scores`,
+    apiScanScreenshot: (id: string) => `/api/scans/${encodeURIComponent(id)}/screenshot`,
     apiScanWeakestSignal: (id: string) => `/api/scans/${id}/weakest-signal`,
     apiDomainScans: '/api/domain-scans',
     apiDomainScanDetail: (id: string) => `/api/domain-scans/${id}`,

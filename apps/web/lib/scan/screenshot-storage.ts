@@ -18,7 +18,9 @@ function getDir(): string {
 function getScreenshotPath(scanId: string): string {
   const dir = getDir()
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  return path.join(dir, `${scanId}${EXT}`)
+  // Keep file names filesystem-safe (DB ids are usually already safe).
+  const safeId = scanId.replace(/[^a-zA-Z0-9._-]+/g, '_')
+  return path.join(dir, `${safeId}${EXT}`)
 }
 
 /** Write screenshot to local disk. Returns a relative URL path for the scan payload. */

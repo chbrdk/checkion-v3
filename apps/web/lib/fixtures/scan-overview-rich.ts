@@ -11,6 +11,7 @@ import {
   LIVE_PASSED_CHECKS,
   LIVE_SCAN_SUMMARY,
 } from './live-scan-single-1'
+import { selectTopIssueGroups } from '../issue-groups'
 
 /** Rich magazine snapshots keyed by scan id (v2-shaped, light). */
 
@@ -50,7 +51,7 @@ export function buildRichScanOverview(
   const base: ScanOverview = {
     scan,
     scores,
-    topIssues: issues.slice(0, 5),
+    topIssues: selectTopIssueGroups(issues, 5),
     lede:
       scan.status === 'running'
         ? 'Dummy scan still marked running — open other completed results to explore.'
@@ -65,7 +66,7 @@ export function buildRichScanOverview(
       ...LIVE_OVERVIEW_ENRICHMENT,
       scan: LIVE_SCAN_SUMMARY,
       scores: enrichScores(scores),
-      topIssues: issues.slice(0, 5),
+      topIssues: selectTopIssueGroups(issues, 5),
       passedChecks: LIVE_PASSED_CHECKS.length ? LIVE_PASSED_CHECKS : PASSED_SAMPLE,
       deviceSiblings: [
         { id: 'scan-single-1', device: 'desktop', overallScore: LIVE_SCAN_SUMMARY.overallScore },

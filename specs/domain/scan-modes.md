@@ -51,7 +51,7 @@ Launch failures surface the API `detail` (or a clear auth/HTML warning) in an `A
 Asynchronous jobs (`single`, `deep`, `seo`, `geo`) must not pretend to be done just because an id exists.
 
 1. **No forced immediate redirect on create** — when `POST /api/scans`, `POST /api/domain-scans`, or `POST /api/geo-jobs` returns a queued/running resource, the user stays on the initiating surface (`/scan`, result re-run dialog, project workspace action, etc.).
-2. **Global notification center** — every queued/running job is registered in a client-side **Notification center** that is visible across CHECKION. It replaces the old snackbar-only approach with:
+2. **Global notification center** — every queued/running job is registered in a client-side **Notification center** opened from the **NavRail Jobs** control (footer, above Settings). It replaces the old snackbar-only / topbar approach with:
    - short toast/snackbar feedback when a job is queued, starts running, completes, or fails
    - a persistent center listing all in-progress and recent jobs
    - deep scans / domain crawls surface honest crawl progress while running: `scanned/total` plus the current page URL being processed, rather than a generic `running` label only

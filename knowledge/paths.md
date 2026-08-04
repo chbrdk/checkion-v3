@@ -31,6 +31,7 @@
 | `OPENAI_API_KEY` | Required for live GEO LLM stages + queryRuns |
 | `OPENAI_MODEL` | Optional default model (default `gpt-5.4-nano`) |
 | `CHECKION_FEDERATION_MODE` | `dummy` (default) or `live` |
+| `SCAN_SCREENSHOTS_PATH` | Directory for live scan JPEG captures (default `data/screenshots` under cwd). On Coolify, point at a persistent volume so redeploys do not drop captures |
 | `PLEXON_DEMO_OWNER_USER_ID` | Fallback owner for origin registration without session |
 | `PLEXON_DEMO_COMPANY_ID` | Fallback company for origin registration without session |
 
@@ -64,6 +65,12 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 
 ## Share
 Public landing: `/share/[token]` · API `/api/share`
+
+## Scan screenshots
+- Persist: Puppeteer JPEG via `lib/scan/screenshot-storage.ts` under `SCAN_SCREENSHOTS_PATH` (default `data/screenshots`)
+- Serve: `GET /api/scans/:id/screenshot` (`paths.routes.apiScanScreenshot`) — keyed by DB scan id; falls back to file key embedded in overview `screenshotUrl` for older UUID-named files
+- Issues canvas / detail `<img>` uses `overview.screenshotUrl` → that API path
+- Missing file → SVG placeholder (`X-Screenshot: placeholder`), not a broken image
 
 ## Cross-product deep-link (AUDION → single-page scan)
 - Launch: `paths.routes.scanLaunch({ projectId, mode: 'single', url, platformProjectId?, audionRunId?, stepUrl? })` → `/scan?projectId=&mode=single&url=`

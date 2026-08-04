@@ -40,6 +40,7 @@ Magazine article (`checkion-magazine--scan`):
    - **Lab strip** — UX / Eco / Links teasers only
    - **GEO chapter** — magazine lens: large score, data-aware lede, discoverability + repurposing meters, FAQ/llms presence chips (not a full report page yet)
    - **Pull quote** — lead finding bridge into “What breaks”
+   - **What breaks** — magazine teaser of **distinct rule groups** (same axe/Pa11y rule collapsed; `affectedCount` = occurrences), ranked severity → count — not eight identical hits of one rule. Full per-node list stays on Issues.
 6. **Issues (folio masthead)** — Chapter 02 dossier: **capture + issue overlays** beside lead pull-quote, severity tally, filters, accordion inspect. Click marker ↔ open finding. Heatmap / scanpath / PageIndex layers are future toggles on the same canvas — not a separate Contents chapter.
 7. **Detail (folio masthead)** — Chapter 03 compact report: category ledger + stacked light-payload bands (not magazine essay, not v2 mega-tabs)
 

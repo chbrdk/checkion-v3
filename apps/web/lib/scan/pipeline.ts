@@ -90,6 +90,7 @@ export async function executeSingleLiveScan(input: {
     device: 'desktop',
     standard: 'WCAG2AA',
     runners: ['axe', 'htmlcs'],
+    id: input.id,
     groupId: input.id,
   })
   const normalized: ScanResult = { ...result, id: input.id, groupId: result.groupId ?? input.id }

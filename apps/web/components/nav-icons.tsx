@@ -60,6 +60,17 @@ export function NavIconResults() {
   )
 }
 
+/** Activity / notification center in the rail. */
+export function NavIconJobs() {
+  return (
+    <NavSvg>
+      <path d="M6 8h12v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8Z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+      <path d="M10 13h4" />
+    </NavSvg>
+  )
+}
+
 export function NavIconSettings() {
   return (
     <NavSvg>

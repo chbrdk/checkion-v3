@@ -817,7 +817,9 @@ export function IssueList({ issues }: { issues: IssueSummary[] }) {
               {issue.severity}
             </Chip>
           }
-          secondary={`${issue.ruleId} · ${issue.section} · ×${issue.affectedCount}`}
+          secondary={`${issue.ruleId} · ${issue.section} · ×${issue.affectedCount} ${
+            issue.affectedCount === 1 ? 'hit' : 'hits'
+          }`}
           barPct={Math.max(
             severityRank(issue.severity) * 0.55 + (issue.affectedCount / maxAffected) * 45,
             8,

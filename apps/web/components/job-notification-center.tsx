@@ -14,6 +14,7 @@ import {
 import { Button, Chip, Text } from '../lib/msqdx-ui'
 import { useToast } from '../lib/msqdx-ui-client'
 import { paths } from '../lib/paths'
+import { NavIconJobs } from './nav-icons'
 
 type TrackedJobResource = 'scan' | 'domain' | 'geo'
 type TrackedJobStatus = 'queued' | 'running' | 'completed' | 'failed'
@@ -294,80 +295,131 @@ export function useJobNotifications() {
   return useContext(JobNotificationsContext)
 }
 
-export function JobNotificationCenterButton() {
-  const { jobs, runningCount, restartingKey, dismissJob, clearFinished, restartDomainJob } =
+/** Badge overlaid on the rail Jobs icon when work is active or failed. */
+export function JobsRailIcon({
+  runningCount,
+  failedCount,
+}: {
+  runningCount: number
+  failedCount: number
+}) {
+  const badge =
+    runningCount > 0 ? String(runningCount) : failedCount > 0 ? String(failedCount) : null
+  return (
+    <span
+      className="checkion-job-center__rail-icon"
+      data-tone={runningCount > 0 ? 'live' : failedCount > 0 ? 'fail' : undefined}
+    >
+      <NavIconJobs />
+      {badge ? <span className="checkion-job-center__rail-badge">{badge}</span> : null}
+    </span>
+  )
+}
+
+export function JobNotificationCenterPanel({
+  open,
+  onClose,
+  railEdge = 'left',
+}: {
+  open: boolean
+  onClose: () => void
+  railEdge?: 'left' | 'right' | 'top' | 'bottom'
+}) {
+  const { jobs, restartingKey, dismissJob, clearFinished, restartDomainJob } =
     useJobNotifications()
-  const [open, setOpen] = useState(false)
-  const failedCount = jobs.filter((job) => job.status === 'failed').length
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    const onPointer = (event: MouseEvent) => {
+      const target = event.target as Element | null
+      if (!target) return
+      if (panelRef.current?.contains(target)) return
+      const railControl = target.closest?.('.nav-rail .rail-link')
+      const aria = railControl?.getAttribute('aria-label') ?? ''
+      if (aria === 'Jobs' || aria.startsWith('Jobs,')) return
+      onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('mousedown', onPointer)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onPointer)
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+
+  const edge =
+    railEdge === 'right' ? 'right' : railEdge === 'top' || railEdge === 'bottom' ? 'left' : 'left'
 
   return (
-    <div className="checkion-job-center">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="checkion-job-center__toggle"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-controls="checkion-job-center-panel"
-      >
-        Jobs
-        {runningCount > 0 ? ` · ${runningCount}` : failedCount > 0 ? ` · ${failedCount} failed` : ''}
-      </Button>
-      {open ? (
-        <div id="checkion-job-center-panel" className="checkion-job-center__panel">
-          <div className="checkion-job-center__head">
-            <div>
-              <Text role="label">Notification center</Text>
-              <Text role="meta">Running scans, crawls, and GEO jobs.</Text>
-            </div>
-            <Button type="button" variant="ghost" size="sm" onClick={clearFinished}>
-              Clear finished
-            </Button>
+    <div
+      ref={panelRef}
+      id="checkion-job-center-panel"
+      className="checkion-job-center checkion-job-center--rail"
+      data-edge={edge}
+      role="dialog"
+      aria-label="Notification center"
+    >
+      <div className="checkion-job-center__panel">
+        <div className="checkion-job-center__head">
+          <div>
+            <Text role="label">Notification center</Text>
+            <Text role="meta">Running scans, crawls, and GEO jobs.</Text>
           </div>
-          {jobs.length === 0 ? (
-            <Text role="meta">No recent jobs.</Text>
-          ) : (
-            <ol className="checkion-job-center__list">
-              {jobs.map((job) => (
-                <li key={itemKey(job)} className="checkion-job-center__item">
-                  <div className="checkion-job-center__row">
-                    <div className="checkion-job-center__copy">
-                      <strong>{job.title}</strong>
-                      <Text role="meta">{jobDetail(job)}</Text>
-                    </div>
-                    <Chip static size="sm">
-                      {job.status}
-                    </Chip>
+          <Button type="button" variant="ghost" size="sm" onClick={clearFinished}>
+            Clear finished
+          </Button>
+        </div>
+        {jobs.length === 0 ? (
+          <Text role="meta">No recent jobs.</Text>
+        ) : (
+          <ol className="checkion-job-center__list">
+            {jobs.map((job) => (
+              <li key={itemKey(job)} className="checkion-job-center__item">
+                <div className="checkion-job-center__row">
+                  <div className="checkion-job-center__copy">
+                    <strong>{job.title}</strong>
+                    <Text role="meta">{jobDetail(job)}</Text>
                   </div>
-                  <div className="checkion-job-center__actions">
-                    <Link href={job.href} onClick={() => setOpen(false)}>
-                      Open
-                    </Link>
-                    {job.resource === 'domain' && job.status === 'failed' && job.projectId && job.targetUrl ? (
-                      <button
-                        type="button"
-                        onClick={() => void restartDomainJob(job)}
-                        className="checkion-job-center__dismiss"
-                        disabled={restartingKey === itemKey(job)}
-                      >
-                        {restartingKey === itemKey(job) ? 'Restarting' : 'Restart'}
-                      </button>
-                    ) : null}
+                  <Chip static size="sm">
+                    {job.status}
+                  </Chip>
+                </div>
+                <div className="checkion-job-center__actions">
+                  <Link href={job.href} onClick={onClose}>
+                    Open
+                  </Link>
+                  {job.resource === 'domain' &&
+                  job.status === 'failed' &&
+                  job.projectId &&
+                  job.targetUrl ? (
                     <button
                       type="button"
-                      onClick={() => dismissJob(job.id, job.resource)}
+                      onClick={() => void restartDomainJob(job)}
                       className="checkion-job-center__dismiss"
+                      disabled={restartingKey === itemKey(job)}
                     >
-                      Dismiss
+                      {restartingKey === itemKey(job) ? 'Restarting' : 'Restart'}
                     </button>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      ) : null}
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => dismissJob(job.id, job.resource)}
+                    className="checkion-job-center__dismiss"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </div>
   )
 }

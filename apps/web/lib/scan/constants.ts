@@ -78,5 +78,5 @@ export const ENV_SCREENSHOT_S3_BUCKET = 'SCREENSHOT_S3_BUCKET'
 export const ENV_SCREENSHOT_S3_PREFIX = 'SCREENSHOT_S3_PREFIX'
 export const ENV_SCREENSHOT_AWS_REGION = 'SCREENSHOT_AWS_REGION'
 
-/** Local screenshot API path (Phase 2 — no separate screenshot route required for persist). */
+/** Local screenshot API path served by `GET /api/scans/:id/screenshot`. */
 export const apiScanScreenshot = (id: string) => `/api/scans/${encodeURIComponent(id)}/screenshot`

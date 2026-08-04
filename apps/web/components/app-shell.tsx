@@ -14,8 +14,17 @@ import {
   type RailDockEdge,
 } from '../lib/msqdx-ui-shell'
 import { Avatar } from '@msqdx/ui'
-import { NavIconOverview, NavIconProjects, NavIconResults, NavIconScan } from './nav-icons'
-import { JobNotificationCenterButton } from './job-notification-center'
+import {
+  NavIconOverview,
+  NavIconProjects,
+  NavIconResults,
+  NavIconScan,
+} from './nav-icons'
+import {
+  JobNotificationCenterPanel,
+  JobsRailIcon,
+  useJobNotifications,
+} from './job-notification-center'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
 
@@ -42,6 +51,9 @@ export function AppShell({
   const pathname = usePathname()
   const { displayName } = useUserPrefs()
   const [railEdge, setRailEdge] = useState<RailDockEdge>(paths.railDockEdge)
+  const [jobsOpen, setJobsOpen] = useState(false)
+  const { jobs, runningCount } = useJobNotifications()
+  const failedCount = jobs.filter((job) => job.status === 'failed').length
 
   const frameStyle = useMemo(
     () =>
@@ -57,6 +69,13 @@ export function AppShell({
   function isActive(href: string): boolean {
     return href === '/' ? pathname === href : pathname.startsWith(href)
   }
+
+  const jobsAria =
+    runningCount > 0
+      ? `Jobs, ${runningCount} running`
+      : failedCount > 0
+        ? `Jobs, ${failedCount} failed`
+        : 'Jobs'
 
   return (
     <AppFrame
@@ -75,6 +94,15 @@ export function AppShell({
           items={PRIMARY_NAV.map((item) => ({ ...item, active: isActive(item.href) }))}
           footerItems={[
             {
+              id: 'jobs',
+              label: 'Jobs',
+              active: jobsOpen,
+              ariaLabel: jobsAria,
+              title: jobsAria,
+              icon: <JobsRailIcon runningCount={runningCount} failedCount={failedCount} />,
+              onClick: () => setJobsOpen((value) => !value),
+            },
+            {
               id: 'settings',
               label: 'Settings',
               href: paths.routes.settings,
@@ -91,13 +119,17 @@ export function AppShell({
             {title != null && title !== '' ? <PageTitle>{title}</PageTitle> : null}
           </div>
           <div className="topbar-right">
-            <JobNotificationCenterButton />
             {status}
             {actions}
           </div>
         </>
       }
     >
+      <JobNotificationCenterPanel
+        open={jobsOpen}
+        onClose={() => setJobsOpen(false)}
+        railEdge={railEdge}
+      />
       <div className="app-main checkion-stage">
         {description ? <p className="checkion-page-lead">{description}</p> : null}
         {children}

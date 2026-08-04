@@ -17,6 +17,7 @@ import {
   LIVE_DOMAIN_SCAN,
   LIVE_DOMAIN_SCORES,
 } from './live-scan-domain-1'
+import { selectTopIssueGroups } from '../issue-groups'
 
 /** Demo corpus — local fixtures; scan-single-1 + domain-1 are live imports from projects-a. */
 
@@ -349,7 +350,7 @@ export function buildScanOverview(scanId: string): ScanOverview | null {
   return {
     scan,
     scores,
-    topIssues: issues.slice(0, 5),
+    topIssues: selectTopIssueGroups(issues, 5),
     lede:
       scan.status === 'running'
         ? 'Dummy scan still marked running — open other completed results to explore.'
