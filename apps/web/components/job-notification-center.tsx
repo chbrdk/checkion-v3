@@ -18,6 +18,12 @@ import { paths } from '../lib/paths'
 type TrackedJobResource = 'scan' | 'domain' | 'geo'
 type TrackedJobStatus = 'queued' | 'running' | 'completed' | 'failed'
 
+type TrackedJobProgress = {
+  scanned: number
+  total: number
+  currentUrl?: string
+}
+
 export type TrackedJob = {
   id: string
   resource: TrackedJobResource
@@ -25,7 +31,9 @@ export type TrackedJob = {
   href: string
   status: TrackedJobStatus
   projectId?: string
+  targetUrl?: string
   detail?: string
+  progress?: TrackedJobProgress
   updatedAt: string
 }
 
@@ -34,9 +42,11 @@ type TrackJobInput = Omit<TrackedJob, 'updatedAt'>
 type JobNotificationsContextValue = {
   jobs: TrackedJob[]
   runningCount: number
+  restartingKey: string | null
   trackJob: (job: TrackJobInput) => void
   dismissJob: (id: string, resource: TrackedJobResource) => void
   clearFinished: () => void
+  restartDomainJob: (job: TrackedJob) => Promise<void>
 }
 
 const STORAGE_KEY = 'checkion.v3.jobNotifications'
@@ -45,9 +55,11 @@ const POLL_MS = 2500
 const JobNotificationsContext = createContext<JobNotificationsContextValue>({
   jobs: [],
   runningCount: 0,
+  restartingKey: null,
   trackJob: () => {},
   dismissJob: () => {},
   clearFinished: () => {},
+  restartDomainJob: async () => {},
 })
 
 function toastCopy(job: TrackJobInput | TrackedJob): string {
@@ -80,6 +92,7 @@ function itemKey(job: Pick<TrackedJob, 'resource' | 'id'>): string {
 async function readRemoteStatus(job: TrackedJob): Promise<{
   status?: TrackedJobStatus
   detail?: string
+  progress?: TrackedJobProgress
 }> {
   const endpoint =
     job.resource === 'scan'
@@ -96,6 +109,7 @@ async function readRemoteStatus(job: TrackedJob): Promise<{
   }
   const data = (await res.json()) as {
     status?: string
+    progress?: TrackedJobProgress
     error?: string
     job?: { status?: string; error?: string }
     payload?: { error?: string }
@@ -108,14 +122,23 @@ async function readRemoteStatus(job: TrackedJob): Promise<{
     rawStatus === 'completed' ||
     rawStatus === 'failed'
   ) {
-    return { status: rawStatus, detail }
+    return { status: rawStatus, detail, progress: data.progress }
   }
-  return { detail }
+  return { detail, progress: data.progress }
+}
+
+function jobDetail(job: TrackedJob): string {
+  if (job.resource === 'domain' && job.progress) {
+    const prefix = `${job.progress.scanned}/${job.progress.total} pages scanned`
+    return job.progress.currentUrl ? `${prefix} · ${job.progress.currentUrl}` : prefix
+  }
+  return job.detail || job.href
 }
 
 export function JobNotificationsProvider({ children }: { children: ReactNode }) {
   const { push } = useToast()
   const [jobs, setJobs] = useState<TrackedJob[]>([])
+  const [restartingKey, setRestartingKey] = useState<string | null>(null)
   const mountedRef = useRef(false)
 
   useEffect(() => {
@@ -159,6 +182,41 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
     )
   }, [])
 
+  const restartDomainJob = useCallback(
+    async (job: TrackedJob) => {
+      if (job.resource !== 'domain' || !job.projectId || !job.targetUrl) return
+      const key = itemKey(job)
+      setRestartingKey(key)
+      try {
+        const res = await fetch(paths.routes.apiDomainScans, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ projectId: job.projectId, url: job.targetUrl }),
+        })
+        if (!res.ok) throw new Error(`Restart failed (${res.status})`)
+        const data = (await res.json()) as { id: string }
+        trackJob({
+          id: data.id,
+          resource: 'domain',
+          status: 'queued',
+          title: job.title,
+          href: paths.routes.domainSection(data.id, 'overview'),
+          projectId: job.projectId,
+          targetUrl: job.targetUrl,
+          detail: job.targetUrl,
+        })
+      } catch (err) {
+        push({
+          message: err instanceof Error ? err.message : 'Restart failed',
+          tone: 'error',
+        })
+      } finally {
+        setRestartingKey(null)
+      }
+    },
+    [push, trackJob],
+  )
+
   useEffect(() => {
     const pending = jobs.filter((job) => job.status === 'queued' || job.status === 'running')
     if (pending.length === 0) return
@@ -178,17 +236,25 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
       setJobs((prev) =>
         prev.map((job) => {
           const update = updates.find((entry) => entry.key === itemKey(job))
-          if (!update?.status || update.status === job.status) return job
+          if (!update) return job
+          const statusChanged = Boolean(update.status && update.status !== job.status)
+          const detailChanged = typeof update.detail === 'string' && update.detail !== job.detail
+          const progressChanged =
+            JSON.stringify(update.progress ?? null) !== JSON.stringify(job.progress ?? null)
+          if (!statusChanged && !detailChanged && !progressChanged) return job
           const next = {
             ...job,
-            status: update.status,
+            status: update.status ?? job.status,
             detail: update.detail ?? job.detail,
+            progress: update.progress ?? job.progress,
             updatedAt: new Date().toISOString(),
           }
-          push({
-            message: toastCopy(next),
-            tone: next.status === 'failed' ? 'error' : next.status === 'completed' ? 'ok' : 'info',
-          })
+          if (statusChanged) {
+            push({
+              message: toastCopy(next),
+              tone: next.status === 'failed' ? 'error' : next.status === 'completed' ? 'ok' : 'info',
+            })
+          }
           return next
         }),
       )
@@ -208,11 +274,13 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
     () => ({
       jobs,
       runningCount: jobs.filter((job) => job.status === 'queued' || job.status === 'running').length,
+      restartingKey,
       trackJob,
       dismissJob,
       clearFinished,
+      restartDomainJob,
     }),
-    [jobs, trackJob, dismissJob, clearFinished],
+    [jobs, restartingKey, trackJob, dismissJob, clearFinished, restartDomainJob],
   )
 
   return (
@@ -227,7 +295,8 @@ export function useJobNotifications() {
 }
 
 export function JobNotificationCenterButton() {
-  const { jobs, runningCount, dismissJob, clearFinished } = useJobNotifications()
+  const { jobs, runningCount, restartingKey, dismissJob, clearFinished, restartDomainJob } =
+    useJobNotifications()
   const [open, setOpen] = useState(false)
   const failedCount = jobs.filter((job) => job.status === 'failed').length
 
@@ -265,7 +334,7 @@ export function JobNotificationCenterButton() {
                   <div className="checkion-job-center__row">
                     <div className="checkion-job-center__copy">
                       <strong>{job.title}</strong>
-                      <Text role="meta">{job.detail || job.href}</Text>
+                      <Text role="meta">{jobDetail(job)}</Text>
                     </div>
                     <Chip static size="sm">
                       {job.status}
@@ -275,6 +344,16 @@ export function JobNotificationCenterButton() {
                     <Link href={job.href} onClick={() => setOpen(false)}>
                       Open
                     </Link>
+                    {job.resource === 'domain' && job.status === 'failed' && job.projectId && job.targetUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => void restartDomainJob(job)}
+                        className="checkion-job-center__dismiss"
+                        disabled={restartingKey === itemKey(job)}
+                      >
+                        {restartingKey === itemKey(job) ? 'Restarting' : 'Restart'}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => dismissJob(job.id, job.resource)}

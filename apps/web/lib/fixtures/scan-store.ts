@@ -266,13 +266,15 @@ async function memoryCreateLiveScan(input: {
   scoresByScan[id] = []
 
   if (input.mode === 'deep') {
-    await memoryCreateDomainScan({
+    const domain = await memoryCreateDomainScan({
       projectId: input.projectId,
       url: input.url,
       waitForCompletion: input.waitForCompletion,
       linkScanId: id,
     })
-    return queued
+    const queuedWithDomain = { ...queued, domainScanId: domain.id }
+    scans = scans.map((s) => (s.id === id ? queuedWithDomain : s))
+    return queuedWithDomain
   }
 
   const run = async () => {
@@ -345,6 +347,7 @@ async function memoryCreateDomainScan(input: {
             issueCount: 0,
             startedAt: row.startedAt,
             completedAt: null,
+            progress: { scanned: 0, total: row.maxPages },
           },
           ...domainScans,
         ]
@@ -361,9 +364,9 @@ async function memoryCreateDomainScan(input: {
           )
         }
       },
-      updateProgress: async (domainId, scanned) => {
+      updateProgress: async (domainId, scanned, total, currentUrl) => {
         domainScans = domainScans.map((d) =>
-          d.id === domainId ? { ...d, pageCount: scanned } : d,
+          d.id === domainId ? { ...d, pageCount: scanned, progress: { scanned, total, currentUrl } } : d,
         )
       },
       persistCompleted: async (bundle) => {

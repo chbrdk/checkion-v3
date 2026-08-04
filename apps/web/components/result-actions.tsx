@@ -14,12 +14,14 @@ export function ResultActions({
   projectId,
   url,
   mode,
+  status,
 }: {
   resourceId: string
   resourceType?: ShareResourceType
   projectId: string
   url: string
   mode: 'single' | 'deep'
+  status?: 'queued' | 'running' | 'completed' | 'failed'
 }) {
   const router = useRouter()
   const { trackJob } = useJobNotifications()
@@ -70,20 +72,34 @@ export function ResultActions({
     setBusy(true)
     setError(null)
     try {
-      const res = await fetch(paths.routes.apiScans, {
+      const isDomainRerun = resourceType === 'domain'
+      const endpoint = isDomainRerun ? paths.routes.apiDomainScans : paths.routes.apiScans
+      const body = isDomainRerun ? { projectId, url } : { projectId, mode, url }
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ projectId, mode, url }),
+        body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error(`Re-run failed (${res.status})`)
-      const data = (await res.json()) as { id: string }
+      if (!res.ok) throw new Error(`${isDomainRerun ? 'Restart' : 'Re-run'} failed (${res.status})`)
+      const data = (await res.json()) as { id: string; domainScanId?: string }
+      const isDeep = isDomainRerun || (mode === 'deep' && Boolean(data.domainScanId))
       trackJob({
-        id: data.id,
-        resource: 'scan',
+        id: isDomainRerun ? data.id : isDeep ? data.domainScanId! : data.id,
+        resource: isDeep ? 'domain' : 'scan',
         status: 'queued',
-        title: mode === 'deep' ? 'Deep scan re-run' : 'Single scan re-run',
-        href: paths.routes.resultSection(data.id, 'overview'),
+        title: isDomainRerun
+          ? 'Deep scan restart'
+          : mode === 'deep'
+            ? 'Deep scan re-run'
+            : 'Single scan re-run',
+        href: isDomainRerun
+          ? paths.routes.domainSection(data.id, 'overview')
+          : isDeep
+            ? paths.routes.domainSection(data.domainScanId!, 'overview')
+          : paths.routes.resultSection(data.id, 'overview'),
         projectId,
+        targetUrl: url,
+        detail: url,
       })
       setRerunOpen(false)
     } catch (err) {
@@ -123,6 +139,10 @@ export function ResultActions({
             Delete
           </Button>
         </>
+      ) : resourceType === 'domain' ? (
+        <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
+          {status === 'failed' ? 'Restart crawl' : 'Re-run crawl'}
+        </Button>
       ) : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
@@ -151,10 +171,10 @@ export function ResultActions({
         open={rerunOpen}
         onClose={() => setRerunOpen(false)}
         onConfirm={confirmRerun}
-        title="Re-run scan?"
-        confirmLabel="Re-run"
+        title={resourceType === 'domain' ? 'Restart crawl?' : 'Re-run scan?'}
+        confirmLabel={resourceType === 'domain' ? 'Restart' : 'Re-run'}
       >
-        Queues a new {mode} scan for {url}.
+        Queues a new {resourceType === 'domain' ? 'domain crawl' : mode + ' scan'} for {url}.
       </ConfirmDialog>
 
       <ConfirmDialog

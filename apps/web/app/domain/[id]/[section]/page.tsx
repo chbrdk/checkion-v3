@@ -43,6 +43,7 @@ export default async function DomainSectionPage({
       projectId={overview.scan.projectId}
       url={overview.scan.rootUrl}
       mode="deep"
+      status={overview.scan.status}
     />
   )
 

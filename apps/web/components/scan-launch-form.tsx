@@ -352,14 +352,19 @@ export function ScanLaunchForm({
       body: JSON.stringify(body),
     })
     if (!res.ok) throw new Error(`Launch failed (${res.status})`)
-    const data = (await res.json()) as { id: string }
+    const data = (await res.json()) as { id: string; domainScanId?: string }
+    const isDeep = launchMode === 'deep' && Boolean(data.domainScanId)
     trackJob({
-      id: data.id,
-      resource: 'scan',
+      id: isDeep ? data.domainScanId! : data.id,
+      resource: isDeep ? 'domain' : 'scan',
       status: 'queued',
       title: launchMode === 'deep' ? 'Deep scan' : 'Single scan',
-      href: paths.routes.resultSection(data.id, 'overview'),
+      href: isDeep
+        ? paths.routes.domainSection(data.domainScanId!, 'overview')
+        : paths.routes.resultSection(data.id, 'overview'),
       projectId,
+      targetUrl: url,
+      detail: url,
     })
   }
 
@@ -389,6 +394,8 @@ export function ScanLaunchForm({
       title: 'SEO crawl',
       href: paths.routes.domainSection(data.id, 'overview'),
       projectId,
+      targetUrl: url,
+      detail: url,
     })
   }
 
@@ -475,6 +482,8 @@ export function ScanLaunchForm({
       title: 'GEO job',
       href: paths.routes.geoSection(jobId, 'overview'),
       projectId: data.projectId || resolvedProjectId,
+      targetUrl: resolvedUrl,
+      detail: resolvedUrl,
     })
   }
 

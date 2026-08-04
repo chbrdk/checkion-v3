@@ -72,11 +72,13 @@ export interface ScanSummary {
   projectId: string
   mode: ScanMode
   url: string
+  domainScanId?: string
   status: ScanStatus
   startedAt: string
   completedAt: string | null
   overallScore: number | null
   issueCount: number
+  error?: string
   /** Multi-device session id (desktop/tablet/mobile) */
   groupId?: string | null
   device?: ScanDevice
@@ -387,6 +389,12 @@ export interface DomainScanLight {
   issueCount: number
   startedAt: string
   completedAt: string | null
+  error?: string
+  progress?: {
+    scanned: number
+    total: number
+    currentUrl?: string
+  }
   industry?: string | null
   tags?: string[]
   issueStats?: IssueStats

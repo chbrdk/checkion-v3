@@ -54,6 +54,7 @@ Asynchronous jobs (`single`, `deep`, `seo`, `geo`) must not pretend to be done j
 2. **Global notification center** — every queued/running job is registered in a client-side **Notification center** that is visible across CHECKION. It replaces the old snackbar-only approach with:
    - short toast/snackbar feedback when a job is queued, starts running, completes, or fails
    - a persistent center listing all in-progress and recent jobs
+   - deep scans / domain crawls surface honest crawl progress while running: `scanned/total` plus the current page URL being processed, rather than a generic `running` label only
    - deep-links from each job row to the relevant result surface (`/results/:id/overview`, `/domain/:id/overview`, `/geo/:id/overview`)
 3. **Result pages remain valid monitors** — if the user explicitly opens a running result page, the page shows an honest in-progress state and polls until completion/failure (same principle already used for GEO).
 4. **Scope** — applies to:
@@ -62,6 +63,8 @@ Asynchronous jobs (`single`, `deep`, `seo`, `geo`) must not pretend to be done j
    - project workspace CTAs
    - future product entry points that start these same APIs
 5. **Status language** — queued/running/completed/failed must be reflected consistently in both the notification center and the relevant result page. An empty queued shell is never rendered as a completed success state.
+6. **Restart honesty (Phase 7a)** — background deep/domain crawls do not silently survive an app redeploy. On the next read after a process restart, stale `queued` / `running` crawls from the previous worker session must be auto-marked `failed` with a clear interruption reason, so users never see orphaned “running forever” jobs.
+7. **Restart CTA (Phase 7b)** — interrupted domain/deep jobs expose a direct restart path in both the Notification center and the domain result chrome. This is an honest restart of the crawl from the same root URL and project, not yet a checkpoint resume.
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 

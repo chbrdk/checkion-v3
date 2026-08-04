@@ -61,6 +61,7 @@ export type ScanPayload = {
   scores?: ScoreCard[]
   /** Full magazine overview when produced by the live pipeline. */
   overview?: ScanOverview
+  runtime?: { workerSessionId?: string }
   error?: string
 }
 
@@ -87,6 +88,7 @@ export type DomainScanPayload = {
   scores?: ScoreCard[]
   overviewExtras?: Record<string, unknown>
   progress?: { scanned: number; total: number; currentUrl?: string }
+  runtime?: { workerSessionId?: string }
   error?: string
 }
 
