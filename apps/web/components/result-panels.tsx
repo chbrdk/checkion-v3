@@ -21,6 +21,7 @@ import { scoreTone, severityRank } from '../lib/scan-display'
 import { getProject } from '../lib/fixtures/project-store'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { IssuesWorkspace } from './issues-workspace'
+import { LabelWithTip } from './help-tip'
 import { ResultSectionNav } from './result-section-nav'
 import { ScoresPanel } from './scores-panel'
 import { WeakestSignalCallout } from './weakest-signal-callout'
@@ -312,7 +313,9 @@ export function ResultOverviewPanel({
                         {overview.freshness.ageDays ?? '—'}
                         <span className="checkion-lab-tile__unit">d</span>
                       </strong>
-                      <span className="checkion-lab-tile__k">Freshness</span>
+                      <span className="checkion-lab-tile__k">
+                        <LabelWithTip tipId="lab.freshness">Freshness</LabelWithTip>
+                      </span>
                       <span className="checkion-lab-tile__m">
                         {overview.freshness.confidence} confidence
                         {overview.freshness.source
@@ -336,7 +339,9 @@ export function ResultOverviewPanel({
                         {shield.ok}
                         <span className="checkion-lab-tile__unit">/{shield.total}</span>
                       </strong>
-                      <span className="checkion-lab-tile__k">Shield</span>
+                      <span className="checkion-lab-tile__k">
+                        <LabelWithTip tipId="lab.shield">Shield</LabelWithTip>
+                      </span>
                       <span className="checkion-lab-tile__m">
                         {shield.gaps.length === 0
                           ? 'All clear'
@@ -347,7 +352,9 @@ export function ResultOverviewPanel({
                   {clearedCount != null ? (
                     <div className="checkion-lab-tile" data-tone="pos">
                       <strong className="checkion-lab-tile__v">{clearedCount}</strong>
-                      <span className="checkion-lab-tile__k">Cleared</span>
+                      <span className="checkion-lab-tile__k">
+                        <LabelWithTip tipId="lab.cleared">Cleared</LabelWithTip>
+                      </span>
                       <span className="checkion-lab-tile__m">
                         {overview.passedChecks?.[0]?.description ?? 'checks already clean'}
                       </span>
@@ -386,30 +393,35 @@ export function ResultOverviewPanel({
                     [
                       {
                         key: 'TTFB',
+                        tipId: 'vital.ttfb' as const,
                         value: perf.ttfb,
                         meta: 'Time to first byte',
                         tone: vitalTone(perf.ttfb, 200, 500),
                       },
                       {
                         key: 'FCP',
+                        tipId: 'vital.fcp' as const,
                         value: perf.fcp,
                         meta: 'First contentful paint',
                         tone: vitalTone(perf.fcp, 1800, 3000),
                       },
                       {
                         key: 'LCP',
+                        tipId: 'vital.lcp' as const,
                         value: perf.lcp,
                         meta: 'Largest contentful paint',
                         tone: vitalTone(perf.lcp, 2500, 4000),
                       },
                       {
                         key: 'DOM',
+                        tipId: 'vital.dom' as const,
                         value: perf.domLoad,
                         meta: 'DOM content loaded',
                         tone: vitalTone(perf.domLoad, 2000, 3500),
                       },
                       {
                         key: 'Load',
+                        tipId: 'vital.load' as const,
                         value: perf.windowLoad,
                         meta: 'Window load',
                         tone: vitalTone(perf.windowLoad, 3000, 5000),
@@ -423,7 +435,9 @@ export function ResultOverviewPanel({
                           {parts.n}
                           <span className="checkion-lab-tile__unit">{parts.unit}</span>
                         </strong>
-                        <span className="checkion-lab-tile__k">{vital.key}</span>
+                        <span className="checkion-lab-tile__k">
+                          <LabelWithTip tipId={vital.tipId}>{vital.key}</LabelWithTip>
+                        </span>
                         <span className="checkion-lab-tile__m">{vital.meta}</span>
                       </div>
                     )
@@ -443,7 +457,9 @@ export function ResultOverviewPanel({
                         {perf.scriptTransferKb}
                         <span className="checkion-lab-tile__unit">kb</span>
                       </strong>
-                      <span className="checkion-lab-tile__k">Scripts</span>
+                      <span className="checkion-lab-tile__k">
+                        <LabelWithTip tipId="vital.scripts">Scripts</LabelWithTip>
+                      </span>
                       <span className="checkion-lab-tile__m">Transfer weight</span>
                     </div>
                   ) : null}
@@ -473,7 +489,9 @@ export function ResultOverviewPanel({
                   }
                 >
                   <span className="checkion-page-spread__cefr-copy">
-                    <span className="checkion-page-spread__cefr-label">Readability</span>
+                    <span className="checkion-page-spread__cefr-label">
+                      <LabelWithTip tipId="reading.cefr">Readability</LabelWithTip>
+                    </span>
                     <span className="checkion-page-spread__cefr-meta">
                       CEFR band from page copy (mapped from Flesch–Kincaid)
                     </span>
@@ -488,7 +506,9 @@ export function ResultOverviewPanel({
                   data-tone={readabilityTone(ux.readabilityScore)}
                 >
                   <div className="checkion-page-spread__clarity-head">
-                    <span>Clarity</span>
+                    <span>
+                      <LabelWithTip tipId="reading.clarity">Clarity</LabelWithTip>
+                    </span>
                     <strong>{ux.readabilityScore}</strong>
                   </div>
                   <div
@@ -503,7 +523,9 @@ export function ResultOverviewPanel({
               {overview.classification?.intensityTier != null ? (
                 <div className="checkion-page-spread__complexity">
                   <div className="checkion-page-spread__complexity-head">
-                    <span>Complexity</span>
+                    <span>
+                      <LabelWithTip tipId="reading.complexity">Complexity</LabelWithTip>
+                    </span>
                     <strong>{intensityLabel(overview.classification.intensityTier)}</strong>
                   </div>
                   <ol
@@ -648,7 +670,9 @@ export function ResultOverviewPanel({
         <section className="checkion-spread__lab" aria-label="UX eco links">
           {ux ? (
             <div className="checkion-lab-tile" data-tone={scoreTone(ux.score)}>
-              <span className="checkion-lab-tile__k">UX lab</span>
+              <span className="checkion-lab-tile__k">
+                <LabelWithTip tipId="lab.ux">UX lab</LabelWithTip>
+              </span>
               <strong className="checkion-lab-tile__v">{ux.score}</strong>
               <span className="checkion-lab-tile__m">
                 {[
@@ -666,7 +690,9 @@ export function ResultOverviewPanel({
                 eco.grade === 'A+' || eco.grade === 'A' ? 'pos' : eco.grade === 'B' ? 'low' : 'neg'
               }
             >
-              <span className="checkion-lab-tile__k">Eco · {eco.grade}</span>
+              <span className="checkion-lab-tile__k">
+                <LabelWithTip tipId="lab.eco">Eco · {eco.grade}</LabelWithTip>
+              </span>
               <strong className="checkion-lab-tile__v">{eco.co2.toFixed(2)}g</strong>
               <span className="checkion-lab-tile__m">
                 {eco.pageWeightKb} KB
@@ -683,7 +709,9 @@ export function ResultOverviewPanel({
               className="checkion-lab-tile"
               data-tone={links.broken > 0 || links.missingNoopener > 0 ? 'neg' : 'pos'}
             >
-              <span className="checkion-lab-tile__k">Links</span>
+              <span className="checkion-lab-tile__k">
+                <LabelWithTip tipId="lab.links">Links</LabelWithTip>
+              </span>
               <strong className="checkion-lab-tile__v">{links.broken}</strong>
               <span className="checkion-lab-tile__m">
                 broken · {links.internal}/{links.external} in/out
@@ -716,13 +744,17 @@ export function ResultOverviewPanel({
           <div className="checkion-geo-spread__body">
             <p className="checkion-geo-spread__score" aria-label={`GEO score ${geo.score}`}>
               <span className="checkion-geo-spread__score-num">{geo.score}</span>
-              <span className="checkion-geo-spread__score-label">GEO score</span>
+              <span className="checkion-geo-spread__score-label">
+                <LabelWithTip tipId="geo.score">GEO score</LabelWithTip>
+              </span>
             </p>
 
             <div className="checkion-geo-spread__signals">
               <div className="checkion-geo-spread__meter" data-tone={scoreTone(geo.discoverability)}>
                 <div className="checkion-geo-spread__meter-head">
-                  <span>Discoverability</span>
+                  <span>
+                    <LabelWithTip tipId="geo.discoverability">Discoverability</LabelWithTip>
+                  </span>
                   <strong>{geo.discoverability}</strong>
                 </div>
                 <div className="checkion-geo-spread__meter-track" aria-hidden>
@@ -736,7 +768,9 @@ export function ResultOverviewPanel({
 
               <div className="checkion-geo-spread__meter" data-tone={scoreTone(geo.repurposing)}>
                 <div className="checkion-geo-spread__meter-head">
-                  <span>Repurposing</span>
+                  <span>
+                    <LabelWithTip tipId="geo.repurposing">Repurposing</LabelWithTip>
+                  </span>
                   <strong>{geo.repurposing}</strong>
                 </div>
                 <div className="checkion-geo-spread__meter-track" aria-hidden>

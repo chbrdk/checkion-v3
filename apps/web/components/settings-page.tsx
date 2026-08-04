@@ -163,7 +163,7 @@ export function SettingsPage({
       <section className="checkion-settings-section">
         <SectionChrome quiet title="Language" as="h2" />
         <Text role="body" className="checkion-settings-help">
-          Stored for upcoming localization (UI stays English for now).
+          Stored locale for help tips (en/de). UI chrome stays English for now.
         </Text>
         <ToggleGroup
           aria-label="Language"

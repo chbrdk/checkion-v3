@@ -128,3 +128,9 @@ export function useUserPrefs(): UserPrefsContextValue {
   }
   return ctx
 }
+
+/** Locale for help tips — falls back to default when outside UserPrefsProvider (tests). */
+export function useHelpTipLocale(): UiLocaleId {
+  const ctx = useContext(UserPrefsContext)
+  return ctx?.locale ?? paths.defaultLocale
+}

@@ -16,6 +16,7 @@ import { GeoReading } from './geo-reading'
 import { GeoPresenceStage } from './geo-share-of-voice'
 import { GeoInsightsPanel } from './geo-insights-panel'
 import { GeoMovesGallery } from './geo-moves-gallery'
+import { LabelWithTip } from './help-tip'
 
 export function GeoOverviewPanel({
   overview,
@@ -101,11 +102,21 @@ export function GeoOverviewPanel({
 
   const eeatScores = eeat
     ? [
-        { id: 'experience', label: 'Experience', value: eeat.experience },
-        { id: 'expertise', label: 'Expertise', value: eeat.expertise },
-        { id: 'authoritativeness', label: 'Authoritativeness', value: eeat.authoritativeness },
-        { id: 'trustworthiness', label: 'Trustworthiness', value: eeat.trustworthiness },
-        { id: 'geoFitness', label: 'GEO fitness', value: eeat.geoFitness },
+        { id: 'experience', tipId: 'geo.eeat.experience' as const, label: 'Experience', value: eeat.experience },
+        { id: 'expertise', tipId: 'geo.eeat.expertise' as const, label: 'Expertise', value: eeat.expertise },
+        {
+          id: 'authoritativeness',
+          tipId: 'geo.eeat.authoritativeness' as const,
+          label: 'Authoritativeness',
+          value: eeat.authoritativeness,
+        },
+        {
+          id: 'trustworthiness',
+          tipId: 'geo.eeat.trustworthiness' as const,
+          label: 'Trustworthiness',
+          value: eeat.trustworthiness,
+        },
+        { id: 'geoFitness', tipId: 'geo.eeat.fitness' as const, label: 'GEO fitness', value: eeat.geoFitness },
       ].sort((a, b) => a.value - b.value)
     : []
 
@@ -135,7 +146,9 @@ export function GeoOverviewPanel({
         </div>
         <aside className="checkion-geo-snapshot" aria-label="GEO snapshot">
           <div className="checkion-lab-tile" data-tone={tone}>
-            <span className="checkion-lab-tile__k">Cited share</span>
+            <span className="checkion-lab-tile__k">
+              <LabelWithTip tipId="geo.cited_share">Cited share</LabelWithTip>
+            </span>
             <span className="checkion-lab-tile__v">{job.citedShare}%</span>
           </div>
           <div className="checkion-lab-tile">
@@ -182,7 +195,7 @@ export function GeoOverviewPanel({
           <div className="checkion-spread__open-main">
             <p className="checkion-spread__eyebrow">On-page (when available)</p>
             <h3 id="geo-eeat-heading" className="checkion-spread__headline">
-              E-E-A-T ledger
+              <LabelWithTip tipId="geo.eeat">E-E-A-T ledger</LabelWithTip>
             </h3>
             <GeoReading
               jobId={job.id}
@@ -202,7 +215,9 @@ export function GeoOverviewPanel({
                   <span className="checkion-score-ledger__idx">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="checkion-score-ledger__label">{score.label}</span>
+                  <span className="checkion-score-ledger__label">
+                    <LabelWithTip tipId={score.tipId}>{score.label}</LabelWithTip>
+                  </span>
                   <span className="checkion-score-ledger__value">{score.value}</span>
                   <span className="checkion-score-ledger__bar" aria-hidden />
                 </div>

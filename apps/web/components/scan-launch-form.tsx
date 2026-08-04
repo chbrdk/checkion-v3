@@ -26,6 +26,7 @@ import {
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
 import { GeoModelPicker } from './geo-model-picker'
+import { LabelWithTip } from './help-tip'
 import { useJobNotifications } from './job-notification-center'
 import { GeoQueryList } from './geo-query-list'
 import { ProjectFormDialog } from './project-form-dialog'
@@ -534,6 +535,17 @@ export function ScanLaunchForm({
       <Panel className="checkion-launch-stage">
         <form className="checkion-scan-form checkion-scan-form--launch" onSubmit={onSubmit}>
           <div className="checkion-launch-capability">
+            <div className="checkion-launch-tip-row" aria-label="Capability tips">
+              <LabelWithTip tipId="launch.wcag">
+                <span>WCAG</span>
+              </LabelWithTip>
+              <LabelWithTip tipId="launch.geo">
+                <span>GEO</span>
+              </LabelWithTip>
+              <LabelWithTip tipId="launch.seo">
+                <span>SEO</span>
+              </LabelWithTip>
+            </div>
             <div
               className="checkion-capability-grid"
               role="radiogroup"
@@ -570,6 +582,14 @@ export function ScanLaunchForm({
               key={`depth-${activeCapability}`}
               className="checkion-launch-depth checkion-launch-reveal"
             >
+              <div className="checkion-launch-tip-row" aria-label="Depth tips">
+                <LabelWithTip tipId="launch.depth.single">
+                  <span>Quick single</span>
+                </LabelWithTip>
+                <LabelWithTip tipId="launch.depth.deep">
+                  <span>Deep scan</span>
+                </LabelWithTip>
+              </div>
               <div
                 className="checkion-depth-grid"
                 role="radiogroup"

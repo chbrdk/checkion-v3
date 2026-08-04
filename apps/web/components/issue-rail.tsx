@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Chip, EmptyState, FilterRow, Text } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
+import type { TipId } from '../lib/help-tips'
+import { LabelWithTip } from './help-tip'
 
 const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'all',
@@ -11,6 +13,13 @@ const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'moderate',
   'minor',
 ]
+
+const SEVERITY_TIP: Partial<Record<IssueSeverity, TipId>> = {
+  critical: 'issue.severity.critical',
+  serious: 'issue.severity.serious',
+  moderate: 'issue.severity.moderate',
+  minor: 'issue.severity.minor',
+}
 
 /** Compact expandable issue rail for the 20% column beside the capture. */
 export function IssueRail({
@@ -62,19 +71,29 @@ export function IssueRail({
         </p>
       </header>
 
-      <FilterRow role="group" aria-label="Severity">
-        {SEVERITIES.map((s) => (
-          <Chip
-            key={s}
-            size="sm"
-            selected={severity === s}
-            onClick={() => setSeverity(s)}
-            aria-pressed={severity === s}
-          >
-            {s === 'all' ? `All ${counts.all}` : `${s[0]!.toUpperCase()} ${counts[s] ?? 0}`}
-          </Chip>
-        ))}
-      </FilterRow>
+      <div className="checkion-issue-rail__filters">
+        <span className="checkion-issue-rail__filter-label">Severity</span>
+        <div className="checkion-issue-rail__sev-tips" aria-label="Severity glossary">
+          {(['critical', 'serious', 'moderate', 'minor'] as const).map((s) => (
+            <LabelWithTip key={s} tipId={SEVERITY_TIP[s]!}>
+              <span className="checkion-issue-rail__sev-tip">{s}</span>
+            </LabelWithTip>
+          ))}
+        </div>
+        <FilterRow role="group" aria-label="Severity">
+          {SEVERITIES.map((s) => (
+            <Chip
+              key={s}
+              size="sm"
+              selected={severity === s}
+              onClick={() => setSeverity(s)}
+              aria-pressed={severity === s}
+            >
+              {s === 'all' ? `All ${counts.all}` : `${s[0]!.toUpperCase()} ${counts[s] ?? 0}`}
+            </Chip>
+          ))}
+        </FilterRow>
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState>No matches.</EmptyState>

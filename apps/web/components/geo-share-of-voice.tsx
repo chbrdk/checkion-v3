@@ -1,6 +1,7 @@
 'use client'
 
 import type { GeoOverview, GeoPresence, GeoShareOfVoice } from '@checkion-v3/contracts'
+import { LabelWithTip } from './help-tip'
 
 function hostLabel(domain: string, isTarget?: boolean): string {
   if (domain === 'other') return 'Other'
@@ -33,7 +34,7 @@ function FieldStage({
       <header className="checkion-geo-voice__head">
         <p className="checkion-spread__eyebrow">The field</p>
         <h3 id="geo-presence-heading" className="checkion-spread__headline">
-          Share of voice
+          <LabelWithTip tipId="geo.share_of_voice">Share of voice</LabelWithTip>
         </h3>
         {target && rival ? (
           <p className="checkion-geo-voice__lede">
@@ -130,7 +131,9 @@ function SoloStage({ presence }: { presence: GeoPresence }) {
       </header>
 
       <div className="checkion-geo-voice__solo-hero" aria-label="Cited share">
-        <span className="checkion-geo-voice__duel-k">Cited share</span>
+        <span className="checkion-geo-voice__duel-k">
+          <LabelWithTip tipId="geo.cited_share">Cited share</LabelWithTip>
+        </span>
         <span className="checkion-geo-voice__duel-num">
           <span className="checkion-geo-voice__duel-v">{solo.citedShare}</span>
           <span className="checkion-geo-voice__duel-unit">%</span>

@@ -5,6 +5,7 @@ import type {
   IssueSummary,
   VisualLayersSnapshot,
 } from '@checkion-v3/contracts'
+import { LabelWithTip } from './help-tip'
 
 /** Capture coordinate space for live scan-single-1 full-page JPEG (1920×5053). */
 export const ISSUE_CAPTURE_VIEWPORT = { width: 1920, height: 5053 } as const
@@ -63,23 +64,28 @@ export function IssueCaptureOverlay({
   return (
     <figure className="checkion-issue-capture" aria-label="Issue capture">
       {layers.length > 1 ? (
-        <div className="checkion-issue-capture__layers" role="tablist" aria-label="Capture layers">
-          {layers.map((id) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={layer === id}
-              className={
-                layer === id
-                  ? 'checkion-issue-capture__layer-btn checkion-issue-capture__layer-btn--active'
-                  : 'checkion-issue-capture__layer-btn'
-              }
-              onClick={() => onLayerChange(id)}
-            >
-              {id === 'issues' ? 'Issues' : id === 'heatmap' ? 'Heatmap' : 'Regions'}
-            </button>
-          ))}
+        <div className="checkion-issue-capture__layers-row">
+          <LabelWithTip tipId="issue.layer.issues">
+            <span className="checkion-issue-capture__layers-label">Layers</span>
+          </LabelWithTip>
+          <div className="checkion-issue-capture__layers" role="tablist" aria-label="Capture layers">
+            {layers.map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={layer === id}
+                className={
+                  layer === id
+                    ? 'checkion-issue-capture__layer-btn checkion-issue-capture__layer-btn--active'
+                    : 'checkion-issue-capture__layer-btn'
+                }
+                onClick={() => onLayerChange(id)}
+              >
+                {id === 'issues' ? 'Issues' : id === 'heatmap' ? 'Heatmap' : 'Regions'}
+              </button>
+            ))}
+          </div>
         </div>
       ) : null}
 

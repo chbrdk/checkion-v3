@@ -13,11 +13,20 @@ import {
 } from 'react'
 import { Button, Chip, Text } from '../lib/msqdx-ui'
 import { useToast } from '../lib/msqdx-ui-client'
+import type { TipId } from '../lib/help-tips'
 import { paths } from '../lib/paths'
+import { LabelWithTip } from './help-tip'
 import { NavIconJobs } from './nav-icons'
 
 type TrackedJobResource = 'scan' | 'domain' | 'geo'
 type TrackedJobStatus = 'queued' | 'running' | 'completed' | 'failed'
+
+const JOB_STATUS_TIP: Record<TrackedJobStatus, TipId> = {
+  queued: 'job.status.queued',
+  running: 'job.status.running',
+  completed: 'job.status.completed',
+  failed: 'job.status.failed',
+}
 
 type TrackedJobProgress = {
   scanned: number
@@ -386,9 +395,13 @@ export function JobNotificationCenterPanel({
                     <strong>{job.title}</strong>
                     <Text role="meta">{jobDetail(job)}</Text>
                   </div>
-                  <Chip static size="sm">
-                    {job.status}
-                  </Chip>
+                  <div className="checkion-job-center__status">
+                    <LabelWithTip tipId={JOB_STATUS_TIP[job.status]}>
+                      <Chip static size="sm">
+                        {job.status}
+                      </Chip>
+                    </LabelWithTip>
+                  </div>
                 </div>
                 <div className="checkion-job-center__actions">
                   <Link href={job.href} onClick={onClose}>

@@ -16,7 +16,7 @@ Quiet settings page matching the shared product pattern: Account, Profile, Appea
 | Account | When authenticated: Plexon name/email (read) + Sign out. When unauthenticated: Sign in → `/login` |
 | Profile | `Avatar` + display name `Input` (localStorage via `paths.displayNameStorageKey`); may seed from session name |
 | Appearance | Theme `ToggleGroup` → `data-theme` + `paths.themeStorageKey` |
-| Language | Locale `ToggleGroup` (`en` / `de`) — persist for later i18n |
+| Language | Locale `ToggleGroup` (`en` / `de`) — drives bilingual **help tip** copy; UI chrome stays English |
 | API tokens | Personal Bearer CRUD (`specs/domain/settings-api-tokens.md`) — create once / revoke |
 | Federation | Contract id, mode, plexon base, health probe link (read-only ops band) |
 

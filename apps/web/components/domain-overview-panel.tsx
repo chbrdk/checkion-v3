@@ -21,6 +21,7 @@ import { DistributionDonut } from './distribution-donut'
 import { DomainSeoReading } from './domain-seo-reading'
 import { DomainTrustGeoReading } from './domain-trust-geo-reading'
 import { ScoresPanel } from './scores-panel'
+import { LabelWithTip } from './help-tip'
 import { buildSeoReadingFallback } from '../lib/domain-seo-reading'
 import { buildTrustGeoReadingFallback } from '../lib/domain-trust-reading'
 
@@ -446,7 +447,13 @@ export function DomainOverviewPanel({
                     return (
                       <ReadoutMeter
                         key={row!.id}
-                        label={row!.label}
+                        label={
+                          row!.id === 'title' ? (
+                            <LabelWithTip tipId="domain.seo_coverage">{row!.label}</LabelWithTip>
+                          ) : (
+                            row!.label
+                          )
+                        }
                         pct={pct}
                         valueLabel={`${row!.have.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${pct}%`}
                       />
@@ -463,7 +470,7 @@ export function DomainOverviewPanel({
           <header className="checkion-domain-chapter__head">
             <p className="checkion-spread__eyebrow">Distributions</p>
             <h3 id="dist-heading" className="checkion-spread__headline">
-              Share across the corpus
+              <LabelWithTip tipId="domain.distribution">Share across the corpus</LabelWithTip>
             </h3>
             <Hint>Donuts for composition — rankings stay as bars above.</Hint>
           </header>
@@ -550,7 +557,9 @@ export function DomainOverviewPanel({
           <div className="checkion-domain-grid">
             {eeat ? (
               <div className="checkion-domain-card">
-                <h4>E-E-A-T coverage</h4>
+                <h4>
+                  <LabelWithTip tipId="domain.eeat">E-E-A-T coverage</LabelWithTip>
+                </h4>
                 <ReadoutMeterList aria-label="E-E-A-T page coverage">
                   {(
                     [
@@ -581,14 +590,18 @@ export function DomainOverviewPanel({
               <div className="checkion-domain-card">
                 <h4>GEO aggregate</h4>
                 <ReadoutMeterList aria-label="GEO scores">
-                  <ReadoutMeter label="Score" pct={geo.score} valueLabel={`${geo.score}`} />
                   <ReadoutMeter
-                    label="Discoverability"
+                    label={<LabelWithTip tipId="geo.score">Score</LabelWithTip>}
+                    pct={geo.score}
+                    valueLabel={`${geo.score}`}
+                  />
+                  <ReadoutMeter
+                    label={<LabelWithTip tipId="geo.discoverability">Discoverability</LabelWithTip>}
                     pct={geo.discoverability}
                     valueLabel={`${geo.discoverability}`}
                   />
                   <ReadoutMeter
-                    label="Repurposing"
+                    label={<LabelWithTip tipId="geo.repurposing">Repurposing</LabelWithTip>}
                     pct={geo.repurposing}
                     valueLabel={`${geo.repurposing}`}
                   />

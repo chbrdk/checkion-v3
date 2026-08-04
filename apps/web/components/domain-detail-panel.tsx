@@ -19,7 +19,9 @@ import {
   type SearchableFact,
 } from '../lib/detail-report-search'
 import { domainFormulaForBand } from '../lib/domain-detail-score-formulas'
+import { tipIdForDetailBand } from '../lib/help-tips'
 import { scoreTone } from '../lib/scan-display'
+import { LabelWithTip } from './help-tip'
 
 function msLabel(value: number): string {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} s`
@@ -84,11 +86,12 @@ function ReportBand({
   rows: Fact[]
 }) {
   if (rows.length === 0) return null
+  const tipId = tipIdForDetailBand(id)
   return (
     <section className="checkion-report__band" aria-labelledby={id}>
       <header className="checkion-report__band-head">
         <h3 id={id} className="checkion-report__band-title">
-          {title}
+          {tipId ? <LabelWithTip tipId={tipId}>{title}</LabelWithTip> : title}
         </h3>
         {formula ? <p className="checkion-report__formula">{formula}</p> : null}
       </header>

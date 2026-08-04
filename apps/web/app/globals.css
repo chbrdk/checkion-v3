@@ -1565,6 +1565,18 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   color: var(--muted);
 }
 
+.checkion-label-with-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.checkion-label-with-tip .ds-infotip__trigger {
+  flex: 0 0 auto;
+}
+
 .checkion-lab-tile__v {
   font-family: var(--font-display, var(--font-body));
   font-size: clamp(1.75rem, 3vw, 2.35rem);
@@ -2103,6 +2115,61 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.checkion-issue-capture__layers-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.checkion-issue-capture__layers-label {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-issue-rail__filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.checkion-issue-rail__filter-label {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-issue-rail__sev-tips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+}
+
+.checkion-issue-rail__sev-tip {
+  font-size: var(--type-xs);
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.checkion-launch-tip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  margin-bottom: 0.55rem;
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+.checkion-job-center__status {
+  display: inline-flex;
+  align-items: center;
 }
 
 .checkion-issue-capture__layer-btn {

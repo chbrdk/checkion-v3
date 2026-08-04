@@ -17,6 +17,7 @@ const requiredSpecs = [
   'specs/domain/journey-agent-island.md',
   'specs/domain/share-links.md',
   'specs/domain/settings.md',
+  'specs/domain/help-tips.md',
   'specs/domain/settings-api-tokens.md',
   'specs/domain/edit-dialogs.md',
   'specs/domain/geo-eeat.md',

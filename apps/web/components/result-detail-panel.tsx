@@ -35,7 +35,9 @@ import {
   type SearchableFact,
 } from '../lib/detail-report-search'
 import { DETAIL_SCORE_FORMULAS, formulaForBand } from '../lib/detail-score-formulas'
+import { tipIdForDetailBand } from '../lib/help-tips'
 import { scoreTone } from '../lib/scan-display'
+import { LabelWithTip } from './help-tip'
 
 function msLabel(value: number): string {
   if (value >= 1000) {
@@ -91,11 +93,12 @@ function ReportBand({
   rows: Fact[]
 }) {
   if (rows.length === 0) return null
+  const tipId = tipIdForDetailBand(id)
   return (
     <section className="checkion-report__band" aria-labelledby={id}>
       <header className="checkion-report__band-head">
         <h3 id={id} className="checkion-report__band-title">
-          {title}
+          {tipId ? <LabelWithTip tipId={tipId}>{title}</LabelWithTip> : title}
         </h3>
         {formula ? <p className="checkion-report__formula">{formula}</p> : null}
       </header>
@@ -156,7 +159,7 @@ function ScoreLedgerStrip({
     <section className="checkion-report__ledger" aria-labelledby="detail-ledger-heading">
       <header className="checkion-report__band-head">
         <h3 id="detail-ledger-heading" className="checkion-report__band-title">
-          Ledger
+          <LabelWithTip tipId="detail.ledger">Ledger</LabelWithTip>
         </h3>
         <p className="checkion-report__formula">{DETAIL_SCORE_FORMULAS.ledger}</p>
       </header>

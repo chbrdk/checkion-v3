@@ -311,6 +311,8 @@ describe('panels smoke', () => {
     ).toBeTruthy()
     expect(screen.getByLabelText(/Weakest signal/i)).toBeTruthy()
     expect(document.querySelector('.category-rank-item--weakest')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /About Accessibility score/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /About Discoverability/i })).toBeTruthy()
     expect(screen.getAllByText(/color contrast/i).length).toBeGreaterThan(0)
     expect(overview!.performance?.lcp).toBe(4060)
     expect(overview!.seo?.h1).toBe('Automotive Brownfield Integration')
