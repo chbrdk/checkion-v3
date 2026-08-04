@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { TopStatus } from '@msqdx/ui'
 import { AppShell } from '../../../../components/app-shell'
+import { ScanStatusPoller } from '../../../../components/scan-status-poller'
 import { ResultActions } from '../../../../components/result-actions'
 import { ResultDetailPanel } from '../../../../components/result-detail-panel'
 import {
@@ -59,6 +60,7 @@ export default async function ResultSectionPage({
         />
       }
     >
+      <ScanStatusPoller scanId={overview.scan.id} status={overview.scan.status} />
       <ResultMagazineShell
         overview={overview}
         actions={actions}

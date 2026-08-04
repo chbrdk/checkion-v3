@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   Alert,
   Button,
@@ -27,6 +26,7 @@ import {
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
 import { GeoModelPicker } from './geo-model-picker'
+import { useJobNotifications } from './job-notification-center'
 import { GeoQueryList } from './geo-query-list'
 import { ProjectFormDialog } from './project-form-dialog'
 
@@ -172,7 +172,7 @@ export function ScanLaunchForm({
   fromAudion?: boolean
   projectLabel?: string
 }) {
-  const router = useRouter()
+  const { trackJob } = useJobNotifications()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
 
   const [capability, setCapability] = useState<LaunchCapability | null>(() =>
@@ -353,7 +353,14 @@ export function ScanLaunchForm({
     })
     if (!res.ok) throw new Error(`Launch failed (${res.status})`)
     const data = (await res.json()) as { id: string }
-    router.push(paths.routes.resultSection(data.id, 'overview'))
+    trackJob({
+      id: data.id,
+      resource: 'scan',
+      status: 'queued',
+      title: launchMode === 'deep' ? 'Deep scan' : 'Single scan',
+      href: paths.routes.resultSection(data.id, 'overview'),
+      projectId,
+    })
   }
 
   async function launchSeo() {
@@ -375,7 +382,14 @@ export function ScanLaunchForm({
     }
     const data = (await res.json()) as { id: string }
     if (!data.id) throw new Error('SEO launch returned no domain id')
-    router.push(paths.routes.domainSection(data.id, 'overview'))
+    trackJob({
+      id: data.id,
+      resource: 'domain',
+      status: 'queued',
+      title: 'SEO crawl',
+      href: paths.routes.domainSection(data.id, 'overview'),
+      projectId,
+    })
   }
 
   async function readLaunchError(res: Response, fallback: string): Promise<string> {
@@ -454,7 +468,14 @@ export function ScanLaunchForm({
     if (data.projectId && data.projectId !== projectId) {
       setProjectId(data.projectId)
     }
-    router.push(paths.routes.geoSection(jobId, 'overview'))
+    trackJob({
+      id: jobId,
+      resource: 'geo',
+      status: 'queued',
+      title: 'GEO job',
+      href: paths.routes.geoSection(jobId, 'overview'),
+      projectId: data.projectId || resolvedProjectId,
+    })
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -471,6 +492,7 @@ export function ScanLaunchForm({
       } else {
         await launchWcagScan(activeWcagDepth!)
       }
+      setStatus('idle')
     } catch (err) {
       setStatus('error')
       setError(err instanceof Error ? err.message : 'Launch failed')

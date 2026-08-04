@@ -381,7 +381,7 @@ describe('ScanLaunchForm', () => {
     // Live filter drops Anthropic; keeps OpenAI selection
     expect(body.models).toEqual(['gpt-5.4-nano', 'gpt-5.6-luna'])
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-new-1', 'overview'))
+      expect(push).not.toHaveBeenCalled()
     })
   })
 
@@ -431,7 +431,7 @@ describe('ScanLaunchForm', () => {
     expect(body.projectId).toBe('proj-2')
     expect(body.url).toBe('https://acme.example/geo')
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-dl-1', 'overview'))
+      expect(push).not.toHaveBeenCalled()
     })
   })
 
@@ -458,7 +458,7 @@ describe('ScanLaunchForm', () => {
     expect(body.companyName).toBe('Acme Robotics')
     expect(body.url).toBe('https://acme-robotics.example/')
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(paths.routes.geoSection('geo-co-1', 'overview'))
+      expect(push).not.toHaveBeenCalled()
     })
   })
 
@@ -545,7 +545,7 @@ describe('ScanLaunchForm', () => {
     expect(body.project).toEqual({ name: 'Demo Project', domain: 'demo.example' })
   })
 
-  it('posts SEO domain crawl and navigates to domain overview', async () => {
+  it('posts SEO domain crawl without forcing a route change', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({ id: 'domain-seo-1' }),
@@ -570,11 +570,11 @@ describe('ScanLaunchForm', () => {
     expect(body.projectId).toBe('proj-1')
     expect(body.url).toBe('https://example.com/')
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(paths.routes.domainSection('domain-seo-1', 'overview'))
+      expect(push).not.toHaveBeenCalled()
     })
   })
 
-  it('posts single scan and navigates to results overview', async () => {
+  it('posts single scan without forcing a route change', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({ id: 'scan-new-1' }),
@@ -599,7 +599,7 @@ describe('ScanLaunchForm', () => {
     expect(body.mode).toBe('single')
     expect(body.url).toBe('https://example.com/')
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(paths.routes.resultSection('scan-new-1', 'overview'))
+      expect(push).not.toHaveBeenCalled()
     })
   })
 

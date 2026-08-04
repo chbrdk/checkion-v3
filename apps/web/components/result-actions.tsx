@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert, Button, Field, Input, Text } from '@msqdx/ui'
 import { ConfirmDialog, Dialog } from '../lib/msqdx-ui-client'
+import { useJobNotifications } from './job-notification-center'
 import { paths } from '../lib/paths'
 import type { ShareResourceType } from '@checkion-v3/contracts'
 
@@ -21,6 +22,7 @@ export function ResultActions({
   mode: 'single' | 'deep'
 }) {
   const router = useRouter()
+  const { trackJob } = useJobNotifications()
   const [shareOpen, setShareOpen] = useState(false)
   const [rerunOpen, setRerunOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -75,7 +77,15 @@ export function ResultActions({
       })
       if (!res.ok) throw new Error(`Re-run failed (${res.status})`)
       const data = (await res.json()) as { id: string }
-      router.push(paths.routes.resultDetail(data.id))
+      trackJob({
+        id: data.id,
+        resource: 'scan',
+        status: 'queued',
+        title: mode === 'deep' ? 'Deep scan re-run' : 'Single scan re-run',
+        href: paths.routes.resultSection(data.id, 'overview'),
+        projectId,
+      })
+      setRerunOpen(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Re-run failed')
     } finally {

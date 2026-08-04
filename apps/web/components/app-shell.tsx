@@ -15,6 +15,7 @@ import {
 } from '../lib/msqdx-ui-shell'
 import { Avatar } from '@msqdx/ui'
 import { NavIconOverview, NavIconProjects, NavIconResults, NavIconScan } from './nav-icons'
+import { JobNotificationCenterButton } from './job-notification-center'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
 
@@ -90,6 +91,7 @@ export function AppShell({
             {title != null && title !== '' ? <PageTitle>{title}</PageTitle> : null}
           </div>
           <div className="topbar-right">
+            <JobNotificationCenterButton />
             {status}
             {actions}
           </div>

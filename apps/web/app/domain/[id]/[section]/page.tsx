@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { TopStatus } from '@msqdx/ui'
 import { AppShell } from '../../../../components/app-shell'
+import { ScanStatusPoller } from '../../../../components/scan-status-poller'
 import { DomainDetailPanel } from '../../../../components/domain-detail-panel'
 import { DomainIssuesPanel } from '../../../../components/domain-issues-panel'
 import { DomainMagazineShell } from '../../../../components/domain-magazine-shell'
@@ -57,6 +58,7 @@ export default async function DomainSectionPage({
         />
       }
     >
+      <ScanStatusPoller scanId={id} status={overview.scan.status} resource="domain" />
       <DomainMagazineShell
         overview={overview}
         actions={actions}

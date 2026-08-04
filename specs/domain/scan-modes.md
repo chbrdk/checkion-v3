@@ -1,7 +1,7 @@
 # Scan modes — CHECKION v3
 
 ## Status
-Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project)
+Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project; Phase 7 — launch / re-run notification center)
 
 ## MVP modes (deep-link / API)
 | Mode | Primary capability | Result |
@@ -46,6 +46,22 @@ Deep-links (`/scan?mode=geo&projectId=&url=`) still prefill URL + Project on the
 Suggest and create both receive URL + optional `companyName` and optional project context (`name`, `domain`) so prompts stay brand-aware — see `specs/api/geo-suggest-queries.md`.
 
 Launch failures surface the API `detail` (or a clear auth/HTML warning) in an `Alert`.
+
+## Launch + re-run behavior
+Asynchronous jobs (`single`, `deep`, `seo`, `geo`) must not pretend to be done just because an id exists.
+
+1. **No forced immediate redirect on create** — when `POST /api/scans`, `POST /api/domain-scans`, or `POST /api/geo-jobs` returns a queued/running resource, the user stays on the initiating surface (`/scan`, result re-run dialog, project workspace action, etc.).
+2. **Global notification center** — every queued/running job is registered in a client-side **Notification center** that is visible across CHECKION. It replaces the old snackbar-only approach with:
+   - short toast/snackbar feedback when a job is queued, starts running, completes, or fails
+   - a persistent center listing all in-progress and recent jobs
+   - deep-links from each job row to the relevant result surface (`/results/:id/overview`, `/domain/:id/overview`, `/geo/:id/overview`)
+3. **Result pages remain valid monitors** — if the user explicitly opens a running result page, the page shows an honest in-progress state and polls until completion/failure (same principle already used for GEO).
+4. **Scope** — applies to:
+   - central `/scan` launches
+   - result/detail re-runs
+   - project workspace CTAs
+   - future product entry points that start these same APIs
+5. **Status language** — queued/running/completed/failed must be reflected consistently in both the notification center and the relevant result page. An empty queued shell is never rendered as a completed success state.
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 
