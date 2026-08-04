@@ -61,7 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-ARG MSQDX_UI_REF=90fdcf3b19dbbca2d5fade773ebb223104d58c48
+ARG MSQDX_UI_REF=b815fd45ad292ef84869ee4c54776346b87f9e70
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
