@@ -78,12 +78,16 @@ describe('Dockerfile Coolify packaging', () => {
     expect(login).toContain('isPlexonAuthConfigured()')
   })
 
-  it('keeps DataTable off the RSC @msqdx/ui barrel', () => {
+  it('keeps stateful overlays off the RSC @msqdx/ui barrel', () => {
     const barrel = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui.ts'), 'utf8')
     const client = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui-client.ts'), 'utf8')
     expect(barrel).not.toMatch(/export \{[^}]*DataTable/)
+    expect(barrel).not.toMatch(/export \{[^}]*Tooltip/)
+    expect(barrel).not.toMatch(/export \{[^}]*InfoTip/)
     expect(client).toContain("'use client'")
     expect(client).toContain('DataTable')
+    expect(client).toContain('Tooltip')
+    expect(client).toContain('InfoTip')
   })
 
   it('keeps health path for Traefik probes', () => {
