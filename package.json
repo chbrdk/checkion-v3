@@ -10,6 +10,8 @@
     "test": "npm run test -w web",
     "typecheck": "npm run typecheck -w web",
     "dev": "npm run dev -w web",
-    "db:push": "npm run db:push -w web"
+    "db:push": "npm run db:push -w web",
+    "mcp:build": "npm run build --prefix mcp-server",
+    "mcp:dev": "npm run dev --prefix mcp-server"
   }
 }

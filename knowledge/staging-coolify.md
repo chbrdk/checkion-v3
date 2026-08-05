@@ -86,6 +86,19 @@ Coolify → Application → **Persistent Storage** → mount host/volume path to
 6. Ports: expose **3007**
 7. Set env vars above → Deploy
 
+### Optional: MCP companion app
+
+Separate Coolify application `checkion-v3-mcp` (not prod CHECKION MCP):
+
+| Item | Value |
+|------|--------|
+| Dockerfile | `mcp-server/Dockerfile` |
+| Build context | `mcp-server` |
+| Port | **3100** |
+| Env | `CHECKION_API_URL=https://checkion-v3.projects-a.plygrnd.tech`, `CHECKION_API_TOKEN=<Settings token>`, `MCP_STATELESS=1` |
+
+Document public URL as `URL_CHECKION_V3_MCP` in `knowledge/paths.md` after attach. Spec: `specs/domain/mcp-server.md`.
+
 ## Smoke checklist
 
 1. `GET https://checkion-v3.projects-a.plygrnd.tech/api/health` → ok + federation contract id

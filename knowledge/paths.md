@@ -37,6 +37,14 @@
 
 ## Auth
 Login `/login` · NextAuth `/api/auth/*` · Plexon `validate-credentials` — see `specs/domain/plexon-federation.md`.
+API tokens (MCP/CLI): Settings → API tokens · `specs/domain/settings-api-tokens.md`.
+
+## MCP (checkion-v3)
+- Package: `mcp-server/` · Spec `specs/domain/mcp-server.md` · Ops `knowledge/mcp-server.md`
+- Tools prefix: `checkion_v3.*` (distinct from CHECKION v2 `checkion.*`)
+- Local HTTP: `http://localhost:3100` (`MCP_PORT`)
+- Staging placeholder: `URL_CHECKION_V3_MCP` — Coolify app `checkion-v3-mcp` after attach
+- Env: `CHECKION_API_URL` (= `URL_CHECKION_V3`), `CHECKION_API_TOKEN` (Settings Bearer)
 
 ## Federation
 Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dummy` for fixture-only local / Staging Shell.

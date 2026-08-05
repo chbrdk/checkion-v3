@@ -36,7 +36,7 @@ Middleware allows `/api/*` when `Authorization: Bearer …` is present (in-route
 
 - Scopes / expiry / rotation UI
 - Service tokens (Plexon inbound uses `PLEXON_SERVICE_SECRET`)
-- Journey / Reports / MCP product surface
+- Journey / Reports product surface (MCP server is separate: `specs/domain/mcp-server.md`)
 
 ## Acceptance
 
