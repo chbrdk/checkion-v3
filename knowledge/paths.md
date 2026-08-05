@@ -43,7 +43,7 @@ API tokens (MCP/CLI): Settings → API tokens · `specs/domain/settings-api-toke
 - Package: `mcp-server/` · Spec `specs/domain/mcp-server.md` · Ops `knowledge/mcp-server.md`
 - Tools prefix: `checkion_v3.*` (distinct from CHECKION v2 `checkion.*`)
 - Local HTTP: `http://localhost:3100` (`MCP_PORT`)
-- Staging placeholder: `URL_CHECKION_V3_MCP` — Coolify app `checkion-v3-mcp` after attach
+- Staging: `URL_CHECKION_V3_MCP` = `https://checkion-v3-mcp.projects-a.plygrnd.tech` (Coolify `checkion-v3-mcp`, uuid `fkwhbjlpy715henc7fcbwj2y`)
 - Env: `CHECKION_API_URL` (= `URL_CHECKION_V3`), `CHECKION_API_TOKEN` (Settings Bearer)
 
 ## Federation

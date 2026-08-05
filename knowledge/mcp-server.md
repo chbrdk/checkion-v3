@@ -19,11 +19,8 @@ Add MCP server URL `http://localhost:3100` (or staging Coolify MCP URL) with Str
 
 ## Coolify
 
-- App: `checkion-v3-mcp` in `msqdx-ecosystem-v3` / staging (not prod CHECKION MCP).
-- Dockerfile: `mcp-server/Dockerfile`, context `mcp-server`.
+- App: `checkion-v3-mcp` in project **MSQDX-Checkion-v3** (uuid `fkwhbjlpy715henc7fcbwj2y`).
+- Dockerfile: `/Dockerfile`, base `/mcp-server`.
 - Port **3100**.
 - Env: `CHECKION_API_URL=https://checkion-v3.projects-a.plygrnd.tech`, `CHECKION_API_TOKEN=…`, `MCP_STATELESS=1`.
-
-## Staging URL placeholder
-
-`URL_CHECKION_V3_MCP` — set after Coolify attach (document in `knowledge/paths.md`).
+- Public: `URL_CHECKION_V3_MCP` = `https://checkion-v3-mcp.projects-a.plygrnd.tech`

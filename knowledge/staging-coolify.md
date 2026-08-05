@@ -86,18 +86,19 @@ Coolify → Application → **Persistent Storage** → mount host/volume path to
 6. Ports: expose **3007**
 7. Set env vars above → Deploy
 
-### Optional: MCP companion app
+### MCP companion app (live)
 
-Separate Coolify application `checkion-v3-mcp` (not prod CHECKION MCP):
+Coolify application `checkion-v3-mcp` in project **MSQDX-Checkion-v3** (uuid `fkwhbjlpy715henc7fcbwj2y`):
 
 | Item | Value |
 |------|--------|
-| Dockerfile | `mcp-server/Dockerfile` |
-| Build context | `mcp-server` |
+| FQDN | `https://checkion-v3-mcp.projects-a.plygrnd.tech` (`URL_CHECKION_V3_MCP`) |
+| Repo | `chbrdk/checkion-v3` · `main` |
+| Dockerfile | `/Dockerfile` · base `/mcp-server` |
 | Port | **3100** |
 | Env | `CHECKION_API_URL=https://checkion-v3.projects-a.plygrnd.tech`, `CHECKION_API_TOKEN=<Settings token>`, `MCP_STATELESS=1` |
 
-Document public URL as `URL_CHECKION_V3_MCP` in `knowledge/paths.md` after attach. Spec: `specs/domain/mcp-server.md`.
+Operator: replace placeholder `CHECKION_API_TOKEN` with a Settings → API tokens Bearer, then redeploy. Spec: `specs/domain/mcp-server.md`.
 
 ## Smoke checklist
 
