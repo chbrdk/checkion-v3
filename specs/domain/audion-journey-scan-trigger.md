@@ -61,3 +61,7 @@ Bases: `knowledge/paths.md` (`NEXT_PUBLIC_CHECKION_URL` / staging `URL_CHECKION_
 
 ## Phasing
 Spec · deep-link `/scan` prefill · correlation on `POST /api/scans` · results “From Audion” chrome — **done**. AUDION BFF Bearer path remains optional.
+
+## Upstream — Collection Test Flow (Plexon)
+
+When Plexon orchestrates a Collection graph that includes `scan` / `score_gate` / `issue_gate` nodes, CHECKION remains owner of single-page scan execution; Plexon owns dispatch + Collection verdict. Spec: `plexon-v3/specs/domain/collection-test-flow.md`. This handoff API is the Wave-1 quality segment primitive.
