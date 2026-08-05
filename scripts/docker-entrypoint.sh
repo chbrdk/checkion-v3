@@ -24,4 +24,6 @@ else
   echo "[CHECKION-v3] DATABASE_URL not set — stores use in-memory fixtures (dev / Staging Shell)."
 fi
 
+mkdir -p "${SCAN_SCREENSHOTS_PATH:-data/screenshots}"
+
 exec npm run start -w web

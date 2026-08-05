@@ -13,19 +13,32 @@ import {
 } from 'react'
 import { Button, Chip, Text } from '../lib/msqdx-ui'
 import { useToast } from '../lib/msqdx-ui-client'
+import type { DomainScanControlAction, ScanStatus } from '@checkion-v3/contracts'
 import type { TipId } from '../lib/help-tips'
 import { paths } from '../lib/paths'
 import { LabelWithTip } from './help-tip'
 import { NavIconJobs } from './nav-icons'
 
 type TrackedJobResource = 'scan' | 'domain' | 'geo'
-type TrackedJobStatus = 'queued' | 'running' | 'completed' | 'failed'
+type TrackedJobStatus = ScanStatus
 
-const JOB_STATUS_TIP: Record<TrackedJobStatus, TipId> = {
+const JOB_STATUS_TIP: Partial<Record<TrackedJobStatus, TipId>> = {
   queued: 'job.status.queued',
   running: 'job.status.running',
+  paused: 'job.status.paused',
+  cancelling: 'job.status.cancelling',
   completed: 'job.status.completed',
   failed: 'job.status.failed',
+  cancelled: 'job.status.cancelled',
+}
+
+function isActiveJobStatus(status: TrackedJobStatus): boolean {
+  return (
+    status === 'queued' ||
+    status === 'running' ||
+    status === 'paused' ||
+    status === 'cancelling'
+  )
 }
 
 type TrackedJobProgress = {
@@ -53,10 +66,12 @@ type JobNotificationsContextValue = {
   jobs: TrackedJob[]
   runningCount: number
   restartingKey: string | null
+  controllingKey: string | null
   trackJob: (job: TrackJobInput) => void
   dismissJob: (id: string, resource: TrackedJobResource) => void
   clearFinished: () => void
   restartDomainJob: (job: TrackedJob) => Promise<void>
+  controlDomainJob: (job: TrackedJob, action: DomainScanControlAction) => Promise<void>
 }
 
 const STORAGE_KEY = 'checkion.v3.jobNotifications'
@@ -66,10 +81,12 @@ const JobNotificationsContext = createContext<JobNotificationsContextValue>({
   jobs: [],
   runningCount: 0,
   restartingKey: null,
+  controllingKey: null,
   trackJob: () => {},
   dismissJob: () => {},
   clearFinished: () => {},
   restartDomainJob: async () => {},
+  controlDomainJob: async () => {},
 })
 
 function toastCopy(job: TrackJobInput | TrackedJob): string {
@@ -82,6 +99,12 @@ function toastCopy(job: TrackJobInput | TrackedJob): string {
       return `${job.title} ready`
     case 'failed':
       return `${job.title} failed`
+    case 'paused':
+      return `${job.title} paused`
+    case 'cancelling':
+      return `${job.title} stopping`
+    case 'cancelled':
+      return `${job.title} cancelled`
   }
 }
 
@@ -129,8 +152,11 @@ async function readRemoteStatus(job: TrackedJob): Promise<{
   if (
     rawStatus === 'queued' ||
     rawStatus === 'running' ||
+    rawStatus === 'paused' ||
+    rawStatus === 'cancelling' ||
     rawStatus === 'completed' ||
-    rawStatus === 'failed'
+    rawStatus === 'failed' ||
+    rawStatus === 'cancelled'
   ) {
     return { status: rawStatus, detail, progress: data.progress }
   }
@@ -149,6 +175,7 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
   const { push } = useToast()
   const [jobs, setJobs] = useState<TrackedJob[]>([])
   const [restartingKey, setRestartingKey] = useState<string | null>(null)
+  const [controllingKey, setControllingKey] = useState<string | null>(null)
   const mountedRef = useRef(false)
 
   useEffect(() => {
@@ -187,10 +214,37 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
   }, [])
 
   const clearFinished = useCallback(() => {
-    setJobs((prev) =>
-      prev.filter((job) => job.status === 'queued' || job.status === 'running'),
-    )
+    setJobs((prev) => prev.filter((job) => isActiveJobStatus(job.status)))
   }, [])
+
+  const controlDomainJob = useCallback(
+    async (job: TrackedJob, action: DomainScanControlAction) => {
+      if (job.resource !== 'domain') return
+      const key = itemKey(job)
+      setControllingKey(key)
+      try {
+        const res = await fetch(paths.routes.apiDomainScanControl(job.id), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action }),
+        })
+        const data = (await res.json()) as { status?: TrackedJobStatus; error?: string }
+        if (!res.ok) throw new Error(data.error ?? `Control failed (${res.status})`)
+        trackJob({
+          ...job,
+          status: data.status ?? job.status,
+        })
+      } catch (err) {
+        push({
+          message: err instanceof Error ? err.message : 'Control failed',
+          tone: 'error',
+        })
+      } finally {
+        setControllingKey(null)
+      }
+    },
+    [push, trackJob],
+  )
 
   const restartDomainJob = useCallback(
     async (job: TrackedJob) => {
@@ -228,7 +282,7 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
   )
 
   useEffect(() => {
-    const pending = jobs.filter((job) => job.status === 'queued' || job.status === 'running')
+    const pending = jobs.filter((job) => isActiveJobStatus(job.status))
     if (pending.length === 0) return
 
     let cancelled = false
@@ -283,14 +337,16 @@ export function JobNotificationsProvider({ children }: { children: ReactNode }) 
   const value = useMemo<JobNotificationsContextValue>(
     () => ({
       jobs,
-      runningCount: jobs.filter((job) => job.status === 'queued' || job.status === 'running').length,
+      runningCount: jobs.filter((job) => isActiveJobStatus(job.status)).length,
       restartingKey,
+      controllingKey,
       trackJob,
       dismissJob,
       clearFinished,
       restartDomainJob,
+      controlDomainJob,
     }),
-    [jobs, restartingKey, trackJob, dismissJob, clearFinished, restartDomainJob],
+    [jobs, restartingKey, controllingKey, trackJob, dismissJob, clearFinished, restartDomainJob, controlDomainJob],
   )
 
   return (
@@ -334,7 +390,7 @@ export function JobNotificationCenterPanel({
   onClose: () => void
   railEdge?: 'left' | 'right' | 'top' | 'bottom'
 }) {
-  const { jobs, restartingKey, dismissJob, clearFinished, restartDomainJob } =
+  const { jobs, restartingKey, controllingKey, dismissJob, clearFinished, restartDomainJob, controlDomainJob } =
     useJobNotifications()
   const panelRef = useRef<HTMLDivElement | null>(null)
 
@@ -396,11 +452,17 @@ export function JobNotificationCenterPanel({
                     <Text role="meta">{jobDetail(job)}</Text>
                   </div>
                   <div className="checkion-job-center__status">
-                    <LabelWithTip tipId={JOB_STATUS_TIP[job.status]}>
+                    {JOB_STATUS_TIP[job.status] ? (
+                      <LabelWithTip tipId={JOB_STATUS_TIP[job.status]!}>
+                        <Chip static size="sm">
+                          {job.status}
+                        </Chip>
+                      </LabelWithTip>
+                    ) : (
                       <Chip static size="sm">
                         {job.status}
                       </Chip>
-                    </LabelWithTip>
+                    )}
                   </div>
                 </div>
                 <div className="checkion-job-center__actions">
@@ -408,7 +470,38 @@ export function JobNotificationCenterPanel({
                     Open
                   </Link>
                   {job.resource === 'domain' &&
-                  job.status === 'failed' &&
+                  (job.status === 'running' || job.status === 'queued') ? (
+                    <button
+                      type="button"
+                      onClick={() => void controlDomainJob(job, 'pause')}
+                      className="checkion-job-center__dismiss"
+                      disabled={controllingKey === itemKey(job)}
+                    >
+                      Pause
+                    </button>
+                  ) : null}
+                  {job.resource === 'domain' && job.status === 'paused' ? (
+                    <button
+                      type="button"
+                      onClick={() => void controlDomainJob(job, 'resume')}
+                      className="checkion-job-center__dismiss"
+                      disabled={controllingKey === itemKey(job)}
+                    >
+                      Resume
+                    </button>
+                  ) : null}
+                  {job.resource === 'domain' && isActiveJobStatus(job.status) ? (
+                    <button
+                      type="button"
+                      onClick={() => void controlDomainJob(job, 'cancel')}
+                      className="checkion-job-center__dismiss"
+                      disabled={controllingKey === itemKey(job)}
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                  {job.resource === 'domain' &&
+                  (job.status === 'failed' || job.status === 'cancelled') &&
                   job.projectId &&
                   job.targetUrl ? (
                     <button

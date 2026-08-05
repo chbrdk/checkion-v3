@@ -381,7 +381,13 @@ function severityFromSystemic(pageCount: number, totalPages: number): IssueSever
 
 export function adaptDomainResultToContracts(
   domainResult: DomainScanResultWithFullPages,
-  input: { id: string; projectId: string; rootUrl: string; startedAt: string },
+  input: {
+    id: string
+    projectId: string
+    rootUrl: string
+    startedAt: string
+    status?: DomainScanLight['status']
+  },
 ): {
   domain: DomainScanLight
   issues: IssueSummary[]
@@ -449,11 +455,12 @@ export function adaptDomainResultToContracts(
     }) ?? [score('accessibility', 'Accessibility', avgScore)]
 
   const completedAt = new Date().toISOString()
+  const terminalStatus = input.status ?? 'completed'
   const domain: DomainScanLight = {
     id: input.id,
     projectId: input.projectId,
     rootUrl: input.rootUrl,
-    status: 'completed',
+    status: terminalStatus,
     pageCount: pages.length || domainResult.totalPages,
     overallScore: Math.round(avgScore),
     issueCount: issues.length,

@@ -1,5 +1,6 @@
 import type {
   DomainOverview,
+  DomainScanControlAction,
   DomainScanLight,
   DomainSystemicIssue,
   IssueSummary,
@@ -28,6 +29,7 @@ import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
 import { withScanCorrelation } from '../scan-correlation'
 import { selectTopIssueGroups } from '../issue-groups'
+import { applyDomainScanControlAction, isActiveDomainScanStatus, readDomainScanControlState } from '../scan/domain-scan-control'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 
@@ -365,6 +367,26 @@ async function memoryCreateDomainScan(input: {
           )
         }
       },
+      beforeWorkerStart: async (domainId) => {
+        const row = memoryGetDomainScan(domainId)
+        if (!row) return false
+        if (row.status === 'cancelling' || row.status === 'cancelled') {
+          const cancelledAt = new Date().toISOString()
+          domainScans = domainScans.map((d) =>
+            d.id === domainId
+              ? { ...d, status: 'cancelled', completedAt: cancelledAt, error: 'Cancelled by user' }
+              : d,
+          )
+          return false
+        }
+        return true
+      },
+      isPaused: async (domainId) => memoryGetDomainScan(domainId)?.status === 'paused',
+      getScanControl: async (domainId) => {
+        const row = memoryGetDomainScan(domainId)
+        if (!row) return 'cancel'
+        return readDomainScanControlState(row.status)
+      },
       updateProgress: async (domainId, scanned, total, currentUrl) => {
         domainScans = domainScans.map((d) =>
           d.id === domainId ? { ...d, pageCount: scanned, progress: { scanned, total, currentUrl } } : d,
@@ -389,6 +411,26 @@ async function memoryCreateDomainScan(input: {
           )
           issuesByScan[input.linkScanId] = enrichIssueInspect(bundle.issues)
           scoresByScan[input.linkScanId] = bundle.scores
+        }
+      },
+      persistCancelled: async (bundle) => {
+        const cancelled = { ...bundle.domain, status: 'cancelled' as const }
+        domainScans = domainScans.map((d) => (d.id === cancelled.id ? cancelled : d))
+        issuesByScan[cancelled.id] = enrichIssueInspect(bundle.issues)
+        scoresByScan[cancelled.id] = bundle.scores
+        domainOverviewExtras[cancelled.id] = bundle.overviewExtras
+        if (input.linkScanId) {
+          scans = scans.map((s) =>
+            s.id === input.linkScanId
+              ? {
+                  ...s,
+                  status: 'cancelled',
+                  completedAt: cancelled.completedAt,
+                  overallScore: cancelled.overallScore,
+                  issueCount: cancelled.issueCount,
+                }
+              : s,
+          )
         }
       },
       persistFailed: async (domainId) => {
@@ -546,4 +588,38 @@ export async function rerunScan(id: string): Promise<ScanSummary | null> {
     mode: source.mode,
     url: source.url,
   })
+}
+
+export async function controlDomainScan(
+  id: string,
+  action: DomainScanControlAction,
+): Promise<{ status: DomainScanLight['status']; message?: string } | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbControlDomainScan(id, action)
+
+  const current = memoryGetDomainScan(id)
+  if (!current) return null
+  const result = applyDomainScanControlAction(current.status, action)
+  if (!result.ok) throw new Error(result.error)
+
+  domainScans = domainScans.map((row) =>
+    row.id === id
+      ? {
+          ...row,
+          status: result.status,
+          completedAt:
+            result.status === 'cancelled'
+              ? new Date().toISOString()
+              : result.status === 'paused'
+                ? null
+                : row.completedAt,
+          error: result.status === 'cancelled' ? 'Cancelled by user' : row.error,
+        }
+      : row,
+  )
+  return { status: result.status, message: result.message }
+}
+
+export async function listActiveDomainScans(projectId: string): Promise<DomainScanLight[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListActiveDomainScans(projectId)
+  return memoryListDomainScans(projectId).filter((row) => isActiveDomainScanStatus(row.status))
 }

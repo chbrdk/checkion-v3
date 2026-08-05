@@ -349,6 +349,21 @@ export const HELP_TIPS = {
     en: 'Stopped with an error — check detail and retry if appropriate.',
     de: 'Mit Fehler gestoppt — Detail prüfen und ggf. erneut starten.',
   },
+  'job.status.paused': {
+    label: 'About paused status',
+    en: 'Crawl paused — resume to continue from the current queue (same process).',
+    de: 'Crawl pausiert — Fortsetzen setzt die Warteschlange im gleichen Prozess fort.',
+  },
+  'job.status.cancelling': {
+    label: 'About cancelling status',
+    en: 'Stop requested — in-flight page scans finish, then the crawl ends.',
+    de: 'Stopp angefordert — laufende Seiten-Scans enden, dann bricht der Crawl ab.',
+  },
+  'job.status.cancelled': {
+    label: 'About cancelled status',
+    en: 'Stopped by user — partial results may be available.',
+    de: 'Vom Nutzer gestoppt — Teilergebnisse können verfügbar sein.',
+  },
 } as const satisfies Record<string, HelpTipEntry>
 
 export type TipId = keyof typeof HELP_TIPS

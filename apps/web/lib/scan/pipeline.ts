@@ -11,10 +11,11 @@ import type {
   ScanSummary,
   ScoreCard,
 } from '@checkion-v3/contracts'
+import type { ScanStatus } from '@checkion-v3/contracts'
 import { adaptDomainResultToContracts, adaptScanResultToContracts } from './adapt-scan-result'
 import type { DomainScanResultWithFullPages, ScanOptions, ScanResult } from './types'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
-import type { DomainScanStreamUpdate } from './spider'
+import type { DomainScanControlState, DomainScanStreamUpdate } from './spider'
 
 export type SingleScanRunner = (
   options: ScanOptions & { groupId?: string; userId?: string },
@@ -27,6 +28,7 @@ export type DomainScanRunner = (
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    getScanControl?: () => Promise<DomainScanControlState>
   },
 ) =>
   | AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>
@@ -58,6 +60,7 @@ async function defaultDomainRunner(
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    getScanControl?: () => Promise<DomainScanControlState>
   },
 ): Promise<AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>> {
   const { runDomainScan } = await import('./spider')
@@ -108,11 +111,13 @@ export async function executeDomainLiveScan(input: {
   maxPages?: number
   useSitemap?: boolean
   onProgress?: (scanned: number, total: number, currentUrl: string) => void | Promise<void>
-}): Promise<PersistedDomainBundle> {
+  getScanControl?: () => Promise<DomainScanControlState>
+}): Promise<PersistedDomainBundle & { terminal: 'completed' | 'cancelled' }> {
   const runner =
     domainRunner ?? ((...args: Parameters<DomainScanRunner>) => defaultDomainRunner(...args))
   const maxPages = resolveDomainScanMaxPages(input.maxPages)
   let completed: DomainScanResultWithFullPages | null = null
+  let terminal: 'completed' | 'cancelled' = 'completed'
 
   const stream = await Promise.resolve(
     runner(input.url, {
@@ -120,14 +125,19 @@ export async function executeDomainLiveScan(input: {
       maxPages,
       domainScanId: input.id,
       projectId: input.projectId,
+      getScanControl: input.getScanControl,
     }),
   )
 
   for await (const update of stream) {
     if (update.type === 'progress') {
       await input.onProgress?.(update.scannedCount, update.total, update.url)
-    } else if (update.type === 'complete' || update.type === 'cancelled') {
+    } else if (update.type === 'complete') {
       completed = update.domainResult
+      terminal = 'completed'
+    } else if (update.type === 'cancelled') {
+      completed = update.domainResult
+      terminal = 'cancelled'
     }
   }
 
@@ -135,11 +145,13 @@ export async function executeDomainLiveScan(input: {
     throw new Error('domain_scan_incomplete')
   }
 
+  const contractStatus: ScanStatus = terminal === 'cancelled' ? 'cancelled' : 'completed'
   const adapted = adaptDomainResultToContracts(completed, {
     id: input.id,
     projectId: input.projectId,
     rootUrl: input.url,
     startedAt: completed.timestamp,
+    status: contractStatus,
   })
 
   return {
@@ -147,5 +159,6 @@ export async function executeDomainLiveScan(input: {
     issues: adapted.issues,
     scores: adapted.scores,
     overview: adapted.overview,
+    terminal,
   }
 }

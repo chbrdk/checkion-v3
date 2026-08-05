@@ -128,6 +128,9 @@ export const paths = {
     apiScanWeakestSignal: (id: string) => `/api/scans/${id}/weakest-signal`,
     apiDomainScans: '/api/domain-scans',
     apiDomainScanDetail: (id: string) => `/api/domain-scans/${id}`,
+    apiDomainScanControl: (id: string) => `/api/domain-scans/${id}/control`,
+    apiProjectActiveDomainScans: (projectId: string) =>
+      `/api/projects/${projectId}/domain-scans/active`,
     apiDomainScanOverview: (id: string) => `/api/domain-scans/${id}/overview`,
     apiDomainScanIssues: (id: string) => `/api/domain-scans/${id}/issues`,
     apiDomainIssuePages: (id: string, issueId: string) =>

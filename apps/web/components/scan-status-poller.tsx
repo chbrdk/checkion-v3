@@ -6,7 +6,7 @@ import { paths } from '../lib/paths'
 
 const POLL_MS = 2000
 
-type PollStatus = 'queued' | 'running' | 'completed' | 'failed'
+type PollStatus = 'queued' | 'running' | 'paused' | 'cancelling' | 'completed' | 'failed' | 'cancelled'
 
 export function ScanStatusPoller({
   scanId,
@@ -24,7 +24,14 @@ export function ScanStatusPoller({
       : paths.routes.apiScanDetail(scanId)
 
   useEffect(() => {
-    if (status !== 'queued' && status !== 'running') return
+    if (
+      status !== 'queued' &&
+      status !== 'running' &&
+      status !== 'paused' &&
+      status !== 'cancelling'
+    ) {
+      return
+    }
 
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined

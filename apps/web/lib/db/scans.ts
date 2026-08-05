@@ -24,14 +24,20 @@ import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
 import { withScanCorrelation } from '../scan-correlation'
 import { selectTopIssueGroups } from '../issue-groups'
+import { applyDomainScanControlAction, isActiveDomainScanStatus } from '../scan/domain-scan-control'
+import { createLiveDomainScanHooks } from '../scan/live-domain-scan-hooks'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 const WORKER_SESSION_ID = crypto.randomUUID()
 const STALE_JOB_GRACE_MS = 45_000
 let lastRecoverySweepAt = 0
 
-function isActiveScanStatus(status: string | null | undefined): status is 'queued' | 'running' {
+function isActiveSingleScanStatus(status: string | null | undefined): status is 'queued' | 'running' {
   return status === 'queued' || status === 'running'
+}
+
+function isStaleSweepDomainStatus(status: string | null | undefined): boolean {
+  return status === 'queued' || status === 'running' || status === 'cancelling'
 }
 
 function isStaleForCurrentWorker(
@@ -59,13 +65,13 @@ async function recoverStaleBackgroundScans(): Promise<void> {
   const activeScanRows = await db.select().from(scans)
   const staleDomainRows = activeDomainRows.filter(
     (row) =>
-      isActiveScanStatus(row.status) &&
+      isStaleSweepDomainStatus(row.status) &&
       isStaleForCurrentWorker(row.updatedAt, row.payload?.runtime?.workerSessionId),
   )
   const staleDeepScanRows = activeScanRows.filter(
     (row) =>
       row.mode === 'deep' &&
-      isActiveScanStatus(row.status) &&
+      isActiveSingleScanStatus(row.status) &&
       isStaleForCurrentWorker(row.updatedAt, row.payload?.runtime?.workerSessionId),
   )
   if (staleDomainRows.length === 0 && staleDeepScanRows.length === 0) return
@@ -90,7 +96,7 @@ async function recoverStaleBackgroundScans(): Promise<void> {
     const linkedScan = activeScanRows.find(
       (scanRow) =>
         scanRow.mode === 'deep' &&
-        isActiveScanStatus(scanRow.status) &&
+        isActiveSingleScanStatus(scanRow.status) &&
         scanRow.payload?.scan?.domainScanId === row.id,
     )
     if (!linkedScan) continue
@@ -489,156 +495,23 @@ async function dbCreateLiveScan(input: {
   })
 
   if (input.mode === 'deep') {
-    let linkedDomainScanId: string | undefined
     const { domain } = await startDomainScan(
       {
         projectId: input.projectId,
         url: input.url,
         waitForCompletion: input.waitForCompletion,
       },
-      {
-        insertQueued: async (row) => {
-          await db.insert(domainScans).values({
-            id: row.id,
-            projectId: row.projectId,
-            rootUrl: row.rootUrl,
-            status: 'queued',
-            pageCount: 0,
-            overallScore: null,
-            issueCount: 0,
-            startedAt: row.startedAt,
-            completedAt: null,
-            payload: {
-              progress: { scanned: 0, total: row.maxPages },
-              runtime: { workerSessionId: WORKER_SESSION_ID },
-            },
-            updatedAt: new Date(),
-            createdAt: new Date(),
-          })
+      createLiveDomainScanHooks({
+        workerSessionId: WORKER_SESSION_ID,
+        getDomainRow: dbGetDomainScanRow,
+        linkScan: {
+          id,
+          projectId: input.projectId,
+          url: input.url,
+          startedAt,
         },
-        markRunning: async (domainId) => {
-          await db
-            .update(domainScans)
-            .set({
-              status: 'running',
-              payload: {
-                ...(await dbGetDomainScanRow(domainId))?.payload,
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(domainScans.id, domainId))
-          await db
-            .update(scans)
-            .set({
-              status: 'running',
-              payload: {
-                scan: {
-                  ...queued,
-                  ...(linkedDomainScanId ? { domainScanId: linkedDomainScanId } : {}),
-                  status: 'running',
-                },
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(scans.id, id))
-        },
-        updateProgress: async (domainId, scanned, total, currentUrl) => {
-          const existing = await dbGetDomainScanRow(domainId)
-          await db
-            .update(domainScans)
-            .set({
-              pageCount: scanned,
-              payload: {
-                ...(existing?.payload ?? {}),
-                progress: { scanned, total, currentUrl },
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(domainScans.id, domainId))
-        },
-        persistCompleted: async (bundle) => {
-          await db
-            .update(domainScans)
-            .set({
-              status: bundle.domain.status,
-              pageCount: bundle.domain.pageCount,
-              overallScore: bundle.domain.overallScore,
-              issueCount: bundle.domain.issueCount,
-              completedAt: bundle.domain.completedAt,
-              payload: {
-                domain: bundle.domain,
-                issues: enrichIssueInspect(bundle.issues),
-                scores: bundle.scores,
-                overviewExtras: bundle.overviewExtras,
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(domainScans.id, bundle.domain.id))
-          await db
-            .update(scans)
-            .set({
-              status: 'completed',
-              completedAt: bundle.domain.completedAt,
-              overallScore: bundle.domain.overallScore,
-              issueCount: bundle.domain.issueCount,
-              payload: {
-                scan: {
-                  ...queued,
-                  ...(linkedDomainScanId ? { domainScanId: linkedDomainScanId } : {}),
-                  status: 'completed',
-                  completedAt: bundle.domain.completedAt,
-                  overallScore: bundle.domain.overallScore,
-                  issueCount: bundle.domain.issueCount,
-                },
-                issues: enrichIssueInspect(bundle.issues),
-                scores: bundle.scores,
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(scans.id, id))
-        },
-        persistFailed: async (domainId, error) => {
-          const failedAt = new Date().toISOString()
-          await db
-            .update(domainScans)
-            .set({
-              status: 'failed',
-              completedAt: failedAt,
-              payload: {
-                ...(await dbGetDomainScanRow(domainId))?.payload,
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-                error,
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(domainScans.id, domainId))
-          await db
-            .update(scans)
-            .set({
-              status: 'failed',
-              completedAt: failedAt,
-              payload: {
-                scan: {
-                  ...queued,
-                  ...(linkedDomainScanId ? { domainScanId: linkedDomainScanId } : {}),
-                  status: 'failed',
-                  completedAt: failedAt,
-                },
-                runtime: { workerSessionId: WORKER_SESSION_ID },
-                error,
-              },
-              updatedAt: new Date(),
-            })
-            .where(eq(scans.id, id))
-        },
-      },
+      }),
     )
-    linkedDomainScanId = domain.id
     const queuedWithDomain = { ...queued, domainScanId: domain.id }
     await db
       .update(scans)
@@ -749,95 +622,10 @@ export async function dbCreateDomainScan(input: {
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
     },
-    {
-      insertQueued: async (row) => {
-        const db = getDb()
-        await db.insert(domainScans).values({
-          id: row.id,
-          projectId: row.projectId,
-          rootUrl: row.rootUrl,
-          status: 'queued',
-          pageCount: 0,
-          overallScore: null,
-          issueCount: 0,
-          startedAt: row.startedAt,
-          completedAt: null,
-          payload: {
-            progress: { scanned: 0, total: row.maxPages },
-            runtime: { workerSessionId: WORKER_SESSION_ID },
-          },
-          updatedAt: new Date(),
-          createdAt: new Date(),
-        })
-      },
-      markRunning: async (domainId) => {
-        const db = getDb()
-        await db
-          .update(domainScans)
-          .set({
-            status: 'running',
-            payload: {
-              ...(await dbGetDomainScanRow(domainId))?.payload,
-              runtime: { workerSessionId: WORKER_SESSION_ID },
-            },
-            updatedAt: new Date(),
-          })
-          .where(eq(domainScans.id, domainId))
-      },
-      updateProgress: async (domainId, scanned, total, currentUrl) => {
-        const db = getDb()
-        const existing = await dbGetDomainScanRow(domainId)
-        await db
-          .update(domainScans)
-          .set({
-            pageCount: scanned,
-            payload: {
-              ...(existing?.payload ?? {}),
-              progress: { scanned, total, currentUrl },
-              runtime: { workerSessionId: WORKER_SESSION_ID },
-            },
-            updatedAt: new Date(),
-          })
-          .where(eq(domainScans.id, domainId))
-      },
-      persistCompleted: async (bundle) => {
-        const db = getDb()
-        await db
-          .update(domainScans)
-          .set({
-            status: bundle.domain.status,
-            pageCount: bundle.domain.pageCount,
-            overallScore: bundle.domain.overallScore,
-            issueCount: bundle.domain.issueCount,
-            completedAt: bundle.domain.completedAt,
-            payload: {
-              domain: bundle.domain,
-              issues: enrichIssueInspect(bundle.issues),
-              scores: bundle.scores,
-              overviewExtras: bundle.overviewExtras,
-              runtime: { workerSessionId: WORKER_SESSION_ID },
-            },
-            updatedAt: new Date(),
-          })
-          .where(eq(domainScans.id, bundle.domain.id))
-      },
-      persistFailed: async (domainId, error) => {
-        const db = getDb()
-        await db
-          .update(domainScans)
-          .set({
-            status: 'failed',
-            completedAt: new Date().toISOString(),
-            payload: {
-              ...(await dbGetDomainScanRow(domainId))?.payload,
-              runtime: { workerSessionId: WORKER_SESSION_ID },
-              error,
-            },
-            updatedAt: new Date(),
-          })
-          .where(eq(domainScans.id, domainId))
-      },
-    },
+    createLiveDomainScanHooks({
+      workerSessionId: WORKER_SESSION_ID,
+      getDomainRow: dbGetDomainScanRow,
+    }),
   )
   return domain
 }
@@ -891,4 +679,46 @@ export async function dbRerunScan(id: string): Promise<ScanSummary | null> {
     mode: source.mode,
     url: source.url,
   })
+}
+
+export async function dbControlDomainScan(
+  id: string,
+  action: import('@checkion-v3/contracts').DomainScanControlAction,
+): Promise<{ status: DomainScanLight['status']; message?: string } | null> {
+  const row = await dbGetDomainScanRow(id)
+  if (!row) return null
+
+  const result = applyDomainScanControlAction(row.status, action)
+  if (!result.ok) {
+    throw new Error(result.error)
+  }
+
+  const db = getDb()
+  const nextPayload = {
+    ...(row.payload ?? {}),
+    runtime: { workerSessionId: row.payload?.runtime?.workerSessionId ?? WORKER_SESSION_ID },
+    ...(result.status === 'cancelled' ? { error: 'Cancelled by user' } : {}),
+  }
+
+  await db
+    .update(domainScans)
+    .set({
+      status: result.status,
+      completedAt:
+        result.status === 'cancelled'
+          ? new Date().toISOString()
+          : result.status === 'paused'
+            ? null
+            : row.completedAt,
+      payload: nextPayload,
+      updatedAt: new Date(),
+    })
+    .where(eq(domainScans.id, id))
+
+  return { status: result.status, message: result.message }
+}
+
+export async function dbListActiveDomainScans(projectId: string): Promise<DomainScanLight[]> {
+  const rows = await dbListDomainScans(projectId)
+  return rows.filter((row) => isActiveDomainScanStatus(row.status))
 }

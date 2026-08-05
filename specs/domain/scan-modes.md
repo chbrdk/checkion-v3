@@ -65,6 +65,8 @@ Asynchronous jobs (`single`, `deep`, `seo`, `geo`) must not pretend to be done j
 5. **Status language** — queued/running/completed/failed must be reflected consistently in both the notification center and the relevant result page. An empty queued shell is never rendered as a completed success state.
 6. **Restart honesty (Phase 7a)** — background deep/domain crawls do not silently survive an app redeploy. On the next read after a process restart, stale `queued` / `running` crawls from the previous worker session must be auto-marked `failed` with a clear interruption reason, so users never see orphaned “running forever” jobs.
 7. **Restart CTA (Phase 7b)** — interrupted domain/deep jobs expose a direct restart path in both the Notification center and the domain result chrome. This is an honest restart of the crawl from the same root URL and project, not yet a checkpoint resume.
+8. **Deep crawl control (Phase 7c — v2 parity)** — live domain crawls support `POST /api/domain-scans/:id/control` with `pause` | `resume` | `cancel`. The spider polls DB status via `getScanControl` (same process — resume unpause, not checkpoint after redeploy). UI: Notification center + domain result chrome expose Pause / Resume / Cancel while `queued` | `running` | `paused` | `cancelling`. `GET /api/projects/:id/domain-scans/active` lists in-flight crawls for workspace parity.
+9. **Screenshot persistence (ops)** — Coolify must mount a volume at `SCAN_SCREENSHOTS_PATH` (default `data/screenshots`) so JPEG captures survive redeploys.
 
 **Visual language:** magazine editorial — type, hairline rules, whitespace. Capability / depth selection via underline + ink weight (not filled color blocks). Stage `Panel` and compose band stay fill-free (no soft panel washes).
 

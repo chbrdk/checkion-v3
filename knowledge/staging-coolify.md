@@ -66,6 +66,16 @@ Live GEO stage1 / accessibility scans launch Puppeteer in-process. The multi-sta
 
 **Coolify:** redeploy after this Dockerfile lands — no extra browser env vars required. Do **not** set `PUPPETEER_SKIP_DOWNLOAD=true` as a Coolify build/runtime env (it can block the runner install layer if injected at build). Optional override: `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium` only if you switch the image to system Chromium instead of the bundled install. Live scans need enough RAM for headless Chrome (~512MB+ spare). Local fixture mode is unchanged (`CHECKION_LIVE_SCANS=0` / no `DATABASE_URL`).
 
+### Scan screenshots (persistent volume)
+
+Live WCAG captures write JPEGs under `SCAN_SCREENSHOTS_PATH` (image default: `/workspace/checkion-v3/data/screenshots`). **Mount a Coolify persistent volume** at that path so redeploys do not drop Issues-canvas screenshots.
+
+```
+SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
+```
+
+Coolify → Application → **Persistent Storage** → mount host/volume path to `/workspace/checkion-v3/data/screenshots`.
+
 ## Coolify attach checklist
 
 1. Project `msqdx-ecosystem-v3` → Environment `staging`

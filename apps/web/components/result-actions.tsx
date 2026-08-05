@@ -2,11 +2,21 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { DomainScanControlAction, ScanStatus } from '@checkion-v3/contracts'
 import { Alert, Button, Field, Input, Text } from '@msqdx/ui'
 import { ConfirmDialog, Dialog } from '../lib/msqdx-ui-client'
 import { useJobNotifications } from './job-notification-center'
 import { paths } from '../lib/paths'
 import type { ShareResourceType } from '@checkion-v3/contracts'
+
+function isActiveDomainStatus(status?: ScanStatus): boolean {
+  return (
+    status === 'queued' ||
+    status === 'running' ||
+    status === 'paused' ||
+    status === 'cancelling'
+  )
+}
 
 export function ResultActions({
   resourceId,
@@ -21,10 +31,10 @@ export function ResultActions({
   projectId: string
   url: string
   mode: 'single' | 'deep'
-  status?: 'queued' | 'running' | 'completed' | 'failed'
+  status?: ScanStatus
 }) {
   const router = useRouter()
-  const { trackJob } = useJobNotifications()
+  const { trackJob, controlDomainJob } = useJobNotifications()
   const [shareOpen, setShareOpen] = useState(false)
   const [rerunOpen, setRerunOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -125,6 +135,33 @@ export function ResultActions({
     }
   }
 
+  async function sendDomainControl(action: DomainScanControlAction) {
+    if (resourceType !== 'domain') return
+    setBusy(true)
+    setError(null)
+    try {
+      await controlDomainJob(
+        {
+          id: resourceId,
+          resource: 'domain',
+          status: status ?? 'running',
+          title: 'Domain crawl',
+          href: paths.routes.domainSection(resourceId, 'overview'),
+          projectId,
+          targetUrl: url,
+          detail: url,
+          updatedAt: new Date().toISOString(),
+        },
+        action,
+      )
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Control failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="checkion-result-actions">
       <Button type="button" size="sm" onClick={openShare} disabled={busy}>
@@ -140,9 +177,47 @@ export function ResultActions({
           </Button>
         </>
       ) : resourceType === 'domain' ? (
-        <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
-          {status === 'failed' ? 'Restart crawl' : 'Re-run crawl'}
-        </Button>
+        <>
+          {isActiveDomainStatus(status) ? (
+            <>
+              {status === 'running' || status === 'queued' ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void sendDomainControl('pause')}
+                >
+                  Pause
+                </Button>
+              ) : null}
+              {status === 'paused' ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void sendDomainControl('resume')}
+                >
+                  Resume
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void sendDomainControl('cancel')}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
+              {status === 'failed' || status === 'cancelled' ? 'Restart crawl' : 'Re-run crawl'}
+            </Button>
+          )}
+        </>
       ) : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 

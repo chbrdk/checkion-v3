@@ -3,7 +3,17 @@
 export type ProjectStatus = 'active' | 'archived' | 'pending_sync'
 export type CapabilitySyncStatus = 'in_sync' | 'pending' | 'error'
 export type ScanMode = 'single' | 'deep'
-export type ScanStatus = 'queued' | 'running' | 'completed' | 'failed'
+export type ScanStatus =
+  | 'queued'
+  | 'running'
+  | 'paused'
+  | 'cancelling'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+
+/** POST /api/domain-scans/:id/control body.action */
+export type DomainScanControlAction = 'pause' | 'resume' | 'cancel'
 export type IssueSeverity = 'critical' | 'serious' | 'moderate' | 'minor'
 export type ScoreKind =
   | 'accessibility'

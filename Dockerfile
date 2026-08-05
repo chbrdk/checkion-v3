@@ -119,6 +119,7 @@ ENV CHECKION_FEDERATION_MODE=dummy
 # Live scans need the browser binary in this stage (not only OS libs / builder cache).
 ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_CACHE_DIR=/opt/puppeteer
+ENV SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
 EXPOSE 3007
 
 # Puppeteer OS libraries (same set as builder base) for live scans.
@@ -170,7 +171,10 @@ COPY --from=builder /workspace/checkion-v3/scripts ./scripts
 # Chrome revision matching the installed puppeteer package (GEO stage1 / live scans).
 # Must run in the runner — Puppeteer cache is outside node_modules and is lost on fresh FROM.
 RUN npx --yes puppeteer browsers install chrome \
-    && test -d "${PUPPETEER_CACHE_DIR}"
+    && test -d "${PUPPETEER_CACHE_DIR}" \
+    && mkdir -p "${SCAN_SCREENSHOTS_PATH}"
+
+VOLUME ["/workspace/checkion-v3/data/screenshots"]
 
 RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/check-database-url.mjs
 

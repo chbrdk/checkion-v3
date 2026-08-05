@@ -1,11 +1,12 @@
 /**
  * Start a domain (deep) scan: create row + run spider in background.
- * Slim Phase 2 port of CHECKION `lib/domain-scan-start.ts` (no LLM / reuse / issues tables).
+ * Supports pause / resume / cancel via DB-backed getScanControl (v2 parity).
  */
 
 import type { DomainScanLight, IssueSummary, ScoreCard } from '@checkion-v3/contracts'
 import { executeDomainLiveScan } from './pipeline'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
+import type { DomainScanControlState } from './spider'
 
 export type DomainScanPersistHooks = {
   insertQueued: (row: {
@@ -23,7 +24,18 @@ export type DomainScanPersistHooks = {
     scores: ScoreCard[]
     overviewExtras: Record<string, unknown>
   }) => Promise<void>
+  persistCancelled?: (bundle: {
+    domain: DomainScanLight
+    issues: IssueSummary[]
+    scores: ScoreCard[]
+    overviewExtras: Record<string, unknown>
+  }) => Promise<void>
   persistFailed: (id: string, error: string) => Promise<void>
+  /** Return false to abort worker before spider starts (already cancelled). */
+  beforeWorkerStart?: (id: string) => Promise<boolean>
+  /** When true, skip markRunning (resume after pause). */
+  isPaused?: (id: string) => Promise<boolean>
+  getScanControl?: (id: string) => Promise<DomainScanControlState>
 }
 
 export type StartDomainScanInput = {
@@ -65,19 +77,32 @@ export async function startDomainScan(
 
   const run = async () => {
     try {
-      await hooks.markRunning(id)
+      if (hooks.beforeWorkerStart) {
+        const ok = await hooks.beforeWorkerStart(id)
+        if (!ok) return
+      }
+
+      const paused = (await hooks.isPaused?.(id)) ?? false
+      if (!paused) {
+        await hooks.markRunning(id)
+      }
+
       const bundle = await executeDomainLiveScan({
         id,
         projectId: input.projectId,
         url: input.url,
         maxPages,
         useSitemap: input.useSitemap,
+        getScanControl: hooks.getScanControl
+          ? () => hooks.getScanControl!(id)
+          : undefined,
         onProgress: async (scanned, total, currentUrl) => {
           await hooks.updateProgress?.(id, scanned, total, currentUrl)
         },
       })
+
       const { pageSamples, systemicIssues, lede, ...rest } = bundle.overview
-      await hooks.persistCompleted({
+      const payload = {
         domain: bundle.domain,
         issues: bundle.issues,
         scores: bundle.scores,
@@ -87,7 +112,13 @@ export async function startDomainScan(
           pageSamples,
           ...rest,
         },
-      })
+      }
+
+      if (bundle.terminal === 'cancelled' && hooks.persistCancelled) {
+        await hooks.persistCancelled(payload)
+      } else {
+        await hooks.persistCompleted(payload)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'domain_scan_failed'
       console.error('[checkion-v3] domain scan failed', id, message)
@@ -97,7 +128,6 @@ export async function startDomainScan(
 
   if (input.waitForCompletion) {
     await run()
-    // Prefer completed row from hooks if caller re-reads; return last known completed shape when available.
   } else {
     void run()
   }
