@@ -324,8 +324,8 @@ export function registerCheckionV3Tools(server: ToolServer) {
   server.registerTool(
     'checkion_v3.domain_scan_start',
     {
-      title: 'Start domain crawl',
-      description: 'POST /api/domain-scans — async deep crawl. Poll domain_scan_get; use domain_scan_control for pause/resume/cancel.',
+      title: 'Start deep scan',
+      description: 'POST /api/domain-scans — async deep scan. Poll domain_scan_get; use domain_scan_control for pause/resume/cancel.',
       inputSchema: z.object({
         projectId: z.string(),
         url: z.string(),
@@ -383,7 +383,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   server.registerTool(
     'checkion_v3.domain_scan_control',
     {
-      title: 'Control domain crawl',
+      title: 'Control deep scan',
       description: 'POST /api/domain-scans/:id/control — pause | resume | cancel (same-process control).',
       inputSchema: z.object({
         id: z.string(),

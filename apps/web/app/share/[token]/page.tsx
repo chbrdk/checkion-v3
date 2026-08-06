@@ -45,7 +45,7 @@ export default async function ShareLandingPage({
     <main className="checkion-share-landing">
       <header className="checkion-share-landing__head">
         <p className="checkion-share-brand">{paths.brandLabel}</p>
-        <Text role="meta">Shared domain crawl · read only</Text>
+        <Text role="meta">Shared deep scan · read only</Text>
       </header>
       <DomainOverviewPanel overview={overview} />
       <Panel>

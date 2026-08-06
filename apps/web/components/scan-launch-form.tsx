@@ -146,7 +146,7 @@ const WCAG_DEPTH_CARDS: Array<{
   {
     id: 'deep',
     label: 'Deep scan',
-    kicker: 'Domain crawl',
+    kicker: 'Host-wide',
     deck: 'Spider from this URL into a light corpus magazine alongside the page result.',
   },
 ]
@@ -251,7 +251,7 @@ export function ScanLaunchForm({
           title: 'SEO coverage',
           deck: 'Crawl the host and open the domain magazine where SEO coverage is a first-class chapter — titles, meta, H1s, and keyword density across pages.',
           cta: 'Launch SEO crawl',
-          loading: 'Starting SEO domain crawl…',
+          loading: 'Starting SEO scan…',
         }
       case 'geo':
         return {
@@ -263,10 +263,10 @@ export function ScanLaunchForm({
       case 'wcag':
         if (activeWcagDepth === 'deep') {
           return {
-            title: 'Deep WCAG crawl',
+            title: 'Deep scan',
             deck: 'Spider the domain from this URL and open a light corpus magazine alongside the page result.',
             cta: 'Launch deep scan',
-            loading: 'Starting deep crawl…',
+            loading: 'Starting deep scan…',
           }
         }
         return {

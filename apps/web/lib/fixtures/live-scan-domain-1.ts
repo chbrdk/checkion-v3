@@ -468,7 +468,7 @@ export const LIVE_DOMAIN_OVERVIEW: DomainOverview = {
       max: 100
     }
   ],
-  lede: "Live deep crawl of https://www.durr.com — 3317 pages scanned (cap 10000), overall 43/100. Corpus summary of every page scan: systemic a11y on ~3100 pages; GEO 51, UX 43.",
+  lede: "Live deep scan of https://www.durr.com — 3317 pages scanned (cap 10000), overall 43/100. Corpus summary of every page scan: systemic a11y on ~3100 pages; GEO 51, UX 43.",
   systemicIssues: [
     {
       id: "link-name",
@@ -727,7 +727,7 @@ export const LIVE_DOMAIN_OVERVIEW: DomainOverview = {
     hostingPoweredBy: null
   },
   classification: {
-    shortSummary: "Deep crawl of https://www.durr.com: 3317 pages in manufacturing_industrial. Avg citation density 0.21, list density 0.07. Dominant themes: Paint application technology, Automotive manufacturing solutions, Final assembly solutions.",
+    shortSummary: "Deep scan of https://www.durr.com: 3317 pages in manufacturing_industrial. Avg citation density 0.21, list density 0.07. Dominant themes: Paint application technology, Automotive manufacturing solutions, Final assembly solutions.",
     tags: [
       "Paint application technology",
       "Automotive manufacturing solutions",

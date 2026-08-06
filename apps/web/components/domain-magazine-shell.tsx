@@ -43,7 +43,7 @@ export async function DomainMagazineShell({
     >
       <div className="checkion-magazine-topbar">
         <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
-          <Link href={paths.routes.domain}>Domain crawls</Link>
+          <Link href={paths.routes.domain}>Deep scans</Link>
           <span className="briefing-nav-sep" aria-hidden>
             /
           </span>
@@ -87,7 +87,7 @@ export async function DomainMagazineShell({
           </div>
 
           <div className="checkion-cover__copy">
-            <p className="checkion-cover__kicker">Deep crawl · corpus</p>
+            <p className="checkion-cover__kicker">Deep scan · corpus</p>
             <p className="checkion-cover__host">{host}</p>
             <Text role="headline" as="h2" className="checkion-cover__title">
               {scan.pageCount.toLocaleString()} pages scanned

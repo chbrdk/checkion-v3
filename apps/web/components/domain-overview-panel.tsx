@@ -664,7 +664,7 @@ export function DomainOverviewPanel({
           <header className="checkion-domain-chapter__head">
             <p className="checkion-spread__eyebrow">Page samples</p>
             <h3 id="samples-heading" className="checkion-spread__headline">
-              Weakest pages in the crawl
+              Weakest pages in the deep scan
             </h3>
             <Text role="meta">Teaser only — full slim-pages table comes later.</Text>
           </header>

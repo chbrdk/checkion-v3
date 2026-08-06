@@ -3,19 +3,32 @@
  */
 
 import type {
+  DomainEcoAggregate,
+  DomainEeatAggregate,
+  DomainGenerativeAggregate,
   DomainOverview,
+  DomainPerformanceAggregate,
   DomainScanLight,
+  DomainSeoCoverage,
   DomainSystemicIssue,
+  DomainUxAggregate,
   IssueSeverity,
   IssueStats,
   IssueSummary,
+  LinkSnapshot,
   ScanOverview,
   ScanSummary,
   ScoreCard,
   ScoreKind,
+  SecurityPrivacySnapshot,
   UxSnapshot,
 } from '@checkion-v3/contracts'
-import type { DomainScanResultWithFullPages, Issue, ScanResult } from './types'
+import type {
+  DomainScanResultWithFullPages,
+  EeatDomainAggregate,
+  Issue,
+  ScanResult,
+} from './types'
 import { normalizeUxReadability } from '../readability-cefr'
 import { apiScanScreenshot } from './constants'
 import { selectTopIssueGroups } from '../issue-groups'
@@ -379,6 +392,275 @@ function severityFromSystemic(pageCount: number, totalPages: number): IssueSever
   return 'moderate'
 }
 
+function mean(values: number[]): number {
+  if (!values.length) return 0
+  return values.reduce((a, b) => a + b, 0) / values.length
+}
+
+function duplicateGroupCount(values: Array<string | null | undefined>): number {
+  const counts = new Map<string, number>()
+  for (const raw of values) {
+    const key = (raw ?? '').trim().toLowerCase()
+    if (!key) continue
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  let groups = 0
+  for (const n of counts.values()) {
+    if (n > 1) groups += 1
+  }
+  return groups
+}
+
+function canonicalMismatches(pages: ScanResult[]): number {
+  let n = 0
+  for (const page of pages) {
+    const canonical = page.seo?.canonical
+    if (!canonical) continue
+    try {
+      const pageUrl = new URL(page.url)
+      const canUrl = new URL(canonical, page.url)
+      const norm = (u: URL) => `${u.origin}${u.pathname.replace(/\/$/, '') || '/'}`
+      if (norm(pageUrl) !== norm(canUrl)) n += 1
+    } catch {
+      n += 1
+    }
+  }
+  return n
+}
+
+function topKeywordsAcrossPages(pages: ScanResult[], limit = 8): string[] {
+  const freq = new Map<string, number>()
+  for (const page of pages) {
+    for (const row of page.seo?.keywordAnalysis?.topKeywords ?? []) {
+      const key = row.keyword.trim().toLowerCase()
+      if (!key) continue
+      freq.set(key, (freq.get(key) ?? 0) + (row.count ?? 1))
+    }
+  }
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([k]) => k)
+}
+
+/** Map spider E-E-A-T shape → contracts magazine aggregate. */
+export function mapDomainEeatAggregate(
+  eeat: EeatDomainAggregate | undefined,
+  totalPages: number,
+): DomainEeatAggregate | undefined {
+  if (!eeat) return undefined
+  return {
+    totalPages: eeat.trust.totalPages || totalPages,
+    trust: {
+      pagesWithContact: eeat.trust.pagesWithContact,
+      pagesWithPrivacy: eeat.trust.pagesWithPrivacy,
+      pagesWithImpressum: eeat.trust.pagesWithImpressum,
+    },
+    expertise: {
+      pagesWithAuthorBio: eeat.expertise.pagesWithAuthorBio,
+      pagesWithArticleAuthor: eeat.expertise.pagesWithArticleAuthor,
+      avgCitationsPerPage: eeat.expertise.avgCitationsPerPage,
+    },
+    experience: {
+      pagesWithTeam: eeat.experience.pagesWithTeam,
+      pagesWithAbout: eeat.experience.pagesWithAbout,
+      pagesWithCaseStudyMention: eeat.experience.pagesWithCaseStudyMention,
+    },
+  }
+}
+
+export function buildDomainSeoCoverage(pages: ScanResult[]): DomainSeoCoverage | undefined {
+  if (!pages.length) return undefined
+  if (!pages.some((p) => p.seo)) return undefined
+  const totalPages = pages.length
+  return {
+    totalPages,
+    withTitle: pages.filter((p) => Boolean(p.seo?.title?.trim())).length,
+    withH1: pages.filter((p) => Boolean(p.seo?.h1?.trim())).length,
+    withMetaDescription: pages.filter((p) => Boolean(p.seo?.metaDescription?.trim())).length,
+    withCanonical: pages.filter((p) => Boolean(p.seo?.canonical?.trim())).length,
+    withOgTitle: pages.filter((p) => Boolean(p.seo?.ogTitle?.trim())).length,
+    withOgImage: pages.filter((p) => Boolean(p.seo?.ogImage?.trim())).length,
+    withTwitterCard: pages.filter((p) => Boolean(p.seo?.twitterCard?.trim())).length,
+    canonicalMismatchCount: canonicalMismatches(pages),
+    duplicateTitleGroupCount: duplicateGroupCount(pages.map((p) => p.seo?.title)),
+    duplicateMetaGroupCount: duplicateGroupCount(pages.map((p) => p.seo?.metaDescription)),
+    missingH1Count: pages.filter((p) => !p.seo?.h1?.trim()).length,
+    totalWordsAcrossPages: pages.reduce(
+      (sum, p) => sum + (p.seo?.bodyWordCount ?? p.seo?.keywordAnalysis?.totalWords ?? 0),
+      0,
+    ),
+    topKeywords: topKeywordsAcrossPages(pages),
+  }
+}
+
+export function buildDomainGenerativeAggregate(
+  pages: ScanResult[],
+): DomainGenerativeAggregate | undefined {
+  const withGen = pages.filter((p) => p.generative)
+  if (!withGen.length) return undefined
+  const pageCount = pages.length
+  return {
+    score: Math.round(mean(withGen.map((p) => p.generative!.score))),
+    discoverability: Math.round(
+      mean(withGen.map((p) => p.generative!.dimensions?.discoverability ?? p.generative!.score)),
+    ),
+    repurposing: Math.round(
+      mean(withGen.map((p) => p.generative!.dimensions?.repurposing ?? p.generative!.score)),
+    ),
+    withLlmsTxt: withGen.filter((p) => p.generative!.technical.hasLlmsTxt).length,
+    withRobotsAllowingAi: withGen.filter((p) => p.generative!.technical.hasRobotsAllowingAI).length,
+    pageCount,
+    citationDensity: mean(withGen.map((p) => p.generative!.content.citationDensity ?? 0)),
+  }
+}
+
+function buildDomainPerformance(pages: ScanResult[]): DomainPerformanceAggregate | undefined {
+  const withPerf = pages.filter((p) => p.performance)
+  if (!withPerf.length) return undefined
+  return {
+    avgTtfb: Math.round(mean(withPerf.map((p) => p.performance!.ttfb))),
+    avgFcp: Math.round(mean(withPerf.map((p) => p.performance!.fcp))),
+    avgLcp: Math.round(mean(withPerf.map((p) => p.performance!.lcp))),
+    avgDomLoad: Math.round(mean(withPerf.map((p) => p.performance!.domLoad))),
+    pageCount: withPerf.length,
+    scriptTransferKbAvg: (() => {
+      const vals = withPerf
+        .map((p) => p.performance!.scriptTransferBytesApprox)
+        .filter((v): v is number => typeof v === 'number' && v > 0)
+        .map((b) => b / 1024)
+      return vals.length ? Math.round(mean(vals)) : null
+    })(),
+  }
+}
+
+function buildDomainUx(pages: ScanResult[]): DomainUxAggregate | undefined {
+  const withUx = pages.filter((p) => p.ux)
+  if (!withUx.length) return undefined
+  const bands = { easy: 0, standard: 0, complex: 0, veryComplex: 0 }
+  for (const p of withUx) {
+    const grade = (p.ux!.readability.grade || '').toLowerCase()
+    if (grade.includes('easy')) bands.easy += 1
+    else if (grade.includes('very complex') || grade.includes('academic')) bands.veryComplex += 1
+    else if (grade.includes('complex') || grade.includes('college')) bands.complex += 1
+    else bands.standard += 1
+  }
+  const modalBand = (Object.entries(bands) as Array<[keyof typeof bands, number]>).sort(
+    (a, b) => b[1] - a[1],
+  )[0]?.[0]
+  const gradeLabel =
+    modalBand === 'easy'
+      ? 'Easy (6th Grade)'
+      : modalBand === 'complex'
+        ? 'Complex (College)'
+        : modalBand === 'veryComplex'
+          ? 'Very Complex (Academic)'
+          : 'Standard (High School)'
+  const dwells = withUx
+    .map((p) => p.ux!.dwellEstimate?.secondsMedian)
+    .filter((v): v is number => typeof v === 'number')
+  return {
+    score: Math.round(mean(withUx.map((p) => p.ux!.score))),
+    cls: Number(mean(withUx.map((p) => p.ux!.cls)).toFixed(3)),
+    readabilityGrade: gradeLabel,
+    readabilityScore: Number(mean(withUx.map((p) => p.ux!.readability.score)).toFixed(1)),
+    readabilityBands: bands,
+    dwellSecondsMedian: dwells.length ? Math.round(mean(dwells)) : null,
+    brokenLinkCount: pages.reduce((sum, p) => sum + (p.links?.broken?.length ?? 0), 0),
+    tapTargetIssueCount: withUx.reduce((sum, p) => sum + (p.ux!.tapTargets?.issues?.length ?? 0), 0),
+    pagesWithMultipleH1: pages.filter(
+      (p) => p.generative?.repurposingSignals?.hasSingleH1 === false,
+    ).length,
+    pagesWithSkippedLevels: 0,
+    pageCount: withUx.length,
+  }
+}
+
+function buildDomainEco(pages: ScanResult[]): DomainEcoAggregate | undefined {
+  const withEco = pages.filter((p) => p.eco)
+  if (!withEco.length) return undefined
+  const gradeDistribution: DomainEcoAggregate['gradeDistribution'] = {}
+  for (const p of withEco) {
+    const g = p.eco!.grade
+    gradeDistribution![g] = (gradeDistribution![g] ?? 0) + 1
+  }
+  const modal = (Object.entries(gradeDistribution!) as Array<[DomainEcoAggregate['grade'], number]>).sort(
+    (a, b) => b[1] - a[1],
+  )[0]?.[0]
+  return {
+    avgCo2: Number(mean(withEco.map((p) => p.eco!.co2)).toFixed(2)),
+    grade: modal ?? 'C',
+    avgPageWeightKb: Math.round(
+      mean(withEco.map((p) => (p.eco!.pageWeight ?? 0) / 1024)),
+    ),
+    gradeDistribution,
+    pageCount: withEco.length,
+  }
+}
+
+function buildDomainLinks(pages: ScanResult[]): LinkSnapshot | undefined {
+  const withLinks = pages.filter((p) => p.links)
+  if (!withLinks.length) return undefined
+  const brokenSamples = withLinks
+    .flatMap((p) => p.links!.broken ?? [])
+    .slice(0, 8)
+    .map((b) => ({ url: b.url, text: b.text, status: b.statusCode }))
+  return {
+    internal: withLinks.reduce((sum, p) => sum + (p.links!.internal ?? 0), 0),
+    external: withLinks.reduce((sum, p) => sum + (p.links!.external ?? 0), 0),
+    broken: withLinks.reduce((sum, p) => sum + (p.links!.broken?.length ?? 0), 0),
+    missingNoopener: withLinks.reduce((sum, p) => sum + (p.links!.missingNoopener?.length ?? 0), 0),
+    total: withLinks.reduce((sum, p) => sum + (p.links!.total ?? 0), 0),
+    brokenSamples: brokenSamples.length ? brokenSamples : undefined,
+  }
+}
+
+function buildDomainSecurityPrivacy(pages: ScanResult[]): SecurityPrivacySnapshot | undefined {
+  if (!pages.length) return undefined
+  const anyHttps = pages.some((p) => p.url.startsWith('https'))
+  const withSec = pages.filter((p) => p.security || p.privacy)
+  if (!withSec.length && !anyHttps) return undefined
+  return {
+    https: anyHttps,
+    hsts: withSec.some((p) => p.security?.strictTransportSecurity?.present),
+    csp: withSec.some((p) => p.security?.contentSecurityPolicy?.present),
+    hasPrivacyPolicy: withSec.some((p) => p.privacy?.hasPrivacyPolicy),
+    hasCookieBanner: withSec.some((p) => p.privacy?.hasCookieBanner),
+    mixedContent: withSec.some((p) => Boolean(p.security?.mixedContentUrls?.length)),
+    xFrameOptions: withSec.some((p) => p.security?.xFrameOptions?.present),
+    permissionsPolicy: withSec.some((p) => p.security?.permissionsPolicy?.present),
+    privacyPolicyUrl: withSec.find((p) => p.privacy?.privacyPolicyUrl)?.privacy?.privacyPolicyUrl ?? null,
+    hasTermsOfService: withSec.some((p) => p.privacy?.hasTermsOfService),
+  }
+}
+
+/** Corpus chapters for the deep-scan magazine Overview. */
+export function buildDomainOverviewAggregates(
+  pages: ScanResult[],
+  domainResult: DomainScanResultWithFullPages,
+): Pick<
+  DomainOverview,
+  | 'seoCoverage'
+  | 'eeat'
+  | 'generative'
+  | 'performance'
+  | 'ux'
+  | 'eco'
+  | 'links'
+  | 'securityPrivacy'
+> {
+  return {
+    seoCoverage: buildDomainSeoCoverage(pages),
+    eeat: mapDomainEeatAggregate(domainResult.eeat, pages.length),
+    generative: buildDomainGenerativeAggregate(pages),
+    performance: buildDomainPerformance(pages),
+    ux: buildDomainUx(pages),
+    eco: buildDomainEco(pages),
+    links: buildDomainLinks(pages),
+    securityPrivacy: buildDomainSecurityPrivacy(pages),
+  }
+}
+
 export function adaptDomainResultToContracts(
   domainResult: DomainScanResultWithFullPages,
   input: {
@@ -475,16 +757,20 @@ export function adaptDomainResultToContracts(
     },
   }
 
+  const aggregates = buildDomainOverviewAggregates(pages, domainResult)
+
   const overview: DomainOverview = {
     scan: domain,
     scores,
-    lede: `Deep crawl of ${input.rootUrl} — ${domain.pageCount} pages, ${issues.length} systemic groups.`,
+    lede: `Deep scan of ${input.rootUrl} — ${domain.pageCount} pages, ${issues.length} systemic groups.`,
     systemicIssues: systemic,
     pageSamples: pages.slice(0, 20).map((p) => ({
       url: p.url,
       score: Math.round(p.ux?.score ?? p.score),
-      issueCount: p.stats.total,
+      errors: p.stats.errors,
+      warnings: p.stats.warnings,
     })),
+    ...aggregates,
   }
 
   return { domain, issues, scores, overview, pageScans }

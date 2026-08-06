@@ -75,7 +75,7 @@ export default async function HomePage() {
         </Panel>
 
         <Panel>
-          <SectionChrome title="Domain crawls" meta={`${domains.length}`} />
+          <SectionChrome title="Deep scans" meta={`${domains.length}`} />
           {domains.length === 0 ? (
             <Text role="meta">No domain fixtures.</Text>
           ) : (

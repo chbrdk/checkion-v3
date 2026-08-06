@@ -2,7 +2,7 @@ export const DOMAIN_DETAIL_SCORE_FORMULAS: Record<string, string> = {
   ledger:
     'Domain overall = crawl score from aggregated page runs. Category rows = lens scores over the corpus.',
   corpus:
-    'Pages scanned · issue groups · total runner errors across all single-page scans in the deep crawl.',
+    'Pages scanned · issue groups · total runner errors across all single-page scans in the deep scan.',
   performance:
     'Averages of lab timings (TTFB / FCP / LCP / DOM) across measured pages — not one URL.',
   seo:

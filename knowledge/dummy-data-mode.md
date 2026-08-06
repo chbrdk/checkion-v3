@@ -14,7 +14,7 @@ Default local development uses **in-memory fixtures**. No crawler workers, no sh
 ## Corpus
 - 3 projects (Bosch, Docs, Shop)
 - Multiple single + deep scans with rich issue lists
-- 2 domain crawls
+- 2 deep scans (domain corpus)
 - 2 GEO magazine jobs (`geo-1` Dürr competitive, `geo-2` shop PDP) with placement + query runs
 - Sample share tokens (`sh_demo_single_1`, `sh_demo_domain_1`, `sh_demo_shop_cart`)
 - Launch synthesizes a **completed** scan immediately (`synthesizeCompletedScan`) when live scans are off

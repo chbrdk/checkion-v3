@@ -74,7 +74,7 @@ export default async function ScanPage({
       : defaultMode === 'seo'
         ? 'domain SEO coverage'
         : defaultMode === 'deep'
-          ? 'WCAG deep crawl'
+          ? 'WCAG deep scan'
           : defaultMode === 'single'
             ? 'WCAG single page'
             : 'choose a capability'

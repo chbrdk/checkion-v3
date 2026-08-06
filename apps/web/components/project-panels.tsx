@@ -409,7 +409,7 @@ export function ProjectWorkspace({
       <WorkspaceChapter
         eyebrow="01 · Pulse"
         title="Corpus pulse"
-        deck="How this capability has been reading the site — singles, crawls, and answer-engine presence."
+        deck="How this capability has been reading the site — singles, deep scans, and answer-engine presence."
       >
         <div className="checkion-project-pulse" aria-label="Corpus pulse">
           <div className="checkion-project-pulse__meter">
@@ -418,7 +418,7 @@ export function ProjectWorkspace({
           </div>
           <div className="checkion-project-pulse__meter">
             <p className="checkion-project-pulse__value">{domainCount}</p>
-            <p className="checkion-project-pulse__label">Domain crawls</p>
+            <p className="checkion-project-pulse__label">Deep scans</p>
           </div>
           <div className="checkion-project-pulse__meter">
             <p className="checkion-project-pulse__value">{geoJobs.length}</p>
@@ -480,20 +480,20 @@ export function ProjectWorkspace({
 
       <WorkspaceChapter
         eyebrow="03 · Corpus"
-        title="Domain crawls"
+        title="Deep scans"
         deck="Spider the host into a light corpus magazine."
         meta={`${domains.length}`}
       >
         {domains.length === 0 ? (
           <EmptyState className="checkion-project-chapter__empty">
-            No domain crawls yet.{' '}
+            No deep scans yet.{' '}
             <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'deep' })}>
-              Launch a crawl
+              Launch a deep scan
             </Link>
             .
           </EmptyState>
         ) : (
-          <ol className="checkion-magazine-list checkion-project-run-list" aria-label="Domain crawls">
+          <ol className="checkion-magazine-list checkion-project-run-list" aria-label="Deep scans">
             {domains.map((d, index) => (
               <li key={d.id} data-tone={scoreTone(d.overallScore)}>
                 <span className="checkion-magazine-list-num" aria-hidden>

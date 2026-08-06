@@ -27,13 +27,13 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
 
 1. **Topbar** — breadcrumb `Projects / {name}` · ghost Edit · Delete
 2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · primary CTAs (New scan · Open GEO / Start GEO)
-3. **Corpus pulse** — magazine chapter band (single / domain / GEO counts · latest score · last scan) as hairline editorial meters — not a dense boxed dashboard
+3. **Corpus pulse** — magazine chapter band (single / deep scan / GEO counts · latest score · last scan) as hairline editorial meters — not a dense boxed dashboard
 4. **Chapters** — numbered magazine lists (not Panel tables):
    - Single scans → `/results/:id/overview`
-   - Domain crawls → `/domain/:id/overview`
+   - Deep scans → `/domain/:id/overview`
    - GEO runs → `/geo/:id/overview` (when present for this project)
 
 Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub.
 
 ## Delete semantics
-Project removed; scans and domain crawls reassigned to `proj-unassigned` so results stay reachable.
+Project removed; scans and deep scans (domain corpus jobs) reassigned to `proj-unassigned` so results stay reachable.

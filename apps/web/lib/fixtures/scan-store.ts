@@ -190,7 +190,7 @@ function memoryGetDomainOverview(id: string): DomainOverview | null {
     lede:
       typeof extras.lede === 'string'
         ? extras.lede
-        : `Deep domain crawl across ${domain.pageCount} pages (dummy corpus).`,
+        : `Deep scan across ${domain.pageCount} pages (dummy corpus).`,
     systemicIssues:
       (extras.systemicIssues as DomainSystemicIssue[] | undefined) ?? systemicFromIssues(issues),
     ...extras,

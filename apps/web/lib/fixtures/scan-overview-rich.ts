@@ -57,7 +57,7 @@ export function buildRichScanOverview(
         ? 'Dummy scan still marked running — open other completed results to explore.'
         : scan.mode === 'single'
           ? 'Single-page quality magazine with accessibility, SEO, performance, UX, eco, and GEO headlines from the light overview payload.'
-          : 'Deep crawl summary across the domain with aggregated scores and top issues.',
+          : 'Deep scan summary across the domain with aggregated scores and top issues.',
   }
 
   if (scanId === 'scan-single-1') {

@@ -14,11 +14,11 @@ export default async function DomainIndexPage() {
 
   return (
     <AppShell
-      title="Domain crawls"
-      description="Light domain payloads — overview / issues / detail (dummy + live corpus)."
+      title="Deep scans"
+      description="Light corpus payloads — overview / issues / detail (dummy + live corpus)."
     >
       <Panel>
-        <SectionChrome title="Domain scans" meta={`${domains.length}`} />
+        <SectionChrome title="Deep scans" meta={`${domains.length}`} />
         {domains.length === 0 ? (
           <Text role="meta">No domain fixtures. Launch a deep scan to synthesize one.</Text>
         ) : (

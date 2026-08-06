@@ -356,6 +356,6 @@ export function buildScanOverview(scanId: string): ScanOverview | null {
         ? 'Dummy scan still marked running — open other completed results to explore.'
         : scan.mode === 'single'
           ? 'Single-page quality snapshot with accessibility and SEO highlights.'
-          : 'Deep crawl summary across the domain with aggregated scores and top issues.',
+          : 'Deep scan summary across the domain with aggregated scores and top issues.',
   }
 }

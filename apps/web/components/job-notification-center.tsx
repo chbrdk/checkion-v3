@@ -434,7 +434,7 @@ export function JobNotificationCenterPanel({
         <div className="checkion-job-center__head">
           <div>
             <Text role="label">Notification center</Text>
-            <Text role="meta">Running scans, crawls, and GEO jobs.</Text>
+            <Text role="meta">Running scans, deep scans, and GEO jobs.</Text>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={clearFinished}>
             Clear finished

@@ -145,7 +145,7 @@ export function ResultActions({
           id: resourceId,
           resource: 'domain',
           status: status ?? 'running',
-          title: 'Domain crawl',
+          title: 'Deep scan',
           href: paths.routes.domainSection(resourceId, 'overview'),
           projectId,
           targetUrl: url,
@@ -214,7 +214,7 @@ export function ResultActions({
             </>
           ) : (
             <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
-              {status === 'failed' || status === 'cancelled' ? 'Restart crawl' : 'Re-run crawl'}
+              {status === 'failed' || status === 'cancelled' ? 'Restart deep scan' : 'Re-run deep scan'}
             </Button>
           )}
         </>
@@ -246,10 +246,10 @@ export function ResultActions({
         open={rerunOpen}
         onClose={() => setRerunOpen(false)}
         onConfirm={confirmRerun}
-        title={resourceType === 'domain' ? 'Restart crawl?' : 'Re-run scan?'}
+        title={resourceType === 'domain' ? 'Restart deep scan?' : 'Re-run scan?'}
         confirmLabel={resourceType === 'domain' ? 'Restart' : 'Re-run'}
       >
-        Queues a new {resourceType === 'domain' ? 'domain crawl' : mode + ' scan'} for {url}.
+        Queues a new {resourceType === 'domain' ? 'deep scan' : mode + ' scan'} for {url}.
       </ConfirmDialog>
 
       <ConfirmDialog

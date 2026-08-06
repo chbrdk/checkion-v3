@@ -49,7 +49,7 @@ export default async function DomainSectionPage({
 
   return (
     <AppShell
-      title="Domain scan"
+      title="Deep scan"
       status={
         <TopStatus
           level={statusTopLevel(overview.scan.status)}

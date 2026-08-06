@@ -7,7 +7,7 @@ Accepted (Phase 1) — domain magazine distinct from single
 `overview`, `issues`, `detail` only. Legacy `scores` redirects to `detail`.
 
 ## Principle
-Deep magazine summarizes **all single-page scans in a domain crawl**. It is not the single-page magazine with aggregates shoehorned into page title/meta fields.
+Deep magazine summarizes **all single-page scans in a deep scan corpus**. It is not the single-page magazine with aggregates shoehorned into page title/meta fields.
 
 | | Single (`ScanOverview`) | Deep (`DomainOverview`) |
 |---|---|---|
@@ -28,4 +28,7 @@ Deep magazine summarizes **all single-page scans in a domain crawl**. It is not 
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 
 ## Deferred
-Crawl map / graph, remote full slim-pages table (beyond issue-scoped page lists), live API wiring, prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
+Crawl map / graph, remote full slim-pages table (beyond issue-scoped page lists), prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
+
+## Live deep-scan wiring
+`adaptDomainResultToContracts` must populate Overview aggregate chapters from the spider corpus (`seoCoverage`, `eeat`, `generative`, plus performance / ux / eco / links / securityPrivacy when page signals exist). Silent omission of SEO/Trust·GEO chapters when aggregates are missing is a bug, not an empty state. Existing thin payloads need a re-run (or backfill) after this lands.

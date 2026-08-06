@@ -365,7 +365,7 @@ export async function dbGetDomainOverview(id: string): Promise<DomainOverview | 
     lede:
       typeof extras.lede === 'string'
         ? extras.lede
-        : `Deep domain crawl across ${domain.pageCount} pages.`,
+        : `Deep scan across ${domain.pageCount} pages.`,
     systemicIssues:
       (extras.systemicIssues as DomainSystemicIssue[] | undefined) ?? systemicFromIssues(issues),
     ...extras,

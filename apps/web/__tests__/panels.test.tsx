@@ -146,7 +146,7 @@ describe('panels smoke', () => {
     expect(screen.getByTitle('Plexon collection id')).toHaveTextContent('plx-1')
     expect(screen.getByRole('heading', { name: /Corpus pulse/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Single scans/i })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Domain crawls/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Deep scans/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /GEO runs/i })).toBeTruthy()
     expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
       'href',
@@ -157,7 +157,7 @@ describe('panels smoke', () => {
       '/geo/geo-x/overview',
     )
     expect(screen.getByRole('list', { name: /Recent single scans/i })).toBeTruthy()
-    expect(screen.getByRole('list', { name: /Domain crawls/i })).toBeTruthy()
+    expect(screen.getByRole('list', { name: /Deep scans/i })).toBeTruthy()
     expect(screen.getByRole('list', { name: /GEO runs/i })).toBeTruthy()
     expect(screen.getByRole('link', { name: /example\.com\/page/i })).toHaveAttribute(
       'href',
