@@ -109,6 +109,35 @@ export const domainScans = pgTable('domain_scans', {
 
 export type DomainScanRow = typeof domainScans.$inferSelect
 
+/**
+ * Per-URL page results for deep-scan reuse (ETag / Last-Modified HEAD match).
+ * Slim ScanResult JSON — screenshots stripped on write.
+ */
+export const pageScanCache = pgTable(
+  'page_scan_cache',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    normalizedUrl: text('normalized_url').notNull(),
+    device: text('device').notNull().default('desktop'),
+    etag: text('etag'),
+    lastModified: text('last_modified'),
+    contentFingerprint: text('content_fingerprint'),
+    result: jsonb('result').$type<Record<string, unknown>>().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    projectUrlDeviceUnique: uniqueIndex('page_scan_cache_project_url_device_unique').on(
+      t.projectId,
+      t.normalizedUrl,
+      t.device,
+    ),
+  }),
+)
+
+export type PageScanCacheRow = typeof pageScanCache.$inferSelect
+
 export type GeoJobPayload = {
   overview: GeoOverview
 }

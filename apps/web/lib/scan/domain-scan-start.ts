@@ -6,6 +6,7 @@
 import type { DomainScanLight, IssueSummary, ScoreCard } from '@checkion-v3/contracts'
 import { executeDomainLiveScan } from './pipeline'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
+import { resolveSkipUnchangedPages } from './domain-scan-reuse'
 import type { DomainScanControlState } from './spider'
 
 export type DomainScanPersistHooks = {
@@ -45,6 +46,8 @@ export type StartDomainScanInput = {
   useSitemap?: boolean
   /** When true, await the crawl before returning (tests / sync callers). */
   waitForCompletion?: boolean
+  /** Reuse prior page results when ETag/Last-Modified still match (default true). */
+  skipUnchangedPages?: boolean
 }
 
 export async function startDomainScan(
@@ -54,6 +57,7 @@ export async function startDomainScan(
   const id = `domain-${Date.now()}`
   const startedAt = new Date().toISOString()
   const maxPages = resolveDomainScanMaxPages(input.maxPages)
+  const skipUnchangedPages = resolveSkipUnchangedPages(input.skipUnchangedPages)
 
   const queued: DomainScanLight = {
     id,
@@ -93,6 +97,7 @@ export async function startDomainScan(
         url: input.url,
         maxPages,
         useSitemap: input.useSitemap,
+        skipUnchangedPages,
         getScanControl: hooks.getScanControl
           ? () => hooks.getScanControl!(id)
           : undefined,

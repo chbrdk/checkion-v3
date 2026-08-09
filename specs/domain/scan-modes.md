@@ -113,4 +113,4 @@ AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / 
 AUDION research may call **`POST /api/fetch-page`** for Chromium page text when HTTP crawl is blocked — see `specs/api/fetch-page.md` (not a WCAG scan).
 
 ## Deferred
-Dedicated SEO-only crawl (without full domain magazine), Journey agent live, performance-as-primary tab, reuse-cache polish, competitor cron, normalized `scan_issues` tables, multi-provider GEO cron.
+Dedicated SEO-only crawl (without full domain magazine), Journey agent live, performance-as-primary tab, page reuse cache (`skipUnchangedPages` + `page_scan_cache`), competitor cron, normalized `scan_issues` tables, multi-provider GEO cron.

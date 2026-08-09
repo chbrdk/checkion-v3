@@ -318,6 +318,7 @@ async function memoryCreateDomainScan(input: {
   maxPages?: number
   useSitemap?: boolean
   waitForCompletion?: boolean
+  skipUnchangedPages?: boolean
   linkScanId?: string
 }): Promise<DomainScanLight> {
   if (!shouldRunLiveScans()) {
@@ -336,6 +337,7 @@ async function memoryCreateDomainScan(input: {
       maxPages: input.maxPages,
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
+      skipUnchangedPages: input.skipUnchangedPages,
     },
     {
       insertQueued: async (row) => {
@@ -556,6 +558,7 @@ export async function createDomainScan(input: {
   maxPages?: number
   useSitemap?: boolean
   waitForCompletion?: boolean
+  skipUnchangedPages?: boolean
 }): Promise<DomainScanLight> {
   if (isDatabaseConfigured()) {
     return (await dbApi()).dbCreateDomainScan(input)

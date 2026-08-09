@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     maxPages?: number
     useSitemap?: boolean
     waitForCompletion?: boolean
+    skipUnchangedPages?: boolean
   }
   if (!body.projectId || !body.url) {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
     maxPages: body.maxPages,
     useSitemap: body.useSitemap,
     waitForCompletion: body.waitForCompletion === true,
+    skipUnchangedPages: body.skipUnchangedPages,
   })
   return NextResponse.json(domain, { status: 201 })
 }

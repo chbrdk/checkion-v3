@@ -599,6 +599,7 @@ export async function dbCreateDomainScan(input: {
   maxPages?: number
   useSitemap?: boolean
   waitForCompletion?: boolean
+  skipUnchangedPages?: boolean
 }): Promise<DomainScanLight> {
   if (!shouldRunLiveScans()) {
     // Fixture-style instant domain row when live off
@@ -621,6 +622,7 @@ export async function dbCreateDomainScan(input: {
       maxPages: input.maxPages,
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
+      skipUnchangedPages: input.skipUnchangedPages,
     },
     createLiveDomainScanHooks({
       workerSessionId: WORKER_SESSION_ID,

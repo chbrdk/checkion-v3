@@ -236,15 +236,49 @@ export async function* runDomainScan(
     let pageCompleteIndex = 0;
 
     async function tryReuseOrRunFullScan(current: { url: string; depth: number }): Promise<ScanResult> {
-        // Phase 2: reuse-cache polish deferred — always run a full page scan.
-        void options.skipUnchangedPages;
-        return runScan({
+        const projectId = options.projectId ?? null
+        if (options.skipUnchangedPages && projectId) {
+            try {
+                const { getLatestCachedPageScan } = await import('@/lib/db/page-scan-cache')
+                const { checkPageUnchangedByHeaders } = await import('@/lib/scan/page-unchanged-check')
+                const { cloneScanResultForReuse } = await import('@/lib/scan/domain-scan-reuse')
+                const prev = await getLatestCachedPageScan({
+                    projectId,
+                    url: current.url,
+                    device: 'desktop',
+                })
+                if (prev?.documentCacheHints) {
+                    const status = await checkPageUnchangedByHeaders(
+                        current.url,
+                        prev.documentCacheHints,
+                    )
+                    if (status === 'unchanged') {
+                        return cloneScanResultForReuse(prev.scanResult, domainId, current.url)
+                    }
+                }
+            } catch (err) {
+                console.warn('[checkion-v3] page reuse check failed; falling back to full scan', err)
+            }
+        }
+
+        const result = await runScan({
             url: current.url,
             device: 'desktop',
             standard: 'WCAG2AA',
             groupId: domainId,
             userId: options.userId,
-        });
+        })
+
+        if (projectId && !result.reusedUnchanged) {
+            try {
+                const { upsertCachedPageScan } = await import('@/lib/db/page-scan-cache')
+                await upsertCachedPageScan({ projectId, result, device: 'desktop' })
+            } catch (err) {
+                console.warn('[checkion-v3] page cache upsert failed', err)
+            }
+        }
+
+        return result
     }
 
     const processCompleted = (completed: InFlight, result: ScanResult | null, error: Error | null) => {

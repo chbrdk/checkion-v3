@@ -28,6 +28,7 @@ export type DomainScanRunner = (
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    skipUnchangedPages?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
 ) =>
@@ -60,6 +61,7 @@ async function defaultDomainRunner(
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    skipUnchangedPages?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
 ): Promise<AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>> {
@@ -110,6 +112,7 @@ export async function executeDomainLiveScan(input: {
   url: string
   maxPages?: number
   useSitemap?: boolean
+  skipUnchangedPages?: boolean
   onProgress?: (scanned: number, total: number, currentUrl: string) => void | Promise<void>
   getScanControl?: () => Promise<DomainScanControlState>
 }): Promise<PersistedDomainBundle & { terminal: 'completed' | 'cancelled' }> {
@@ -125,6 +128,7 @@ export async function executeDomainLiveScan(input: {
       maxPages,
       domainScanId: input.id,
       projectId: input.projectId,
+      skipUnchangedPages: input.skipUnchangedPages,
       getScanControl: input.getScanControl,
     }),
   )
