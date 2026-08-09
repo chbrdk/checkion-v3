@@ -9,7 +9,7 @@ import type {
   GeoQueryRun,
   GeoRecommendation,
 } from '@checkion-v3/contracts'
-import { buildGeoInsights, mergeRecommendations } from '../geo-insights'
+import { buildEeatGapMoves, buildGeoInsights, mergeRecommendations } from '../geo-insights'
 import { buildGeoPresence, normalizeGeoHost, shareOfVoiceFromPresence } from '../geo-presence'
 import type { GeoEeatIntensiveResult } from '../scan/types'
 
@@ -126,6 +126,11 @@ export function buildLiveGeoOverview(input: {
     input.title?.trim() ||
     `GEO — ${targetHost || input.url}`
 
+  const eeatGapMoves = buildEeatGapMoves({
+    missingElements: eeat?.missingElements,
+    targetHost: targetHost || input.url,
+  })
+
   const draft: GeoOverviewDraft = {
     job: {
       id: input.jobId,
@@ -147,6 +152,7 @@ export function buildLiveGeoOverview(input: {
     competitors: input.competitors.map(normalizeGeoHost).filter(Boolean),
     positionMatrix: buildPositionMatrix(input.queries, models, input.queryRuns),
     queryRuns: input.queryRuns,
+    recommendations: eeatGapMoves,
   }
 
   return finalizeGeoOverview(draft)

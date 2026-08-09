@@ -144,8 +144,16 @@ function buildMissVsRival(
 /** Heuristic prompt intent — fixture overrides win in `resolvePromptIntents`. */
 export function inferPromptIntent(query: string, targetHost: string): GeoPromptIntent {
   const q = query.toLowerCase()
-  if (/\bvs\.?\b|\bversus\b|\bcompare\b|\balternative/.test(q)) return 'comparison'
-  if (/\bhow to\b|\bhow do\b|\bhow can\b|\bsteps to\b/.test(q)) return 'how-to'
+  if (
+    /\bvs\.?\b|\bversus\b|\bcompare\b|\balternative|\bvergleich|\bgegenüber|\balternativ/.test(q)
+  ) {
+    return 'comparison'
+  }
+  if (
+    /\bhow to\b|\bhow do\b|\bhow can\b|\bsteps to\b|\bwie\b|\bschritt[e]?\b|\banleitung\b/.test(q)
+  ) {
+    return 'how-to'
+  }
   const host = normalizeGeoHost(targetHost).toLowerCase()
   if (host && q.includes(host)) return 'branded'
   const token = hostMentionToken(targetHost)
@@ -153,6 +161,13 @@ export function inferPromptIntent(query: string, targetHost: string): GeoPromptI
     return 'branded'
   }
   return 'other'
+}
+
+function intentLabelDe(intent: GeoPromptIntent): string {
+  if (intent === 'branded') return 'Marken-Prompts'
+  if (intent === 'comparison') return 'Vergleichs-Prompts'
+  if (intent === 'how-to') return 'How-to-Prompts'
+  return 'Suchprompts'
 }
 
 export function resolvePromptIntents(
@@ -236,6 +251,7 @@ export function buildDerivedMoves(input: {
 }): GeoRecommendation[] {
   const moves: GeoRecommendation[] = []
   const seenQueries = new Set<string>()
+  const host = input.targetHost || 'deine Domain'
 
   // 1. Miss-vs-rival — one per distinct (query, rivalDomain)
   const missKeys = new Set<string>()
@@ -244,12 +260,12 @@ export function buildDerivedMoves(input: {
     if (missKeys.has(key)) continue
     missKeys.add(key)
     seenQueries.add(row.query)
-    const cue = truncate(row.query, 42)
+    const cue = truncate(row.query, 48)
     moves.push({
       id: slugId(['move-miss', row.rivalDomain, row.query]),
-      title: `${row.rivalDomain} owns “${cue}”`,
+      title: `${row.rivalDomain} zitiert bei „${cue}“ — du nicht`,
       severity: 'high',
-      body: `${row.rivalDomain} is cited (#${row.rivalPosition}) while you are missing. Publish a quotable proof block models can lift into that answer.`,
+      body: `${row.rivalDomain} steht auf Platz #${row.rivalPosition}, ${host} fehlt in der Antwort. Ergänze einen klar zitierbaren Block zur Frage „${truncate(row.query, 96)}“ (kurze Definition, 1–2 Fakten, Quelle/Ansprechpartner), den Modelle direkt übernehmen können.`,
       source: 'derived',
       query: row.query,
     })
@@ -261,15 +277,18 @@ export function buildDerivedMoves(input: {
     if (duel.outcome !== 'lose' && duel.outcome !== 'miss') continue
     if (seenQueries.has(duel.query)) continue
     seenQueries.add(duel.query)
-    const lead = duel.leaderDomain ? ` Lead today: ${duel.leaderDomain}.` : ''
+    const intentDe = intentLabelDe(duel.intent)
+    const lead = duel.leaderDomain
+      ? ` Aktuell führt ${duel.leaderDomain}.`
+      : ''
     moves.push({
       id: slugId(['move-duel', duel.outcome, duel.query]),
       title:
         duel.outcome === 'miss'
-          ? `Get cited on ${duel.intent} prompts`
-          : `Retake the ${duel.intent} prompt`,
+          ? `Bei ${intentDe} zitiert werden`
+          : `${intentDe}: Führungsposition zurückholen`,
       severity: duel.outcome === 'miss' ? 'high' : 'medium',
-      body: `“${truncate(duel.query, 72)}” is a ${duel.outcome} (${duel.targetHitRate}% cited).${lead} Align the page lead so answer engines name ${input.targetHost} first.`,
+      body: `„${truncate(duel.query, 96)}“ ist ein ${duel.outcome === 'miss' ? 'Miss' : 'Rückstand'} (${duel.targetHitRate}% Zitationsrate).${lead} Richte den Seitenanfang so aus, dass Antwortmodelle ${host} zuerst nennen — mit eindeutiger Claim-Zeile und Belegen.`,
       source: 'derived',
       query: duel.query,
     })
@@ -284,9 +303,9 @@ export function buildDerivedMoves(input: {
   ) {
     moves.push({
       id: 'move-first-cite',
-      title: 'Win the first citation slot',
+      title: 'Erste Zitationsposition gewinnen',
       severity: 'medium',
-      body: `You are cited in ${input.solo.hitCount} cells but only ${input.solo.firstCiteRate}% as #1. Tighten definition leads so models lift your snippet first.`,
+      body: `${host} wird in ${input.solo.hitCount} Zellen zitiert, aber nur in ${input.solo.firstCiteRate}% als #1. Schärfe Definitionen und Lead-Absätze, damit Modelle deinen Snippet zuerst heben.`,
       source: 'derived',
     })
     if (moves.length >= MOVES_CAP) return moves
@@ -301,9 +320,9 @@ export function buildDerivedMoves(input: {
     const miss = (d.missModels ?? []).join(', ')
     moves.push({
       id: slugId(['move-split', d.query]),
-      title: 'Resolve model cite disagreement',
+      title: 'Modell-Widerspruch bei Zitation auflösen',
       severity: 'medium',
-      body: `On “${truncate(d.query, 72)}”, ${hit || 'some models'} cite you while ${miss || 'others'} skip you. Make the claim unambiguous and quotable across engines.`,
+      body: `Bei „${truncate(d.query, 96)}“ zitieren ${hit || 'einige Modelle'} ${host}, während ${miss || 'andere'} dich auslassen. Formuliere den Claim eindeutig und mit Belegen, die über Engines hinweg zitierbar sind.`,
       source: 'derived',
       query: d.query,
     })
@@ -311,6 +330,27 @@ export function buildDerivedMoves(input: {
   }
 
   return moves
+}
+
+const EEAT_GAP_MOVES_CAP = 2
+
+/** On-page GEO fitness gaps → actionable moves (DE). */
+export function buildEeatGapMoves(input: {
+  missingElements?: string[] | null
+  targetHost: string
+}): GeoRecommendation[] {
+  const host = input.targetHost || 'deine Domain'
+  const gaps = (input.missingElements ?? [])
+    .map((g) => g.trim())
+    .filter(Boolean)
+    .slice(0, EEAT_GAP_MOVES_CAP)
+  return gaps.map((gap, i) => ({
+    id: slugId(['move-eeat', gap, String(i)]),
+    title: `On-Page-Lücke: ${truncate(gap, 42)}`,
+    severity: 'medium' as const,
+    body: `Für ${host} fehlt „${gap}“. Ergänze das Element mit klarer Struktur und zitierbaren Fakten (Wer / Was / Nachweis), damit Modelle die Seite als Quelle belohnen.`,
+    source: 'derived' as const,
+  }))
 }
 
 /** Derived moves win; append unique fixture ids. */

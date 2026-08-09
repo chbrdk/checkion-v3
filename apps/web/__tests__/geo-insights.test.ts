@@ -3,6 +3,7 @@ import type { GeoQueryRun } from '@checkion-v3/contracts'
 import {
   analyzeAnswerCell,
   buildDerivedMoves,
+  buildEeatGapMoves,
   buildGeoInsights,
   hostMentionToken,
   inferPromptIntent,
@@ -258,6 +259,8 @@ describe('geo-insights', () => {
       targetHost: 'durr.com',
     })
     expect(derived[0]?.source).toBe('derived')
+    expect(derived[0]?.title).toMatch(/abb\.com.*zitiert/i)
+    expect(derived[0]?.body).toMatch(/klar zitierbaren Block/i)
     const merged = mergeRecommendations(derived, [
       { id: 'fixture-1', title: 'Static tip', severity: 'low', body: 'Keep as extra.' },
       { id: derived[0]!.id, title: 'Should drop', severity: 'high', body: 'Dup id' },
@@ -265,6 +268,23 @@ describe('geo-insights', () => {
     expect(merged[0]?.id).toBe(derived[0]!.id)
     expect(merged.some((r) => r.id === 'fixture-1')).toBe(true)
     expect(merged.filter((r) => r.title === 'Should drop')).toHaveLength(0)
+  })
+
+  it('builds German E-E-A-T gap moves from missing elements', () => {
+    const gaps = buildEeatGapMoves({
+      targetHost: 'beispiel.de',
+      missingElements: ['FAQ', 'Author bio', 'HowTo markup'],
+    })
+    expect(gaps).toHaveLength(2)
+    expect(gaps[0]?.title).toMatch(/On-Page-Lücke/)
+    expect(gaps[0]?.body).toMatch(/beispiel\.de/)
+  })
+
+  it('infers German how-to / comparison intents', () => {
+    expect(inferPromptIntent('Wie melde ich einen Schaden?', 'beispiel.de')).toBe('how-to')
+    expect(inferPromptIntent('Vergleich BU vs Berufsunfähigkeit', 'beispiel.de')).toBe(
+      'comparison',
+    )
   })
 
   it('flags first_domain_split when models open with different hosts', () => {

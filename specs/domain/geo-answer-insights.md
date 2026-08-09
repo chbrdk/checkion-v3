@@ -139,16 +139,17 @@ Prefer emitting **both** kinds when both apply (separate rows, or one row with p
 
 ### Auto moves (`GeoRecommendation` derived)
 
-Derive next moves from insights (not static copy alone). Priority order:
+Derive next moves from insights (not static copy alone). Copy is **German**, concrete (host, rival, query, rates). Priority order:
 
 1. **Miss-vs-rival** — one move per distinct `(query, rivalDomain)` from top miss rows (high).
-2. **Lose / miss duels** — prompt where `outcome` is `lose` or `miss` (high/medium).
+2. **Lose / miss duels** — prompt where `outcome` is `lose` or `miss` (high/medium); intent labels in DE (Marken-/Vergleichs-/How-to-/Suchprompts).
 3. **First-cite gap** — when presence solo `firstCiteRate` is non-null and `< 50` and there are hits (medium).
 4. **Cite-split disagreement** — models disagree on citing target (medium).
+5. **E-E-A-T / GEO-fitness gaps** — up to 2 moves from `eeat.missingElements` on live finalize (medium); merged as extras after derived competitive moves.
 
-Cap derived list at **5**. Each move sets `source: 'derived'` and optional `query` for deep-link.
+Cap derived competitive list at **5**. Each move sets `source: 'derived'` and optional `query` for deep-link.
 
-**Merge with fixtures:** derived is source of truth when non-empty. Append fixture recommendations whose `id` is not already present. Cap combined list at **6**. When derived is empty (edge case), keep fixture list as-is.
+**Merge with fixtures / extras:** derived is source of truth when non-empty. Append extras (E-E-A-T gaps, fixture) whose `id` is not already present. Cap combined list at **6**. When derived is empty (edge case), keep fixture/extra list as-is.
 
 ## Payload
 
