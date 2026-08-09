@@ -2508,6 +2508,39 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   overflow: hidden;
 }
 
+.checkion-score-ledger__why {
+  grid-column: 2 / -1;
+  margin: 0.15rem 0 0;
+  font-size: var(--type-sm, 0.9rem);
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+.checkion-geo-eeat-gaps {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1.15rem;
+}
+
+.checkion-geo-eeat-gaps__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.checkion-geo-eeat-gaps__list li {
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border: 1px dashed color-mix(in srgb, var(--line) 90%, transparent);
+  font-size: var(--type-xs, 0.75rem);
+  letter-spacing: 0.04em;
+  color: var(--ink, var(--fg));
+}
+
 .checkion-score-ledger__bar {
   position: absolute;
   left: 0;

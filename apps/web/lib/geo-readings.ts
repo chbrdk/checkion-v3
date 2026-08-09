@@ -74,19 +74,29 @@ export function buildGeoReadingFallback(
         `No on-page E-E-A-T reading is attached to this GEO job — competitive placement stands alone for now.`,
       )
     }
+    const missing = eeat.missingElements?.filter(Boolean) ?? []
     const weak =
       eeat.authoritativeness < 50
         ? 'authoritativeness lags'
         : eeat.experience < 50
           ? 'lived experience signals are thin'
           : null
+    if (missing.length > 0) {
+      return clampOneLine(
+        `On-page gaps that hold GEO back: ${missing.slice(0, 4).join(', ')}${
+          eeat.geoFitnessReasoning ? ` — ${eeat.geoFitnessReasoning}` : ''
+        }.`,
+      )
+    }
     if (eeat.expertise >= 65 && weak) {
       return clampOneLine(
         `Expertise reads strong at ${eeat.expertise}, but ${weak} (${eeat.authoritativeness} auth / ${eeat.experience} experience) — models trust the product story more than the people story.`,
       )
     }
     return clampOneLine(
-      `On-page E-E-A-T averages trust ${eeat.trustworthiness}, expertise ${eeat.expertise}, GEO fitness ${eeat.geoFitness} — enough substance to quote, not enough proof to win head-to-heads.`,
+      `On-page E-E-A-T averages trust ${eeat.trustworthiness}, expertise ${eeat.expertise}, GEO fitness ${eeat.geoFitness}${
+        eeat.geoFitnessReasoning ? ` — ${eeat.geoFitnessReasoning}` : ' — enough substance to quote, not enough proof to win head-to-heads'
+      }.`,
     )
   }
 

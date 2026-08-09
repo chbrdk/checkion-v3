@@ -561,6 +561,14 @@ export interface GeoEeatScores {
   authoritativeness: number
   trustworthiness: number
   geoFitness: number
+  /** Per-dimension LLM reasoning from intensive page reading (Stufe 2). */
+  experienceReasoning?: string
+  expertiseReasoning?: string
+  authoritativenessReasoning?: string
+  trustworthinessReasoning?: string
+  /** GEO fitness narrative + gaps from Stufe 3. */
+  geoFitnessReasoning?: string
+  missingElements?: string[]
 }
 
 export interface GeoCitation {

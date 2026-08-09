@@ -148,6 +148,17 @@ const GEO_DRAFTS: GeoOverviewDraft[] = [
       authoritativeness: 54,
       trustworthiness: 68,
       geoFitness: 51,
+      experienceReasoning:
+        'Case studies and plant references exist, but first-hand “we ran this line” voice is uneven across hubs.',
+      expertiseReasoning:
+        'Technical depth on application systems is strong; named author credentials are sparse on quoteable pages.',
+      authoritativenessReasoning:
+        'Industry recognition is implied more than evidenced with third-party citations on-page.',
+      trustworthinessReasoning:
+        'Legal/contact surfaces are present; transparency signals are consistent on corporate pages.',
+      geoFitnessReasoning:
+        'Pages are citable on how-tos but under-structured for answer engines that prefer FAQs and definitional leads.',
+      missingElements: ['FAQs', 'Author bios', 'llms.txt'],
     },
     recommendations: [
       {
@@ -379,6 +390,12 @@ const GEO_DRAFTS: GeoOverviewDraft[] = [
       authoritativeness: 36,
       trustworthiness: 52,
       geoFitness: 34,
+      experienceReasoning: 'PDP copy is transactional; little first-hand usage narrative.',
+      expertiseReasoning: 'Spec tables help, but no expert byline or sourcing.',
+      authoritativenessReasoning: 'Few third-party proofs on the product page itself.',
+      trustworthinessReasoning: 'Checkout trust badges help; editorial transparency is thin.',
+      geoFitnessReasoning: 'Answer engines prefer guides over PDPs — missing FAQ schema and definitional lead.',
+      missingElements: ['FAQs', 'Structured data', 'Author'],
     },
     recommendations: [
       {

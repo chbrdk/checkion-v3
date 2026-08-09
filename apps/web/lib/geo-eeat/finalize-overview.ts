@@ -62,6 +62,8 @@ export function eeatScoresFromIntensive(
   const page = payload?.pages?.[0]
   if (!page?.eeatScores && page?.geoFitnessScore == null) return undefined
   const e = page.eeatScores
+  const missing =
+    page.missingGeoElements?.map((x) => String(x).trim()).filter(Boolean) ?? []
   return {
     experience: score1to5AsPercent(e?.experience.score),
     expertise: score1to5AsPercent(e?.expertise.score),
@@ -71,6 +73,13 @@ export function eeatScoresFromIntensive(
       typeof page.geoFitnessScore === 'number'
         ? Math.max(0, Math.min(100, Math.round(page.geoFitnessScore)))
         : 0,
+    experienceReasoning: e?.experience.reasoning?.trim() || undefined,
+    expertiseReasoning: e?.expertise.reasoning?.trim() || undefined,
+    authoritativenessReasoning:
+      e?.authoritativeness?.reasoning?.trim() || e?.expertise.reasoning?.trim() || undefined,
+    trustworthinessReasoning: e?.trust.reasoning?.trim() || undefined,
+    geoFitnessReasoning: page.geoFitnessReasoning?.trim() || undefined,
+    missingElements: missing.length ? missing : undefined,
   }
 }
 

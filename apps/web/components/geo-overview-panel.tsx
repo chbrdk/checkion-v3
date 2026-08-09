@@ -205,24 +205,55 @@ export function GeoOverviewPanel({
             />
             <Hint>From an attached page reading — not the LLM competitive run.</Hint>
             <div className="checkion-score-ledger" aria-label="E-E-A-T scores">
-              {eeatScores.map((score, index) => (
-                <div
-                  key={score.id}
-                  className="checkion-score-ledger__cell"
-                  data-tone={scoreTone(score.value)}
-                  style={{ ['--bar' as string]: `${score.value}%` }}
-                >
-                  <span className="checkion-score-ledger__idx">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="checkion-score-ledger__label">
-                    <LabelWithTip tipId={score.tipId}>{score.label}</LabelWithTip>
-                  </span>
-                  <span className="checkion-score-ledger__value">{score.value}</span>
-                  <span className="checkion-score-ledger__bar" aria-hidden />
-                </div>
-              ))}
+              {eeatScores.map((score, index) => {
+                const reasoningKey =
+                  score.id === 'experience'
+                    ? 'experienceReasoning'
+                    : score.id === 'expertise'
+                      ? 'expertiseReasoning'
+                      : score.id === 'authoritativeness'
+                        ? 'authoritativenessReasoning'
+                        : score.id === 'trustworthiness'
+                          ? 'trustworthinessReasoning'
+                          : score.id === 'geoFitness'
+                            ? 'geoFitnessReasoning'
+                            : null
+                const reasoning =
+                  reasoningKey && eeat
+                    ? (eeat[reasoningKey as keyof typeof eeat] as string | undefined)
+                    : undefined
+                return (
+                  <div
+                    key={score.id}
+                    className="checkion-score-ledger__cell"
+                    data-tone={scoreTone(score.value)}
+                    style={{ ['--bar' as string]: `${score.value}%` }}
+                  >
+                    <span className="checkion-score-ledger__idx">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="checkion-score-ledger__label">
+                      <LabelWithTip tipId={score.tipId}>{score.label}</LabelWithTip>
+                    </span>
+                    <span className="checkion-score-ledger__value">{score.value}</span>
+                    <span className="checkion-score-ledger__bar" aria-hidden />
+                    {reasoning ? (
+                      <p className="checkion-score-ledger__why">{reasoning}</p>
+                    ) : null}
+                  </div>
+                )
+              })}
             </div>
+            {eeat.missingElements && eeat.missingElements.length > 0 ? (
+              <div className="checkion-geo-eeat-gaps" aria-label="Missing GEO elements">
+                <p className="checkion-spread__eyebrow">Missing / weak</p>
+                <ul className="checkion-geo-eeat-gaps__list">
+                  {eeat.missingElements.map((el) => (
+                    <li key={el}>{el}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
           <aside
             className="checkion-spread__callout"
