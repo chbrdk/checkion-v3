@@ -1,6 +1,6 @@
 /**
- * Competitive answer parsing helpers (OpenAI structured JSON → citations).
- * Multi-provider cron / Claude+Gemini suites are out of Phase 3 scope.
+ * Competitive answer parsing helpers (structured JSON → citations).
+ * Used by OpenAI (json_schema), Anthropic, and Gemini query runs.
  */
 
 export const GEO_COMPETITIVE_ANSWER_TEXT_MAX = 4000

@@ -6,7 +6,7 @@ import {
   normalizeGeoUrl,
   urlFromCompanyName,
 } from '../../../lib/geo-query-suggest'
-import { hasOpenAIKey } from '../../../lib/llm/config'
+import { hasAnyGeoLlmKey } from '../../../lib/llm/config'
 import { shouldRunLiveGeo } from '../../../lib/geo-eeat/live-geo-gate'
 import { getProject } from '../../../lib/fixtures/project-store'
 import {
@@ -81,9 +81,13 @@ export async function POST(request: Request) {
     )
   }
 
-  if (shouldRunLiveGeo() && !hasOpenAIKey()) {
+  if (shouldRunLiveGeo() && !hasAnyGeoLlmKey()) {
     return NextResponse.json(
-      { error: 'openai_key_required', detail: 'OPENAI_API_KEY is required for live GEO' },
+      {
+        error: 'llm_key_required',
+        detail:
+          'At least one of OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY (or GOOGLE_API_KEY) is required for live GEO',
+      },
       { status: 400 },
     )
   }

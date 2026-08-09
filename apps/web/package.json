@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@checkion-v3/contracts": "file:../../packages/contracts",
     "@msqdx/ui": "file:../../../msqdx-ui/packages/ui",
     "@msqdx/ui-tokens": "file:../../../msqdx-ui/packages/ui-tokens",

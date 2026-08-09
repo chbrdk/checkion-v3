@@ -46,9 +46,11 @@ AUTH_SECRET=<≥32 chars>          # required by entrypoint when PLEXON_AUTH_URL
 NEXT_PUBLIC_PLEXON_REGISTER_URL=https://plexon-v3.projects-a.plygrnd.tech/register
 DATABASE_URL=postgres://…        # triggers drizzle-kit push on start; also enables live scans / GEO unless CHECKION_LIVE_*=0
 CHECKION_LIVE_SCANS=1            # force live Puppeteer scans (even without DB — results stay in-memory)
-CHECKION_LIVE_GEO=1              # force live GEO LLM pipeline (requires OPENAI_API_KEY)
-OPENAI_API_KEY=sk-…              # required for live GEO stages + queryRuns
-OPENAI_MODEL=gpt-5.4-nano        # optional
+CHECKION_LIVE_GEO=1              # force live GEO LLM pipeline (requires ≥1 LLM key)
+OPENAI_API_KEY=sk-…              # OpenAI GEO stages + OpenAI queryRuns
+ANTHROPIC_API_KEY=sk-ant-…       # Claude queryRuns (e.g. claude-sonnet-5)
+GEMINI_API_KEY=…                 # Gemini queryRuns (or GOOGLE_API_KEY)
+OPENAI_MODEL=gpt-5.6-luna        # optional single-model fallback
 CHECKION_FEDERATION_MODE=live
 PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
 PLEXON_DEMO_COMPANY_ID=…
@@ -106,7 +108,7 @@ Operator: replace placeholder `CHECKION_API_TOKEN` with a Settings → API token
 2. `GET …/api/federation/health` → contract present; `deferred: true` in dummy; live probes plexon
 3. Browser: `/geo/geo-1/overview` and `/geo/geo-1/queries` (fixture magazine)
 4. Optional: launch fixture scan from UI → result overview
-5. Optional live GEO: set `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY` → `POST /api/geo-jobs` → open `/geo/<jobId>/overview`
+5. Optional live GEO: set `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY` (+ optional `ANTHROPIC_API_KEY` / `GEMINI_API_KEY`) → `POST /api/geo-jobs` → open `/geo/<jobId>/overview`
 6. Confirm **prod** `https://checkion.projects-a.plygrnd.tech` untouched
 7. **Plexon registry (operator):** after smoke passes, set on **plexon-v3** Coolify:
    `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech`

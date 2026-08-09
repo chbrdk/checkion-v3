@@ -1,7 +1,7 @@
 # GEO Competitive Presence — CHECKION v3
 
 ## Status
-Accepted (spec-driven). Fixtures + derive helpers land with this spec. **Phase 3 live GEO** lands job create + OpenAI queryRuns → same `finalize` / presence helpers (`CHECKION_LIVE_GEO` / `DATABASE_URL` + `OPENAI_API_KEY`). Multi-provider competitive cron remains deferred.
+Accepted (spec-driven). Fixtures + derive helpers land with this spec. **Phase 3 live GEO** lands job create + multi-provider queryRuns (OpenAI / Anthropic / Gemini) → same `finalize` / presence helpers (`CHECKION_LIVE_GEO` / `DATABASE_URL` + at least one LLM key). Full-catalog “Soon” models and competitive cron remain deferred.
 
 ## Purpose
 Answer: **Where do we appear in answer engines?** — citations, placement, model/query coverage — not on-page page quality.
@@ -35,7 +35,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 ### Launch defaults
 From `/scan` GEO mode the form may send:
 - `queries` — editable magazine list (one prompt per row via `GeoQueryList`), or brand-derived defaults when empty after trim; **Suggest** uses `POST /api/geo/suggest-queries` (fixture pool without `OPENAI_API_KEY`, OpenAI when keyed) with URL / company / project context
-- `models` — compact picker from `lib/geo/model-catalog.ts` (`GeoModelPicker`: selected chips + Add dialog); defaults to recommended `gpt-5.4-nano`; live POST filters to OpenAI-supported ids (see `geo-model-catalog.md`). Server still falls back to `OPENAI_MODEL` / `gpt-5.4-nano` when omitted
+- `models` — compact picker from `lib/geo/model-catalog.ts` (`GeoModelPicker`: selected chips + Add dialog); defaults to recommended multi-provider set (`gpt-5.6-luna` + terra/sol + `claude-sonnet-5` + `gemini-3.6-flash`); live POST filters to `liveSupported` ids (see `geo-model-catalog.md`). Server still falls back to `OPENAI_MODEL` / catalog default when omitted
 - **URL and/or `companyName`** + `queries` — at least one of URL / company name required (form + API). When only company name is set, the API derives a normalized citation URL and keeps `companyName` for brand / job title / stage1 context. **Project** is visible but optional: empty placeholder by default; user may select an existing Collection or create via **+ New project**; when still empty on Start, omit `projectId` and the API auto-creates from the target host / company (session / `PLEXON_DEMO_COMPANY_ID` when federating). **`companyId` is not a GEO-job field** (federation only). Compose shows URL · Company · Project — see `scan-modes.md` § GEO compose validation. Failures return JSON `{ error, detail }` and the form shows `detail` in an Alert.
 
 After create, navigate to `/geo/:id/overview`.
@@ -44,8 +44,8 @@ After create, navigate to `/geo/:id/overview`.
 | Path | Create response | Overview behaviour |
 |------|-----------------|-------------------|
 | Fixture (`CHECKION_LIVE_GEO=0` / no DB) | `status: completed` with filled `queryRuns` | Magazine renders values immediately |
-| Live (`DATABASE_URL` and/or `CHECKION_LIVE_GEO=1` + `OPENAI_API_KEY`) | `status: queued` shell (`queryRuns: []`), pipeline continues async | Overview shows an honest **in-progress** state and **polls** `GET /api/geo-jobs/:id` until `completed` or `failed` — never present an empty magazine as a finished success |
-| Pipeline / OpenAI failure | `status: failed` with error lede | Overview shows failure, not 0% “done” |
+| Live (`DATABASE_URL` and/or `CHECKION_LIVE_GEO=1` + at least one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GEMINI_API_KEY`) | `status: queued` shell (`queryRuns: []`), pipeline continues async | Overview shows an honest **in-progress** state and **polls** `GET /api/geo-jobs/:id` until `completed` or `failed` — never present an empty magazine as a finished success |
+| Pipeline / LLM failure | `status: failed` with error lede | Overview shows failure, not 0% “done” |
 
 Do **not** mark failed runs as `completed` with empty `queryRuns`.
 

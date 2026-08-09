@@ -48,6 +48,10 @@ export const paths = {
   fetchPageMaxChars: 6000,
   envOpenAiApiKey: 'OPENAI_API_KEY',
   envOpenAiModel: 'OPENAI_MODEL',
+  envAnthropicApiKey: 'ANTHROPIC_API_KEY',
+  envGeminiApiKey: 'GEMINI_API_KEY',
+  /** Alias accepted for Gemini when GEMINI_API_KEY unset. */
+  envGoogleApiKey: 'GOOGLE_API_KEY',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
   envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
   routes: {

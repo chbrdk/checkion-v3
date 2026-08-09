@@ -2,8 +2,7 @@
  * GEO launch model catalog (August 2026).
  * Spec: specs/domain/geo-model-catalog.md
  *
- * Live GEO currently runs OpenAI only; Anthropic / Google stay in the catalog
- * for UX + future multi-provider competitive runs.
+ * Live GEO runs OpenAI + Anthropic + Google for models marked liveSupported.
  */
 
 export type GeoModelProvider = 'openai' | 'anthropic' | 'google'
@@ -19,7 +18,7 @@ export type GeoModelEntry = {
   recommended?: boolean
   /** Single fallback when selection is empty after live filter */
   default?: boolean
-  /** Runnable in live GEO today (OpenAI + OPENAI_API_KEY) */
+  /** Runnable in live GEO today (provider key required at runtime) */
   liveSupported: boolean
 }
 
@@ -32,6 +31,15 @@ export const GEO_MODEL_PROVIDERS: ReadonlyArray<{
   { id: 'google', label: 'Google' },
 ]
 
+/** Compact EQC / Suggest default set (OpenAI 5.6 + Claude Sonnet + Gemini Flash). */
+export const GEO_EQC_DEFAULT_MODEL_IDS = [
+  'gpt-5.6-luna',
+  'gpt-5.6-terra',
+  'gpt-5.6-sol',
+  'claude-sonnet-5',
+  'gemini-3.6-flash',
+] as const
+
 /** Typed registry — refresh when providers ship new GA tiers. */
 export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
   // OpenAI — GPT-5.6 family (July 2026) + still-current 5.5 / 5.4
@@ -40,6 +48,7 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'gpt-5.6-sol',
     label: 'GPT-5.6 Sol',
     tier: 'flagship',
+    recommended: true,
     liveSupported: true,
   },
   {
@@ -47,6 +56,7 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'gpt-5.6-terra',
     label: 'GPT-5.6 Terra',
     tier: 'balanced',
+    recommended: true,
     liveSupported: true,
   },
   {
@@ -54,6 +64,8 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'gpt-5.6-luna',
     label: 'GPT-5.6 Luna',
     tier: 'fast',
+    recommended: true,
+    default: true,
     liveSupported: true,
   },
   {
@@ -75,8 +87,6 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'gpt-5.4-nano',
     label: 'GPT-5.4 nano',
     tier: 'fast',
-    recommended: true,
-    default: true,
     liveSupported: true,
   },
   // Anthropic — Claude 5 + current 4.x (API aliases)
@@ -99,7 +109,8 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'claude-sonnet-5',
     label: 'Claude Sonnet 5',
     tier: 'balanced',
-    liveSupported: false,
+    recommended: true,
+    liveSupported: true,
   },
   {
     provider: 'anthropic',
@@ -128,7 +139,8 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'gemini-3.6-flash',
     label: 'Gemini 3.6 Flash',
     tier: 'balanced',
-    liveSupported: false,
+    recommended: true,
+    liveSupported: true,
   },
   {
     provider: 'google',
@@ -182,11 +194,13 @@ export function getGeoModel(id: string): GeoModelEntry | undefined {
 
 export function catalogDefaultId(): string {
   const hit = GEO_MODEL_CATALOG.find((m) => m.default)
-  return hit?.id ?? 'gpt-5.4-nano'
+  return hit?.id ?? 'gpt-5.6-luna'
 }
 
-/** Recommended preselect (Suggest restores this). */
+/** Recommended preselect (Suggest restores this) — compact multi-provider set. */
 export function defaultGeoModelIds(): string[] {
+  const ordered = GEO_EQC_DEFAULT_MODEL_IDS.filter((id) => byId.get(id)?.recommended)
+  if (ordered.length > 0) return [...ordered]
   const recommended = GEO_MODEL_CATALOG.filter((m) => m.recommended).map((m) => m.id)
   return recommended.length > 0 ? recommended : [catalogDefaultId()]
 }

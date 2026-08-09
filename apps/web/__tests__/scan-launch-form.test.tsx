@@ -179,12 +179,14 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('group', { name: /^GEO queries$/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /AI suggest GEO queries/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /^GEO models$/i })).toBeTruthy()
-    expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Remove GPT-5\.4 nano/i })).toBeTruthy()
+    expect(screen.getByText(/GPT-5\.6 Luna/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Remove GPT-5\.6 Luna/i })).toBeTruthy()
+    expect(screen.getByText(/Claude Sonnet 5/i)).toBeTruthy()
+    expect(screen.getByText(/Gemini 3\.6 Flash/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Suggest default GEO models/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Add GEO model/i })).toBeTruthy()
-    // Full catalog is not dumped as chips on the launch surface
-    expect(screen.queryByRole('button', { name: /Claude Sonnet 5 \(Soon\)/i })).toBeNull()
+    // Full catalog is not dumped as chips on the launch surface (Soon entries stay in Add dialog)
+    expect(screen.queryByRole('button', { name: /Claude Opus 5 \(Soon\)/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i })).toBeNull()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
@@ -245,26 +247,28 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('heading', { name: /Add model/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /Model provider/i })).toBeTruthy()
 
-    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
-    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.6 Luna/i }))
-    expect(screen.getByRole('option', { name: /GPT-5\.6 Luna/i })).toHaveAttribute(
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'nano' } })
+    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.4 nano/i }))
+    expect(screen.getByRole('option', { name: /GPT-5\.4 nano/i })).toHaveAttribute(
       'aria-selected',
       'true',
     )
 
     fireEvent.click(screen.getByRole('button', { name: /^Anthropic$/i }))
-    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'sonnet 5' } })
-    fireEvent.click(screen.getByRole('option', { name: /Claude Sonnet 5/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'opus 5' } })
+    fireEvent.click(screen.getByRole('option', { name: /Claude Opus 5/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Done$/i }))
 
-    expect(screen.getByText(/GPT-5\.6 Luna/i)).toBeTruthy()
-    expect(screen.getByText(/Claude Sonnet 5/i)).toBeTruthy()
+    expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
+    expect(screen.getByText(/Claude Opus 5/i)).toBeTruthy()
     expect(screen.getByText(/1 Soon model/i)).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: /Suggest default GEO models/i }))
-    expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
-    expect(screen.queryByText(/GPT-5\.6 Luna/i)).toBeNull()
-    expect(screen.queryByText(/Claude Sonnet 5/i)).toBeNull()
+    expect(screen.getByText(/GPT-5\.6 Luna/i)).toBeTruthy()
+    expect(screen.getByText(/Claude Sonnet 5/i)).toBeTruthy()
+    expect(screen.getByText(/Gemini 3\.6 Flash/i)).toBeTruthy()
+    expect(screen.queryByText(/Claude Opus 5/i)).toBeNull()
+    expect(screen.queryByText(/GPT-5\.4 nano/i)).toBeNull()
   })
 
   it('adds and removes GEO query rows from the list', () => {
@@ -353,11 +357,11 @@ describe('ScanLaunchForm', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Bosch eBike' } })
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
-    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'luna' } })
-    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.6 Luna/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'nano' } })
+    fireEvent.click(screen.getByRole('option', { name: /GPT-5\.4 nano/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Anthropic$/i }))
-    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'sonnet 5' } })
-    fireEvent.click(screen.getByRole('option', { name: /Claude Sonnet 5/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'opus 5' } })
+    fireEvent.click(screen.getByRole('option', { name: /Claude Opus 5/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Done$/i }))
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
 
@@ -378,8 +382,15 @@ describe('ScanLaunchForm', () => {
     expect(body.url).toContain('http')
     expect(body.companyName).toBe('Bosch eBike')
     expect(body.queries.length).toBeGreaterThan(0)
-    // Live filter drops Anthropic; keeps OpenAI selection
-    expect(body.models).toEqual(['gpt-5.4-nano', 'gpt-5.6-luna'])
+    // Live filter keeps recommended + nano; drops Soon Opus
+    expect(body.models).toEqual([
+      'gpt-5.6-luna',
+      'gpt-5.6-terra',
+      'gpt-5.6-sol',
+      'claude-sonnet-5',
+      'gemini-3.6-flash',
+      'gpt-5.4-nano',
+    ])
     await waitFor(() => {
       expect(push).not.toHaveBeenCalled()
     })
