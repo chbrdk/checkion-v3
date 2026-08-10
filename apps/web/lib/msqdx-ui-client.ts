@@ -5,6 +5,11 @@ export { ConfirmDialog } from '../../../../msqdx-ui/packages/ui/src/components/C
 export { DataTable } from '../../../../msqdx-ui/packages/ui/src/components/DataTable'
 export type { DataTableColumn, DataTableProps } from '../../../../msqdx-ui/packages/ui/src/components/DataTable'
 export { Dialog } from '../../../../msqdx-ui/packages/ui/src/components/Dialog'
+export { ChatOverlay } from '../../../../msqdx-ui/packages/ui/src/components/ChatOverlay'
+export type {
+  ChatOverlayPlacement,
+  ChatOverlayProps,
+} from '../../../../msqdx-ui/packages/ui/src/components/ChatOverlay'
 export { InfoTip } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export type { InfoTipProps } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export { Select } from '../../../../msqdx-ui/packages/ui/src/components/Select'

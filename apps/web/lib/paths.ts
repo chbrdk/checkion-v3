@@ -34,7 +34,11 @@ export const paths = {
   dataSource: 'fixtures' as const,
   federationMode: 'dummy' as const,
   envPlexonBase: 'NEXT_PLEXON_BASE_URL',
+  /** Browser iframe origin for central assistant (falls back to base/auth). */
+  envPlexonPublicUrl: 'NEXT_PUBLIC_PLEXON_URL',
   envCheckionPublicUrl: 'NEXT_PUBLIC_CHECKION_URL',
+  pathAssistantEmbed: '/assistant/embed',
+  pathAssistantExpand: '/assistant',
   envPlexonServiceSecret: 'PLEXON_SERVICE_SECRET',
   envPlexonAuthUrl: 'PLEXON_AUTH_URL',
   envPlexonRegisterUrl: 'NEXT_PUBLIC_PLEXON_REGISTER_URL',

@@ -25,6 +25,7 @@ import {
   JobsRailIcon,
   useJobNotifications,
 } from './job-notification-center'
+import { PlatformAssistantHost } from './platform-assistant-host'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
 
@@ -134,6 +135,7 @@ export function AppShell({
         {description ? <p className="checkion-page-lead">{description}</p> : null}
         {children}
       </div>
+      <PlatformAssistantHost />
     </AppFrame>
   )
 }

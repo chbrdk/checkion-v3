@@ -23,6 +23,11 @@
 - Ops: `plexon-v3/knowledge/collection-knowledge-sync.md`
 - Base URL: `plexonBaseUrl()` prefers `NEXT_PLEXON_BASE_URL`, else `PLEXON_AUTH_URL`
 
+## Central Assistant (cross-app)
+- Host: `PlatformAssistantHost` in AppShell → iframe `{plexonBase}/assistant/embed`
+- Spec: `plexon-v3/specs/domain/central-assistant-flyout.md` · `plexon-v3/specs/api/assistant-embed.md`
+- Public Plexon origin for iframe: same base as federation (`NEXT_PLEXON_BASE_URL` / `PLEXON_AUTH_URL` / `NEXT_PUBLIC_PLEXON_URL` when set) — document in `knowledge/paths.md`
+
 ## Auth (NextAuth + Plexon)
 - NextAuth credentials provider validates against plexon `POST /api/auth/validate-credentials`
 - Env: `PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, `AUTH_SECRET` (≥32), optional `NEXT_PUBLIC_PLEXON_REGISTER_URL`
