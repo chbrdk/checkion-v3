@@ -8,7 +8,7 @@
 ## Staging (Coolify)
 - Public: `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`)
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
-- Central Assistant flyout: AppShell `PlatformAssistantHost` → `{plexon}/assistant/embed` · `plexon-v3/specs/domain/central-assistant-flyout.md`
+- Central Assistant flyout: AppShell `PlatformAssistantHost` → `{plexon}/assistant/embed` (+ `theme` / `assistant:theme`) · `plexon-v3/specs/domain/central-assistant-flyout.md`
 - Attach runbook: `knowledge/staging-coolify.md`
 - **Operator (after smoke):** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` so Collection dashboard / registry deep-links target v3 (do not leave prod `checkion.projects-a…`). See `plexon-v3/knowledge/coolify-v3-staging-runbook.md` §4.3 Wave B note.
 - Image: root `Dockerfile` fetches sibling `chbrdk/msqdx-ui` at pinned `MSQDX_UI_REF` into `/workspace/msqdx-ui` (same layout as local `GITHUB/checkion-v3` + `GITHUB/msqdx-ui`). Bump the SHA when barrels need newer primitives — floating `main` clone layers go stale on Coolify and break `lib/msqdx-ui.ts` (e.g. missing `CardActions`).

@@ -29,9 +29,10 @@ describe('checkion platform assistant paths', () => {
     const embed = buildPlatformAssistantEmbedUrl({
       platformProjectId: 'p1',
       pathname: '/scan',
+      theme: 'msqdx-dark',
     })
     expect(embed).toBe(
-      'https://plexon-v3.example/assistant/embed?product=checkion&project=p1&pathname=%2Fscan',
+      'https://plexon-v3.example/assistant/embed?product=checkion&project=p1&pathname=%2Fscan&theme=msqdx-dark',
     )
     expect(buildPlatformAssistantExpandUrl('c1', 'p1')).toBe(
       'https://plexon-v3.example/assistant?c=c1&project=p1',
