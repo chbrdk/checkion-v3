@@ -13,8 +13,10 @@ describe('runQueryRuns multi-provider', () => {
 
   it('routes openai/anthropic/google through the complete hook', async () => {
     const seen: string[] = []
-    setQueryRunCompleteForTests(async ({ provider, modelId, userPrompt }) => {
+    const prompts: string[] = []
+    setQueryRunCompleteForTests(async ({ provider, modelId, userPrompt, systemPrompt }) => {
       seen.push(`${provider}:${modelId}`)
+      prompts.push(systemPrompt)
       return {
         content: JSON.stringify({
           answer: `${provider} answer for ${userPrompt}`,
@@ -26,7 +28,7 @@ describe('runQueryRuns multi-provider', () => {
 
     const out = await runQueryRuns({
       targetUrl: 'https://example.com',
-      competitors: [],
+      competitors: ['rival.example'],
       queries: ['best widgets'],
       models: ['gpt-5.6-luna', 'claude-sonnet-5', 'gemini-3.6-flash'],
     })
@@ -40,6 +42,14 @@ describe('runQueryRuns multi-provider', () => {
     expect(out.queryRuns.every((r) => r.ourPosition === 1)).toBe(true)
     expect(out.usage.input_tokens).toBe(3)
     expect(out.usage.output_tokens).toBe(6)
+    expect(
+      prompts.every(
+        (p) =>
+          !/\bexample\.com\b/.test(p) &&
+          !p.includes('rival.example') &&
+          !/known domains/i.test(p),
+      ),
+    ).toBe(true)
   })
 
   it('soft-fails a model cell when the completer throws', async () => {

@@ -6,6 +6,7 @@ import { GeoJobStatusPoller } from '../../../../components/geo-job-status-poller
 import { GeoMagazineShell } from '../../../../components/geo-magazine-shell'
 import { GeoOverviewPanel } from '../../../../components/geo-overview-panel'
 import { GeoQueriesPanel } from '../../../../components/geo-queries-panel'
+import { GeoResultActions } from '../../../../components/geo-result-actions'
 import type { GeoSectionId } from '../../../../components/geo-section-nav'
 import { isGeoJobInProgress } from '../../../../lib/geo-job-display'
 import { getGeoOverview } from '../../../../lib/fixtures/geo-store'
@@ -51,11 +52,14 @@ export default async function GeoSectionPage({
   const inProgress = isGeoJobInProgress(jobStatus)
 
   const actions = (
-    <Link href={paths.routes.projectDetail(overview.job.projectId)}>
-      <Button size="sm" variant="ghost">
-        Project
-      </Button>
-    </Link>
+    <>
+      <GeoResultActions overview={overview} />
+      <Link href={paths.routes.projectDetail(overview.job.projectId)}>
+        <Button size="sm" variant="ghost">
+          Project
+        </Button>
+      </Link>
+    </>
   )
 
   return (

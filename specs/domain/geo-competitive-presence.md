@@ -38,7 +38,10 @@ From `/scan` GEO mode the form may send:
 - `models` — compact picker from `lib/geo/model-catalog.ts` (`GeoModelPicker`: selected chips + Add dialog); defaults to recommended multi-provider set (`gpt-5.6-luna` + terra/sol + `claude-sonnet-5` + `gemini-3.6-flash`); live POST filters to `liveSupported` ids (see `geo-model-catalog.md`). Server still falls back to `OPENAI_MODEL` / catalog default when omitted
 - **URL and/or `companyName`** + `queries` — at least one of URL / company name required (form + API). When only company name is set, the API derives a normalized citation URL and keeps `companyName` for brand / job title / stage1 context. **Project** is visible but optional: empty placeholder by default; user may select an existing Collection or create via **+ New project**; when still empty on Start, omit `projectId` and the API auto-creates from the target host / company (session / `PLEXON_DEMO_COMPANY_ID` when federating). **`companyId` is not a GEO-job field** (federation only). Compose shows URL · Company · Project — see `scan-modes.md` § GEO compose validation. Failures return JSON `{ error, detail }` and the form shows `detail` in an Alert.
 
-After create, navigate to `/geo/:id/overview`.
+After create, navigate to `/geo/:id/overview` (or stay on launch / prior result and track via Notification center — see `scan-modes.md` § Launch + re-run).
+
+### Re-run from result
+Completed or failed jobs expose **Re-run** in magazine topbar actions (`GeoResultActions`). Creates a **new** geo job via `POST /api/geo-jobs` cloning `url`, `queries`, `models`, `competitors`, `projectId`, `title` from the current overview. Does not mutate the old job. In-progress jobs disable the CTA.
 
 ### Result readiness (live vs fixture)
 | Path | Create response | Overview behaviour |
@@ -135,12 +138,28 @@ Legacy `shareOfVoice[]` on `GeoOverview` remains as a convenience mirror of `fie
 - Overview Opportunities + Queries answer dossier — see [`geo-answer-insights.md`](./geo-answer-insights.md)
 - Model placement strip / citation map cells deep-link within Queries (`?q=` / `model=`) — see answer-insights spec
 
+## Competitive LLM prompt honesty (live queryRuns)
+
+Live `queryRuns` are **ungrounded chat probes** (no web search). Measurement must not steer the model toward the target.
+
+| Rule | Why |
+|------|-----|
+| **No target/competitor domain list in the system prompt** | Listing known domains inflates hit rates (models pick from the hint set) |
+| **Anti-steer line** — cite only companies you would genuinely recommend; empty citations OK | Keeps answers natural without forcing a filled cite list |
+| **Still ask for ordered domain citations** when recommending | Placement metrics stay measurable when the model does name brands |
+| **Post-hoc matching only** — `ourPosition` via host fuzzy match after parse | Scoring stays blind to the model |
+
+**Balance:** Do **not** require grounded search or strip citations entirely — that would collapse placement for everyone. Honest parametric recall (well-known brands) may still cite the target; obscure brands may miss more often, which is intended.
+
+See `knowledge/geo-measurement-honesty.md`.
+
 ## Non-goals (v1 competitive)
 - On-page E-E-A-T, llms.txt, Schema, discoverability page scores (Scan / Domain)
 - Editable meters / sliders for scores
 - Live Plexon federation (deferred)
 - Per-answer live LLM (prompt-level reading only)
 - **Multi-provider competitive cron** (Claude + Gemini + history reruns) — deferred; Phase 3 uses OpenAI query×model runs only. See `knowledge/dummy-data-mode.md` (“Live GEO pipeline”).
+- Grounded / consumer-UI answer-engine sampling (deferred; separate from prompt honesty)
 
 ## Contracts
 `GeoPresenceSolo`, `GeoPresenceField`, `GeoRivalSource`, `GeoPresence` in `@checkion-v3/contracts`; `GeoOverview.presence`.  
@@ -153,3 +172,6 @@ Legacy `shareOfVoice[]` on `GeoOverview` remains as a convenience mirror of `fie
 ## Tests
 - `apps/web/__tests__/geo-presence.test.ts` — solo metrics, discovery, SoV with `other`, empty runs
 - `apps/web/__tests__/geo-insights.test.ts` — duels, miss-vs-rival, cell analysis
+- `apps/web/__tests__/competitive-response-honesty.test.ts` — blind system prompt (no domain hints)
+- `apps/web/__tests__/run-query-runs-multi-provider.test.ts` — providers + prompt does not leak target/rival hosts
+- `apps/web/__tests__/geo-rerun.test.ts` — result chrome re-run payload clone

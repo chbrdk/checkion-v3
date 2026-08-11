@@ -52,4 +52,5 @@
 | CI | `knowledge/ci.md` |
 | DS gaps (product view) | `knowledge/ds-component-gaps.md` |
 | Dummy data mode | `knowledge/dummy-data-mode.md` |
+| GEO measurement honesty | `knowledge/geo-measurement-honesty.md` |
 | Collection Knowledge Pack (Plexon) | `plexon-v3/specs/domain/collection-knowledge-pack.md` · consume/publish `specs/domain/geo-knowledge-consume.md` |

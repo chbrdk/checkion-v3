@@ -87,9 +87,11 @@ export function GeoOverviewPanel({
           ]}
         />
         <p className="checkion-geo-recs__cta">
+          Use Re-run in the top bar to queue the same prompts again, or{' '}
           <Link href={paths.routes.scanLaunch({ mode: 'geo', projectId: job.projectId })} className="checkion-geo-recs__nav">
-            Start another GEO run
+            start a new GEO compose
           </Link>
+          .
         </p>
       </div>
     )

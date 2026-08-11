@@ -236,9 +236,7 @@ export async function runQueryRuns(input: {
 }): Promise<RunQueryRunsResult> {
   const usage = emptyUsageTotals()
   const targetHost = normalizeGeoHost(input.targetUrl)
-  const competitorHosts = input.competitors.map(normalizeGeoHost).filter(Boolean)
-  const allDomains = [targetHost, ...competitorHosts].filter(Boolean)
-  const systemPrompt = buildCompetitiveSystemPrompt(allDomains)
+  const systemPrompt = buildCompetitiveSystemPrompt()
   const models = input.models.length > 0 ? input.models : [OPENAI_MODEL]
   const queryRuns: GeoQueryRun[] = []
 

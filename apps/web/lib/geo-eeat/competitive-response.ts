@@ -40,19 +40,21 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
   additionalProperties: false,
 }
 
-export function buildCompetitiveSystemPrompt(allDomains: string[]): string {
-  const domainHint =
-    allDomains.length > 0
-      ? `When a company matches one of these known domains, use that domain: ${allDomains.join(', ')}.`
-      : 'Use lowercase domains without protocol (e.g. example.com).'
-
+/**
+ * Blind competitive probe — no target/competitor domain list (avoids steered hits).
+ * Still asks for natural ordered citations so placement remains measurable.
+ * Spec: geo-competitive-presence.md § Competitive LLM prompt honesty
+ */
+export function buildCompetitiveSystemPrompt(): string {
   return (
-    "You are a helpful search assistant. For the user's query, respond with a JSON object containing:\n" +
+    'You are a helpful search assistant answering as you would for a real user researching this topic. ' +
+    "For the user's query, respond with a JSON object containing:\n" +
     '- "answer": natural language prose (2–6 sentences) in the same language as the query;\n' +
     '- "citations": an array of recommended companies/domains in order of relevance.\n' +
-    'Each citation must have "domain" (lowercase, no protocol) and "position" (1-based index). ' +
-    domainHint +
-    ' If no relevant companies or domains, return {"answer":"…","citations":[]}.'
+    'Each citation must have "domain" (lowercase, no protocol, e.g. brand.tld) and "position" (1-based index). ' +
+    'Only cite companies you would genuinely recommend for this query — do not invent brands to fill the list, ' +
+    'and do not favor any particular brand. Empty citations are fine when you have no real recommendations. ' +
+    'If no relevant companies or domains, return {"answer":"…","citations":[]}.'
   )
 }
 
