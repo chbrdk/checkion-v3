@@ -21,5 +21,6 @@ Coolify MCP (`user-coolify`) is **read-only**. Deploys go through the Coolify RE
 
 ## 2026-08-11 — GEO honesty + Re-run
 
-- Commit: `76ee963`
-- Deployment uuid: `y14b7lr5yjnffp277g2b5n8b` (queued after push)
+- Commits: `76ee963` (feature) · `bd42bb7` (deploy docs)
+- First force-deploy `y14b7lr5yjnffp277g2b5n8b` **failed** during Next “Collecting build traces” (exit 255 / likely OOM)
+- Retry `s12pcr3m80c7oliqozksx5bw` **finished** on `bd42bb7` → https://checkion-v3.projects-a.plygrnd.tech
