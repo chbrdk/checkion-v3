@@ -21,13 +21,28 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toMatch(/git fetch --depth 1 origin "\$\{MSQDX_UI_REF\}"/)
     expect(df).toContain('CardActions.tsx')
     expect(df).toContain('InfoTip.tsx')
+    expect(df).toContain('ChatOverlay.tsx')
     expect(df).toContain('docker-entrypoint.sh')
+    expect(df).toMatch(/find \. -type d -name node_modules/)
+    expect(df).toMatch(
+      /ln -s \/workspace\/checkion-v3\/node_modules \/workspace\/msqdx-ui\/node_modules/,
+    )
     expect(df).toContain('apps/web/drizzle.config.ts')
     expect(df).toContain('libnss3')
     expect(df).toContain('PUPPETEER_SKIP_DOWNLOAD')
     expect(df).toContain('PUPPETEER_CACHE_DIR')
     expect(df).toContain('puppeteer browsers install chrome')
     expect(df).toMatch(/docker-entrypoint\.sh|npm run start -w web/)
+  })
+
+  it('ships react-driftkit + resolve.modules for sibling DS (no DS node_modules in Docker)', () => {
+    const pkg = JSON.parse(
+      readFileSync(resolve(repoRoot, 'apps/web/package.json'), 'utf8'),
+    ) as { dependencies?: Record<string, string> }
+    expect(pkg.dependencies?.['react-driftkit']).toMatch(/^\^?0\./)
+    const nextCfg = readFileSync(resolve(repoRoot, 'apps/web/next.config.ts'), 'utf8')
+    expect(nextCfg).toContain('resolve.modules')
+    expect(nextCfg).toContain('appNodeModules')
   })
 
   it('pins msqdx-ui to a full commit SHA (busts stale Coolify ds cache)', () => {
@@ -84,10 +99,12 @@ describe('Dockerfile Coolify packaging', () => {
     expect(barrel).not.toMatch(/export \{[^}]*DataTable/)
     expect(barrel).not.toMatch(/export \{[^}]*Tooltip/)
     expect(barrel).not.toMatch(/export \{[^}]*InfoTip/)
+    expect(barrel).not.toMatch(/export \{[^}]*ChatOverlay/)
     expect(client).toContain("'use client'")
     expect(client).toContain('DataTable')
     expect(client).toContain('Tooltip')
     expect(client).toContain('InfoTip')
+    expect(client).toContain('ChatOverlay')
   })
 
   it('keeps health path for Traefik probes', () => {

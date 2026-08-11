@@ -56,20 +56,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ---- Design system (msqdx-ui) ----
 # Pin a commit (not floating `main`) so Coolify/Docker cannot reuse a stale `ds`
-# layer that predates barrel targets like CardActions / Lede — that surfaces as:
-#   ./lib/msqdx-ui.ts Module not found: …/components/CardActions
+# layer that predates barrel targets like CardActions / ChatOverlay — that surfaces as:
+#   ./lib/msqdx-ui-client.ts Module not found: …/components/ChatOverlay
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-ARG MSQDX_UI_REF=621fda38822165c6edfce0f337f937ecf3e5863c
+# Same pin as brandion-v3 (ChatOverlay + ReactNode return type for dual @types/react).
+ARG MSQDX_UI_REF=5323011442f3665dc72da00ec77ebfb6559e1d3e
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
     && git fetch --depth 1 origin "${MSQDX_UI_REF}" \
     && git checkout --force FETCH_HEAD \
     && test "$(git rev-parse HEAD)" = "${MSQDX_UI_REF}" \
+    && printf 'node-linker=hoisted\n' > .npmrc \
     && pnpm install --frozen-lockfile \
-    && pnpm build
+    && pnpm build \
+    # Drop install trees before COPY — full node_modules OOMs Coolify (exit 255).
+    # Builder re-links checkion node_modules for @types/react + peer resolution.
+    && rm -rf node_modules \
+    && find . -type d -name node_modules -prune -exec rm -rf {} +
 
 # ---- Builder ----
 FROM base AS builder
@@ -84,14 +90,20 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund --include=dev
 
 # Sibling layout: …/workspace/checkion-v3 + …/workspace/msqdx-ui
-# Assert barrel source targets exist (RSC alias re-exports deep src paths, not package dist).
+# One node_modules for app + DS source (avoids dual @types/react / ChatOverlay JSX break).
+# See msqdx-ui/knowledge/react-types-dedupe.md
 RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && test -f /workspace/msqdx-ui/packages/ui-tokens/dist/index.js \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/CardActions.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/Lede.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/InfoTip.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/ChatOverlay.tsx \
     && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts \
-    && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts
+    && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "export { ChatOverlay }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && rm -rf /workspace/msqdx-ui/node_modules \
+    && ln -s /workspace/checkion-v3/node_modules /workspace/msqdx-ui/node_modules \
+    && test -d /workspace/msqdx-ui/node_modules/@types/react
 
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=6144
@@ -104,7 +116,9 @@ RUN DATABASE_URL= \
     PLEXON_SERVICE_SECRET= \
     PLEXON_AUTH_URL= \
     AUTH_SECRET= \
-    npm run build
+    npm run build \
+    # Runner must not inherit the absolute symlink into checkion node_modules.
+    && rm -f /workspace/msqdx-ui/node_modules
 
 # ---- Runner ----
 # Fresh base image — no builder ENV. Runtime secrets come from Coolify container env only.
