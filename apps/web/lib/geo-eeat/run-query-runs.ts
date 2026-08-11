@@ -21,6 +21,7 @@ import { getGeoModel, type GeoModelProvider } from '../geo/model-catalog'
 import {
   COMPETITIVE_RESPONSE_JSON_SCHEMA,
   buildCompetitiveSystemPrompt,
+  citationMatchesTargetHost,
   parseCompetitiveResponse,
 } from './competitive-response'
 
@@ -31,18 +32,6 @@ const COMPETITIVE_RESPONSE_FORMAT = {
     strict: true,
     schema: COMPETITIVE_RESPONSE_JSON_SCHEMA,
   },
-}
-
-function citationMatchesDomain(citationDomain: string, ourDomain: string): boolean {
-  const c = citationDomain.toLowerCase().trim()
-  const d = ourDomain.toLowerCase().trim()
-  if (c === d) return true
-  if (d.endsWith('.' + c)) return true
-  if (c.endsWith('.' + d)) return true
-  const dBase = d.split('.')[0]
-  if (dBase && c === dBase) return true
-  if (dBase && c.startsWith(dBase + '.')) return true
-  return false
 }
 
 export type RunQueryRunsResult = {
@@ -254,7 +243,7 @@ export async function runQueryRuns(input: {
         })
         const parsed = parseCompetitiveResponse(rawContent)
         const match = parsed.citations.find((c) =>
-          citationMatchesDomain(c.domain, targetHost),
+          citationMatchesTargetHost(c.domain, targetHost),
         )
         return {
           queryId,

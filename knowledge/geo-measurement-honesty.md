@@ -5,7 +5,7 @@
 
 ## What we measure
 
-Ungrounded multi-provider chat: for each prompt × model, ask for a natural answer + ordered domain citations, then match the target host post-hoc.
+Ungrounded multi-provider chat: for each prompt × model, ask for a natural answer + ordered **website hostnames**, then match the target host post-hoc with **label-aware** DNS rules.
 
 This is a **parametric preference / recall probe**, not live Answer Engine placement with web search.
 
@@ -13,28 +13,24 @@ This is a **parametric preference / recall probe**, not live Answer Engine place
 
 | Knob | Setting | Effect |
 |------|---------|--------|
-| Domain hints (target + rivals in system prompt) | **Off** | Removes the main artificial inflation |
-| “Genuinely recommend / empty OK” | **On** | Avoids forced cite lists |
-| Structured citations when recommending | **On** | Still get placement when brands are named |
+| Domain hints (target + rivals in system prompt) | **Off** | Removes steered hits |
+| Multi-option / anti-fame-#1 prompt | **On** | Less habitual first place for one familiar chain |
+| Citations must be registrable hosts (TLD required) | **On** | Bare brand names do not count |
+| Label-aware host match | **On** | `martin.de` ≠ `moebel-martin.de` |
 | Brand-free user prompts (EQC / persona) | **On** (Plexon) | Prompt text does not name the target |
-| Grounded search / AI Overviews sampling | **Off** (deferred) | Would be more real; separate wave |
+| Grounded search / AI Overviews sampling | **Off** (deferred) | Separate wave |
 
-## Why not “stricter”
+## Why famous retailers can still place
 
-Removing citations, requiring web grounding, or demanding the model never name familiar retailers would drive hit rates toward zero for many legitimate regional brands and make the magazine unusable. The goal is **less steered**, not **no placements**.
-
-## Expectation after the change
-
-- Well-known brands (e.g. large DE retailers) may still appear often — from training recall, not because we whispered their domain.
-- Niche / young brands should miss more often than under the old hint list — that is the honest signal.
-- Fixture GEO jobs are unchanged (synthetic magazine).
+Even with the dial above, models often know large DE chains (e.g. Möbel Martin) from training data and may still cite `moebel-martin.de` on Einrichtung queries. That is **parametric recall**, not a bug — but it is **not** proof of live Answer Engine placement.
 
 ## Re-run
 
-From `/geo/:id/*` magazine topbar: **Re-run** → `POST /api/geo-jobs` with cloned inputs (`lib/geo-rerun.ts`). New job id; Notification center tracks it. Spec: `scan-modes.md` § GEO re-run.
+From `/geo/:id/*` magazine topbar: **Re-run** → new job with cloned inputs (`lib/geo-rerun.ts`). Old jobs keep old answers/matching.
 
 ## Code
 
-- Prompt: `apps/web/lib/geo-eeat/competitive-response.ts` → `buildCompetitiveSystemPrompt`
-- Runner: `apps/web/lib/geo-eeat/run-query-runs.ts` (does not pass domain lists into the prompt)
+- Prompt + match: `apps/web/lib/geo-eeat/competitive-response.ts`
+- Runner: `apps/web/lib/geo-eeat/run-query-runs.ts`
+- Presence hit fallback: `apps/web/lib/geo-presence.ts`
 - Re-run UI: `components/geo-result-actions.tsx`

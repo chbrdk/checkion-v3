@@ -7,6 +7,7 @@ import type {
   GeoRivalSource,
   GeoShareOfVoice,
 } from '@checkion-v3/contracts'
+import { citationMatchesTargetHost } from './geo-eeat/competitive-response'
 
 const MAX_RIVALS = 5
 
@@ -31,7 +32,7 @@ function targetHit(run: GeoQueryRun, targetHost: string): { hit: boolean; positi
   if (run.ourPosition != null && run.ourPosition > 0) {
     return { hit: true, position: run.ourPosition }
   }
-  const cite = run.citations.find((c) => normalizeGeoHost(c.domain) === host)
+  const cite = run.citations.find((c) => citationMatchesTargetHost(c.domain, host))
   if (cite) return { hit: true, position: cite.position > 0 ? cite.position : null }
   return { hit: false, position: null }
 }

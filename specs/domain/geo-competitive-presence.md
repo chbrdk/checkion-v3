@@ -145,11 +145,12 @@ Live `queryRuns` are **ungrounded chat probes** (no web search). Measurement mus
 | Rule | Why |
 |------|-----|
 | **No target/competitor domain list in the system prompt** | Listing known domains inflates hit rates (models pick from the hint set) |
-| **Anti-steer line** — cite only companies you would genuinely recommend; empty citations OK | Keeps answers natural without forcing a filled cite list |
-| **Still ask for ordered domain citations** when recommending | Placement metrics stay measurable when the model does name brands |
-| **Post-hoc matching only** — `ourPosition` via host fuzzy match after parse | Scoring stays blind to the model |
+| **Anti-steer + multi-option line** — mention several fits when asked for providers; order by query fit not fame; empty citations OK | Cuts habitual “always the same chain #1” |
+| **Citations = registrable hostnames only** (must include a TLD) | Bare brand names (“Möbel Martin”) no longer count as placement |
+| **Label-aware host match** | Prevents false hits like `martin.de` matching `moebel-martin.de` via string suffix |
+| **Post-hoc matching only** — `ourPosition` after parse | Scoring stays blind to the model |
 
-**Balance:** Do **not** require grounded search or strip citations entirely — that would collapse placement for everyone. Honest parametric recall (well-known brands) may still cite the target; obscure brands may miss more often, which is intended.
+**Balance:** Do **not** require grounded search or strip citations entirely — that would collapse placement for everyone. Honest parametric recall (well-known brands with real domains) may still cite the target; obscure brands may miss more often, which is intended.
 
 See `knowledge/geo-measurement-honesty.md`.
 

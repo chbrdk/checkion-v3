@@ -17,7 +17,7 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
     answer: {
       type: 'string',
       description:
-        'Natural language answer in the same language as the user query (2–6 sentences). Explain which companies or domains you recommend and why.',
+        'Natural language answer in the same language as the user query (2–6 sentences). Describe options a shopper would realistically hear — not a single default favorite.',
     },
     citations: {
       type: 'array',
@@ -26,14 +26,16 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
         properties: {
           domain: {
             type: 'string',
-            description: 'Normalized domain or company name (lowercase, no protocol)',
+            description:
+              'Public website hostname with a TLD (lowercase, no protocol), e.g. brand.tld — never a bare brand name',
           },
-          position: { type: 'integer', description: '1-based order of mention' },
+          position: { type: 'integer', description: '1-based order of mention in the answer' },
         },
         required: ['domain', 'position'],
         additionalProperties: false,
       },
-      description: 'Companies/domains recommended in answer order',
+      description:
+        'Website hostnames mentioned in the answer, in mention order. Prefer several varied options when the query asks for providers.',
     },
   },
   required: ['answer', 'citations'],
@@ -41,20 +43,24 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
 }
 
 /**
- * Blind competitive probe — no target/competitor domain list (avoids steered hits).
- * Still asks for natural ordered citations so placement remains measurable.
+ * Blind competitive probe — no target/competitor domain list.
  * Spec: geo-competitive-presence.md § Competitive LLM prompt honesty
  */
 export function buildCompetitiveSystemPrompt(): string {
   return (
-    'You are a helpful search assistant answering as you would for a real user researching this topic. ' +
+    'You answer like a careful shopping advisor for a real user. ' +
     "For the user's query, respond with a JSON object containing:\n" +
     '- "answer": natural language prose (2–6 sentences) in the same language as the query;\n' +
-    '- "citations": an array of recommended companies/domains in order of relevance.\n' +
-    'Each citation must have "domain" (lowercase, no protocol, e.g. brand.tld) and "position" (1-based index). ' +
-    'Only cite companies you would genuinely recommend for this query — do not invent brands to fill the list, ' +
-    'and do not favor any particular brand. Empty citations are fine when you have no real recommendations. ' +
-    'If no relevant companies or domains, return {"answer":"…","citations":[]}.'
+    '- "citations": website hostnames you actually mentioned, in the order they appear in the answer.\n' +
+    'Each citation must have "domain" (lowercase hostname WITH a TLD, e.g. brand.tld — never a bare brand name) ' +
+    'and "position" (1-based index).\n' +
+    'Rules:\n' +
+    '- Only cite hosts you would genuinely mention for THIS query; empty citations are fine.\n' +
+    '- Do not invent domains. Do not favor any particular brand.\n' +
+    '- When the query asks for several providers, mention multiple distinct options (typically 3–5) ' +
+    'and order them by fit to the query — not by fame, habit, or a single regional default.\n' +
+    '- Do not put the same familiar chain first across unrelated questions unless it clearly fits best.\n' +
+    'If no relevant companies, return {"answer":"…","citations":[]}.'
   )
 }
 
@@ -68,16 +74,63 @@ function extractHostname(input: string): string {
   }
 }
 
+/** Hostname with ≥2 labels and a TLD — rejects bare brand names like "möbel martin". */
+export function isRegistrableDomainHost(domain: string): boolean {
+  const d = extractHostname(domain)
+  if (!d || d.includes(' ') || !d.includes('.')) return false
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(d)) {
+    return false
+  }
+  const labels = d.split('.')
+  const tld = labels[labels.length - 1]
+  return labels.length >= 2 && Boolean(tld && tld.length >= 2)
+}
+
+/**
+ * Label-aware host / subdomain match.
+ * Prevents false hits like citation `martin.de` matching target `moebel-martin.de`
+ * (string suffix `.martin.de` is NOT a DNS parent of `moebel-martin.de`).
+ */
+export function hostEqualsOrSubdomain(host: string, base: string): boolean {
+  const h = extractHostname(host)
+  const b = extractHostname(base)
+  if (!h || !b) return false
+  if (h === b) return true
+  const hLabels = h.split('.')
+  const bLabels = b.split('.')
+  if (hLabels.length <= bLabels.length) return false
+  return bLabels.every((label, i) => hLabels[hLabels.length - bLabels.length + i] === label)
+}
+
+export function citationMatchesTargetHost(
+  citationDomain: string,
+  targetHost: string,
+): boolean {
+  if (!isRegistrableDomainHost(citationDomain) || !isRegistrableDomainHost(targetHost)) {
+    return false
+  }
+  const c = extractHostname(citationDomain)
+  const t = extractHostname(targetHost)
+  return hostEqualsOrSubdomain(c, t) || hostEqualsOrSubdomain(t, c)
+}
+
 export function normalizeCompetitiveCitations(
   citations: Array<{ domain?: string; position?: number }>,
 ): Array<{ domain: string; position: number }> {
-  return citations
-    .filter((c) => c.domain != null && String(c.domain).trim() !== '')
-    .map((c, i) => ({
-      domain: extractHostname(String(c.domain)),
+  const out: Array<{ domain: string; position: number }> = []
+  for (let i = 0; i < citations.length; i++) {
+    const c = citations[i]
+    if (c?.domain == null || String(c.domain).trim() === '') continue
+    const domain = extractHostname(String(c.domain))
+    if (!isRegistrableDomainHost(domain)) continue
+    out.push({
+      domain,
       position:
-        typeof c.position === 'number' && c.position >= 1 ? Math.floor(c.position) : i + 1,
-    }))
+        typeof c.position === 'number' && c.position >= 1 ? Math.floor(c.position) : out.length + 1,
+    })
+  }
+  // Re-number by retained order so dropped brand-name rows do not leave gaps as "position 1"
+  return out.map((c, i) => ({ ...c, position: i + 1 }))
 }
 
 export function parseCompetitiveResponse(content: string): ParsedCompetitiveResponse {
