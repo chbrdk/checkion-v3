@@ -53,7 +53,9 @@ function slugify(name: string): string {
 }
 
 function memoryListProjects(): ProjectSummary[] {
-  return projects.filter((p) => p.id !== UNASSIGNED_PROJECT_ID).map(toProjectSummary)
+  return projects
+    .filter((p) => p.id !== UNASSIGNED_PROJECT_ID && p.status !== 'archived')
+    .map(toProjectSummary)
 }
 
 function memoryGetProject(id: string): ProjectDetail | null {

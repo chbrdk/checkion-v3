@@ -1,4 +1,4 @@
-import { desc, eq, ne } from 'drizzle-orm'
+import { and, desc, eq, ne } from 'drizzle-orm'
 import type {
   CreateProjectInput,
   ProjectDetail,
@@ -56,7 +56,7 @@ export async function dbListProjects(): Promise<ProjectSummary[]> {
   const rows = await db
     .select()
     .from(projects)
-    .where(ne(projects.id, UNASSIGNED_PROJECT_ID))
+    .where(and(ne(projects.id, UNASSIGNED_PROJECT_ID), ne(projects.status, 'archived')))
     .orderBy(desc(projects.updatedAt))
   return rows.map((row) => toSummary(rowToDetail(row)))
 }
