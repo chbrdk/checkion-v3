@@ -15,6 +15,7 @@ This is a **parametric preference / recall probe**, not live Answer Engine place
 |------|---------|--------|
 | Domain hints (target + rivals in system prompt) | **Off** | Removes steered hits |
 | Multi-option / anti-fame-#1 prompt | **On** | Less habitual first place for one familiar chain |
+| Broad citation panel (up to ~20) | **On** | Higher chance of mid-list mentions; no invent-to-pad |
 | Citations must be registrable hosts (TLD required) | **On** | Bare brand names do not count |
 | Label-aware host match | **On** | `martin.de` ≠ `moebel-martin.de` |
 | Brand-free user prompts (EQC / persona) | **On** (Plexon) | Prompt text does not name the target |

@@ -5,6 +5,9 @@
 
 export const GEO_COMPETITIVE_ANSWER_TEXT_MAX = 4000
 
+/** Target citation list length for provider-style queries (honest recall panel). */
+export const GEO_COMPETITIVE_CITATION_TARGET = 20
+
 export type ParsedCompetitiveResponse = {
   answerText: string
   citations: Array<{ domain: string; position: number }>
@@ -17,7 +20,7 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
     answer: {
       type: 'string',
       description:
-        'Natural language answer in the same language as the user query (2–6 sentences). Describe options a shopper would realistically hear — not a single default favorite.',
+        'Natural language answer in the same language as the user query (2–8 sentences). Cover several realistic options — not a single default favorite.',
     },
     citations: {
       type: 'array',
@@ -35,7 +38,7 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
         additionalProperties: false,
       },
       description:
-        'Website hostnames mentioned in the answer, in mention order. Prefer several varied options when the query asks for providers.',
+        `Up to ${GEO_COMPETITIVE_CITATION_TARGET} distinct website hostnames in mention order when the query asks for providers or comparisons.`,
     },
   },
   required: ['answer', 'citations'],
@@ -47,18 +50,20 @@ export const COMPETITIVE_RESPONSE_JSON_SCHEMA = {
  * Spec: geo-competitive-presence.md § Competitive LLM prompt honesty
  */
 export function buildCompetitiveSystemPrompt(): string {
+  const n = GEO_COMPETITIVE_CITATION_TARGET
   return (
     'You answer like a careful shopping advisor for a real user. ' +
     "For the user's query, respond with a JSON object containing:\n" +
-    '- "answer": natural language prose (2–6 sentences) in the same language as the query;\n' +
+    '- "answer": natural language prose (2–8 sentences) in the same language as the query;\n' +
     '- "citations": website hostnames you actually mentioned, in the order they appear in the answer.\n' +
     'Each citation must have "domain" (lowercase hostname WITH a TLD, e.g. brand.tld — never a bare brand name) ' +
     'and "position" (1-based index).\n' +
     'Rules:\n' +
-    '- Only cite hosts you would genuinely mention for THIS query; empty citations are fine.\n' +
+    '- Only cite hosts you would genuinely mention for THIS query; empty citations are fine when nothing fits.\n' +
     '- Do not invent domains. Do not favor any particular brand.\n' +
-    '- When the query asks for several providers, mention multiple distinct options (typically 3–5) ' +
-    'and order them by fit to the query — not by fame, habit, or a single regional default.\n' +
+    `- When the query asks for providers, retailers, or comparisons, aim for a broad panel of up to ${n} ` +
+    'distinct real website hosts (fill as many as you can honestly name — typically toward that target when the category is large). ' +
+    'Order them by fit to the query — not by fame, habit, or a single regional default. Do not pad with fictional domains.\n' +
     '- Do not put the same familiar chain first across unrelated questions unless it clearly fits best.\n' +
     'If no relevant companies, return {"answer":"…","citations":[]}.'
   )

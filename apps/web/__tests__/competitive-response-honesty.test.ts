@@ -9,13 +9,14 @@ import {
 } from '../lib/geo-eeat/competitive-response'
 
 describe('buildCompetitiveSystemPrompt (honesty)', () => {
-  it('does not embed target or competitor domains and asks for varied options', () => {
+  it('does not embed target or competitor domains and asks for a broad citation panel', () => {
     const prompt = buildCompetitiveSystemPrompt()
     expect(prompt).not.toMatch(/moebel-martin|known domains|use that domain/i)
     expect(prompt).toMatch(/genuinely mention/i)
-    expect(prompt).toMatch(/Empty citations are fine|empty citations are fine/i)
-    expect(prompt).toMatch(/multiple distinct options|3–5/)
+    expect(prompt).toMatch(/empty citations are fine/i)
+    expect(prompt).toMatch(/up to 20/)
     expect(prompt).toMatch(/not by fame/i)
+    expect(prompt).toMatch(/Do not pad with fictional domains/i)
   })
 
   it('still defines the JSON answer + citations contract', () => {

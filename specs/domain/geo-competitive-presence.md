@@ -145,7 +145,7 @@ Live `queryRuns` are **ungrounded chat probes** (no web search). Measurement mus
 | Rule | Why |
 |------|-----|
 | **No target/competitor domain list in the system prompt** | Listing known domains inflates hit rates (models pick from the hint set) |
-| **Anti-steer + multi-option line** — mention several fits when asked for providers; order by query fit not fame; empty citations OK | Cuts habitual “always the same chain #1” |
+| **Anti-steer + broad panel** — when asking for providers, aim for up to **20** distinct real hosts (no inventing to pad); order by query fit not fame; empty OK | Raises chance of a mid-list cite without forcing fake brands |
 | **Citations = registrable hostnames only** (must include a TLD) | Bare brand names (“Möbel Martin”) no longer count as placement |
 | **Label-aware host match** | Prevents false hits like `martin.de` matching `moebel-martin.de` via string suffix |
 | **Post-hoc matching only** — `ourPosition` after parse | Scoring stays blind to the model |
