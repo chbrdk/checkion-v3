@@ -23,7 +23,10 @@ describe('geo model catalog', () => {
     expect(getGeoModel('gpt-5.6-sol')?.liveSupported).toBe(true)
     expect(getGeoModel('claude-sonnet-5')?.liveSupported).toBe(true)
     expect(getGeoModel('gemini-3.6-flash')?.liveSupported).toBe(true)
-    expect(getGeoModel('claude-opus-5')?.liveSupported).toBe(false)
+    expect(getGeoModel('claude-opus-5')?.liveSupported).toBe(true)
+    expect(getGeoModel('claude-fable-5')?.liveSupported).toBe(true)
+    expect(getGeoModel('claude-haiku-4-5')?.liveSupported).toBe(true)
+    expect(getGeoModel('gemini-2.5-flash')?.liveSupported).toBe(false)
     expect(GEO_MODEL_CATALOG.every((m) => m.id.trim().length > 0)).toBe(true)
   })
 
@@ -68,8 +71,11 @@ describe('geo model catalog', () => {
   })
 
   it('filters launch payload to live-supported models with default fallback', () => {
-    expect(modelsForLaunch(['gpt-5.6-luna', 'claude-opus-5'])).toEqual(['gpt-5.6-luna'])
-    expect(modelsForLaunch(['claude-opus-5'])).toEqual(['gpt-5.6-luna'])
+    expect(modelsForLaunch(['gpt-5.6-luna', 'claude-opus-5'])).toEqual([
+      'gpt-5.6-luna',
+      'claude-opus-5',
+    ])
+    expect(modelsForLaunch(['claude-opus-5'])).toEqual(['claude-opus-5'])
     expect(modelsForLaunch([])).toEqual(['gpt-5.6-luna'])
     expect(modelsForLaunch(['claude-sonnet-5', 'gemini-3.6-flash'])).toEqual([
       'claude-sonnet-5',
@@ -79,6 +85,7 @@ describe('geo model catalog', () => {
       'gpt-5.6-luna',
       'gpt-5.6-sol',
     ])
+    expect(modelsForLaunch(['gemini-2.5-flash'])).toEqual(['gpt-5.6-luna'])
   })
 
   it('toggles selection and compares order-insensitively', () => {
@@ -89,6 +96,7 @@ describe('geo model catalog', () => {
     expect(toggleModelSelection(['gpt-5.6-luna'], 'gpt-5.6-luna')).toEqual([])
     expect(sameModelSelection(['a', 'b'], ['b', 'a'])).toBe(true)
     expect(sameModelSelection(['a'], ['a', 'b'])).toBe(false)
-    expect(countDeferredSelected(['gpt-5.6-luna', 'claude-opus-5'])).toBe(1)
+    expect(countDeferredSelected(['gpt-5.6-luna', 'claude-opus-5'])).toBe(0)
+    expect(countDeferredSelected(['gpt-5.6-luna', 'gemini-2.5-flash'])).toBe(1)
   })
 })

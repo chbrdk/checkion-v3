@@ -257,6 +257,9 @@ describe('ScanLaunchForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Anthropic$/i }))
     fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'opus 5' } })
     fireEvent.click(screen.getByRole('option', { name: /Claude Opus 5/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Google$/i }))
+    fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: '2.5 flash' } })
+    fireEvent.click(screen.getByRole('option', { name: /Gemini 2\.5 Flash/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Done$/i }))
 
     expect(screen.getByText(/GPT-5\.4 nano/i)).toBeTruthy()
@@ -382,7 +385,6 @@ describe('ScanLaunchForm', () => {
     expect(body.url).toContain('http')
     expect(body.companyName).toBe('Bosch eBike')
     expect(body.queries.length).toBeGreaterThan(0)
-    // Live filter keeps recommended + nano; drops Soon Opus
     expect(body.models).toEqual([
       'gpt-5.6-luna',
       'gpt-5.6-terra',
@@ -390,6 +392,7 @@ describe('ScanLaunchForm', () => {
       'claude-sonnet-5',
       'gemini-3.6-flash',
       'gpt-5.4-nano',
+      'claude-opus-5',
     ])
     await waitFor(() => {
       expect(push).not.toHaveBeenCalled()

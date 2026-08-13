@@ -95,14 +95,14 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'claude-fable-5',
     label: 'Claude Fable 5',
     tier: 'flagship',
-    liveSupported: false,
+    liveSupported: true,
   },
   {
     provider: 'anthropic',
     id: 'claude-opus-5',
     label: 'Claude Opus 5',
     tier: 'flagship',
-    liveSupported: false,
+    liveSupported: true,
   },
   {
     provider: 'anthropic',
@@ -117,21 +117,21 @@ export const GEO_MODEL_CATALOG: readonly GeoModelEntry[] = [
     id: 'claude-opus-4-8',
     label: 'Claude Opus 4.8',
     tier: 'previous',
-    liveSupported: false,
+    liveSupported: true,
   },
   {
     provider: 'anthropic',
     id: 'claude-sonnet-4-6',
     label: 'Claude Sonnet 4.6',
     tier: 'previous',
-    liveSupported: false,
+    liveSupported: true,
   },
   {
     provider: 'anthropic',
     id: 'claude-haiku-4-5',
     label: 'Claude Haiku 4.5',
     tier: 'fast',
-    liveSupported: false,
+    liveSupported: true,
   },
   // Google — Gemini 3.x Flash + Pro preview + 2.5 still GA
   {

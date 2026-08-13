@@ -70,7 +70,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Create: `POST /api/geo-jobs` prefill competitors / seed queries from pack when Collection bound
 - Publish: `POST /api/geo-jobs/:id/publish-knowledge` (`paths.routes.apiGeoJobPublishKnowledge`) — geo_context + competitive merge to plexon-v3
 - Collection Knowledge Pack: `apps/web/lib/plexon-knowledge-pack.ts` · `specs/domain/geo-knowledge-consume.md` · Plexon SoT `plexon-v3/specs/domain/collection-knowledge-pack.md`
-- Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); live GEO posts OpenAI-supported ids only (`specs/domain/geo-model-catalog.md`)
+- Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); Anthropic catalog ids are live (`ANTHROPIC_API_KEY`); `modelsForLaunch` still drops remaining Soon (Gemini extras) (`specs/domain/geo-model-catalog.md`)
 - Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)
 
 ## Share

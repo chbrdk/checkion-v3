@@ -23,11 +23,13 @@ Module: `apps/web/lib/geo/model-catalog.ts`
 
 ### Current entries (snapshot)
 - **OpenAI (live):** `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` (default), `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano`
-- **Anthropic (live):** `claude-sonnet-5` · **Soon:** `claude-fable-5`, `claude-opus-5`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`
+- **Anthropic (live):** `claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`
 - **Google (live):** `gemini-3.6-flash` · **Soon:** remaining Gemini 3.x / 2.5 ids
 
 **Suggest / EQC defaults** (`GEO_EQC_DEFAULT_MODEL_IDS` / `defaultGeoModelIds()`):
 `gpt-5.6-luna`, `gpt-5.6-terra`, `gpt-5.6-sol`, `claude-sonnet-5`, `gemini-3.6-flash`
+
+Plexon Event Quick Check posts the compact GPT/Gemini set **plus every Anthropic catalog id** (`plexon-v3/lib/integrations/eqc-geo-default-models.ts`).
 
 Refresh IDs when providers ship new GA tiers; do not invent retired names. Adding a provider only grows the catalog + Add-dialog segment — not the launch surface.
 
