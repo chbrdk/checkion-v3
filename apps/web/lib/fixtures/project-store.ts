@@ -22,10 +22,24 @@ const UNASSIGNED_PROJECT: ProjectDetail = {
   recentScanIds: [],
 }
 
-let projects: ProjectDetail[] = [
-  ...PROJECT_FIXTURES.map((p) => ({ ...p, recentScanIds: [...p.recentScanIds] })),
-  { ...UNASSIGNED_PROJECT },
-]
+const globalForProjects = globalThis as typeof globalThis & {
+  __checkionV3ProjectMemory?: ProjectDetail[]
+}
+
+if (!globalForProjects.__checkionV3ProjectMemory) {
+  globalForProjects.__checkionV3ProjectMemory = [
+    ...PROJECT_FIXTURES.map((p) => ({ ...p, recentScanIds: [...p.recentScanIds] })),
+    { ...UNASSIGNED_PROJECT },
+  ]
+}
+
+function projects(): ProjectDetail[] {
+  return globalForProjects.__checkionV3ProjectMemory!
+}
+
+function setProjects(next: ProjectDetail[]): void {
+  globalForProjects.__checkionV3ProjectMemory = next
+}
 
 async function dbApi() {
   return import('../db/projects')
@@ -53,18 +67,18 @@ function slugify(name: string): string {
 }
 
 function memoryListProjects(): ProjectSummary[] {
-  return projects
+  return projects()
     .filter((p) => p.id !== UNASSIGNED_PROJECT_ID && p.status !== 'archived')
     .map(toProjectSummary)
 }
 
 function memoryGetProject(id: string): ProjectDetail | null {
-  const found = projects.find((p) => p.id === id)
+  const found = projects().find((p) => p.id === id)
   return found ? { ...found, recentScanIds: [...found.recentScanIds] } : null
 }
 
 function memoryGetProjectByPlatformId(platformProjectId: string): ProjectDetail | null {
-  const found = projects.find((p) => p.platformProjectId === platformProjectId)
+  const found = projects().find((p) => p.platformProjectId === platformProjectId)
   return found ? { ...found, recentScanIds: [...found.recentScanIds] } : null
 }
 
@@ -77,7 +91,7 @@ function memoryCreateProject(input: CreateProjectInput): ProjectDetail {
   const platformProjectId =
     input.platformProjectId?.trim() || `plx-local-${slugify(name)}-${Date.now().toString(36)}`
 
-  if (projects.some((p) => p.platformProjectId === platformProjectId)) {
+  if (projects().some((p) => p.platformProjectId === platformProjectId)) {
     throw new Error('platform_project_exists')
   }
 
@@ -94,7 +108,7 @@ function memoryCreateProject(input: CreateProjectInput): ProjectDetail {
     recentScanIds: [],
   }
 
-  projects = [project, ...projects]
+  setProjects([project, ...projects()])
   return { ...project, recentScanIds: [] }
 }
 
@@ -106,7 +120,7 @@ function memoryUpsertByPlatformProjectId(
     status?: 'active' | 'archived'
   },
 ): ProjectDetail {
-  const existing = projects.find((p) => p.platformProjectId === platformProjectId)
+  const existing = projects().find((p) => p.platformProjectId === platformProjectId)
   if (existing) {
     const next: ProjectDetail = {
       ...existing,
@@ -118,7 +132,7 @@ function memoryUpsertByPlatformProjectId(
       status: input.status === 'archived' ? 'archived' : 'active',
       capabilityStatus: 'in_sync',
     }
-    projects = projects.map((p) => (p.id === existing.id ? next : p))
+    setProjects(projects().map((p) => (p.id === existing.id ? next : p)))
     return { ...next, recentScanIds: [...next.recentScanIds] }
   }
 
@@ -138,7 +152,7 @@ function memoryUpsertByPlatformProjectId(
     description: '',
     recentScanIds: [],
   }
-  projects = [project, ...projects]
+  setProjects([project, ...projects()])
   return { ...project, recentScanIds: [] }
 }
 
@@ -147,25 +161,25 @@ function memoryApplyPlatformBinding(
   binding: { platformProjectId: string; capabilityStatus?: ProjectDetail['capabilityStatus'] },
 ): ProjectDetail | null {
   if (projectId === UNASSIGNED_PROJECT_ID) return null
-  const idx = projects.findIndex((p) => p.id === projectId)
+  const idx = projects().findIndex((p) => p.id === projectId)
   if (idx < 0) return null
 
   const platformProjectId = binding.platformProjectId.trim()
   if (
-    projects.some(
+    projects().some(
       (p) => p.platformProjectId === platformProjectId && p.id !== projectId,
     )
   ) {
     throw new Error('platform_project_exists')
   }
 
-  const current = projects[idx]!
+  const current = projects()[idx]!
   const next: ProjectDetail = {
     ...current,
     platformProjectId,
     capabilityStatus: binding.capabilityStatus ?? 'in_sync',
   }
-  projects = projects.map((p, i) => (i === idx ? next : p))
+  setProjects(projects().map((p, i) => (i === idx ? next : p)))
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
@@ -173,19 +187,19 @@ function memorySetProjectCapabilityStatus(
   projectId: string,
   capabilityStatus: ProjectDetail['capabilityStatus'],
 ): ProjectDetail | null {
-  const idx = projects.findIndex((p) => p.id === projectId)
+  const idx = projects().findIndex((p) => p.id === projectId)
   if (idx < 0) return null
-  const next = { ...projects[idx]!, capabilityStatus }
-  projects = projects.map((p, i) => (i === idx ? next : p))
+  const next = { ...projects()[idx]!, capabilityStatus }
+  setProjects(projects().map((p, i) => (i === idx ? next : p)))
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
 function memoryUpdateProject(id: string, patch: UpdateProjectInput): ProjectDetail | null {
   if (id === UNASSIGNED_PROJECT_ID) return null
-  const idx = projects.findIndex((p) => p.id === id)
+  const idx = projects().findIndex((p) => p.id === id)
   if (idx < 0) return null
 
-  const current = projects[idx]!
+  const current = projects()[idx]!
   const next: ProjectDetail = {
     ...current,
     name: patch.name != null ? patch.name.trim() || current.name : current.name,
@@ -197,30 +211,32 @@ function memoryUpdateProject(id: string, patch: UpdateProjectInput): ProjectDeta
       patch.description != null ? patch.description.trim() : current.description,
   }
 
-  projects = projects.map((p, i) => (i === idx ? next : p))
+  setProjects(projects().map((p, i) => (i === idx ? next : p)))
   return { ...next, recentScanIds: [...next.recentScanIds] }
 }
 
 async function memoryDeleteProject(id: string): Promise<boolean> {
   if (id === UNASSIGNED_PROJECT_ID) return false
-  const before = projects.length
-  const existed = projects.some((p) => p.id === id)
+  const before = projects().length
+  const existed = projects().some((p) => p.id === id)
   if (!existed) return false
 
   const moved = await reassignProjectResources(id, UNASSIGNED_PROJECT_ID)
-  projects = projects
-    .filter((p) => p.id !== id)
-    .map((p) => {
-      if (p.id !== UNASSIGNED_PROJECT_ID) return p
-      return {
-        ...p,
-        scanCount: p.scanCount + moved.scanCount,
-        recentScanIds: [...moved.recentScanIds, ...p.recentScanIds].slice(0, 20),
-        lastScanAt: moved.lastScanAt ?? p.lastScanAt,
-      }
-    })
+  setProjects(
+    projects()
+      .filter((p) => p.id !== id)
+      .map((p) => {
+        if (p.id !== UNASSIGNED_PROJECT_ID) return p
+        return {
+          ...p,
+          scanCount: p.scanCount + moved.scanCount,
+          recentScanIds: [...moved.recentScanIds, ...p.recentScanIds].slice(0, 20),
+          lastScanAt: moved.lastScanAt ?? p.lastScanAt,
+        }
+      }),
+  )
 
-  return projects.length < before
+  return projects().length < before
 }
 
 /** Visible capability projects (excludes the system unassigned bucket). */
@@ -297,8 +313,8 @@ export async function deleteProject(id: string): Promise<boolean> {
 
 /** Test helper — restore demo fixtures (memory only). */
 export function resetProjectStore(): void {
-  projects = [
+  setProjects([
     ...PROJECT_FIXTURES.map((p) => ({ ...p, recentScanIds: [...p.recentScanIds] })),
     { ...UNASSIGNED_PROJECT },
-  ]
+  ])
 }

@@ -29,6 +29,18 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
+
+  // Prefer on-disk JPEG even when in-memory/DB scan lookup fails (Next.js module isolation).
+  const disk = await readScreenshot(id)
+  if (disk?.length) {
+    return new NextResponse(new Uint8Array(disk), {
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'private, max-age=3600',
+      },
+    })
+  }
+
   const scan = await getScan(id)
   if (!scan) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
@@ -38,6 +50,7 @@ export async function GET(
   )
 
   for (const key of keys) {
+    if (key === id) continue
     const buffer = await readScreenshot(key)
     if (buffer?.length) {
       return new NextResponse(new Uint8Array(buffer), {

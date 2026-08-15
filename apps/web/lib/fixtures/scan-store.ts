@@ -33,30 +33,53 @@ import { applyDomainScanControlAction, isActiveDomainScanStatus, readDomainScanC
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
 
-let scans = [...SCAN_FIXTURES]
-const issuesByScan: Record<string, IssueSummary[]> = Object.fromEntries(
-  Object.entries(ISSUE_FIXTURES).map(([k, v]) => [k, [...v]]),
-)
-const scoresByScan: Record<string, ScoreCard[]> = Object.fromEntries(
-  Object.entries(SCORE_FIXTURES).map(([k, v]) => [k, [...v]]),
-)
-const overviewByScan: Record<string, ScanOverview> = {}
-const domainOverviewExtras: Record<string, Record<string, unknown>> = {}
-let domainScans = [...DOMAIN_SCAN_FIXTURES]
+/**
+ * Next.js (webpack) can instantiate this module per route bundle.
+ * Pin mutable memory state on globalThis so POST /api/scans and GET /api/scans/:id share data.
+ */
+type MemoryStore = {
+  scans: ScanSummary[]
+  issuesByScan: Record<string, IssueSummary[]>
+  scoresByScan: Record<string, ScoreCard[]>
+  overviewByScan: Record<string, ScanOverview>
+  domainOverviewExtras: Record<string, Record<string, unknown>>
+  domainScans: DomainScanLight[]
+}
+
+const globalForMemory = globalThis as typeof globalThis & {
+  __checkionV3ScanMemory?: MemoryStore
+}
+
+function createMemoryStore(): MemoryStore {
+  return {
+    scans: [...SCAN_FIXTURES],
+    issuesByScan: Object.fromEntries(Object.entries(ISSUE_FIXTURES).map(([k, v]) => [k, [...v]])),
+    scoresByScan: Object.fromEntries(Object.entries(SCORE_FIXTURES).map(([k, v]) => [k, [...v]])),
+    overviewByScan: {},
+    domainOverviewExtras: {},
+    domainScans: [...DOMAIN_SCAN_FIXTURES],
+  }
+}
+
+const store = (globalForMemory.__checkionV3ScanMemory ??= createMemoryStore())
+const issuesByScan = store.issuesByScan
+const scoresByScan = store.scoresByScan
+const overviewByScan = store.overviewByScan
+const domainOverviewExtras = store.domainOverviewExtras
 
 async function dbApi() {
   return import('../db/scans')
 }
 
 function memoryListScans(projectId?: string): ScanSummary[] {
-  return projectId ? scans.filter((s) => s.projectId === projectId) : [...scans]
+  return projectId ? store.scans.filter((s) => s.projectId === projectId) : [...store.scans]
 }
 
 function resolveVirtualDomainPageScan(id: string): ScanSummary | null {
   const parsed = parseDomainPageScanId(id)
   if (!parsed) return null
 
-  const template = scans.find((s) => s.id === TEMPLATE_SINGLE_SCAN_ID)
+  const template = store.scans.find((s) => s.id === TEMPLATE_SINGLE_SCAN_ID)
   if (!template) return null
 
   const domainIssues = issuesByScan[parsed.domainId] ?? []
@@ -80,7 +103,7 @@ function resolveVirtualDomainPageScan(id: string): ScanSummary | null {
 }
 
 function memoryGetScan(id: string): ScanSummary | null {
-  return scans.find((s) => s.id === id) ?? resolveVirtualDomainPageScan(id)
+  return store.scans.find((s) => s.id === id) ?? resolveVirtualDomainPageScan(id)
 }
 
 function memoryGetScanOverview(id: string): ScanOverview | null {
@@ -153,12 +176,12 @@ function memoryGetScanScores(id: string): ScoreCard[] {
 
 function memoryListDomainScans(projectId?: string): DomainScanLight[] {
   return projectId
-    ? domainScans.filter((d) => d.projectId === projectId)
-    : [...domainScans]
+    ? store.domainScans.filter((d) => d.projectId === projectId)
+    : [...store.domainScans]
 }
 
 function memoryGetDomainScan(id: string): DomainScanLight | null {
-  return domainScans.find((d) => d.id === id) ?? null
+  return store.domainScans.find((d) => d.id === id) ?? null
 }
 
 function systemicFromIssues(issues: IssueSummary[]): DomainSystemicIssue[] {
@@ -210,13 +233,13 @@ function memoryCreateSynthesizedScan(input: {
     ...input.correlation,
   })
   const scan = withScanCorrelation(synthesized.scan, input.correlation)
-  scans = [scan, ...scans]
+  store.scans = [scan, ...store.scans]
   issuesByScan[id] = enrichIssueInspect(synthesized.issues)
   scoresByScan[id] = synthesized.scores
 
   if (input.mode === 'deep') {
     const domainId = `domain-${Date.now()}`
-    domainScans = [
+    store.domainScans = [
       {
         id: domainId,
         projectId: input.projectId,
@@ -228,7 +251,7 @@ function memoryCreateSynthesizedScan(input: {
         startedAt: scan.startedAt,
         completedAt: scan.completedAt,
       },
-      ...domainScans,
+      ...store.domainScans,
     ]
     issuesByScan[domainId] = synthesized.issues.map((i, idx) => ({
       ...i,
@@ -264,7 +287,7 @@ async function memoryCreateLiveScan(input: {
     },
     input.correlation,
   )
-  scans = [queued, ...scans]
+  store.scans = [queued, ...store.scans]
   issuesByScan[id] = []
   scoresByScan[id] = []
 
@@ -276,13 +299,13 @@ async function memoryCreateLiveScan(input: {
       linkScanId: id,
     })
     const queuedWithDomain = { ...queued, domainScanId: domain.id }
-    scans = scans.map((s) => (s.id === id ? queuedWithDomain : s))
+    store.scans = store.scans.map((s) => (s.id === id ? queuedWithDomain : s))
     return queuedWithDomain
   }
 
   const run = async () => {
     try {
-      scans = scans.map((s) => (s.id === id ? { ...s, status: 'running' } : s))
+      store.scans = store.scans.map((s) => (s.id === id ? { ...s, status: 'running' } : s))
       const bundle = await executeSingleLiveScan({
         id,
         projectId: input.projectId,
@@ -290,14 +313,14 @@ async function memoryCreateLiveScan(input: {
         mode: 'single',
       })
       const completed = withScanCorrelation(bundle.scan, input.correlation)
-      scans = scans.map((s) => (s.id === id ? completed : s))
+      store.scans = store.scans.map((s) => (s.id === id ? completed : s))
       issuesByScan[id] = enrichIssueInspect(bundle.issues)
       scoresByScan[id] = bundle.scores
       overviewByScan[id] = bundle.overview
     } catch (err) {
       const message = err instanceof Error ? err.message : 'scan_failed'
       const failedAt = new Date().toISOString()
-      scans = scans.map((s) =>
+      store.scans = store.scans.map((s) =>
         s.id === id ? { ...s, status: 'failed', completedAt: failedAt } : s,
       )
       console.error('[checkion-v3] memory single scan failed', id, message)
@@ -327,7 +350,7 @@ async function memoryCreateDomainScan(input: {
       mode: 'deep',
       url: input.url,
     })
-    return domainScans.find((d) => d.startedAt === synth.startedAt) ?? domainScans[0]!
+    return store.domainScans.find((d) => d.startedAt === synth.startedAt) ?? store.domainScans[0]!
   }
 
   const { domain } = await startDomainScan(
@@ -341,7 +364,7 @@ async function memoryCreateDomainScan(input: {
     },
     {
       insertQueued: async (row) => {
-        domainScans = [
+        store.domainScans = [
           {
             id: row.id,
             projectId: row.projectId,
@@ -354,17 +377,17 @@ async function memoryCreateDomainScan(input: {
             completedAt: null,
             progress: { scanned: 0, total: row.maxPages },
           },
-          ...domainScans,
+          ...store.domainScans,
         ]
         issuesByScan[row.id] = []
         scoresByScan[row.id] = []
       },
       markRunning: async (domainId) => {
-        domainScans = domainScans.map((d) =>
+        store.domainScans = store.domainScans.map((d) =>
           d.id === domainId ? { ...d, status: 'running' } : d,
         )
         if (input.linkScanId) {
-          scans = scans.map((s) =>
+          store.scans = store.scans.map((s) =>
             s.id === input.linkScanId ? { ...s, status: 'running' } : s,
           )
         }
@@ -374,7 +397,7 @@ async function memoryCreateDomainScan(input: {
         if (!row) return false
         if (row.status === 'cancelling' || row.status === 'cancelled') {
           const cancelledAt = new Date().toISOString()
-          domainScans = domainScans.map((d) =>
+          store.domainScans = store.domainScans.map((d) =>
             d.id === domainId
               ? { ...d, status: 'cancelled', completedAt: cancelledAt, error: 'Cancelled by user' }
               : d,
@@ -390,17 +413,17 @@ async function memoryCreateDomainScan(input: {
         return readDomainScanControlState(row.status)
       },
       updateProgress: async (domainId, scanned, total, currentUrl) => {
-        domainScans = domainScans.map((d) =>
+        store.domainScans = store.domainScans.map((d) =>
           d.id === domainId ? { ...d, pageCount: scanned, progress: { scanned, total, currentUrl } } : d,
         )
       },
       persistCompleted: async (bundle) => {
-        domainScans = domainScans.map((d) => (d.id === bundle.domain.id ? bundle.domain : d))
+        store.domainScans = store.domainScans.map((d) => (d.id === bundle.domain.id ? bundle.domain : d))
         issuesByScan[bundle.domain.id] = enrichIssueInspect(bundle.issues)
         scoresByScan[bundle.domain.id] = bundle.scores
         domainOverviewExtras[bundle.domain.id] = bundle.overviewExtras
         if (input.linkScanId) {
-          scans = scans.map((s) =>
+          store.scans = store.scans.map((s) =>
             s.id === input.linkScanId
               ? {
                   ...s,
@@ -417,12 +440,12 @@ async function memoryCreateDomainScan(input: {
       },
       persistCancelled: async (bundle) => {
         const cancelled = { ...bundle.domain, status: 'cancelled' as const }
-        domainScans = domainScans.map((d) => (d.id === cancelled.id ? cancelled : d))
+        store.domainScans = store.domainScans.map((d) => (d.id === cancelled.id ? cancelled : d))
         issuesByScan[cancelled.id] = enrichIssueInspect(bundle.issues)
         scoresByScan[cancelled.id] = bundle.scores
         domainOverviewExtras[cancelled.id] = bundle.overviewExtras
         if (input.linkScanId) {
-          scans = scans.map((s) =>
+          store.scans = store.scans.map((s) =>
             s.id === input.linkScanId
               ? {
                   ...s,
@@ -437,11 +460,11 @@ async function memoryCreateDomainScan(input: {
       },
       persistFailed: async (domainId) => {
         const failedAt = new Date().toISOString()
-        domainScans = domainScans.map((d) =>
+        store.domainScans = store.domainScans.map((d) =>
           d.id === domainId ? { ...d, status: 'failed', completedAt: failedAt } : d,
         )
         if (input.linkScanId) {
-          scans = scans.map((s) =>
+          store.scans = store.scans.map((s) =>
             s.id === input.linkScanId
               ? { ...s, status: 'failed', completedAt: failedAt }
               : s,
@@ -463,22 +486,22 @@ function memoryCreateScan(input: {
 }
 
 function memoryDeleteScan(id: string): boolean {
-  const before = scans.length
-  scans = scans.filter((s) => s.id !== id)
+  const before = store.scans.length
+  store.scans = store.scans.filter((s) => s.id !== id)
   delete issuesByScan[id]
   delete scoresByScan[id]
-  return scans.length < before
+  return store.scans.length < before
 }
 
 function memoryReassignProjectResources(
   fromProjectId: string,
   toProjectId: string,
 ): { scanCount: number; recentScanIds: string[]; lastScanAt: string | null } {
-  const movedScans = scans.filter((s) => s.projectId === fromProjectId)
-  scans = scans.map((s) =>
+  const movedScans = store.scans.filter((s) => s.projectId === fromProjectId)
+  store.scans = store.scans.map((s) =>
     s.projectId === fromProjectId ? { ...s, projectId: toProjectId } : s,
   )
-  domainScans = domainScans.map((d) =>
+  store.domainScans = store.domainScans.map((d) =>
     d.projectId === fromProjectId ? { ...d, projectId: toProjectId } : d,
   )
 
@@ -604,7 +627,7 @@ export async function controlDomainScan(
   const result = applyDomainScanControlAction(current.status, action)
   if (!result.ok) throw new Error(result.error)
 
-  domainScans = domainScans.map((row) =>
+  store.domainScans = store.domainScans.map((row) =>
     row.id === id
       ? {
           ...row,
