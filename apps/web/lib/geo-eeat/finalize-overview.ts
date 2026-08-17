@@ -4,11 +4,13 @@
 
 import type {
   GeoEeatScores,
+  GeoMeasurement,
   GeoOverview,
   GeoPositionRow,
   GeoQueryRun,
   GeoRecommendation,
 } from '@checkion-v3/contracts'
+import { geoMeasurementLede, parseGeoMeasurement } from '../geo/measurement'
 import { buildEeatGapMoves, buildGeoInsights, mergeRecommendations } from '../geo-insights'
 import { buildGeoPresence, normalizeGeoHost, shareOfVoiceFromPresence } from '../geo-presence'
 import type { GeoEeatIntensiveResult } from '../scan/types'
@@ -117,11 +119,13 @@ export function buildLiveGeoOverview(input: {
   queryRuns: GeoQueryRun[]
   eeatPayload?: GeoEeatIntensiveResult | null
   completedAt?: string
+  measurement?: GeoMeasurement
 }): GeoOverview {
   const targetHost = normalizeGeoHost(input.url)
   const models = input.models.length > 0 ? input.models : ['gpt-5.4-nano']
   const eeat = eeatScoresFromIntensive(input.eeatPayload)
   const completedAt = input.completedAt ?? new Date().toISOString()
+  const measurement = parseGeoMeasurement(input.measurement)
   const title =
     input.title?.trim() ||
     `GEO — ${targetHost || input.url}`
@@ -143,8 +147,12 @@ export function buildLiveGeoOverview(input: {
       queryCount: input.queries.length,
       modelCount: models.length,
       citedShare: 0,
+      measurement,
     },
-    lede: `Live GEO run for ${targetHost || input.url} across ${input.queries.length} queries × ${models.length} models.`,
+    lede: geoMeasurementLede(measurement, targetHost || input.url, 'completed', {
+      queries: input.queries.length,
+      models: models.length,
+    }),
     targetHost,
     ...(eeat ? { eeat } : {}),
     models,
@@ -167,9 +175,11 @@ export function buildQueuedGeoOverview(input: {
   queries: string[]
   models: string[]
   competitors: string[]
+  measurement?: GeoMeasurement
 }): GeoOverview {
   const targetHost = normalizeGeoHost(input.url)
   const models = input.models.length > 0 ? input.models : ['gpt-5.4-nano']
+  const measurement = parseGeoMeasurement(input.measurement)
   const draft: GeoOverviewDraft = {
     job: {
       id: input.jobId,
@@ -182,8 +192,9 @@ export function buildQueuedGeoOverview(input: {
       queryCount: input.queries.length,
       modelCount: models.length,
       citedShare: 0,
+      measurement,
     },
-    lede: `GEO job queued for ${targetHost || input.url}.`,
+    lede: geoMeasurementLede(measurement, targetHost || input.url, 'queued'),
     targetHost,
     models,
     queries: input.queries,

@@ -541,6 +541,18 @@ export interface DomainOverview {
 /** GEO / E-E-A-T job — separate from ScanMode ('single' | 'deep'). */
 export type GeoJobStatus = 'queued' | 'running' | 'completed' | 'failed'
 
+/**
+ * Standalone GEO measurement layer — never mix in one job.
+ * `recall` = ungrounded model memory (Layer 1). `live` = web-grounded search (Layer 2).
+ */
+export type GeoMeasurement = 'recall' | 'live'
+
+export const GEO_MEASUREMENT_DEFAULT: GeoMeasurement = 'recall'
+
+export function parseGeoMeasurement(value: unknown): GeoMeasurement {
+  return value === 'live' ? 'live' : GEO_MEASUREMENT_DEFAULT
+}
+
 export interface GeoJobSummary {
   id: string
   title: string
@@ -553,6 +565,8 @@ export interface GeoJobSummary {
   modelCount: number
   /** Share of query×model cells where the target domain was cited (0–100). */
   citedShare: number
+  /** Layer for this job. Omitted on older rows → treat as `recall`. */
+  measurement?: GeoMeasurement
 }
 
 export interface GeoEeatScores {
@@ -575,6 +589,8 @@ export interface GeoCitation {
   domain: string
   position: number
   context?: string
+  /** Absolute source URL when Layer 2 grounded search provided one. */
+  url?: string
 }
 
 export interface GeoQueryRun {

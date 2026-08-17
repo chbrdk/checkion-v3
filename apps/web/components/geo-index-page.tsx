@@ -4,6 +4,7 @@ import { AppShell } from './app-shell'
 import { listGeoJobs } from '../lib/fixtures/geo-store'
 import { listProjects } from '../lib/fixtures/project-store'
 import { paths } from '../lib/paths'
+import { geoJobMeasurement, geoMeasurementLabel } from '../lib/geo/measurement'
 
 export async function GeoIndexPage() {
   const jobs = await listGeoJobs()
@@ -36,9 +37,12 @@ export async function GeoIndexPage() {
               return (
                 <li key={job.id} className="checkion-index-card">
                   <div className="checkion-index-card__meta">
-                    <Chip static size="sm">
-                      {job.status}
-                    </Chip>
+                  <Chip static size="sm">
+                    {job.status}
+                  </Chip>
+                  <Chip static size="sm">
+                    {geoMeasurementLabel(geoJobMeasurement(job))}
+                  </Chip>
                     <Text role="meta">{projects[job.projectId] ?? job.projectId}</Text>
                     <Chip static size="sm">
                       {job.overallScore ?? '—'}

@@ -52,7 +52,15 @@ describe('buildGeoRerunPayload', () => {
       models: ['gpt-5.4-nano'],
       competitors: ['ikea.com'],
       title: 'Test GEO',
+      measurement: 'recall',
     })
+  })
+
+  it('clones live measurement as a standalone layer', () => {
+    const payload = buildGeoRerunPayload(
+      sampleOverview({ job: { measurement: 'live' } }),
+    )
+    expect(payload?.measurement).toBe('live')
   })
 
   it('returns null when queries are empty', () => {

@@ -2,10 +2,11 @@
  * Synthesize a completed GeoOverview when live GEO is off (no OpenAI).
  */
 
-import type { GeoOverview } from '@checkion-v3/contracts'
+import type { GeoMeasurement, GeoOverview } from '@checkion-v3/contracts'
 import { OPENAI_MODEL } from '../llm/config'
 import { GEO_OVERVIEWS } from '../fixtures/geo-jobs'
 import { normalizeGeoHost } from '../geo-presence'
+import { geoMeasurementLabel, parseGeoMeasurement } from '../geo/measurement'
 import {
   buildPositionMatrix,
   finalizeGeoOverview,
@@ -20,10 +21,12 @@ export function synthesizeFixtureGeoOverview(input: {
   models: string[]
   competitors: string[]
   title?: string
+  measurement?: GeoMeasurement
 }): GeoOverview {
   const template = GEO_OVERVIEWS[0]
   const targetHost = normalizeGeoHost(input.url)
   const models = input.models.length > 0 ? input.models : [OPENAI_MODEL]
+  const measurement = parseGeoMeasurement(input.measurement)
   const queries =
     input.queries.length > 0 ? input.queries : (template?.queries ?? ['best vendors'])
   const competitors =
@@ -65,8 +68,9 @@ export function synthesizeFixtureGeoOverview(input: {
       queryCount: queries.length,
       modelCount: models.length,
       citedShare: 0,
+      measurement,
     },
-    lede: `Synthesized GEO fixture for ${targetHost || input.url} (live GEO off).`,
+    lede: `Synthesized GEO fixture (${geoMeasurementLabel(measurement)}) for ${targetHost || input.url} (live GEO off).`,
     targetHost,
     ...(template?.eeat ? { eeat: { ...template.eeat } } : {}),
     models,

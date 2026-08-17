@@ -91,6 +91,25 @@ describe('fixture createGeoJob path', () => {
     expect(overview?.presence.solo.cellCount).toBeGreaterThan(0)
   })
 
+  it('persists measurement=live on fixture jobs as a standalone layer', async () => {
+    vi.stubEnv('DATABASE_URL', '')
+    vi.stubEnv('CHECKION_LIVE_GEO', '')
+    vi.stubEnv('OPENAI_API_KEY', '')
+
+    const job = await createGeoJob({
+      projectId: 'proj-1',
+      url: 'https://example.com',
+      queries: ['best widgets'],
+      models: ['gpt-5.4-nano'],
+      measurement: 'live',
+    })
+
+    expect(job.measurement).toBe('live')
+    const overview = await getGeoOverview(job.id)
+    expect(overview?.job.measurement).toBe('live')
+    expect(overview?.lede).toMatch(/Live search/i)
+  })
+
   it('keeps seeded fixtures readable', async () => {
     vi.stubEnv('DATABASE_URL', '')
     vi.stubEnv('CHECKION_LIVE_GEO', '')

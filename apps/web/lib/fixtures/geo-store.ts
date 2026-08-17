@@ -1,4 +1,5 @@
-import type { GeoJobSummary, GeoOverview } from '@checkion-v3/contracts'
+import type { GeoJobSummary, GeoMeasurement, GeoOverview } from '@checkion-v3/contracts'
+import { parseGeoMeasurement } from '../geo/measurement'
 import { GEO_OVERVIEWS } from './geo-jobs'
 import { isDatabaseConfigured } from '../db/config'
 import { OPENAI_MODEL } from '../llm/config'
@@ -59,11 +60,13 @@ async function memoryCreateGeoJob(input: {
   title?: string
   includePageScan?: boolean
   waitForCompletion?: boolean
+  measurement?: GeoMeasurement
 }): Promise<GeoJobSummary> {
   const jobId = newGeoJobId()
   const models = input.models?.length ? input.models : [OPENAI_MODEL]
   const competitors = input.competitors ?? []
   const queries = input.queries
+  const measurement = parseGeoMeasurement(input.measurement)
 
   if (!shouldRunLiveGeo()) {
     const overview = synthesizeFixtureGeoOverview({
@@ -74,6 +77,7 @@ async function memoryCreateGeoJob(input: {
       models,
       competitors,
       title: input.title,
+      measurement,
     })
     memoryUpsert(overview)
     triggerGeoAutosync(jobId)
@@ -88,6 +92,7 @@ async function memoryCreateGeoJob(input: {
     queries,
     models,
     competitors,
+    measurement,
   })
   memoryUpsert(queued)
 
@@ -102,6 +107,7 @@ async function memoryCreateGeoJob(input: {
         competitors,
         title: input.title,
         includePageScan: input.includePageScan,
+        measurement,
         onStatus: async (status, overview) => {
           memoryUpsert(overview)
           if (status === 'completed') triggerGeoAutosync(jobId)
@@ -140,6 +146,7 @@ export async function createGeoJob(input: {
   title?: string
   includePageScan?: boolean
   waitForCompletion?: boolean
+  measurement?: GeoMeasurement
 }): Promise<GeoJobSummary> {
   if (isDatabaseConfigured()) return (await dbApi()).dbCreateGeoJob(input)
   return memoryCreateGeoJob(input)

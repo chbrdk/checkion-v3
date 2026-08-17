@@ -49,7 +49,7 @@ Examples: `score.accessibility`, `geo.discoverability`, `detail.performance`, `i
 
 ### P2 (Wave F)
 
-- Launch WCAG / GEO / SEO + depth
+- Launch WCAG / GEO / SEO + depth + GEO measurement (Model memory / Live search)
 - Job status chips
 
 ### Out of scope

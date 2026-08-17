@@ -8,6 +8,7 @@ import {
   isGeoJobInProgress,
   isGeoOverviewFailed,
 } from '../lib/geo-job-display'
+import { geoJobMeasurement, geoMeasurementLabel, geoMeasurementLayerKicker } from '../lib/geo/measurement'
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
 import { buildGeoReadingFallback } from '../lib/geo-readings'
@@ -26,6 +27,8 @@ export function GeoOverviewPanel({
   canPublishKnowledge?: boolean
 }) {
   const { eeat, recommendations, job, presence } = overview
+  const measurement = geoJobMeasurement(job)
+  const measurementLabel = `${geoMeasurementLayerKicker(measurement)} · ${geoMeasurementLabel(measurement)}`
   const inProgress = isGeoJobInProgress(job.status)
   const failed = isGeoOverviewFailed(overview)
   const showMagazine = geoOverviewReadyForMagazine(overview)
@@ -36,7 +39,7 @@ export function GeoOverviewPanel({
       <div className="checkion-magazine-body checkion-spread checkion-geo-spread-layout">
         <StatusMeterPanel
           title={queued ? 'GEO job queued' : 'GEO run in progress'}
-          meta={`${job.queryCount} queries · ${job.modelCount} models`}
+          meta={`${measurementLabel} · ${job.queryCount} queries · ${job.modelCount} models`}
           level="warn"
           banner={
             queued
@@ -147,6 +150,14 @@ export function GeoOverviewPanel({
           <p className="checkion-spread__prose">{overview.lede}</p>
         </div>
         <aside className="checkion-geo-snapshot" aria-label="GEO snapshot">
+          <div className="checkion-lab-tile">
+            <span className="checkion-lab-tile__k">
+              <LabelWithTip tipId={measurement === 'live' ? 'launch.geo.live' : 'launch.geo.recall'}>
+                Measurement
+              </LabelWithTip>
+            </span>
+            <span className="checkion-lab-tile__v">{measurementLabel}</span>
+          </div>
           <div className="checkion-lab-tile" data-tone={tone}>
             <span className="checkion-lab-tile__k">
               <LabelWithTip tipId="geo.cited_share">Cited share</LabelWithTip>

@@ -1,11 +1,13 @@
 /**
  * Multi-provider query×model competitive runs → GeoQueryRun[].
- * OpenAI (structured JSON), Anthropic Messages, Gemini generateContent.
+ * Layer 1 (`recall`): OpenAI structured JSON, Anthropic Messages, Gemini generateContent.
+ * Layer 2 (`live`): Responses web_search / Anthropic web_search / Gemini google_search.
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
-import type { GeoQueryRun } from '@checkion-v3/contracts'
+import type { GeoCitation, GeoMeasurement, GeoQueryRun } from '@checkion-v3/contracts'
+import { parseGeoMeasurement } from '../geo/measurement'
 import {
   OPENAI_MODEL,
   getAnthropicKey,
@@ -16,14 +18,22 @@ import {
   hasOpenAIKey,
 } from '../llm/config'
 import { addOpenAIChatUsage, emptyUsageTotals, type LlmUsageTotals } from '../llm/usage-totals'
+import { geminiGenerateContentUrl, paths } from '../paths'
 import { normalizeGeoHost } from '../geo-presence'
 import { getGeoModel, type GeoModelProvider } from '../geo/model-catalog'
 import {
   COMPETITIVE_RESPONSE_JSON_SCHEMA,
   buildCompetitiveSystemPrompt,
+  buildGroundedSystemPrompt,
   citationMatchesTargetHost,
   parseCompetitiveResponse,
 } from './competitive-response'
+import {
+  citationsFromSourceUrls,
+  extractAnthropicGroundedSources,
+  extractGeminiGroundedSources,
+  extractOpenAiGroundedSources,
+} from './grounded-citations'
 
 const COMPETITIVE_RESPONSE_FORMAT = {
   type: 'json_schema' as const,
@@ -60,7 +70,12 @@ export type QueryRunCompleteFn = (args: {
   modelId: string
   systemPrompt: string
   userPrompt: string
-}) => Promise<{ content: string; usage?: { input_tokens?: number; output_tokens?: number } }>
+  measurement: GeoMeasurement
+}) => Promise<{
+  content: string
+  citations?: GeoCitation[]
+  usage?: { input_tokens?: number; output_tokens?: number }
+}>
 
 let chatClientForTests: QueryRunChatClient | null = null
 let completeForTests: QueryRunCompleteFn | null = null
@@ -92,6 +107,25 @@ function emptyRun(
     answerText,
     citations: [],
     ourPosition: null,
+  }
+}
+
+function toQueryRun(args: {
+  queryId: string
+  query: string
+  modelId: string
+  answerText: string
+  citations: GeoCitation[]
+  targetHost: string
+}): GeoQueryRun {
+  const match = args.citations.find((c) => citationMatchesTargetHost(c.domain, args.targetHost))
+  return {
+    queryId: args.queryId,
+    query: args.query,
+    modelId: args.modelId,
+    answerText: args.answerText,
+    citations: args.citations,
+    ourPosition: match?.position ?? null,
   }
 }
 
@@ -163,8 +197,7 @@ async function completeGemini(args: {
   if (!hasGeminiKey()) {
     throw new Error('GEMINI_API_KEY (or GOOGLE_API_KEY) is not set')
   }
-  const key = getGeminiKey()
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(args.modelId)}:generateContent?key=${encodeURIComponent(key)}`
+  const url = geminiGenerateContentUrl(args.modelId, getGeminiKey())
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -190,31 +223,132 @@ async function completeGemini(args: {
   return json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? ''
 }
 
-async function completeForModel(args: {
+type GroundedComplete = { answerText: string; citations: GeoCitation[] }
+
+function addResponsesUsage(
+  totals: LlmUsageTotals,
+  usage: { input_tokens?: number; output_tokens?: number } | null | undefined,
+): void {
+  if (!usage) return
+  totals.input_tokens += usage.input_tokens ?? 0
+  totals.output_tokens += usage.output_tokens ?? 0
+}
+
+async function completeOpenAIGrounded(args: {
+  modelId: string
+  systemPrompt: string
+  userPrompt: string
+  usage: LlmUsageTotals
+}): Promise<GroundedComplete> {
+  if (!hasOpenAIKey()) {
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+  const openai = new OpenAI({ apiKey: getOpenAIKey() })
+  const res = await openai.responses.create({
+    model: args.modelId,
+    tools: [{ type: paths.openaiWebSearchTool }],
+    tool_choice: 'required',
+    input: [
+      { role: 'system', content: args.systemPrompt },
+      { role: 'user', content: args.userPrompt },
+    ],
+  })
+  addResponsesUsage(args.usage, res.usage)
+  const extracted = extractOpenAiGroundedSources(res)
+  return {
+    answerText: extracted.answerText,
+    citations: citationsFromSourceUrls(extracted.sources),
+  }
+}
+
+async function completeAnthropicGrounded(args: {
+  modelId: string
+  systemPrompt: string
+  userPrompt: string
+  usage: LlmUsageTotals
+}): Promise<GroundedComplete> {
+  if (!hasAnthropicKey()) {
+    throw new Error('ANTHROPIC_API_KEY is not set')
+  }
+  const client = new Anthropic({ apiKey: getAnthropicKey() })
+  const res = await client.messages.create({
+    model: args.modelId,
+    max_tokens: 4096,
+    system: args.systemPrompt,
+    tools: [
+      {
+        type: paths.anthropicWebSearchTool,
+        name: 'web_search',
+      } as unknown as Anthropic.Messages.Tool,
+    ],
+    messages: [{ role: 'user', content: args.userPrompt }],
+  })
+  args.usage.input_tokens += res.usage?.input_tokens ?? 0
+  args.usage.output_tokens += res.usage?.output_tokens ?? 0
+  const extracted = extractAnthropicGroundedSources(res)
+  return {
+    answerText: extracted.answerText,
+    citations: citationsFromSourceUrls(extracted.sources),
+  }
+}
+
+async function completeGeminiGrounded(args: {
+  modelId: string
+  systemPrompt: string
+  userPrompt: string
+  usage: LlmUsageTotals
+}): Promise<GroundedComplete> {
+  if (!hasGeminiKey()) {
+    throw new Error('GEMINI_API_KEY (or GOOGLE_API_KEY) is not set')
+  }
+  const url = geminiGenerateContentUrl(args.modelId, getGeminiKey())
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: args.systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: args.userPrompt }] }],
+      tools: [{ google_search: {} }],
+    }),
+  })
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Gemini HTTP ${res.status}: ${detail.slice(0, 240)}`)
+  }
+  const json = (await res.json()) as {
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
+  }
+  args.usage.input_tokens += json.usageMetadata?.promptTokenCount ?? 0
+  args.usage.output_tokens += json.usageMetadata?.candidatesTokenCount ?? 0
+  const extracted = extractGeminiGroundedSources(json)
+  return {
+    answerText: extracted.answerText,
+    citations: citationsFromSourceUrls(extracted.sources),
+  }
+}
+
+async function completeRecallForModel(args: {
   provider: GeoModelProvider
   modelId: string
   systemPrompt: string
   userPrompt: string
   usage: LlmUsageTotals
 }): Promise<string> {
-  if (completeForTests) {
-    const out = await completeForTests({
-      provider: args.provider,
-      modelId: args.modelId,
-      systemPrompt: args.systemPrompt,
-      userPrompt: args.userPrompt,
-    })
-    args.usage.input_tokens += out.usage?.input_tokens ?? 0
-    args.usage.output_tokens += out.usage?.output_tokens ?? 0
-    return out.content
-  }
-  if (args.provider === 'anthropic') {
-    return completeAnthropic(args)
-  }
-  if (args.provider === 'google') {
-    return completeGemini(args)
-  }
+  if (args.provider === 'anthropic') return completeAnthropic(args)
+  if (args.provider === 'google') return completeGemini(args)
   return completeOpenAI(args)
+}
+
+async function completeLiveForModel(args: {
+  provider: GeoModelProvider
+  modelId: string
+  systemPrompt: string
+  userPrompt: string
+  usage: LlmUsageTotals
+}): Promise<GroundedComplete> {
+  if (args.provider === 'anthropic') return completeAnthropicGrounded(args)
+  if (args.provider === 'google') return completeGeminiGrounded(args)
+  return completeOpenAIGrounded(args)
 }
 
 export async function runQueryRuns(input: {
@@ -222,10 +356,13 @@ export async function runQueryRuns(input: {
   competitors: string[]
   queries: string[]
   models: string[]
+  measurement?: GeoMeasurement
 }): Promise<RunQueryRunsResult> {
   const usage = emptyUsageTotals()
   const targetHost = normalizeGeoHost(input.targetUrl)
-  const systemPrompt = buildCompetitiveSystemPrompt()
+  const measurement = parseGeoMeasurement(input.measurement)
+  const systemPrompt =
+    measurement === 'live' ? buildGroundedSystemPrompt() : buildCompetitiveSystemPrompt()
   const models = input.models.length > 0 ? input.models : [OPENAI_MODEL]
   const queryRuns: GeoQueryRun[] = []
 
@@ -234,7 +371,56 @@ export async function runQueryRuns(input: {
     const runPromises = input.queries.map(async (query, q) => {
       const queryId = `q-${q}`
       try {
-        const rawContent = await completeForModel({
+        if (completeForTests) {
+          const out = await completeForTests({
+            provider,
+            modelId,
+            systemPrompt,
+            userPrompt: query,
+            measurement,
+          })
+          usage.input_tokens += out.usage?.input_tokens ?? 0
+          usage.output_tokens += out.usage?.output_tokens ?? 0
+          if (measurement === 'live' && out.citations) {
+            return toQueryRun({
+              queryId,
+              query,
+              modelId,
+              answerText: out.content || `(no answer for “${query}”)`,
+              citations: out.citations,
+              targetHost,
+            })
+          }
+          const parsed = parseCompetitiveResponse(out.content)
+          return toQueryRun({
+            queryId,
+            query,
+            modelId,
+            answerText: parsed.answerText || `(no answer for “${query}”)`,
+            citations: parsed.citations,
+            targetHost,
+          })
+        }
+
+        if (measurement === 'live') {
+          const grounded = await completeLiveForModel({
+            provider,
+            modelId,
+            systemPrompt,
+            userPrompt: query,
+            usage,
+          })
+          return toQueryRun({
+            queryId,
+            query,
+            modelId,
+            answerText: grounded.answerText || `(no answer for “${query}”)`,
+            citations: grounded.citations,
+            targetHost,
+          })
+        }
+
+        const rawContent = await completeRecallForModel({
           provider,
           modelId,
           systemPrompt,
@@ -242,17 +428,14 @@ export async function runQueryRuns(input: {
           usage,
         })
         const parsed = parseCompetitiveResponse(rawContent)
-        const match = parsed.citations.find((c) =>
-          citationMatchesTargetHost(c.domain, targetHost),
-        )
-        return {
+        return toQueryRun({
           queryId,
           query,
           modelId,
           answerText: parsed.answerText || `(no answer for “${query}”)`,
           citations: parsed.citations,
-          ourPosition: match?.position ?? null,
-        } satisfies GeoQueryRun
+          targetHost,
+        })
       } catch (e) {
         console.error('[checkion-v3] GEO query run error:', provider, modelId, query, e)
         const hint = e instanceof Error ? e.message : 'provider_error'

@@ -22,6 +22,7 @@ const requiredSpecs = [
   'specs/domain/edit-dialogs.md',
   'specs/domain/geo-eeat.md',
   'specs/domain/geo-competitive-presence.md',
+  'specs/domain/geo-measurement-layers.md',
   'specs/domain/geo-model-catalog.md',
   'specs/domain/geo-answer-insights.md',
   'specs/domain/geo-knowledge-consume.md',
@@ -63,6 +64,9 @@ describe('specs inventory', () => {
     expect(paths.routes.projectDetail('p1')).toBe('/projects/p1')
     expect(paths.routes.scan).toBe('/scan')
     expect(paths.routes.scanLaunch({ mode: 'geo' })).toBe('/scan?mode=geo')
+    expect(paths.routes.scanLaunch({ mode: 'geo', measurement: 'live' })).toBe(
+      '/scan?mode=geo&measurement=live',
+    )
     expect(paths.routes.scanLaunch({ mode: 'seo' })).toBe('/scan?mode=seo')
     expect(paths.routes.scanLaunch({ mode: 'single' })).toBe('/scan?mode=single')
     expect(paths.routes.scanLaunch({ mode: 'deep' })).toBe('/scan?mode=deep')

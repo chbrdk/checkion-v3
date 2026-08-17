@@ -54,10 +54,10 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 ## Central launch (`/scan`)
 - Route: `/scan` (`paths.routes.scan`) — capability-first magazine form (`ScanLaunchForm`): **SEO · GEO · WCAG**
 - Primary tiles: SEO · GEO · WCAG; WCAG reveals secondary **Quick single** · **Deep scan** (`ToggleGroup`)
-- Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, … })`
+- Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, measurement?, … })`
 - Modes:
   - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
-  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; Project defaults empty — select / create, or auto-create on submit when omitted; optional `companyName` on GEO body — see `scan-modes.md`)
+  - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; optional `measurement=recall|live`; Project defaults empty — select / create, or auto-create on submit when omitted; optional `companyName` on GEO body — see `scan-modes.md` · `geo-measurement-layers.md`)
   - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
   - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
 - Spec: `specs/domain/scan-modes.md`
@@ -71,7 +71,9 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Publish: `POST /api/geo-jobs/:id/publish-knowledge` (`paths.routes.apiGeoJobPublishKnowledge`) — geo_context + competitive merge to plexon-v3
 - Collection Knowledge Pack: `apps/web/lib/plexon-knowledge-pack.ts` · `specs/domain/geo-knowledge-consume.md` · Plexon SoT `plexon-v3/specs/domain/collection-knowledge-pack.md`
 - Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); Anthropic catalog ids are live (`ANTHROPIC_API_KEY`); `modelsForLaunch` still drops remaining Soon (Gemini extras) (`specs/domain/geo-model-catalog.md`)
-- Live GEO: `CHECKION_LIVE_GEO` + `OPENAI_API_KEY` (see `knowledge/dummy-data-mode.md`)
+- Live GEO: `CHECKION_LIVE_GEO` + provider keys (see `knowledge/dummy-data-mode.md`). `POST /api/geo-jobs` `measurement`: `recall` (default, ungrounded) or `live` (Responses / Claude / Gemini web search) — `specs/domain/geo-measurement-layers.md`
+- Gemini generateContent base: `paths.geminiApiBase` (`https://generativelanguage.googleapis.com/v1beta`) — never inline in runners
+- Anthropic hosted search tool type: `paths.anthropicWebSearchTool`
 
 ## Share
 Public landing: `/share/[token]` · API `/api/share`

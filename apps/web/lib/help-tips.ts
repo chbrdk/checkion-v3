@@ -311,8 +311,8 @@ export const HELP_TIPS = {
   },
   'launch.geo': {
     label: 'About GEO capability',
-    en: 'Prompt × model presence job — how generative answers cite the brand.',
-    de: 'Prompt×Modell-Präsenzjob — wie generative Antworten die Marke zitieren.',
+    en: 'Prompt × model presence job — how generative answers cite the brand. Pick Model memory (Layer 1) or Live search (Layer 2).',
+    de: 'Prompt×Modell-Präsenzjob — wie generative Antworten die Marke zitieren. Wähle Modell-Gedächtnis (Layer 1) oder Live-Suche (Layer 2).',
   },
   'launch.seo': {
     label: 'About SEO capability',
@@ -328,6 +328,16 @@ export const HELP_TIPS = {
     label: 'About Deep scan',
     en: 'Broader crawl under the host — domain magazine with multi-page coverage.',
     de: 'Breiterer Crawl unter dem Host — Domain-Magazine mit Mehrseiten-Abdeckung.',
+  },
+  'launch.geo.recall': {
+    label: 'About Model memory GEO',
+    en: 'Layer 1 — ungrounded chat. Measures whether the model already names your host from training, not ChatGPT-with-search.',
+    de: 'Layer 1 — Chat ohne Suche. Misst, ob das Modell euren Host aus dem Training nennt — nicht ChatGPT mit Suche.',
+  },
+  'launch.geo.live': {
+    label: 'About Live search GEO',
+    en: 'Layer 2 — provider web search. Closer to ChatGPT with browse; still not the consumer ChatGPT app. Never mixed with Model memory scores.',
+    de: 'Layer 2 — Websuche der Provider. Näher an ChatGPT mit Browse; nicht die ChatGPT-App. Nie mit Modell-Gedächtnis-Scores mischen.',
   },
   'job.status.queued': {
     label: 'About queued status',

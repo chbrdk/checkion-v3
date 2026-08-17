@@ -1,4 +1,5 @@
 import { AppShell } from '../../components/app-shell'
+import { parseGeoMeasurement, type GeoMeasurement } from '../../lib/geo/measurement'
 import { ScanLaunchForm, type LaunchMode } from '../../components/scan-launch-form'
 import { listProjects } from '../../lib/fixtures/project-store'
 import { TopStatus } from '@msqdx/ui'
@@ -32,6 +33,7 @@ export default async function ScanPage({
     platformProjectId?: string
     audionRunId?: string
     stepUrl?: string
+    measurement?: string
   }>
 }) {
   const params = await searchParams
@@ -56,6 +58,8 @@ export default async function ScanPage({
   )
   /** AUDION journey handoff always launches WCAG Quick single (never deep / GEO / SEO). */
   const defaultMode: LaunchMode | undefined = fromAudion ? 'single' : parseLaunchMode(params.mode)
+  const defaultMeasurement: GeoMeasurement | undefined =
+    defaultMode === 'geo' ? parseGeoMeasurement(params.measurement) : undefined
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined
@@ -70,7 +74,9 @@ export default async function ScanPage({
   const statusSecondary = fromAudion
     ? 'WCAG single · CHECKION'
     : defaultMode === 'geo'
-      ? 'competitive presence'
+      ? defaultMeasurement === 'live'
+        ? 'live search'
+        : 'model memory'
       : defaultMode === 'seo'
         ? 'domain SEO coverage'
         : defaultMode === 'deep'
@@ -87,6 +93,7 @@ export default async function ScanPage({
       <ScanLaunchForm
         projects={projects}
         defaultMode={defaultMode}
+        defaultMeasurement={defaultMeasurement}
         defaultProjectId={defaultProjectId}
         defaultUrl={defaultUrl}
         correlation={{

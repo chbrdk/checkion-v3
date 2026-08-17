@@ -1,7 +1,7 @@
 # Scan modes — CHECKION v3
 
 ## Status
-Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project; Phase 7 — launch / re-run notification center)
+Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project; Phase 7 — launch / re-run notification center; Phase 8 — GEO measurement tiles: Model memory vs Live search)
 
 ## MVP modes (deep-link / API)
 | Mode | Primary capability | Result |
@@ -21,19 +21,20 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
 1. **Capability picker** (primary) — large inviting tiles: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG). Cold `/scan` (no `mode=`) starts with **capability tiles only** — none pre-selected; depth and compose stay unmounted until the user chooses. No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
 2. **Progressive disclosure** (smooth `checkion-rise` / `checkion-launch-reveal`; `prefers-reduced-motion` disables animation):
    - **WCAG** → reveal depth tiles (**Quick single scan** · **Deep scan**); after depth is chosen (or immediately if depth was already chosen this session / via deep-link) → reveal compose.
-   - **GEO** → reveal GEO compose (**URL and/or Company name**, **Project**, **queries**, **models**, CTA); skip WCAG depth.
+   - **GEO** → reveal **measurement tiles** (**Model memory** · **Live search**, same aesthetic as WCAG depth); after measurement is chosen (or immediately via `mode=geo` / `measurement=` deep-link) → reveal GEO compose (**URL and/or Company name**, **Project**, **queries**, **models**, CTA); skip WCAG depth. See [`geo-measurement-layers.md`](./geo-measurement-layers.md).
    - **SEO** → reveal compose (URL, project, CTA); skip depth.
    - Changing capability swaps/re-animates the secondary sections accordingly.
    - Deep-links with `mode=seo|geo|single|deep` (and AUDION handoff) **skip ahead** and show the full relevant chain on first paint — no empty trap for AUDION / handoff URLs. Prefills still seed visible fields (not silent-only).
 3. **WCAG depth** (secondary, only when WCAG selected and not AUDION) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only); depth grid uses a bottom hairline only (no top rule), same as capability.
-4. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
+4. **GEO measurement** (secondary, only when GEO selected) — compact sibling tiles: **Model memory** (`recall`) · **Live search** (`live`). Accessible name via `aria-label` only (`GEO measurement`). Deep-link `mode=geo` defaults to `recall`; `measurement=live` selects Layer 2.
+5. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
    - **URL** — hero input (page or host) — WCAG / SEO required; GEO optional when Company name is set
    - **GEO Company name** — hero input beside URL; optional when URL is set. At least one of URL **or** Company name is required to start
    - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO / GEO (same 60/40 hero sizing; GEO row may be URL · Company · Project). Destination status stays quiet
 
 ### GEO compose validation (visible URL / company / project)
-`POST /api/geo-jobs` accepts `{ url?, companyName?, queries[], projectId?, models?, … }`. Launch form rules:
+`POST /api/geo-jobs` accepts `{ url?, companyName?, queries[], projectId?, models?, measurement?, … }`. Launch form rules:
 
 | Field | Rule |
 |-------|------|
@@ -104,9 +105,9 @@ Deep-links (`paths.routes.scanLaunch`):
 ### GEO (`geo`)
 - Gate: `lib/geo-eeat/live-geo-gate.ts` — live when `DATABASE_URL` **or** `CHECKION_LIVE_GEO=1`; `CHECKION_LIVE_GEO=0` forces synthesize.
 - Live requires `OPENAI_API_KEY`; fixture path synthesizes a completed magazine overview instantly.
-- Create: `POST /api/geo-jobs` with `{ url?, companyName?, queries[], projectId?, models?, competitors?, title? }`. At least one of `url` / `companyName` required; when only `companyName`, server derives a normalized citation URL. `projectId` is optional — when omitted / empty, API **auto-creates** a Collection project from URL / company (session/`PLEXON_DEMO_COMPANY_ID`); when provided, must exist. Form does not pre-select or silently substitute another project. **`companyId` is not a GEO-job field** — company name is a brand hint, not a federation id. Live requires `OPENAI_API_KEY`.
+- Create: `POST /api/geo-jobs` with `{ url?, companyName?, queries[], projectId?, models?, measurement?, competitors?, title? }`. `measurement` is `recall` (default, Layer 1) or `live` (Layer 2 web search). At least one of `url` / `companyName` required; when only `companyName`, server derives a normalized citation URL. `projectId` is optional — when omitted / empty, API **auto-creates** a Collection project from URL / company (session/`PLEXON_DEMO_COMPANY_ID`); when provided, must exist. Form does not pre-select or silently substitute another project. **`companyId` is not a GEO-job field** — company name is a brand hint, not a federation id. Live requires `OPENAI_API_KEY`.
 - Suggest (launch only): `POST /api/geo/suggest-queries` with `{ url?, companyName?, project?, existing?, max? }` — see GEO query list above.
-- **Re-run (result chrome)** — completed / failed GEO overview exposes **Re-run** (`GeoResultActions`). Confirms, then `POST /api/geo-jobs` with the same `projectId`, `url`, `queries`, `models`, `competitors`, and `title` from the current overview (new job id). User stays on the old result; Notification center tracks the new job and deep-links to `/geo/:newId/overview`. Disabled while the current job is `queued` / `running`. Same honesty prompt as live create (no domain hints — see `geo-competitive-presence.md`).
+- **Re-run (result chrome)** — completed / failed GEO overview exposes **Re-run** (`GeoResultActions`). Confirms, then `POST /api/geo-jobs` with the same `projectId`, `url`, `queries`, `models`, `competitors`, `title`, and `measurement` from the current overview (new job id). User stays on the old result; Notification center tracks the new job and deep-links to `/geo/:newId/overview`. Disabled while the current job is `queued` / `running`. Same honesty prompt as live create (no domain hints — see `geo-competitive-presence.md`).
 
 ## Cross-product (AUDION)
 AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / Studies) via `POST /api/scans` or `/scan?projectId&mode=single&url=` — see `audion-journey-scan-trigger.md`. That path must **not** use `deep`, domain crawl, `geo`, or `seo`.

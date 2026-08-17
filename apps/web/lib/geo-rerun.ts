@@ -1,5 +1,6 @@
-import type { GeoOverview } from '@checkion-v3/contracts'
+import type { GeoMeasurement, GeoOverview } from '@checkion-v3/contracts'
 import { modelsForLaunch } from './geo/model-catalog'
+import { geoJobMeasurement } from './geo/measurement'
 
 /** Body for POST /api/geo-jobs when re-running from an existing overview. */
 export type GeoRerunPayload = {
@@ -9,6 +10,7 @@ export type GeoRerunPayload = {
   models: string[]
   competitors: string[]
   title?: string
+  measurement: GeoMeasurement
 }
 
 /**
@@ -31,6 +33,7 @@ export function buildGeoRerunPayload(overview: GeoOverview): GeoRerunPayload | n
     queries,
     models,
     competitors,
+    measurement: geoJobMeasurement(overview.job),
     ...(title ? { title } : {}),
   }
 }

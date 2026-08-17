@@ -51,7 +51,7 @@ Live wiring is accepted (`specs/domain/plexon-federation.md`); keep fixtures as 
 ## Live GEO pipeline (Phase 3)
 When live GEO is on (`shouldRunLiveGeo()` in `lib/geo-eeat/live-geo-gate.ts`):
 
-1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → multi-provider query×model runs (OpenAI / Anthropic / Gemini) → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures).
+1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → multi-provider query×model runs (OpenAI / Anthropic / Gemini) → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures). Body `measurement` is `recall` (ungrounded JSON citations, default) or `live` (provider web search + native URL citations). Never mix layers in one job.
 2. Payload persists as `GeoOverview` jsonb on `geo_jobs`. Failures persist as `status: failed` (not empty `completed`).
 3. Magazine UI `/geo/:id/...` shows an in-progress meter while `queued`/`running` and **polls** `GET /api/geo-jobs/:id` until finalize; empty completed shells are treated as failure, not a zeroed success magazine. Reading API remains `GET /api/geo-jobs/:id/reading`.
 
@@ -66,7 +66,7 @@ export OPENAI_API_KEY=sk-…
 npm run dev -w web
 curl -X POST http://localhost:3007/api/geo-jobs \
   -H 'content-type: application/json' \
-  -d '{"projectId":"proj-demo-1","url":"https://example.com","queries":["best widgets"],"models":["gpt-5.6-luna","claude-sonnet-5","gemini-3.6-flash"],"competitors":["rival.com"]}'
+  -d '{"projectId":"proj-demo-1","url":"https://example.com","queries":["best widgets"],"models":["gpt-5.6-luna","claude-sonnet-5","gemini-3.6-flash"],"competitors":["rival.com"],"measurement":"recall"}'
 ```
 
 `projectId` may be omitted — the API auto-creates a Collection project from the URL host / company name (federation company from session / `PLEXON_DEMO_COMPANY_ID`). There is no `companyId` field on GEO jobs.

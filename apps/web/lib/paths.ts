@@ -56,6 +56,12 @@ export const paths = {
   envGeminiApiKey: 'GEMINI_API_KEY',
   /** Alias accepted for Gemini when GEMINI_API_KEY unset. */
   envGoogleApiKey: 'GOOGLE_API_KEY',
+  /** Gemini generateContent origin — use `geminiGenerateContentUrl`. */
+  geminiApiBase: 'https://generativelanguage.googleapis.com/v1beta',
+  /** Hosted Anthropic web search tool type (Layer 2 GEO). */
+  anthropicWebSearchTool: 'web_search_20260318',
+  /** OpenAI Responses hosted search tool type (Layer 2 GEO). */
+  openaiWebSearchTool: 'web_search',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
   envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
   routes: {
@@ -76,6 +82,7 @@ export const paths = {
       platformProjectId?: string
       audionRunId?: string
       stepUrl?: string
+      measurement?: 'recall' | 'live'
     }) => {
       const params = new URLSearchParams()
       if (q.projectId) params.set('projectId', q.projectId)
@@ -84,6 +91,7 @@ export const paths = {
       if (q.platformProjectId) params.set('platformProjectId', q.platformProjectId)
       if (q.audionRunId) params.set('audionRunId', q.audionRunId)
       if (q.stepUrl) params.set('stepUrl', q.stepUrl)
+      if (q.measurement) params.set('measurement', q.measurement)
       const qs = params.toString()
       return qs ? `/scan?${qs}` : '/scan'
     },
@@ -153,5 +161,9 @@ export const paths = {
     apiFederationHealth: '/api/federation/health',
   },
 } as const
+
+export function geminiGenerateContentUrl(modelId: string, apiKey: string): string {
+  return `${paths.geminiApiBase}/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`
+}
 
 export type AppPaths = typeof paths

@@ -17,6 +17,10 @@ import {
   modelsForLaunch,
 } from '../lib/geo/model-catalog'
 import {
+  GEO_MEASUREMENT_DEFAULT,
+  type GeoMeasurement,
+} from '../lib/geo/measurement'
+import {
   defaultGeoQueries,
   hostFromUrl,
   normalizeGeoUrl,
@@ -88,6 +92,18 @@ export function initialWcagDepth(
   return null
 }
 
+export function initialGeoMeasurement(
+  fromAudion: boolean,
+  defaultMode?: LaunchMode,
+  defaultMeasurement?: GeoMeasurement,
+): GeoMeasurement | null {
+  if (fromAudion) return null
+  if (defaultMode === 'geo') {
+    return defaultMeasurement ?? GEO_MEASUREMENT_DEFAULT
+  }
+  return defaultMeasurement ?? null
+}
+
 /** GEO starts empty unless deep-linked; WCAG / SEO still auto-pick first Collection. */
 export function initialProjectId(
   projects: Array<{ id: string }>,
@@ -151,6 +167,26 @@ const WCAG_DEPTH_CARDS: Array<{
   },
 ]
 
+const GEO_MEASUREMENT_CARDS: Array<{
+  id: GeoMeasurement
+  label: string
+  kicker: string
+  deck: string
+}> = [
+  {
+    id: 'recall',
+    label: 'Model memory',
+    kicker: 'Layer 1',
+    deck: 'Ungrounded probe — brands the model already knows from training.',
+  },
+  {
+    id: 'live',
+    label: 'Live search',
+    kicker: 'Layer 2',
+    deck: 'Web-grounded answers — citations from search, closer to ChatGPT with browse.',
+  },
+]
+
 export function ScanLaunchForm({
   projects,
   defaultMode,
@@ -159,6 +195,7 @@ export function ScanLaunchForm({
   correlation,
   fromAudion = false,
   projectLabel,
+  defaultMeasurement,
 }: {
   projects: Array<{ id: string; name: string; domain?: string; platformProjectId?: string }>
   /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
@@ -172,6 +209,7 @@ export function ScanLaunchForm({
   }
   fromAudion?: boolean
   projectLabel?: string
+  defaultMeasurement?: GeoMeasurement
 }) {
   const { trackJob } = useJobNotifications()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
@@ -181,6 +219,9 @@ export function ScanLaunchForm({
   )
   const [wcagDepth, setWcagDepth] = useState<WcagDepth | null>(() =>
     initialWcagDepth(fromAudion, defaultMode),
+  )
+  const [geoMeasurement, setGeoMeasurement] = useState<GeoMeasurement | null>(() =>
+    initialGeoMeasurement(fromAudion, defaultMode, defaultMeasurement),
   )
   const [url, setUrl] = useState(initialUrl)
   const [companyName, setCompanyName] = useState('')
@@ -207,6 +248,7 @@ export function ScanLaunchForm({
   const activeProjectName = projectLabel || activeProject?.name || projectId
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
+  const activeGeoMeasurement = fromAudion ? null : geoMeasurement
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
   const geoSuggestUrl =
     normalizeGeoUrl(url) ||
@@ -230,10 +272,11 @@ export function ScanLaunchForm({
   }
 
   const showDepth = activeCapability === 'wcag' && !fromAudion
+  const showGeoMeasurement = activeCapability === 'geo' && !fromAudion
   const showCompose =
     fromAudion ||
     activeCapability === 'seo' ||
-    activeCapability === 'geo' ||
+    (activeCapability === 'geo' && activeGeoMeasurement !== null) ||
     (activeCapability === 'wcag' && activeWcagDepth !== null)
 
   const modeCopy = useMemo(() => {
@@ -255,8 +298,11 @@ export function ScanLaunchForm({
         }
       case 'geo':
         return {
-          title: 'GEO presence',
-          deck: 'Ask answer engines where this host shows up — citations, placement, and competitive share of voice.',
+          title: activeGeoMeasurement === 'live' ? 'GEO live search' : 'GEO presence',
+          deck:
+            activeGeoMeasurement === 'live'
+              ? 'Ask answer engines with web search where this host is cited — closer to ChatGPT with browse, not model memory.'
+              : 'Ask answer engines where this host shows up from model memory — citations, placement, and competitive share of voice.',
           cta: 'Start GEO job',
           loading: 'Starting GEO job…',
         }
@@ -283,7 +329,7 @@ export function ScanLaunchForm({
           loading: 'Starting…',
         }
     }
-  }, [activeCapability, activeWcagDepth, fromAudion])
+  }, [activeCapability, activeWcagDepth, activeGeoMeasurement, fromAudion])
 
   function onCapabilityChange(next: LaunchCapability) {
     if (fromAudion) return
@@ -291,13 +337,19 @@ export function ScanLaunchForm({
     setError(null)
     // GEO: empty project by default. WCAG / SEO: keep / restore a Collection pick.
     if (next === 'geo') {
+      setGeoMeasurement(
+        defaultMode === 'geo' ? (defaultMeasurement ?? GEO_MEASUREMENT_DEFAULT) : null,
+      )
       if (!(defaultProjectId && projectOptions.some((p) => p.id === defaultProjectId))) {
         setProjectId('')
       } else {
         setProjectId(defaultProjectId)
       }
-    } else if (!projectId.trim() && projectOptions[0]?.id) {
-      setProjectId(projectOptions[0].id)
+    } else {
+      setGeoMeasurement(null)
+      if (!projectId.trim() && projectOptions[0]?.id) {
+        setProjectId(projectOptions[0].id)
+      }
     }
   }
 
@@ -312,6 +364,11 @@ export function ScanLaunchForm({
   function onWcagDepthChange(next: WcagDepth) {
     if (fromAudion) return
     setWcagDepth(next)
+    setError(null)
+  }
+
+  function onGeoMeasurementChange(next: GeoMeasurement) {
+    setGeoMeasurement(next)
     setError(null)
   }
 
@@ -446,6 +503,7 @@ export function ScanLaunchForm({
       url: resolvedUrl,
       queries: resolvedQueries,
       models,
+      measurement: activeGeoMeasurement ?? GEO_MEASUREMENT_DEFAULT,
     }
     if (trimmedCompany) body.companyName = trimmedCompany
     if (resolvedProjectId) body.projectId = resolvedProjectId
@@ -480,7 +538,8 @@ export function ScanLaunchForm({
       id: jobId,
       resource: 'geo',
       status: 'queued',
-      title: 'GEO job',
+      title:
+        activeGeoMeasurement === 'live' ? 'GEO · Live search' : 'GEO · Model memory',
       href: paths.routes.geoSection(jobId, 'overview'),
       projectId: data.projectId || resolvedProjectId,
       targetUrl: resolvedUrl,
@@ -492,6 +551,7 @@ export function ScanLaunchForm({
     e.preventDefault()
     if (!showCompose || !activeCapability) return
     if (activeCapability === 'wcag' && !activeWcagDepth) return
+    if (activeCapability === 'geo' && !activeGeoMeasurement) return
     setStatus('submitting')
     setError(null)
     try {
@@ -610,6 +670,50 @@ export function ScanLaunchForm({
                           : 'checkion-depth-tile'
                       }
                       onClick={() => onWcagDepthChange(card.id)}
+                    >
+                      <span className="checkion-depth-tile__kicker">{card.kicker}</span>
+                      <span className="checkion-depth-tile__label">{card.label}</span>
+                      <span className="checkion-depth-tile__deck">{card.deck}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {showGeoMeasurement ? (
+            <div
+              key="geo-measurement"
+              className="checkion-launch-depth checkion-launch-reveal"
+            >
+              <div className="checkion-launch-tip-row" aria-label="GEO measurement tips">
+                <LabelWithTip tipId="launch.geo.recall">
+                  <span>Model memory</span>
+                </LabelWithTip>
+                <LabelWithTip tipId="launch.geo.live">
+                  <span>Live search</span>
+                </LabelWithTip>
+              </div>
+              <div
+                className="checkion-depth-grid"
+                role="radiogroup"
+                aria-label="GEO measurement"
+              >
+                {GEO_MEASUREMENT_CARDS.map((card) => {
+                  const selected = activeGeoMeasurement === card.id
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${card.label}. ${card.deck}`}
+                      className={
+                        selected
+                          ? 'checkion-depth-tile checkion-depth-tile--selected'
+                          : 'checkion-depth-tile'
+                      }
+                      onClick={() => onGeoMeasurementChange(card.id)}
                     >
                       <span className="checkion-depth-tile__kicker">{card.kicker}</span>
                       <span className="checkion-depth-tile__label">{card.label}</span>

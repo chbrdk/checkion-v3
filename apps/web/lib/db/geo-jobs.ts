@@ -1,5 +1,5 @@
 import { desc, eq } from 'drizzle-orm'
-import type { GeoJobSummary, GeoOverview } from '@checkion-v3/contracts'
+import type { GeoJobSummary, GeoMeasurement, GeoOverview } from '@checkion-v3/contracts'
 import { getDb } from './client'
 import { geoJobs, type GeoJobRow } from './schema'
 import { OPENAI_MODEL } from '../llm/config'
@@ -7,6 +7,7 @@ import { shouldRunLiveGeo } from '../geo-eeat/live-geo-gate'
 import { buildQueuedGeoOverview } from '../geo-eeat/finalize-overview'
 import { executeLiveGeoPipeline, newGeoJobId } from '../geo-eeat/pipeline'
 import { synthesizeFixtureGeoOverview } from '../geo-eeat/synthesize-fixture'
+import { parseGeoMeasurement } from '../geo/measurement'
 
 function triggerGeoAutosync(jobId: string): void {
   void import('../knowledge-pack-autosync').then(({ scheduleGeoKnowledgeAutosync }) => {
@@ -94,11 +95,13 @@ export async function dbCreateGeoJob(input: {
   title?: string
   includePageScan?: boolean
   waitForCompletion?: boolean
+  measurement?: GeoMeasurement
 }): Promise<GeoJobSummary> {
   const jobId = newGeoJobId()
   const models = input.models?.length ? input.models : [OPENAI_MODEL]
   const competitors = input.competitors ?? []
   const queries = input.queries
+  const measurement = parseGeoMeasurement(input.measurement)
 
   if (!shouldRunLiveGeo()) {
     const overview = synthesizeFixtureGeoOverview({
@@ -109,6 +112,7 @@ export async function dbCreateGeoJob(input: {
       models,
       competitors,
       title: input.title,
+      measurement,
     })
     await dbUpsertGeoOverview(overview)
     triggerGeoAutosync(jobId)
@@ -123,6 +127,7 @@ export async function dbCreateGeoJob(input: {
     queries,
     models,
     competitors,
+    measurement,
   })
   await dbUpsertGeoOverview(queued)
 
@@ -137,6 +142,7 @@ export async function dbCreateGeoJob(input: {
         competitors,
         title: input.title,
         includePageScan: input.includePageScan,
+        measurement,
         onStatus: async (status, overview) => {
           await dbUpsertGeoOverview(overview)
           if (status === 'completed') triggerGeoAutosync(jobId)

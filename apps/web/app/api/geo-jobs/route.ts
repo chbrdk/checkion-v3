@@ -13,6 +13,7 @@ import {
   competitorHostsFromEnrichment,
   resolveKnowledgeEnrichment,
 } from '../../../lib/plexon-knowledge-pack'
+import { parseGeoMeasurement } from '../../../lib/geo/measurement'
 import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     title?: string
     includePageScan?: boolean
     waitForCompletion?: boolean
+    measurement?: string
   }
 
   const companyName =
@@ -127,6 +129,7 @@ export async function POST(request: Request) {
     title,
     includePageScan: body.includePageScan,
     waitForCompletion: body.waitForCompletion === true,
+    measurement: parseGeoMeasurement(body.measurement),
   })
 
   return NextResponse.json(

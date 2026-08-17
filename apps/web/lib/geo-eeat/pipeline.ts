@@ -2,10 +2,11 @@
  * Live GEO job pipeline — stage1 scan → EEAT LLM → queryRuns → GeoOverview finalize.
  */
 
-import type { GeoOverview } from '@checkion-v3/contracts'
+import type { GeoOverview, GeoMeasurement } from '@checkion-v3/contracts'
 import { OPENAI_MODEL } from '../llm/config'
 import { emptyUsageTotals, mergeUsageTotals } from '../llm/usage-totals'
 import type { ScanOptions, ScanResult } from '../scan/types'
+import { parseGeoMeasurement, geoMeasurementLede } from '../geo/measurement'
 import { buildGeoEeatResultFromScan } from './stage1'
 import { runLlmStages } from './run-llm-stages'
 import { runQueryRuns } from './run-query-runs'
@@ -22,6 +23,7 @@ export type CreateGeoJobInput = {
   /** Skip page scan (tests) or attach EEAT from scan. Default true for live. */
   includePageScan?: boolean
   waitForCompletion?: boolean
+  measurement?: GeoMeasurement
 }
 
 export type SingleScanRunner = (
@@ -57,12 +59,14 @@ export async function executeLiveGeoPipeline(input: {
   title?: string
   includePageScan?: boolean
   onStatus?: (status: 'running' | 'completed', overview: GeoOverview) => Promise<void>
+  measurement?: GeoMeasurement
 }): Promise<GeoOverview> {
   requireOpenAiKeyForLiveGeo()
 
   const models = input.models.length > 0 ? input.models : [OPENAI_MODEL]
   const competitors = input.competitors ?? []
   const includePageScan = input.includePageScan !== false
+  const measurement = parseGeoMeasurement(input.measurement)
 
   let running = buildQueuedGeoOverview({
     jobId: input.jobId,
@@ -72,11 +76,12 @@ export async function executeLiveGeoPipeline(input: {
     queries: input.queries,
     models,
     competitors,
+    measurement,
   })
   running = {
     ...running,
     job: { ...running.job, status: 'running' },
-    lede: `Running live GEO for ${running.targetHost}…`,
+    lede: geoMeasurementLede(measurement, running.targetHost, 'running'),
   }
   await input.onStatus?.('running', running)
 
@@ -111,6 +116,7 @@ export async function executeLiveGeoPipeline(input: {
     competitors,
     queries: input.queries,
     models,
+    measurement,
   })
   mergeUsageTotals(usage, queryOut.usage)
 
@@ -130,6 +136,7 @@ export async function executeLiveGeoPipeline(input: {
     competitors,
     queryRuns: queryOut.queryRuns,
     eeatPayload,
+    measurement,
   })
 
   await input.onStatus?.('completed', overview)

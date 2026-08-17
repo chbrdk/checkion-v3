@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildCompetitiveSystemPrompt,
+  buildGroundedSystemPrompt,
   citationMatchesTargetHost,
   hostEqualsOrSubdomain,
   isRegistrableDomainHost,
   normalizeCompetitiveCitations,
   parseCompetitiveResponse,
 } from '../lib/geo-eeat/competitive-response'
+
+describe('buildGroundedSystemPrompt (honesty)', () => {
+  it('asks for web search without domain hints or a JSON host panel', () => {
+    const prompt = buildGroundedSystemPrompt()
+    expect(prompt).toMatch(/Search the web/i)
+    expect(prompt).not.toMatch(/moebel-martin|known domains/i)
+    expect(prompt).not.toContain('"citations"')
+    expect(prompt).not.toMatch(/up to 20/)
+  })
+})
 
 describe('buildCompetitiveSystemPrompt (honesty)', () => {
   it('does not embed target or competitor domains and asks for a broad citation panel', () => {

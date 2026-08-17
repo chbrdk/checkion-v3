@@ -6,6 +6,8 @@ Accepted (spec-driven). Fixtures + derive helpers land with this spec. **Phase 3
 ## Purpose
 Answer: **Where do we appear in answer engines?** — citations, placement, model/query coverage — not on-page page quality.
 
+Two **standalone** measurements (never mixed in one job): Layer 1 `recall` (ungrounded model memory) and Layer 2 `live` (web-grounded search). See [`geo-measurement-layers.md`](./geo-measurement-layers.md).
+
 On-page E-E-A-T / GEO fitness is an **optional appendix** only when a page reading is attached. See [`geo-eeat.md`](./geo-eeat.md).
 
 Actionable prompt/answer insights (miss-vs-rival, head-to-head, answer dossier, auto moves, intents, co-citation, model disagreement) are specified in [`geo-answer-insights.md`](./geo-answer-insights.md).
@@ -21,6 +23,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 | Target URL / host | yes | Normalized host is `targetHost` |
 | Queries | yes | Prompt list |
 | Models | yes | LLM IDs for the run matrix |
+| Measurement | no | `recall` (default) or `live` — see [`geo-measurement-layers.md`](./geo-measurement-layers.md) |
 | Explicit competitors | no | Domains the user wants in the field |
 
 ### Surfaces
@@ -41,7 +44,7 @@ From `/scan` GEO mode the form may send:
 After create, navigate to `/geo/:id/overview` (or stay on launch / prior result and track via Notification center — see `scan-modes.md` § Launch + re-run).
 
 ### Re-run from result
-Completed or failed jobs expose **Re-run** in magazine topbar actions (`GeoResultActions`). Creates a **new** geo job via `POST /api/geo-jobs` cloning `url`, `queries`, `models`, `competitors`, `projectId`, `title` from the current overview. Does not mutate the old job. In-progress jobs disable the CTA.
+Completed or failed jobs expose **Re-run** in magazine topbar actions (`GeoResultActions`). Creates a **new** geo job via `POST /api/geo-jobs` cloning `url`, `queries`, `models`, `competitors`, `projectId`, `title`, and `measurement` from the current overview. Does not mutate the old job. In-progress jobs disable the CTA.
 
 ### Result readiness (live vs fixture)
 | Path | Create response | Overview behaviour |
@@ -140,7 +143,7 @@ Legacy `shareOfVoice[]` on `GeoOverview` remains as a convenience mirror of `fie
 
 ## Competitive LLM prompt honesty (live queryRuns)
 
-Live `queryRuns` are **ungrounded chat probes** (no web search). Measurement must not steer the model toward the target.
+Live `queryRuns` default to **ungrounded chat probes** (`measurement: 'recall'`, no web search). Layer 2 (`measurement: 'live'`) uses provider search tools and native URL citations — still must not steer toward the target. Never merge the two layers into one hit-rate.
 
 | Rule | Why |
 |------|-----|
@@ -160,7 +163,7 @@ See `knowledge/geo-measurement-honesty.md`.
 - Live Plexon federation (deferred)
 - Per-answer live LLM (prompt-level reading only)
 - **Multi-provider competitive cron** (Claude + Gemini + history reruns) — deferred; Phase 3 uses OpenAI query×model runs only. See `knowledge/dummy-data-mode.md` (“Live GEO pipeline”).
-- Grounded / consumer-UI answer-engine sampling (deferred; separate from prompt honesty)
+- ChatGPT consumer-UI clone / Deep Research (Layer 2 v1 is Responses `web_search` + Claude/Gemini grounding only — [`geo-measurement-layers.md`](./geo-measurement-layers.md))
 
 ## Contracts
 `GeoPresenceSolo`, `GeoPresenceField`, `GeoRivalSource`, `GeoPresence` in `@checkion-v3/contracts`; `GeoOverview.presence`.  

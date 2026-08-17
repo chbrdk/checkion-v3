@@ -454,7 +454,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     {
       title: 'Start GEO job',
       description:
-        'POST /api/geo-jobs — requires url or companyName plus queries (or pack seeds). Poll geo_job_get.',
+        'POST /api/geo-jobs — requires url or companyName plus queries (or pack seeds). Optional measurement recall|live. Poll geo_job_get.',
       inputSchema: z.object({
         projectId: z.string().optional(),
         platformProjectId: z.string().optional(),
@@ -464,6 +464,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
         models: z.array(z.string()).optional(),
         competitors: z.array(z.string()).optional(),
         title: z.string().optional(),
+        measurement: z.enum(['recall', 'live']).optional(),
         waitForCompletion: z.boolean().optional(),
       }),
     },

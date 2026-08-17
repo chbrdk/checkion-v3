@@ -69,6 +69,21 @@ export function buildCompetitiveSystemPrompt(): string {
   )
 }
 
+/**
+ * Layer 2 — native grounded answer. No JSON host panel.
+ * Spec: geo-measurement-layers.md
+ */
+export function buildGroundedSystemPrompt(): string {
+  return (
+    'You answer like a careful shopping advisor for a real user. ' +
+    'Search the web before answering. Prefer current, citable sources. ' +
+    'Write a natural-language answer (2–8 sentences) in the same language as the query. ' +
+    'Cover several realistic options — not a single default favorite. ' +
+    'Do not favor any particular brand. Do not invent sources. ' +
+    'If nothing relevant is found, say so plainly.'
+  )
+}
+
 function extractHostname(input: string): string {
   const s = input.trim().toLowerCase()
   try {
