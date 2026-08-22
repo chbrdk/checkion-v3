@@ -61,8 +61,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-# Same pin as brandion-v3 (ChatOverlay + ReactNode return type for dual @types/react).
-ARG MSQDX_UI_REF=5323011442f3665dc72da00ec77ebfb6559e1d3e
+# BrandCorner hover expand, TokenPicker/LayersPanel/BreakpointSwitcher editor chrome (Aug 2026).
+ARG MSQDX_UI_REF=08420264859d6c8e65dee046585f9054458216bb
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
