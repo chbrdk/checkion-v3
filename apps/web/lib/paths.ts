@@ -82,7 +82,7 @@ export const paths = {
       platformProjectId?: string
       audionRunId?: string
       stepUrl?: string
-      measurement?: 'recall' | 'live'
+      measurement?: 'recall' | 'live' | 'both'
     }) => {
       const params = new URLSearchParams()
       if (q.projectId) params.set('projectId', q.projectId)

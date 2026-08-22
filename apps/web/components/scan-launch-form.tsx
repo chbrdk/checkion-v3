@@ -18,6 +18,8 @@ import {
 } from '../lib/geo/model-catalog'
 import {
   GEO_MEASUREMENT_DEFAULT,
+  parseGeoMeasurements,
+  toggleGeoMeasurement,
   type GeoMeasurement,
 } from '../lib/geo/measurement'
 import {
@@ -92,16 +94,30 @@ export function initialWcagDepth(
   return null
 }
 
+export function initialGeoMeasurements(
+  fromAudion: boolean,
+  defaultMode?: LaunchMode,
+  defaultMeasurement?: GeoMeasurement,
+  defaultMeasurements?: GeoMeasurement[],
+): GeoMeasurement[] {
+  if (fromAudion) return []
+  if (defaultMeasurements?.length) return parseGeoMeasurements(defaultMeasurements)
+  if (defaultMeasurement) return parseGeoMeasurements(defaultMeasurement)
+  if (defaultMode === 'geo') return [GEO_MEASUREMENT_DEFAULT]
+  return []
+}
+
+/** @deprecated use initialGeoMeasurements — kept for single-layer callers. */
 export function initialGeoMeasurement(
   fromAudion: boolean,
   defaultMode?: LaunchMode,
   defaultMeasurement?: GeoMeasurement,
+  defaultMeasurements?: GeoMeasurement[],
 ): GeoMeasurement | null {
-  if (fromAudion) return null
-  if (defaultMode === 'geo') {
-    return defaultMeasurement ?? GEO_MEASUREMENT_DEFAULT
-  }
-  return defaultMeasurement ?? null
+  return (
+    initialGeoMeasurements(fromAudion, defaultMode, defaultMeasurement, defaultMeasurements)[0] ??
+    null
+  )
 }
 
 /** GEO starts empty unless deep-linked; WCAG / SEO still auto-pick first Collection. */
@@ -196,6 +212,7 @@ export function ScanLaunchForm({
   fromAudion = false,
   projectLabel,
   defaultMeasurement,
+  defaultMeasurements,
 }: {
   projects: Array<{ id: string; name: string; domain?: string; platformProjectId?: string }>
   /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
@@ -210,6 +227,7 @@ export function ScanLaunchForm({
   fromAudion?: boolean
   projectLabel?: string
   defaultMeasurement?: GeoMeasurement
+  defaultMeasurements?: GeoMeasurement[]
 }) {
   const { trackJob } = useJobNotifications()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
@@ -220,8 +238,8 @@ export function ScanLaunchForm({
   const [wcagDepth, setWcagDepth] = useState<WcagDepth | null>(() =>
     initialWcagDepth(fromAudion, defaultMode),
   )
-  const [geoMeasurement, setGeoMeasurement] = useState<GeoMeasurement | null>(() =>
-    initialGeoMeasurement(fromAudion, defaultMode, defaultMeasurement),
+  const [geoMeasurements, setGeoMeasurements] = useState<GeoMeasurement[]>(() =>
+    initialGeoMeasurements(fromAudion, defaultMode, defaultMeasurement, defaultMeasurements),
   )
   const [url, setUrl] = useState(initialUrl)
   const [companyName, setCompanyName] = useState('')
@@ -248,7 +266,9 @@ export function ScanLaunchForm({
   const activeProjectName = projectLabel || activeProject?.name || projectId
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
-  const activeGeoMeasurement = fromAudion ? null : geoMeasurement
+  const activeGeoMeasurements = fromAudion ? [] : geoMeasurements
+  const primaryGeoMeasurement = activeGeoMeasurements[0] ?? null
+  const geoBothLayers = activeGeoMeasurements.length > 1
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
   const geoSuggestUrl =
     normalizeGeoUrl(url) ||
@@ -276,7 +296,7 @@ export function ScanLaunchForm({
   const showCompose =
     fromAudion ||
     activeCapability === 'seo' ||
-    (activeCapability === 'geo' && activeGeoMeasurement !== null) ||
+    (activeCapability === 'geo' && activeGeoMeasurements.length > 0) ||
     (activeCapability === 'wcag' && activeWcagDepth !== null)
 
   const modeCopy = useMemo(() => {
@@ -297,10 +317,18 @@ export function ScanLaunchForm({
           loading: 'Starting SEO scan…',
         }
       case 'geo':
+        if (geoBothLayers) {
+          return {
+            title: 'GEO both layers',
+            deck: 'Two separate jobs — model memory and live search. Hit rates stay unmixed.',
+            cta: 'Start GEO jobs',
+            loading: 'Starting GEO jobs…',
+          }
+        }
         return {
-          title: activeGeoMeasurement === 'live' ? 'GEO live search' : 'GEO presence',
+          title: primaryGeoMeasurement === 'live' ? 'GEO live search' : 'GEO presence',
           deck:
-            activeGeoMeasurement === 'live'
+            primaryGeoMeasurement === 'live'
               ? 'Ask answer engines with web search where this host is cited — closer to ChatGPT with browse, not model memory.'
               : 'Ask answer engines where this host shows up from model memory — citations, placement, and competitive share of voice.',
           cta: 'Start GEO job',
@@ -329,7 +357,7 @@ export function ScanLaunchForm({
           loading: 'Starting…',
         }
     }
-  }, [activeCapability, activeWcagDepth, activeGeoMeasurement, fromAudion])
+  }, [activeCapability, activeWcagDepth, primaryGeoMeasurement, geoBothLayers, fromAudion])
 
   function onCapabilityChange(next: LaunchCapability) {
     if (fromAudion) return
@@ -337,8 +365,8 @@ export function ScanLaunchForm({
     setError(null)
     // GEO: empty project by default. WCAG / SEO: keep / restore a Collection pick.
     if (next === 'geo') {
-      setGeoMeasurement(
-        defaultMode === 'geo' ? (defaultMeasurement ?? GEO_MEASUREMENT_DEFAULT) : null,
+      setGeoMeasurements(
+        initialGeoMeasurements(fromAudion, defaultMode, defaultMeasurement, defaultMeasurements),
       )
       if (!(defaultProjectId && projectOptions.some((p) => p.id === defaultProjectId))) {
         setProjectId('')
@@ -346,7 +374,7 @@ export function ScanLaunchForm({
         setProjectId(defaultProjectId)
       }
     } else {
-      setGeoMeasurement(null)
+      setGeoMeasurements([])
       if (!projectId.trim() && projectOptions[0]?.id) {
         setProjectId(projectOptions[0].id)
       }
@@ -367,8 +395,8 @@ export function ScanLaunchForm({
     setError(null)
   }
 
-  function onGeoMeasurementChange(next: GeoMeasurement) {
-    setGeoMeasurement(next)
+  function onGeoMeasurementToggle(next: GeoMeasurement) {
+    setGeoMeasurements((prev) => toggleGeoMeasurement(prev, next))
     setError(null)
   }
 
@@ -499,59 +527,75 @@ export function ScanLaunchForm({
           })
     const models = modelsForLaunch(geoModels)
     const resolvedProjectId = projectId.trim() || undefined
-    const body: Record<string, unknown> = {
-      url: resolvedUrl,
-      queries: resolvedQueries,
-      models,
-      measurement: activeGeoMeasurement ?? GEO_MEASUREMENT_DEFAULT,
-    }
-    if (trimmedCompany) body.companyName = trimmedCompany
-    if (resolvedProjectId) body.projectId = resolvedProjectId
     const platformProjectId =
       correlation?.platformProjectId?.trim() ||
       (activeProject?.platformProjectId &&
       !activeProject.platformProjectId.startsWith('plx-local-')
         ? activeProject.platformProjectId
         : undefined)
-    if (platformProjectId) body.platformProjectId = platformProjectId
+    const layers = activeGeoMeasurements.length
+      ? activeGeoMeasurements
+      : [GEO_MEASUREMENT_DEFAULT]
+    const errors: string[] = []
+    for (const measurement of layers) {
+      const body: Record<string, unknown> = {
+        url: resolvedUrl,
+        queries: resolvedQueries,
+        models,
+        measurement,
+      }
+      if (trimmedCompany) body.companyName = trimmedCompany
+      if (resolvedProjectId) body.projectId = resolvedProjectId
+      if (platformProjectId) body.platformProjectId = platformProjectId
 
-    const res = await fetch(paths.routes.apiGeoJobs, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) {
-      throw new Error(await readLaunchError(res, 'GEO launch failed'))
+      const res = await fetch(paths.routes.apiGeoJobs, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        errors.push(await readLaunchError(res, `GEO ${measurement} launch failed`))
+        continue
+      }
+      let data: { jobId?: string; job?: { id: string }; projectId?: string }
+      try {
+        data = (await res.json()) as typeof data
+      } catch {
+        errors.push(`GEO ${measurement} launch returned a non-JSON response — check auth / API health`)
+        continue
+      }
+      const jobId = data.jobId || data.job?.id
+      if (!jobId) {
+        errors.push(`GEO ${measurement} launch returned no job id`)
+        continue
+      }
+      if (data.projectId && data.projectId !== projectId) {
+        setProjectId(data.projectId)
+      }
+      trackJob({
+        id: jobId,
+        resource: 'geo',
+        status: 'queued',
+        title: measurement === 'live' ? 'GEO · Live search' : 'GEO · Model memory',
+        href: paths.routes.geoSection(jobId, 'overview'),
+        projectId: data.projectId || resolvedProjectId,
+        targetUrl: resolvedUrl,
+        detail: resolvedUrl,
+      })
     }
-    let data: { jobId?: string; job?: { id: string }; projectId?: string }
-    try {
-      data = (await res.json()) as typeof data
-    } catch {
-      throw new Error('GEO launch returned a non-JSON response — check auth / API health')
+    if (errors.length === layers.length) {
+      throw new Error(errors[0] ?? 'GEO launch failed')
     }
-    const jobId = data.jobId || data.job?.id
-    if (!jobId) throw new Error('GEO launch returned no job id')
-    if (data.projectId && data.projectId !== projectId) {
-      setProjectId(data.projectId)
+    if (errors.length) {
+      throw new Error(errors.join(' · '))
     }
-    trackJob({
-      id: jobId,
-      resource: 'geo',
-      status: 'queued',
-      title:
-        activeGeoMeasurement === 'live' ? 'GEO · Live search' : 'GEO · Model memory',
-      href: paths.routes.geoSection(jobId, 'overview'),
-      projectId: data.projectId || resolvedProjectId,
-      targetUrl: resolvedUrl,
-      detail: resolvedUrl,
-    })
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!showCompose || !activeCapability) return
     if (activeCapability === 'wcag' && !activeWcagDepth) return
-    if (activeCapability === 'geo' && !activeGeoMeasurement) return
+    if (activeCapability === 'geo' && activeGeoMeasurements.length === 0) return
     setStatus('submitting')
     setError(null)
     try {
@@ -696,16 +740,16 @@ export function ScanLaunchForm({
               </div>
               <div
                 className="checkion-depth-grid"
-                role="radiogroup"
+                role="group"
                 aria-label="GEO measurement"
               >
                 {GEO_MEASUREMENT_CARDS.map((card) => {
-                  const selected = activeGeoMeasurement === card.id
+                  const selected = activeGeoMeasurements.includes(card.id)
                   return (
                     <button
                       key={card.id}
                       type="button"
-                      role="radio"
+                      role="checkbox"
                       aria-checked={selected}
                       aria-label={`${card.label}. ${card.deck}`}
                       className={
@@ -713,7 +757,7 @@ export function ScanLaunchForm({
                           ? 'checkion-depth-tile checkion-depth-tile--selected'
                           : 'checkion-depth-tile'
                       }
-                      onClick={() => onGeoMeasurementChange(card.id)}
+                      onClick={() => onGeoMeasurementToggle(card.id)}
                     >
                       <span className="checkion-depth-tile__kicker">{card.kicker}</span>
                       <span className="checkion-depth-tile__label">{card.label}</span>
@@ -722,6 +766,7 @@ export function ScanLaunchForm({
                   )
                 })}
               </div>
+              <Hint>Select one or both — each layer is a separate job. Hit rates are never mixed.</Hint>
             </div>
           ) : null}
 

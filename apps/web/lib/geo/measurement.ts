@@ -4,12 +4,25 @@
 
 import {
   GEO_MEASUREMENT_DEFAULT,
+  GEO_MEASUREMENT_ORDER,
+  encodeGeoMeasurements,
   parseGeoMeasurement,
+  parseGeoMeasurements,
+  parseGeoMeasurementsOrDefault,
+  toggleGeoMeasurement,
   type GeoJobSummary,
   type GeoMeasurement,
 } from '@checkion-v3/contracts'
 
-export { GEO_MEASUREMENT_DEFAULT, parseGeoMeasurement }
+export {
+  GEO_MEASUREMENT_DEFAULT,
+  GEO_MEASUREMENT_ORDER,
+  encodeGeoMeasurements,
+  parseGeoMeasurement,
+  parseGeoMeasurements,
+  parseGeoMeasurementsOrDefault,
+  toggleGeoMeasurement,
+}
 export type { GeoMeasurement }
 
 export function geoJobMeasurement(
@@ -24,6 +37,10 @@ export function geoMeasurementLabel(measurement: GeoMeasurement): string {
 
 export function geoMeasurementLayerKicker(measurement: GeoMeasurement): string {
   return measurement === 'live' ? 'Layer 2' : 'Layer 1'
+}
+
+export function geoMeasurementMagazineLabel(measurement: GeoMeasurement): string {
+  return `${geoMeasurementLayerKicker(measurement)} · ${geoMeasurementLabel(measurement)}`
 }
 
 export function geoMeasurementLede(

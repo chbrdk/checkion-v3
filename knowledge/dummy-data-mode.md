@@ -51,7 +51,7 @@ Live wiring is accepted (`specs/domain/plexon-federation.md`); keep fixtures as 
 ## Live GEO pipeline (Phase 3)
 When live GEO is on (`shouldRunLiveGeo()` in `lib/geo-eeat/live-geo-gate.ts`):
 
-1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → multi-provider query×model runs (OpenAI / Anthropic / Gemini) → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures). Body `measurement` is `recall` (ungrounded JSON citations, default) or `live` (provider web search + native URL citations). Never mix layers in one job.
+1. `POST /api/geo-jobs` creates a **queued** row, then runs async: optional page scan (stage1) → EEAT/GEO-fitness LLM stages → multi-provider query×model runs (OpenAI / Anthropic / Gemini) → `finalizeGeoOverview()` (same `buildGeoPresence` + `buildGeoInsights` as fixtures). Body `measurement` is `recall` (ungrounded JSON citations, default) or `live` (provider web search + native URL citations). Never mix layers in one job. Launch / EQC may select **both** layers — that is two POSTs.
 2. Payload persists as `GeoOverview` jsonb on `geo_jobs`. Failures persist as `status: failed` (not empty `completed`).
 3. Magazine UI `/geo/:id/...` shows an in-progress meter while `queued`/`running` and **polls** `GET /api/geo-jobs/:id` until finalize; empty completed shells are treated as failure, not a zeroed success magazine. Reading API remains `GET /api/geo-jobs/:id/reading`.
 

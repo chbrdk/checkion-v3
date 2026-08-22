@@ -16,18 +16,18 @@ Do **not** average Layer 1 and Layer 2 into one `citedShare`. Each GEO job has e
 This is **not** 1:1 ChatGPT-app parity. OpenAI does not expose the consumer stack. Layer 2 is the closest honest API analogue (Responses `web_search`, Anthropic `web_search`, Gemini Google Search grounding). Deep Research / shopping / memory / custom GPTs stay out of v1.
 
 ## Launch (standalone option)
-On `/scan` after GEO is selected, reveal **measurement tiles** (same aesthetic as WCAG depth — not a ToggleGroup strip):
+On `/scan` after GEO is selected, reveal **measurement tiles** (same aesthetic as WCAG depth — not a ToggleGroup strip). Tiles are **multi-select** (one or both). Compose mounts only after at least one layer is chosen.
 
 | Tile | `measurement` | Kicker | Deck |
 |------|---------------|--------|------|
 | Model memory | `recall` | Layer 1 | Ungrounded probe — brands the model already knows. |
 | Live search | `live` | Layer 2 | Web-grounded answers — citations from search, closer to ChatGPT-with-browse. |
 
-Compose (URL / company / queries / models) mounts only after a measurement is chosen.
+Selecting **both** starts **two jobs** (same queries/models, different `measurement`). Never one mixed `citedShare`.
 
-Deep-link `/scan?mode=geo` skips ahead with **`recall`**. Optional `measurement=live` selects Layer 2. Helper: `paths.routes.scanLaunch({ mode: 'geo', measurement })`.
+Deep-link `/scan?mode=geo` skips ahead with **`recall`**. Optional `measurement=live` / `measurement=both` / `measurement=recall,live`. Helper: `paths.routes.scanLaunch({ mode: 'geo', measurement })`.
 
-Plexon Event Quick Check stays Layer 1 unless a later flow posts `measurement: 'live'`.
+**Everywhere GEO runs, the layer switch must be present** — CHECKION `/scan` and Plexon Event Quick Check / Collection Flow `geo_job` (confirm panel). Default when omitted: `recall`.
 
 ## API
 `POST /api/geo-jobs` body adds optional `measurement?: 'recall' | 'live'`. Omitted / unknown → `recall`. Persist on `GeoJobSummary.measurement` (default `recall` when reading older rows).
@@ -59,16 +59,15 @@ Optional `GeoCitation.url` stores the absolute source URL when grounded.
 Label the job (overview meter, index chip, notification title) as **Model memory** or **Live search**. Lede must not call Layer 1 “ChatGPT placement.”
 
 ## Non-goals (v1 Layer 2)
-- Mixing both layers in one job / one `citedShare`
+- Mixing both layers in one job / one `citedShare` (two selected tiles = two jobs)
 - ChatGPT consumer-app clone (memory, shopping, custom GPTs)
 - Deep Research / background multi-minute runs
 - Scraping chatgpt.com / AI Overviews
-- Changing EQC default away from `recall`
 
 ## Tests
 - `apps/web/__tests__/geo-measurement.test.ts` — parse, labels, default
 - `apps/web/__tests__/grounded-citations.test.ts` — OpenAI / Anthropic / Gemini payload extract
 - `apps/web/__tests__/run-query-runs-multi-provider.test.ts` — live path uses grounded prompt, no host leak
-- `apps/web/__tests__/scan-launch-form.test.tsx` — measurement tiles + POST `measurement`
+- `apps/web/__tests__/scan-launch-form.test.tsx` — measurement tiles (multi-select) + POST `measurement`; both layers → two jobs
 - `apps/web/__tests__/geo-rerun.test.ts` — clones `measurement`
 - `apps/web/__tests__/specs-inventory.test.ts` — this spec on disk

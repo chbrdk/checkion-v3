@@ -156,8 +156,8 @@ describe('ScanLaunchForm', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
-    expect(screen.getByRole('radiogroup', { name: /GEO measurement/i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /Model memory\./i })).toHaveAttribute(
+    expect(screen.getByRole('group', { name: /GEO measurement/i })).toBeTruthy()
+    expect(screen.getByRole('checkbox', { name: /Model memory\./i })).toHaveAttribute(
       'aria-checked',
       'true',
     )
@@ -170,14 +170,14 @@ describe('ScanLaunchForm', () => {
   it('cold GEO reveals measurement tiles before compose', () => {
     render(<ScanLaunchForm projects={projects} />)
     fireEvent.click(screen.getByRole('radio', { name: /GEO\./i }))
-    expect(screen.getByRole('radiogroup', { name: /GEO measurement/i })).toBeTruthy()
-    expect(screen.getByRole('radio', { name: /Model memory\./i })).toHaveAttribute(
+    expect(screen.getByRole('group', { name: /GEO measurement/i })).toBeTruthy()
+    expect(screen.getByRole('checkbox', { name: /Model memory\./i })).toHaveAttribute(
       'aria-checked',
       'false',
     )
     expect(screen.queryByRole('button', { name: /Start GEO job/i })).toBeNull()
 
-    fireEvent.click(screen.getByRole('radio', { name: /Live search\./i }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /Live search\./i }))
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
     expect(screen.getByLabelText(/Scan URL/i)).toBeTruthy()
   })
@@ -210,7 +210,7 @@ describe('ScanLaunchForm', () => {
     expect(screen.queryByRole('button', { name: /GPT-5\.6 Luna \(Live\)/i })).toBeNull()
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
-    expect(screen.getByRole('radiogroup', { name: /GEO measurement/i })).toBeTruthy()
+    expect(screen.getByRole('group', { name: /GEO measurement/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Best alternatives to bosch-ebike/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Add GEO query/i })).toBeTruthy()
     // URL · Company · Project compose row is visible for GEO
@@ -451,7 +451,7 @@ describe('ScanLaunchForm', () => {
     render(
       <ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="live" />,
     )
-    expect(screen.getByRole('radio', { name: /Live search\./i })).toHaveAttribute(
+    expect(screen.getByRole('checkbox', { name: /Live search\./i })).toHaveAttribute(
       'aria-checked',
       'true',
     )
@@ -465,6 +465,33 @@ describe('ScanLaunchForm', () => {
       ),
     ) as { measurement?: string }
     expect(body.measurement).toBe('live')
+  })
+
+  it('posts two GEO jobs when both layers are selected', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ success: true, jobId: `geo-${fetchMock.mock.calls.length}`, status: 'queued' }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <ScanLaunchForm
+        projects={projects}
+        defaultMode="geo"
+        defaultMeasurements={['recall', 'live']}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /Start GEO jobs/i })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Start GEO jobs/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    const measurements = (
+      fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }
+    ).mock.calls.map((call) => {
+      const body = JSON.parse(String(call[1]?.body)) as { measurement?: string }
+      return body.measurement
+    })
+    expect(measurements).toEqual(['recall', 'live'])
   })
 
   it('posts GEO deep-link url and projectId on visible compose row', async () => {
@@ -704,6 +731,9 @@ describe('scanLaunch deep-links', () => {
     expect(paths.routes.scanLaunch({ mode: 'deep' })).toBe('/scan?mode=deep')
     expect(paths.routes.scanLaunch({ mode: 'geo', measurement: 'live' })).toBe(
       '/scan?mode=geo&measurement=live',
+    )
+    expect(paths.routes.scanLaunch({ mode: 'geo', measurement: 'both' })).toBe(
+      '/scan?mode=geo&measurement=both',
     )
   })
 })

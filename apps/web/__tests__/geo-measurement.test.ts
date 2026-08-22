@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { parseGeoMeasurement } from '@checkion-v3/contracts'
+import {
+  parseGeoMeasurement,
+  parseGeoMeasurements,
+  parseGeoMeasurementsOrDefault,
+  toggleGeoMeasurement,
+} from '@checkion-v3/contracts'
 import {
   GEO_MEASUREMENT_DEFAULT,
   geoJobMeasurement,
@@ -16,6 +21,16 @@ describe('GEO measurement helpers', () => {
     expect(parseGeoMeasurement('chatgpt')).toBe('recall')
     expect(geoJobMeasurement({})).toBe('recall')
     expect(geoJobMeasurement({ measurement: 'live' })).toBe('live')
+  })
+
+  it('parses multi-select lists without mixing into one measurement', () => {
+    expect(parseGeoMeasurements(undefined)).toEqual([])
+    expect(parseGeoMeasurements('both')).toEqual(['recall', 'live'])
+    expect(parseGeoMeasurements('recall,live')).toEqual(['recall', 'live'])
+    expect(parseGeoMeasurements(['live', 'recall'])).toEqual(['recall', 'live'])
+    expect(parseGeoMeasurementsOrDefault(undefined)).toEqual(['recall'])
+    expect(toggleGeoMeasurement(['recall'], 'live')).toEqual(['recall', 'live'])
+    expect(toggleGeoMeasurement(['recall', 'live'], 'recall')).toEqual(['live'])
   })
 
   it('labels layers without mixing them', () => {
