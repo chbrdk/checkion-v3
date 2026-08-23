@@ -19,8 +19,8 @@ import {
 } from '../llm/config'
 import { addOpenAIChatUsage, emptyUsageTotals, type LlmUsageTotals } from '../llm/usage-totals'
 import { geminiGenerateContentUrl, paths } from '../paths'
+import { resolveSearchMarket, searchUserLocation, type GeoSearchMarket } from '../geo/search-market'
 import { normalizeGeoHost } from '../geo-presence'
-import { getGeoModel, type GeoModelProvider } from '../geo/model-catalog'
 import {
   COMPETITIVE_RESPONSE_JSON_SCHEMA,
   buildCompetitiveSystemPrompt,
@@ -28,12 +28,16 @@ import {
   citationMatchesTargetHost,
   parseCompetitiveResponse,
 } from './competitive-response'
+import { getGeoModel, type GeoModelProvider } from '../geo/model-catalog'
 import {
   citationsFromSourceUrls,
   extractAnthropicGroundedSources,
   extractGeminiGroundedSources,
   extractOpenAiGroundedSources,
 } from './grounded-citations'
+
+export { resolveSearchMarket }
+export type { GeoSearchMarket }
 
 const COMPETITIVE_RESPONSE_FORMAT = {
   type: 'json_schema' as const,
@@ -47,6 +51,8 @@ const COMPETITIVE_RESPONSE_FORMAT = {
 export type RunQueryRunsResult = {
   queryRuns: GeoQueryRun[]
   usage: LlmUsageTotals
+  /** Resolved search market when measurement is live. */
+  searchMarket?: string
 }
 
 export type QueryRunChatClient = {
@@ -74,6 +80,7 @@ export type QueryRunCompleteFn = (args: {
 }) => Promise<{
   content: string
   citations?: GeoCitation[]
+  searchQueries?: string[]
   usage?: { input_tokens?: number; output_tokens?: number }
 }>
 
@@ -117,6 +124,7 @@ function toQueryRun(args: {
   answerText: string
   citations: GeoCitation[]
   targetHost: string
+  searchQueries?: string[]
 }): GeoQueryRun {
   const match = args.citations.find((c) => citationMatchesTargetHost(c.domain, args.targetHost))
   return {
@@ -126,6 +134,7 @@ function toQueryRun(args: {
     answerText: args.answerText,
     citations: args.citations,
     ourPosition: match?.position ?? null,
+    ...(args.searchQueries?.length ? { searchQueries: args.searchQueries } : {}),
   }
 }
 
@@ -223,7 +232,11 @@ async function completeGemini(args: {
   return json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? ''
 }
 
-type GroundedComplete = { answerText: string; citations: GeoCitation[] }
+type GroundedComplete = {
+  answerText: string
+  citations: GeoCitation[]
+  searchQueries: string[]
+}
 
 function addResponsesUsage(
   totals: LlmUsageTotals,
@@ -239,6 +252,7 @@ async function completeOpenAIGrounded(args: {
   systemPrompt: string
   userPrompt: string
   usage: LlmUsageTotals
+  market: GeoSearchMarket
 }): Promise<GroundedComplete> {
   if (!hasOpenAIKey()) {
     throw new Error('OPENAI_API_KEY is not set')
@@ -246,7 +260,13 @@ async function completeOpenAIGrounded(args: {
   const openai = new OpenAI({ apiKey: getOpenAIKey() })
   const res = await openai.responses.create({
     model: args.modelId,
-    tools: [{ type: paths.openaiWebSearchTool }],
+    tools: [
+      {
+        type: paths.openaiWebSearchTool,
+        user_location: searchUserLocation(args.market),
+        search_context_size: 'high',
+      },
+    ],
     tool_choice: 'required',
     input: [
       { role: 'system', content: args.systemPrompt },
@@ -258,6 +278,7 @@ async function completeOpenAIGrounded(args: {
   return {
     answerText: extracted.answerText,
     citations: citationsFromSourceUrls(extracted.sources),
+    searchQueries: extracted.searchQueries,
   }
 }
 
@@ -266,6 +287,7 @@ async function completeAnthropicGrounded(args: {
   systemPrompt: string
   userPrompt: string
   usage: LlmUsageTotals
+  market: GeoSearchMarket
 }): Promise<GroundedComplete> {
   if (!hasAnthropicKey()) {
     throw new Error('ANTHROPIC_API_KEY is not set')
@@ -279,6 +301,7 @@ async function completeAnthropicGrounded(args: {
       {
         type: paths.anthropicWebSearchTool,
         name: 'web_search',
+        user_location: searchUserLocation(args.market),
       } as unknown as Anthropic.Messages.Tool,
     ],
     messages: [{ role: 'user', content: args.userPrompt }],
@@ -289,6 +312,7 @@ async function completeAnthropicGrounded(args: {
   return {
     answerText: extracted.answerText,
     citations: citationsFromSourceUrls(extracted.sources),
+    searchQueries: extracted.searchQueries,
   }
 }
 
@@ -324,6 +348,7 @@ async function completeGeminiGrounded(args: {
   return {
     answerText: extracted.answerText,
     citations: citationsFromSourceUrls(extracted.sources),
+    searchQueries: extracted.searchQueries,
   }
 }
 
@@ -345,6 +370,7 @@ async function completeLiveForModel(args: {
   systemPrompt: string
   userPrompt: string
   usage: LlmUsageTotals
+  market: GeoSearchMarket
 }): Promise<GroundedComplete> {
   if (args.provider === 'anthropic') return completeAnthropicGrounded(args)
   if (args.provider === 'google') return completeGeminiGrounded(args)
@@ -361,8 +387,11 @@ export async function runQueryRuns(input: {
   const usage = emptyUsageTotals()
   const targetHost = normalizeGeoHost(input.targetUrl)
   const measurement = parseGeoMeasurement(input.measurement)
+  const market = measurement === 'live' ? resolveSearchMarket(input.targetUrl) : null
   const systemPrompt =
-    measurement === 'live' ? buildGroundedSystemPrompt() : buildCompetitiveSystemPrompt()
+    measurement === 'live'
+      ? buildGroundedSystemPrompt({ country: market?.country })
+      : buildCompetitiveSystemPrompt()
   const models = input.models.length > 0 ? input.models : [OPENAI_MODEL]
   const queryRuns: GeoQueryRun[] = []
 
@@ -389,6 +418,7 @@ export async function runQueryRuns(input: {
               answerText: out.content || `(no answer for “${query}”)`,
               citations: out.citations,
               targetHost,
+              searchQueries: out.searchQueries,
             })
           }
           const parsed = parseCompetitiveResponse(out.content)
@@ -402,13 +432,14 @@ export async function runQueryRuns(input: {
           })
         }
 
-        if (measurement === 'live') {
+        if (measurement === 'live' && market) {
           const grounded = await completeLiveForModel({
             provider,
             modelId,
             systemPrompt,
             userPrompt: query,
             usage,
+            market,
           })
           return toQueryRun({
             queryId,
@@ -417,6 +448,7 @@ export async function runQueryRuns(input: {
             answerText: grounded.answerText || `(no answer for “${query}”)`,
             citations: grounded.citations,
             targetHost,
+            searchQueries: grounded.searchQueries,
           })
         }
 
@@ -445,5 +477,9 @@ export async function runQueryRuns(input: {
     queryRuns.push(...(await Promise.all(runPromises)))
   }
 
-  return { queryRuns, usage }
+  return {
+    queryRuns,
+    usage,
+    ...(market ? { searchMarket: market.country } : {}),
+  }
 }

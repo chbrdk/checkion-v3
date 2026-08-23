@@ -613,6 +613,8 @@ export interface GeoJobSummary {
   citedShare: number
   /** Layer for this job. Omitted on older rows → treat as `recall`. */
   measurement?: GeoMeasurement
+  /** ISO country code used for Layer 2 search market (live jobs only). */
+  searchMarket?: string
 }
 
 export interface GeoEeatScores {
@@ -647,6 +649,8 @@ export interface GeoQueryRun {
   citations: GeoCitation[]
   /** 1-based position for target domain; null when not cited. */
   ourPosition: number | null
+  /** Provider-executed search strings when Layer 2 tool payloads include them. */
+  searchQueries?: string[]
 }
 
 export interface GeoShareOfVoice {
@@ -698,6 +702,8 @@ export interface GeoPresenceSolo {
   missRate: number
   avgPosition: number | null
   firstCiteRate: number | null
+  /** Live jobs only — % of cells with target prose mention (not URL citation). */
+  mentionedShare?: number
   byModel: Array<Required<Pick<GeoPresenceSlice, 'modelId' | 'cellCount' | 'hitCount' | 'hitRate'>>>
   byQuery: Array<Required<Pick<GeoPresenceSlice, 'query' | 'cellCount' | 'hitCount' | 'hitRate'>>>
 }
@@ -799,6 +805,8 @@ export interface GeoOverview {
   job: GeoJobSummary
   lede: string
   targetHost: string
+  /** ISO country used for Layer 2 search market (live jobs). */
+  searchMarket?: string
   /** Present only when a page scan / on-page reading is attached. */
   eeat?: GeoEeatScores
   recommendations: GeoRecommendation[]

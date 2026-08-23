@@ -22,10 +22,14 @@ describe('citationsFromSourceUrls', () => {
 })
 
 describe('extractOpenAiGroundedSources', () => {
-  it('reads output_text and url_citation annotations', () => {
+  it('reads output_text, url_citation annotations, and web_search_call queries', () => {
     const extracted = extractOpenAiGroundedSources({
       output_text: 'Two retailers to compare.',
       output: [
+        {
+          type: 'web_search_call',
+          query: 'best furniture stores germany',
+        },
         {
           type: 'message',
           content: [
@@ -46,6 +50,8 @@ describe('extractOpenAiGroundedSources', () => {
       'https://ikea.com',
       'https://moebel-martin.de',
     ])
+    expect(extracted.sources[0]?.title).toBe('IKEA')
+    expect(extracted.searchQueries).toEqual(['best furniture stores germany'])
   })
 })
 
@@ -66,18 +72,21 @@ describe('extractAnthropicGroundedSources', () => {
 })
 
 describe('extractGeminiGroundedSources', () => {
-  it('reads parts text and groundingChunks.web.uri', () => {
+  it('reads parts text, groundingChunks.web.uri, and webSearchQueries', () => {
     const extracted = extractGeminiGroundedSources({
       candidates: [
         {
           content: { parts: [{ text: 'Grounded Gemini answer.' }] },
           groundingMetadata: {
             groundingChunks: [{ web: { uri: 'https://otto.de', title: 'OTTO' } }],
+            webSearchQueries: ['möbel online shop'],
           },
         },
       ],
     })
     expect(extracted.answerText).toBe('Grounded Gemini answer.')
     expect(extracted.sources[0]?.url).toBe('https://otto.de')
+    expect(extracted.sources[0]?.title).toBe('OTTO')
+    expect(extracted.searchQueries).toEqual(['möbel online shop'])
   })
 })

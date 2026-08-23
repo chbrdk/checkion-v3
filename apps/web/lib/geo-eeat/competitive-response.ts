@@ -73,13 +73,17 @@ export function buildCompetitiveSystemPrompt(): string {
  * Layer 2 — native grounded answer. No JSON host panel.
  * Spec: geo-measurement-layers.md
  */
-export function buildGroundedSystemPrompt(): string {
+export function buildGroundedSystemPrompt(options?: { country?: string }): string {
+  const country = options?.country?.trim().toUpperCase()
+  const marketHint = country
+    ? ` Assume the user is searching from ${country}. Prefer local, relevant sources for that market.`
+    : ''
   return (
     'You answer like a careful shopping advisor for a real user. ' +
     'Search the web before answering. Prefer current, citable sources. ' +
-    'Write a natural-language answer (2–8 sentences) in the same language as the query. ' +
-    'Cover several realistic options — not a single default favorite. ' +
-    'Do not favor any particular brand. Do not invent sources. ' +
+    'Write a natural-language answer in the same language as the query — as long as needed to cover several realistic options, not a single default favorite.' +
+    marketHint +
+    ' Do not favor any particular brand. Do not invent sources. ' +
     'If nothing relevant is found, say so plainly.'
   )
 }

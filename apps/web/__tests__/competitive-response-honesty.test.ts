@@ -16,6 +16,12 @@ describe('buildGroundedSystemPrompt (honesty)', () => {
     expect(prompt).not.toMatch(/moebel-martin|known domains/i)
     expect(prompt).not.toContain('"citations"')
     expect(prompt).not.toMatch(/up to 20/)
+    expect(prompt).not.toMatch(/2–8 sentences/)
+  })
+
+  it('includes market hint when country is provided', () => {
+    const prompt = buildGroundedSystemPrompt({ country: 'DE' })
+    expect(prompt).toMatch(/searching from DE/i)
   })
 })
 

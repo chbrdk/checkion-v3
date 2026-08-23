@@ -1,5 +1,6 @@
 import type {
   GeoCitation,
+  GeoMeasurement,
   GeoPresence,
   GeoPresenceField,
   GeoPresenceSolo,
@@ -8,6 +9,7 @@ import type {
   GeoShareOfVoice,
 } from '@checkion-v3/contracts'
 import { citationMatchesTargetHost } from './geo-eeat/competitive-response'
+import { targetMentionedInAnswer } from './geo-insights'
 
 const MAX_RIVALS = 5
 
@@ -94,11 +96,17 @@ export function resolveRivals(
   return { rivals, rivalSource }
 }
 
-function buildSolo(runs: GeoQueryRun[], targetHost: string, queries: string[]): GeoPresenceSolo {
+function buildSolo(
+  runs: GeoQueryRun[],
+  targetHost: string,
+  queries: string[],
+  measurement?: GeoMeasurement,
+): GeoPresenceSolo {
   const cellCount = runs.length
   const positions: number[] = []
   let hitCount = 0
   let firstCiteHits = 0
+  let mentionCount = 0
 
   const modelMap = new Map<string, { cellCount: number; hitCount: number }>()
   const queryMap = new Map<string, { cellCount: number; hitCount: number }>()
@@ -126,6 +134,9 @@ function buildSolo(runs: GeoQueryRun[], targetHost: string, queries: string[]): 
         if (position === 1) firstCiteHits += 1
       }
     }
+    if (measurement === 'live' && targetMentionedInAnswer(run.answerText, targetHost)) {
+      mentionCount += 1
+    }
   }
 
   const citedShare = pct(hitCount, cellCount)
@@ -138,6 +149,7 @@ function buildSolo(runs: GeoQueryRun[], targetHost: string, queries: string[]): 
     missRate: cellCount === 0 ? 0 : 100 - citedShare,
     avgPosition: avgPosition == null ? null : Math.round(avgPosition * 10) / 10,
     firstCiteRate: hitCount === 0 ? null : pct(firstCiteHits, hitCount),
+    ...(measurement === 'live' ? { mentionedShare: pct(mentionCount, cellCount) } : {}),
     byModel: [...modelMap.entries()]
       .map(([modelId, s]) => ({
         modelId,
@@ -225,6 +237,7 @@ export type BuildGeoPresenceInput = {
   competitors: string[]
   queries: string[]
   queryRuns: GeoQueryRun[]
+  measurement?: GeoMeasurement
 }
 
 /** Derive competitive presence from runs — specs/domain/geo-competitive-presence.md */
@@ -234,7 +247,7 @@ export function buildGeoPresence(input: BuildGeoPresenceInput): GeoPresence {
     input.queryRuns,
     input.targetHost,
   )
-  const solo = buildSolo(input.queryRuns, input.targetHost, input.queries)
+  const solo = buildSolo(input.queryRuns, input.targetHost, input.queries, input.measurement)
   const field = rivals.length >= 1 ? buildField(input.queryRuns, input.targetHost, rivals) : null
 
   return { solo, field, rivals, rivalSource }

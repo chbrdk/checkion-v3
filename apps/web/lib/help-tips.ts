@@ -148,8 +148,13 @@ export const HELP_TIPS = {
   },
   'geo.cited_share': {
     label: 'About Cited share',
-    en: 'Share of model answers that cite or surface this brand among measured prompts.',
-    de: 'Anteil der Modellantworten, die diese Marke bei gemessenen Prompts zitieren oder nennen.',
+    en: 'Share of query×model cells where the target domain appears in URL citations — not prose mentions alone.',
+    de: 'Anteil der Prompt×Modell-Zellen, in denen die Ziel-Domain in URL-Zitaten vorkommt — nicht allein Prosa-Erwähnungen.',
+  },
+  'geo.mentioned_share': {
+    label: 'About Mentioned in answer',
+    en: 'Live search only — share of cells where the brand is named in the answer text, even without a URL citation. Never blended into Cited share.',
+    de: 'Nur Live-Suche — Anteil der Zellen, in denen die Marke im Antworttext genannt wird, auch ohne URL-Zitat. Nie in Cited share gemischt.',
   },
   'geo.share_of_voice': {
     label: 'About Share of voice',

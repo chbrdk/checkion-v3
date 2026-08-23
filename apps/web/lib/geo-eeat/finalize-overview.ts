@@ -25,11 +25,13 @@ export type GeoOverviewDraft = Omit<
 /** Mirror fixture `finalize()` — derive presence + insights from queryRuns. */
 export function finalizeGeoOverview(draft: GeoOverviewDraft): GeoOverview {
   const { recommendations: extraRecs = [], ...rest } = draft
+  const measurement = parseGeoMeasurement(rest.job.measurement)
   const presence = buildGeoPresence({
     targetHost: rest.targetHost,
     competitors: rest.competitors,
     queries: rest.queries,
     queryRuns: rest.queryRuns,
+    measurement,
   })
   const shareOfVoice = shareOfVoiceFromPresence(presence)
   const insights = buildGeoInsights({
@@ -120,6 +122,7 @@ export function buildLiveGeoOverview(input: {
   eeatPayload?: GeoEeatIntensiveResult | null
   completedAt?: string
   measurement?: GeoMeasurement
+  searchMarket?: string
 }): GeoOverview {
   const targetHost = normalizeGeoHost(input.url)
   const models = input.models.length > 0 ? input.models : ['gpt-5.4-nano']
@@ -148,12 +151,14 @@ export function buildLiveGeoOverview(input: {
       modelCount: models.length,
       citedShare: 0,
       measurement,
+      ...(input.searchMarket ? { searchMarket: input.searchMarket } : {}),
     },
     lede: geoMeasurementLede(measurement, targetHost || input.url, 'completed', {
       queries: input.queries.length,
       models: models.length,
     }),
     targetHost,
+    ...(input.searchMarket ? { searchMarket: input.searchMarket } : {}),
     ...(eeat ? { eeat } : {}),
     models,
     queries: input.queries,

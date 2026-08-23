@@ -31,6 +31,10 @@ A job is one layer. `citedShare` is never an average of both. ChatGPT-the-app is
 | Forced 20-host JSON panel | **Off** | Native answer + tool citations |
 | Search must run | **On** (OpenAI `tool_choice` required; Claude/Gemini search tools) | Avoid silent parametric fallback |
 | Citations from tool annotations | **On** | Not model-invented host lists |
+| Search market (`user_location`) | **On** (OpenAI + Anthropic; Gemini prompt hint) | Avoid silent US default on OpenAI `web_search` |
+| OpenAI `search_context_size` | **high** | More search context in grounded answers |
+| Prose mention KPI | **Secondary** (`mentionedShare`) | Visible on live jobs; never mixed into `citedShare` |
+| Tool search queries captured | **On** when provider returns them | Audit trail in Queries dossier |
 
 ## Why famous retailers can still place (Layer 1)
 

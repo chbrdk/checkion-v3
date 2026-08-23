@@ -75,7 +75,7 @@ describe('runQueryRuns multi-provider', () => {
     expect(out.queryRuns[1]?.citations).toEqual([])
   })
 
-  it('live measurement uses the grounded prompt and native citations from the hook', async () => {
+  it('live measurement uses the grounded prompt, market, and native citations from the hook', async () => {
     const prompts: string[] = []
     setQueryRunCompleteForTests(async ({ systemPrompt, measurement }) => {
       prompts.push(systemPrompt)
@@ -86,12 +86,13 @@ describe('runQueryRuns multi-provider', () => {
           { domain: 'ikea.com', position: 1, url: 'https://ikea.com' },
           { domain: 'example.com', position: 2, url: 'https://example.com' },
         ],
+        searchQueries: ['best widgets DE'],
         usage: { input_tokens: 4, output_tokens: 5 },
       }
     })
 
     const out = await runQueryRuns({
-      targetUrl: 'https://example.com',
+      targetUrl: 'https://example.de',
       competitors: ['rival.example'],
       queries: ['best widgets'],
       models: ['gpt-5.6-luna'],
@@ -99,9 +100,12 @@ describe('runQueryRuns multi-provider', () => {
     })
 
     expect(prompts[0]).toMatch(/Search the web/i)
-    expect(prompts[0]).not.toMatch(/example\.com|rival\.example/i)
-    expect(out.queryRuns[0]?.ourPosition).toBe(2)
+    expect(prompts[0]).toMatch(/searching from DE/i)
+    expect(prompts[0]).not.toMatch(/example\.de|rival\.example/i)
+    expect(out.searchMarket).toBe('DE')
+    expect(out.queryRuns[0]?.ourPosition).toBeNull()
     expect(out.queryRuns[0]?.citations[0]?.url).toBe('https://ikea.com')
+    expect(out.queryRuns[0]?.searchQueries).toEqual(['best widgets DE'])
     expect(out.usage.input_tokens).toBe(4)
   })
 })

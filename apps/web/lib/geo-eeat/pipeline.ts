@@ -137,6 +137,7 @@ export async function executeLiveGeoPipeline(input: {
     queryRuns: queryOut.queryRuns,
     eeatPayload,
     measurement,
+    searchMarket: queryOut.searchMarket,
   })
 
   await input.onStatus?.('completed', overview)

@@ -179,4 +179,42 @@ describe('geo-presence', () => {
     expect(presence.rivals).toContain('abb.com')
     expect(presence.rivals).toContain('extra.com')
   })
+
+  it('computes mentionedShare for live jobs without changing citedShare', () => {
+    const queryRuns = [
+      run({
+        query: 'q1',
+        modelId: 'gpt',
+        ourPosition: null,
+        answerText: 'See acme for options.',
+        citations: [],
+      }),
+      run({
+        query: 'q1',
+        modelId: 'claude',
+        ourPosition: 1,
+        answerText: 'Try ikea instead.',
+        citations: [{ domain: 'acme.com', position: 1 }],
+      }),
+    ]
+    const recall = buildGeoPresence({
+      targetHost: 'acme.com',
+      competitors: [],
+      queries: ['q1'],
+      queryRuns,
+      measurement: 'recall',
+    })
+    expect(recall.solo.citedShare).toBe(50)
+    expect(recall.solo.mentionedShare).toBeUndefined()
+
+    const live = buildGeoPresence({
+      targetHost: 'acme.com',
+      competitors: [],
+      queries: ['q1'],
+      queryRuns,
+      measurement: 'live',
+    })
+    expect(live.solo.citedShare).toBe(50)
+    expect(live.solo.mentionedShare).toBe(50)
+  })
 })

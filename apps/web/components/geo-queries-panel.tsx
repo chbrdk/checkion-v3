@@ -44,6 +44,17 @@ function AnswerDetail({
 
       <blockquote className="checkion-geo-answer__prose">{run.answerText}</blockquote>
 
+      {run.searchQueries && run.searchQueries.length > 0 ? (
+        <div className="checkion-geo-answer__searches">
+          <p className="checkion-geo-answer__cites-k">Search queries</p>
+          <ul className="checkion-geo-answer__search-list" aria-label="Provider search queries">
+            {run.searchQueries.map((q) => (
+              <li key={q}>{q}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       {cell && cell.citationStack.length > 0 ? (
         <div className="checkion-geo-answer__cites">
           <p className="checkion-geo-answer__cites-k">Cite stack</p>

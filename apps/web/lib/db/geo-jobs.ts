@@ -28,6 +28,8 @@ function rowToOverview(row: GeoJobRow): GeoOverview {
     queryCount: row.queryCount,
     modelCount: row.modelCount,
     citedShare: row.citedShare,
+    measurement: overview.job.measurement,
+    searchMarket: overview.job.searchMarket,
   }
   return overview
 }

@@ -29,6 +29,11 @@ export function GeoOverviewPanel({
   const { eeat, recommendations, job, presence } = overview
   const measurement = geoJobMeasurement(job)
   const measurementLabel = `${geoMeasurementLayerKicker(measurement)} · ${geoMeasurementLabel(measurement)}`
+  const marketSuffix =
+    measurement === 'live' && (overview.searchMarket ?? job.searchMarket)
+      ? ` · ${overview.searchMarket ?? job.searchMarket}`
+      : ''
+  const measurementDisplay = `${measurementLabel}${marketSuffix}`
   const inProgress = isGeoJobInProgress(job.status)
   const failed = isGeoOverviewFailed(overview)
   const showMagazine = geoOverviewReadyForMagazine(overview)
@@ -39,7 +44,7 @@ export function GeoOverviewPanel({
       <div className="checkion-magazine-body checkion-spread checkion-geo-spread-layout">
         <StatusMeterPanel
           title={queued ? 'GEO job queued' : 'GEO run in progress'}
-          meta={`${measurementLabel} · ${job.queryCount} queries · ${job.modelCount} models`}
+          meta={`${measurementDisplay} · ${job.queryCount} queries · ${job.modelCount} models`}
           level="warn"
           banner={
             queued
@@ -156,7 +161,7 @@ export function GeoOverviewPanel({
                 Measurement
               </LabelWithTip>
             </span>
-            <span className="checkion-lab-tile__v">{measurementLabel}</span>
+            <span className="checkion-lab-tile__v">{measurementDisplay}</span>
           </div>
           <div className="checkion-lab-tile" data-tone={tone}>
             <span className="checkion-lab-tile__k">
@@ -164,6 +169,14 @@ export function GeoOverviewPanel({
             </span>
             <span className="checkion-lab-tile__v">{job.citedShare}%</span>
           </div>
+          {measurement === 'live' && presence.solo.mentionedShare != null ? (
+            <div className="checkion-lab-tile">
+              <span className="checkion-lab-tile__k">
+                <LabelWithTip tipId="geo.mentioned_share">Mentioned in answer</LabelWithTip>
+              </span>
+              <span className="checkion-lab-tile__v">{presence.solo.mentionedShare}%</span>
+            </div>
+          ) : null}
           <div className="checkion-lab-tile">
             <span className="checkion-lab-tile__k">Queries</span>
             <span className="checkion-lab-tile__v">{job.queryCount}</span>
