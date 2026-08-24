@@ -98,6 +98,7 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/Lede.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/InfoTip.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/ChatOverlay.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/MarkdownProse.tsx \
     && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { ChatOverlay }" /workspace/msqdx-ui/packages/ui/src/index.ts \
