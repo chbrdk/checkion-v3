@@ -5,6 +5,7 @@ import type { GeoAnswerCellAnalysis, GeoOverview, GeoQueryRun } from '@checkion-
 import { buildPromptReadingFallback, groupRunsByQuery } from '../lib/geo-readings'
 import { findCellAnalysis, findDisagreement, findIntent } from '../lib/geo-insights'
 import { GeoReading } from './geo-reading'
+import { MarkdownProse } from '../lib/msqdx-ui'
 import { normalizeGeoHost } from '../lib/geo-presence'
 
 function outcomeTone(outcome: string): 'pos' | 'low' | 'neg' {
@@ -42,7 +43,9 @@ function AnswerDetail({
         {cell?.coCited ? <span className="checkion-geo-answer__flag">co-cited</span> : null}
       </header>
 
-      <blockquote className="checkion-geo-answer__prose">{run.answerText}</blockquote>
+      <MarkdownProse as="blockquote" className="checkion-geo-answer__prose">
+        {run.answerText}
+      </MarkdownProse>
 
       {run.searchQueries && run.searchQueries.length > 0 ? (
         <div className="checkion-geo-answer__searches">

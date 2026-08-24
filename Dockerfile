@@ -62,7 +62,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
 # BrandCorner hover expand, TokenPicker/LayersPanel/BreakpointSwitcher editor chrome (Aug 2026).
-ARG MSQDX_UI_REF=08420264859d6c8e65dee046585f9054458216bb
+ARG MSQDX_UI_REF=ac5c94f0e3d8af7b5167c50fbb1d6becd65e409a
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \

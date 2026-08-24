@@ -23,6 +23,8 @@ export { Meter, MeterList } from '../../../../msqdx-ui/packages/ui/src/component
 export { SectionChrome } from '../../../../msqdx-ui/packages/ui/src/SectionChrome'
 export { Lede, LedeStrip } from '../../../../msqdx-ui/packages/ui/src/components/Lede'
 export type { LedeProps, LedeStripProps, LedeTone, LedeStep } from '../../../../msqdx-ui/packages/ui/src/components/Lede'
+export { MarkdownProse } from '../../../../msqdx-ui/packages/ui/src/components/MarkdownProse'
+export type { MarkdownProseProps } from '../../../../msqdx-ui/packages/ui/src/components/MarkdownProse'
 export { StatLede, StatLedeGroup } from '../../../../msqdx-ui/packages/ui/src/components/StatLede'
 export type { StatLedeTone } from '../../../../msqdx-ui/packages/ui/src/components/StatLede'
 export { StatusDot } from '../../../../msqdx-ui/packages/ui/src/components/StatusDot'
