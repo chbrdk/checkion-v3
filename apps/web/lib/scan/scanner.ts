@@ -30,6 +30,7 @@ import { scrollPageForScanLayout } from './scan-scroll-settle';
 import { computeGeoDimensionsScore } from './geo-dimensions-score';
 import { writeScreenshot } from './screenshot-storage';
 import { detectSkipLinkOnPage } from './skip-link-detect';
+import { readAxeMinJsSource } from './resolve-axe-min-js';
 import type {
     Issue,
     Pass,
@@ -515,67 +516,75 @@ export async function runScan(
         // 3. Capture Passed Audits using axe-core directly
         let passes: Pass[] = [];
         try {
-            scanDebugLog("Injecting axe-core...");
-            // Resolve path relative to CWD (project root)
-            // This is safer in Next.js serverless/webpack context than require.resolve sometimes
-            const axePath = path.join(process.cwd(), 'node_modules', 'axe-core', 'axe.min.js');
-
-            if (fs.existsSync(axePath)) {
-                const axeSource = fs.readFileSync(axePath, 'utf8');
+            scanDebugLog('Injecting axe-core...');
+            const axeSource = readAxeMinJsSource();
+            if (!axeSource) {
+                scanDebugWarn('axe.min.js not found — skipping passed-audit capture');
+            } else {
                 await page.addScriptTag({ content: axeSource });
-                scanDebugLog("Axe injected via content. Running axe...");
-            } else {
-                scanDebugWarn("Axe file not found at:", axePath);
-                // Fallback to require.resolve - sometimes works local dev
-                const fallbackPath = require.resolve('axe-core');
-                await page.addScriptTag({ path: fallbackPath });
-                scanDebugLog("Axe injected via fallback path.");
-            }
+                scanDebugLog('Axe injected via content. Running axe...');
 
-            // Run axe with APCA enabled
-            const axeResults = await page.evaluate(async function () {
-                const g = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
-                const axe = (g as Record<string, unknown>)['axe'] as { configure: (o: object) => void; run: (o: object) => Promise<object> } | undefined;
-                try {
-                    if (typeof axe === 'undefined') return { error: 'axe is undefined in page context' };
+                const axeResults = await page.evaluate(async function () {
+                    const g =
+                        typeof globalThis !== 'undefined'
+                            ? globalThis
+                            : typeof window !== 'undefined'
+                              ? window
+                              : {};
+                    const axe = (g as Record<string, unknown>)['axe'] as
+                        | { configure: (o: object) => void; run: (o: object) => Promise<object> }
+                        | undefined;
+                    try {
+                        if (typeof axe === 'undefined') return { error: 'axe is undefined in page context' };
 
-                    axe.configure({
-                        rules: [{
-                            id: 'color-contrast-enhanced',
-                            enabled: true
-                        }]
-                    });
+                        axe.configure({
+                            rules: [
+                                {
+                                    id: 'color-contrast-enhanced',
+                                    enabled: true,
+                                },
+                            ],
+                        });
 
-                    return await axe.run({
-                        runOnly: {
-                            type: 'tag',
-                            values: ['wcag2a', 'wcag2aa', 'wcag2aaa', 'cat.apca']
-                        },
-                        resultTypes: ['violations', 'passes', 'inapplicable', 'incomplete']
-                    });
-                } catch (err: any) {
-                    return { error: err.toString() };
+                        return await axe.run({
+                            runOnly: {
+                                type: 'tag',
+                                values: ['wcag2a', 'wcag2aa', 'wcag2aaa', 'cat.apca'],
+                            },
+                            resultTypes: ['violations', 'passes', 'inapplicable', 'incomplete'],
+                        });
+                    } catch (err: any) {
+                        return { error: err.toString() };
+                    }
+                });
+
+                scanDebugLog('Axe run complete.');
+                const axe = axeResults as {
+                    passes?: Array<{
+                        id: string;
+                        description: string;
+                        help: string;
+                        nodes: Array<{ html: string; target: string[]; failureSummary?: string }>;
+                    }>;
+                    error?: string;
+                } | null;
+                if (axe && axe.passes) {
+                    scanDebugLog(`Found ${axe.passes.length} passed rules.`);
+                    passes = axe.passes.map((p) => ({
+                        id: String(p.id ?? ''),
+                        description: String(p.description ?? ''),
+                        help: String(p.help ?? ''),
+                        nodes: (p.nodes ?? []).map((n) => ({
+                            html: String(n.html ?? ''),
+                            target: Array.isArray(n.target) ? n.target.map(String) : [],
+                            ...(n.failureSummary != null ? { failureSummary: String(n.failureSummary) } : {}),
+                        })),
+                    }));
+                } else if (axe && axe.error) {
+                    console.error('Axe run returned error:', axe.error);
+                } else {
+                    scanDebugWarn('Axe results structure unexpected:', axe ? Object.keys(axe) : []);
                 }
-            });
-
-            scanDebugLog("Axe run complete.");
-            const axe = axeResults as { passes?: Array<{ id: string; description: string; help: string; nodes: Array<{ html: string; target: string[]; failureSummary?: string }> }>; error?: string } | null;
-            if (axe && axe.passes) {
-                scanDebugLog(`Found ${axe.passes.length} passed rules.`);
-                passes = axe.passes.map((p) => ({
-                    id: String(p.id ?? ''),
-                    description: String(p.description ?? ''),
-                    help: String(p.help ?? ''),
-                    nodes: (p.nodes ?? []).map((n) => ({
-                        html: String(n.html ?? ''),
-                        target: Array.isArray(n.target) ? n.target.map(String) : [],
-                        ...(n.failureSummary != null ? { failureSummary: String(n.failureSummary) } : {}),
-                    })),
-                }));
-            } else if (axe && axe.error) {
-                console.error("Axe run returned error:", axe.error);
-            } else {
-                scanDebugWarn("Axe results structure unexpected:", axe ? Object.keys(axe) : []);
             }
         } catch (e) {
             console.error('Failed to capture passed audits:', e);
