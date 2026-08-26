@@ -657,7 +657,10 @@
         "tagTiers": "Tag-Tiers",
         "devices": "Geräte"
       }
-    }
+    },
+    "scoreStripHint": "Kategorieleiste zum Lesen — schwächste zuerst.",
+    "noScoreCards": "Noch keine Score-Karten.",
+    "virtualCorpusLede": "Corpus-Seite aus dem Deep-Scan — {url}. Für diese URL gibt es noch keinen eigenen Live-Capture; Scores und Issue-Chrome sind Magazin-Platzhalter."
   },
   "domain": {
     "scoreLabel": "domain",

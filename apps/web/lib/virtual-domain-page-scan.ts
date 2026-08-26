@@ -7,6 +7,18 @@ import {
 import { buildRichScanOverview, enrichIssueInspect } from './fixtures/scan-overview-rich'
 import { normalizeUxReadability } from './readability-cefr'
 
+/** Prefixed lede so magazine chrome can localize without baking English into the payload. */
+export const VIRTUAL_CORPUS_LEDE_PREFIX = 'checkion:virtual-corpus-lede|'
+
+export function encodeVirtualCorpusLede(url: string): string {
+  return `${VIRTUAL_CORPUS_LEDE_PREFIX}${url}`
+}
+
+export function decodeVirtualCorpusLede(lede: string | null | undefined): string | null {
+  if (!lede?.startsWith(VIRTUAL_CORPUS_LEDE_PREFIX)) return null
+  return lede.slice(VIRTUAL_CORPUS_LEDE_PREFIX.length)
+}
+
 /** Build a virtual single-page summary from a domain corpus page (no DB template row). */
 export function buildVirtualPageScanSummary(input: {
   id: string
@@ -55,7 +67,7 @@ export function buildVirtualPageScanOverview(
   return {
     ...rich,
     scan: virtualScan,
-    lede: `Corpus page from the deep scan — ${virtualScan.url}. No dedicated live capture for this URL yet; scores and issue chrome are magazine placeholders.`,
+    lede: encodeVirtualCorpusLede(virtualScan.url),
     screenshotUrl: undefined,
     visualLayers: undefined,
     classification: undefined,

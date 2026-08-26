@@ -657,7 +657,10 @@
         "tagTiers": "Tag tiers",
         "devices": "Devices"
       }
-    }
+    },
+    "scoreStripHint": "Read-only category strip — weakest first.",
+    "noScoreCards": "No score cards yet.",
+    "virtualCorpusLede": "Corpus page from the deep scan — {url}. No dedicated live capture for this URL yet; scores and issue chrome are magazine placeholders."
   },
   "domain": {
     "scoreLabel": "domain",

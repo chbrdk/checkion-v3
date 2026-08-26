@@ -4,7 +4,18 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Chip, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
+import { decodeVirtualCorpusLede } from '../lib/virtual-domain-page-scan'
 import { useT } from '../lib/user-prefs'
+
+function localizeDeck(
+  deck: string | null | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string | null | undefined {
+  if (!deck) return deck
+  const url = decodeVirtualCorpusLede(deck)
+  if (url) return t('results.virtualCorpusLede', { url })
+  return deck
+}
 
 export function ResultMagazineChrome({
   tone,
@@ -44,6 +55,7 @@ export function ResultMagazineChrome({
   const t = useT()
   const scoreDisplay = overallScore ?? t('results.scoreNone')
   const displayTitle = titleIsHome ? t('nav.home') : title
+  const displayDeck = localizeDeck(deck, t)
 
   return (
     <>
@@ -112,7 +124,7 @@ export function ResultMagazineChrome({
             </Text>
             {variant === 'cover' ? (
               <>
-                {deck ? <p className="checkion-cover__deck">{deck}</p> : null}
+                {displayDeck ? <p className="checkion-cover__deck">{displayDeck}</p> : null}
                 {tags?.length ? (
                   <div className="checkion-chip-row checkion-cover__tags">
                     {tags.map((tag) => (
@@ -163,6 +175,7 @@ export function DomainMagazineChrome({
 }) {
   const t = useT()
   const scoreDisplay = overallScore ?? t('domain.scoreNone')
+  const displayDeck = localizeDeck(deck, t)
 
   return (
     <>
@@ -217,7 +230,7 @@ export function DomainMagazineChrome({
             </Text>
             {variant === 'cover' ? (
               <>
-                {deck ? <p className="checkion-cover__deck">{deck}</p> : null}
+                {displayDeck ? <p className="checkion-cover__deck">{displayDeck}</p> : null}
                 {tags?.length ? (
                   <div className="checkion-chip-row checkion-cover__tags">
                     {tags.slice(0, 6).map((tag) => (
