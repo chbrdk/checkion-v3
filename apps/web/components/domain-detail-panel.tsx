@@ -18,8 +18,9 @@ import {
   type DetailSearchQuery,
   type SearchableFact,
 } from '../lib/detail-report-search'
-import { domainFormulaForBand } from '../lib/domain-detail-score-formulas'
+import { domainFormulaLocalePath } from '../lib/domain-detail-score-formulas'
 import { tipIdForDetailBand } from '../lib/help-tips'
+import type { Translator } from '../lib/i18n'
 import { scoreTone } from '../lib/scan-display'
 import { useT } from '../lib/user-prefs'
 import { LabelWithTip } from './help-tip'
@@ -29,7 +30,7 @@ function msLabel(value: number): string {
   return `${Math.round(value)} ms`
 }
 
-function yesNo(value: boolean, t: (k: string) => string): string {
+function yesNo(value: boolean, t: Translator): string {
   return value ? t('results.detail.yes') : t('results.detail.no')
 }
 
@@ -56,6 +57,11 @@ function compactPath(url: string): string {
   } catch {
     return url.length > 64 ? `${url.slice(0, 61)}…` : url
   }
+}
+
+function formulaText(id: string, t: Translator): string | undefined {
+  const path = domainFormulaLocalePath(id)
+  return path ? t(path) : undefined
 }
 
 type Fact = SearchableFact
@@ -137,7 +143,7 @@ function ScoreLedgerStrip({
         <h3 id="domain-detail-ledger-heading" className="checkion-report__band-title">
           {t('results.detail.ledger')}
         </h3>
-        <p className="checkion-report__formula">{domainFormulaForBand('ledger')}</p>
+        <p className="checkion-report__formula">{formulaText('ledger', t)}</p>
       </header>
       <table
         className="checkion-report__table checkion-report__table--ledger"
@@ -174,8 +180,11 @@ function ScoreLedgerStrip({
   )
 }
 
+/** Domain magazine Chapter 03 — Corpus ledger detail report. */
 export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
   const t = useT()
+  const f = (key: string, params?: Record<string, string | number>) =>
+    t(`domain.detail.fields.${key}`, params)
   const [rawQuery, setRawQuery] = useState('')
   const deferred = useDeferredValue(rawQuery)
   const query: DetailSearchQuery = useMemo(() => parseDetailQuery(deferred), [deferred])
@@ -198,36 +207,36 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
   } = overview
 
   const corpusRows: Fact[] = []
-  push(corpusRows, 'Root URL', scan.rootUrl)
-  push(corpusRows, 'Status', scan.status)
-  push(corpusRows, 'Pages scanned', scan.pageCount.toLocaleString())
-  push(corpusRows, 'Issue groups', String(scan.issueCount))
-  if (scan.industry) push(corpusRows, 'Industry', scan.industry)
+  push(corpusRows, f('rootUrl'), scan.rootUrl)
+  push(corpusRows, f('status'), scan.status)
+  push(corpusRows, f('pagesScanned'), scan.pageCount.toLocaleString())
+  push(corpusRows, f('issueGroups'), String(scan.issueCount))
+  if (scan.industry) push(corpusRows, f('industry'), scan.industry)
   if (scan.issueStats) {
     push(
       corpusRows,
-      'Total errors',
+      f('totalErrors'),
       scan.issueStats.errors.toLocaleString(),
       countTone(scan.issueStats.errors, 1, 100),
     )
-    push(corpusRows, 'Warnings', scan.issueStats.warnings.toLocaleString())
+    push(corpusRows, f('warnings'), scan.issueStats.warnings.toLocaleString())
     if (scan.issueStats.byWcagLevel) {
-      push(corpusRows, 'WCAG A', String(scan.issueStats.byWcagLevel.A ?? 0))
-      push(corpusRows, 'WCAG AA', String(scan.issueStats.byWcagLevel.AA ?? 0))
+      push(corpusRows, f('wcagA'), String(scan.issueStats.byWcagLevel.A ?? 0))
+      push(corpusRows, f('wcagAA'), String(scan.issueStats.byWcagLevel.AA ?? 0))
     }
   }
-  push(corpusRows, 'Started', fmtWhen(scan.startedAt))
-  push(corpusRows, 'Completed', fmtWhen(scan.completedAt))
+  push(corpusRows, f('started'), fmtWhen(scan.startedAt))
+  push(corpusRows, f('completed'), fmtWhen(scan.completedAt))
 
   const perfRows: Fact[] = []
   if (perf) {
-    push(perfRows, 'Avg TTFB', msLabel(perf.avgTtfb), timingTone(perf.avgTtfb, 200, 500))
-    push(perfRows, 'Avg FCP', msLabel(perf.avgFcp), timingTone(perf.avgFcp, 1800, 3000))
-    push(perfRows, 'Avg LCP', msLabel(perf.avgLcp), timingTone(perf.avgLcp, 2500, 4000))
-    push(perfRows, 'Avg DOM', msLabel(perf.avgDomLoad), timingTone(perf.avgDomLoad, 2000, 3500))
-    push(perfRows, 'Pages measured', perf.pageCount.toLocaleString())
+    push(perfRows, f('avgTtfb'), msLabel(perf.avgTtfb), timingTone(perf.avgTtfb, 200, 500))
+    push(perfRows, f('avgFcp'), msLabel(perf.avgFcp), timingTone(perf.avgFcp, 1800, 3000))
+    push(perfRows, f('avgLcp'), msLabel(perf.avgLcp), timingTone(perf.avgLcp, 2500, 4000))
+    push(perfRows, f('avgDom'), msLabel(perf.avgDomLoad), timingTone(perf.avgDomLoad, 2000, 3500))
+    push(perfRows, f('pagesMeasured'), perf.pageCount.toLocaleString())
     if (perf.scriptTransferKbAvg != null) {
-      push(perfRows, 'Avg script transfer', `${perf.scriptTransferKbAvg} KB`)
+      push(perfRows, f('avgScriptTransfer'), `${perf.scriptTransferKbAvg} KB`)
     }
   }
 
@@ -239,25 +248,25 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
     const canonicalPct = coveragePct(seo.withCanonical, seo.totalPages)
     push(
       seoRows,
-      'Pages with title',
+      f('pagesWithTitle'),
       `${seo.withTitle.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${titlePct}%`,
       scoreMetricTone(titlePct),
     )
     push(
       seoRows,
-      'Pages with H1',
+      f('pagesWithH1'),
       `${seo.withH1.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${h1Pct}%`,
       scoreMetricTone(h1Pct),
     )
     push(
       seoRows,
-      'Pages with meta',
+      f('pagesWithMeta'),
       `${seo.withMetaDescription.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${metaPct}%`,
       scoreMetricTone(metaPct),
     )
     push(
       seoRows,
-      'Pages with canonical',
+      f('pagesWithCanonical'),
       `${seo.withCanonical.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${canonicalPct}%`,
       scoreMetricTone(canonicalPct),
     )
@@ -265,7 +274,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
       const ogPct = coveragePct(seo.withOgTitle, seo.totalPages)
       push(
         seoRows,
-        'Open Graph title',
+        f('openGraphTitle'),
         `${seo.withOgTitle.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${ogPct}%`,
         scoreMetricTone(ogPct),
       )
@@ -274,170 +283,173 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
       const twPct = coveragePct(seo.withTwitterCard, seo.totalPages)
       push(
         seoRows,
-        'Twitter card',
+        f('twitterCard'),
         `${seo.withTwitterCard.toLocaleString()}/${seo.totalPages.toLocaleString()} · ${twPct}%`,
         scoreMetricTone(twPct),
       )
     }
     push(
       seoRows,
-      'Canonical mismatches',
+      f('canonicalMismatches'),
       seo.canonicalMismatchCount.toLocaleString(),
       countTone(seo.canonicalMismatchCount, 1, 50),
     )
     push(
       seoRows,
-      'Duplicate title groups',
+      f('duplicateTitleGroups'),
       seo.duplicateTitleGroupCount.toLocaleString(),
       countTone(seo.duplicateTitleGroupCount, 1, 10),
     )
     if (seo.duplicateMetaGroupCount != null) {
-      push(seoRows, 'Duplicate meta groups', seo.duplicateMetaGroupCount.toLocaleString())
+      push(seoRows, f('duplicateMetaGroups'), seo.duplicateMetaGroupCount.toLocaleString())
     }
     if (seo.missingH1Count != null) {
-      push(seoRows, 'Missing H1', seo.missingH1Count.toLocaleString(), countTone(seo.missingH1Count, 1, 5))
+      push(seoRows, f('missingH1'), seo.missingH1Count.toLocaleString(), countTone(seo.missingH1Count, 1, 5))
     }
     if (seo.hreflangXDefaultConflict != null) {
       push(
         seoRows,
-        'Hreflang x-default conflict',
+        f('hreflangXDefaultConflict'),
         yesNo(seo.hreflangXDefaultConflict, t),
         goodWhenTrue(!seo.hreflangXDefaultConflict),
       )
     }
     if (seo.totalWordsAcrossPages != null) {
-      push(seoRows, 'Total words', seo.totalWordsAcrossPages.toLocaleString())
+      push(seoRows, f('totalWords'), seo.totalWordsAcrossPages.toLocaleString())
     }
     if (seo.topKeywords?.length) {
-      push(seoRows, 'Top keywords', seo.topKeywords.join(', '))
+      push(seoRows, f('topKeywords'), seo.topKeywords.join(', '))
     }
   }
 
   const uxRows: Fact[] = []
   if (ux) {
-    push(uxRows, 'UX score', String(ux.score), scoreMetricTone(ux.score))
-    push(uxRows, 'CLS (avg)', String(ux.cls))
-    push(uxRows, 'Readability grade', ux.readabilityGrade)
-    push(uxRows, 'Readability score', String(ux.readabilityScore))
+    push(uxRows, f('uxScore'), String(ux.score), scoreMetricTone(ux.score))
+    push(uxRows, f('clsAvg'), String(ux.cls))
+    push(uxRows, f('readabilityGrade'), ux.readabilityGrade)
+    push(uxRows, f('readabilityScore'), String(ux.readabilityScore))
     if (ux.readabilityBands) {
-      push(uxRows, 'Band · easy', ux.readabilityBands.easy.toLocaleString())
-      push(uxRows, 'Band · standard', ux.readabilityBands.standard.toLocaleString())
-      push(uxRows, 'Band · complex', ux.readabilityBands.complex.toLocaleString())
-      push(uxRows, 'Band · very complex', ux.readabilityBands.veryComplex.toLocaleString())
+      push(uxRows, f('bandEasy'), ux.readabilityBands.easy.toLocaleString())
+      push(uxRows, f('bandStandard'), ux.readabilityBands.standard.toLocaleString())
+      push(uxRows, f('bandComplex'), ux.readabilityBands.complex.toLocaleString())
+      push(uxRows, f('bandVeryComplex'), ux.readabilityBands.veryComplex.toLocaleString())
     }
     push(
       uxRows,
-      'Pages with multiple H1',
+      f('pagesWithMultipleH1'),
       ux.pagesWithMultipleH1.toLocaleString(),
       countTone(ux.pagesWithMultipleH1, 1, 20),
     )
     push(
       uxRows,
-      'Pages with skipped levels',
+      f('pagesWithSkippedLevels'),
       ux.pagesWithSkippedLevels.toLocaleString(),
       countTone(ux.pagesWithSkippedLevels, 1, 50),
     )
     push(
       uxRows,
-      'Broken links (corpus)',
+      f('brokenLinksCorpus'),
       ux.brokenLinkCount.toLocaleString(),
       countTone(ux.brokenLinkCount, 1, 20),
     )
-    push(uxRows, 'Tap-target issues (sample)', String(ux.tapTargetIssueCount))
+    push(uxRows, f('tapTargetIssuesSample'), String(ux.tapTargetIssueCount))
     if (ux.dwellSecondsMedian != null) {
-      push(uxRows, 'Median dwell', `${ux.dwellSecondsMedian}s`)
+      push(uxRows, f('medianDwell'), `${ux.dwellSecondsMedian}s`)
     }
   }
 
   const ecoRows: Fact[] = []
   if (eco) {
-    push(ecoRows, 'Avg CO₂', `${eco.avgCo2} g`)
-    push(ecoRows, 'Dominant grade', eco.grade)
-    push(ecoRows, 'Avg page weight', `${eco.avgPageWeightKb.toLocaleString()} KB`)
+    push(ecoRows, f('avgCo2'), `${eco.avgCo2} g`)
+    push(ecoRows, f('dominantGrade'), eco.grade)
+    push(ecoRows, f('avgPageWeight'), `${eco.avgPageWeightKb.toLocaleString()} KB`)
     if (eco.gradeDistribution) {
       for (const g of ['A+', 'A', 'B', 'C', 'D', 'E', 'F'] as const) {
         const n = eco.gradeDistribution[g]
-        if (n) push(ecoRows, `Grade ${g}`, n.toLocaleString())
+        if (n) push(ecoRows, f('gradeNamed', { g }), n.toLocaleString())
       }
     }
   }
 
   const linkRows: Fact[] = []
   if (links) {
-    push(linkRows, 'Total', (links.total ?? links.internal + links.external).toLocaleString())
-    push(linkRows, 'Internal', links.internal.toLocaleString())
-    push(linkRows, 'External', links.external.toLocaleString())
-    push(linkRows, 'Broken', links.broken.toLocaleString(), countTone(links.broken, 1, 20))
+    push(linkRows, f('total'), (links.total ?? links.internal + links.external).toLocaleString())
+    push(linkRows, f('internal'), links.internal.toLocaleString())
+    push(linkRows, f('external'), links.external.toLocaleString())
+    push(linkRows, f('broken'), links.broken.toLocaleString(), countTone(links.broken, 1, 20))
   }
 
   const shieldRows: Fact[] = []
   if (shield) {
-    push(shieldRows, 'HTTPS', yesNo(shield.https, t), goodWhenTrue(shield.https))
-    push(shieldRows, 'HSTS', yesNo(shield.hsts, t), goodWhenTrue(shield.hsts))
-    push(shieldRows, 'CSP (majority)', yesNo(shield.csp, t), goodWhenTrue(shield.csp))
+    push(shieldRows, f('https'), yesNo(shield.https, t), goodWhenTrue(shield.https))
+    push(shieldRows, f('hsts'), yesNo(shield.hsts, t), goodWhenTrue(shield.hsts))
+    push(shieldRows, f('cspMajority'), yesNo(shield.csp, t), goodWhenTrue(shield.csp))
     push(
       shieldRows,
-      'Privacy policy',
+      f('privacyPolicy'),
       yesNo(shield.hasPrivacyPolicy, t),
       goodWhenTrue(shield.hasPrivacyPolicy),
     )
-    push(shieldRows, 'Cookie banner', yesNo(shield.hasCookieBanner, t))
-    push(shieldRows, 'Mixed content', yesNo(shield.mixedContent, t), goodWhenTrue(!shield.mixedContent))
-    if (shield.privacyPolicyUrl) push(shieldRows, 'Privacy URL', shield.privacyPolicyUrl)
-    if (shield.cmpHints?.length) push(shieldRows, 'Early script hosts', shield.cmpHints.join(', '))
+    push(shieldRows, f('cookieBanner'), yesNo(shield.hasCookieBanner, t))
+    push(shieldRows, f('mixedContent'), yesNo(shield.mixedContent, t), goodWhenTrue(!shield.mixedContent))
+    if (shield.privacyPolicyUrl) push(shieldRows, f('privacyUrl'), shield.privacyPolicyUrl)
+    if (shield.cmpHints?.length) push(shieldRows, f('earlyScriptHosts'), shield.cmpHints.join(', '))
   }
 
   const eeatRows: Fact[] = []
   if (eeat) {
-    push(eeatRows, 'Contact pages', eeat.trust.pagesWithContact.toLocaleString())
-    push(eeatRows, 'Privacy pages', eeat.trust.pagesWithPrivacy.toLocaleString())
-    push(eeatRows, 'Impressum pages', eeat.trust.pagesWithImpressum.toLocaleString())
-    push(eeatRows, 'About pages', eeat.experience.pagesWithAbout.toLocaleString())
-    push(eeatRows, 'Team pages', eeat.experience.pagesWithTeam.toLocaleString())
-    push(eeatRows, 'Case-study mentions', eeat.experience.pagesWithCaseStudyMention.toLocaleString())
-    push(eeatRows, 'Author bio pages', eeat.expertise.pagesWithAuthorBio.toLocaleString())
-    push(eeatRows, 'Avg citations / page', eeat.expertise.avgCitationsPerPage.toFixed(2))
+    push(eeatRows, f('contactPages'), eeat.trust.pagesWithContact.toLocaleString())
+    push(eeatRows, f('privacyPages'), eeat.trust.pagesWithPrivacy.toLocaleString())
+    push(eeatRows, f('impressumPages'), eeat.trust.pagesWithImpressum.toLocaleString())
+    push(eeatRows, f('aboutPages'), eeat.experience.pagesWithAbout.toLocaleString())
+    push(eeatRows, f('teamPages'), eeat.experience.pagesWithTeam.toLocaleString())
+    push(eeatRows, f('caseStudyMentions'), eeat.experience.pagesWithCaseStudyMention.toLocaleString())
+    push(eeatRows, f('authorBioPages'), eeat.expertise.pagesWithAuthorBio.toLocaleString())
+    push(eeatRows, f('avgCitationsPerPage'), eeat.expertise.avgCitationsPerPage.toFixed(2))
   }
 
   const geoRows: Fact[] = []
   if (geo) {
-    push(geoRows, 'GEO score', String(geo.score), scoreMetricTone(geo.score))
-    push(geoRows, 'Discoverability', String(geo.discoverability))
-    push(geoRows, 'Repurposing', String(geo.repurposing))
-    push(geoRows, 'llms.txt pages', geo.withLlmsTxt.toLocaleString())
+    push(geoRows, f('geoScore'), String(geo.score), scoreMetricTone(geo.score))
+    push(geoRows, f('discoverability'), String(geo.discoverability))
+    push(geoRows, f('repurposing'), String(geo.repurposing))
+    push(geoRows, f('llmsTxtPages'), geo.withLlmsTxt.toLocaleString())
     if (geo.withRobotsAllowingAi != null) {
-      push(geoRows, 'AI bots allowed (pages)', geo.withRobotsAllowingAi.toLocaleString())
+      push(geoRows, f('aiBotsAllowedPages'), geo.withRobotsAllowingAi.toLocaleString())
     }
   }
 
   const infraRows: Fact[] = []
   if (infra) {
-    push(infraRows, 'Server IP', infra.serverIp ?? '—')
-    push(infraRows, 'City', infra.city ?? '—')
-    push(infraRows, 'Country', infra.country ?? '—')
-    push(infraRows, 'CDN / host', infra.cdnProvider ?? infra.hostingServer ?? '—')
-    push(infraRows, 'html lang', infra.htmlLang ?? '—')
-    push(infraRows, 'Hreflang targets', String(infra.hreflangCount ?? 0))
-    push(infraRows, 'Platforms', infra.platforms?.join(', ') || '—')
-    push(infraRows, 'Tracking hosts', infra.tracking?.join(', ') || '—')
+    push(infraRows, f('serverIp'), infra.serverIp ?? '—')
+    push(infraRows, f('city'), infra.city ?? '—')
+    push(infraRows, f('country'), infra.country ?? '—')
+    push(infraRows, f('cdnHost'), infra.cdnProvider ?? infra.hostingServer ?? '—')
+    push(infraRows, f('htmlLang'), infra.htmlLang ?? '—')
+    push(infraRows, f('hreflangTargets'), String(infra.hreflangCount ?? 0))
+    push(infraRows, f('platforms'), infra.platforms?.join(', ') || '—')
+    push(infraRows, f('trackingHosts'), infra.tracking?.join(', ') || '—')
   }
 
   const classRows: Fact[] = []
   if (classification) {
-    push(classRows, 'Summary', classification.shortSummary)
-    push(classRows, 'Tags', classification.tags.join(', '))
-    push(classRows, 'Intensity tier', String(classification.intensityTier))
+    push(classRows, f('summary'), classification.shortSummary)
+    push(classRows, f('tags'), classification.tags.join(', '))
+    push(classRows, f('intensityTier'), String(classification.intensityTier))
   }
 
-  const systemicRows: Fact[] = systemicIssues.slice(0, 12).map((i) => ({
-    label: i.title,
-    value: `${i.pageCount.toLocaleString()} pages`,
-    tone: countTone(i.pageCount, 100, 1000),
+  const systemicRows: Fact[] = systemicIssues.slice(0, 12).map((issue) => ({
+    label: issue.title,
+    value: t('domain.pagesUnit', { n: issue.pageCount.toLocaleString() }),
+    tone: countTone(issue.pageCount, 100, 1000),
   }))
 
-  const sampleRows: Fact[] = (pageSamples ?? []).map((p) => ({
-    label: compactPath(p.url),
-    value: `${p.score ?? '—'}${p.errors != null ? ` · ${p.errors} err` : ''}`,
+  const sampleRows: Fact[] = (pageSamples ?? []).map((page) => ({
+    label: compactPath(page.url),
+    value:
+      page.errors != null
+        ? t('domain.errAbbrev', { score: page.score ?? '—', errors: page.errors })
+        : String(page.score ?? '—'),
   }))
 
   const bands: Array<{
@@ -447,23 +459,101 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
     formulaKey: string
     rows: Fact[]
   }> = [
-    { id: 'report-corpus', title: 'Corpus', aliases: ['domain', 'pages', 'crawl'], formulaKey: 'corpus', rows: corpusRows },
-    { id: 'report-systemic', title: 'Systemic issues', aliases: ['systemic', 'a11y'], formulaKey: 'corpus', rows: systemicRows },
-    { id: 'report-performance', title: 'Performance', aliases: ['vitals', 'lcp', 'fcp'], formulaKey: 'performance', rows: perfRows },
-    { id: 'report-seo', title: 'SEO coverage', aliases: ['seo', 'canonical', 'title'], formulaKey: 'seo', rows: seoRows },
-    { id: 'report-ux', title: 'UX', aliases: ['ux', 'readability', 'cls'], formulaKey: 'ux', rows: uxRows },
-    { id: 'report-eco', title: 'Eco', aliases: ['eco', 'co2'], formulaKey: 'eco', rows: ecoRows },
-    { id: 'report-links', title: 'Links', aliases: ['links', 'broken'], formulaKey: 'links', rows: linkRows },
-    { id: 'report-shield', title: 'Shield', aliases: ['security', 'privacy', 'csp'], formulaKey: 'shield', rows: shieldRows },
-    { id: 'report-eeat', title: 'E-E-A-T', aliases: ['eeat', 'trust'], formulaKey: 'eeat', rows: eeatRows },
-    { id: 'report-geo', title: 'GEO', aliases: ['geo', 'generative', 'llm'], formulaKey: 'geo', rows: geoRows },
-    { id: 'report-infra', title: 'Infra', aliases: ['infra', 'cdn', 'hosting'], formulaKey: 'infra', rows: infraRows },
-    { id: 'report-class', title: 'Classification', aliases: ['class', 'themes', 'tags'], formulaKey: 'class', rows: classRows },
-    { id: 'report-samples', title: 'Page samples', aliases: ['samples', 'pages'], formulaKey: 'samples', rows: sampleRows },
+    {
+      id: 'report-corpus',
+      title: t('domain.detail.bands.corpus'),
+      aliases: ['domain', 'pages', 'crawl'],
+      formulaKey: 'corpus',
+      rows: corpusRows,
+    },
+    {
+      id: 'report-systemic',
+      title: t('domain.detail.bands.systemic'),
+      aliases: ['systemic', 'a11y'],
+      formulaKey: 'corpus',
+      rows: systemicRows,
+    },
+    {
+      id: 'report-performance',
+      title: t('domain.detail.bands.performance'),
+      aliases: ['vitals', 'lcp', 'fcp'],
+      formulaKey: 'performance',
+      rows: perfRows,
+    },
+    {
+      id: 'report-seo',
+      title: t('domain.detail.bands.seo'),
+      aliases: ['seo', 'canonical', 'title'],
+      formulaKey: 'seo',
+      rows: seoRows,
+    },
+    {
+      id: 'report-ux',
+      title: t('domain.detail.bands.ux'),
+      aliases: ['ux', 'readability', 'cls'],
+      formulaKey: 'ux',
+      rows: uxRows,
+    },
+    {
+      id: 'report-eco',
+      title: t('domain.detail.bands.eco'),
+      aliases: ['eco', 'co2'],
+      formulaKey: 'eco',
+      rows: ecoRows,
+    },
+    {
+      id: 'report-links',
+      title: t('domain.detail.bands.links'),
+      aliases: ['links', 'broken'],
+      formulaKey: 'links',
+      rows: linkRows,
+    },
+    {
+      id: 'report-shield',
+      title: t('domain.detail.bands.shield'),
+      aliases: ['security', 'privacy', 'csp'],
+      formulaKey: 'shield',
+      rows: shieldRows,
+    },
+    {
+      id: 'report-eeat',
+      title: t('domain.detail.bands.eeat'),
+      aliases: ['eeat', 'trust'],
+      formulaKey: 'eeat',
+      rows: eeatRows,
+    },
+    {
+      id: 'report-geo',
+      title: t('domain.detail.bands.geo'),
+      aliases: ['geo', 'generative', 'llm'],
+      formulaKey: 'geo',
+      rows: geoRows,
+    },
+    {
+      id: 'report-infra',
+      title: t('domain.detail.bands.infra'),
+      aliases: ['infra', 'cdn', 'hosting'],
+      formulaKey: 'infra',
+      rows: infraRows,
+    },
+    {
+      id: 'report-class',
+      title: t('domain.detail.bands.class'),
+      aliases: ['class', 'themes', 'tags'],
+      formulaKey: 'class',
+      rows: classRows,
+    },
+    {
+      id: 'report-samples',
+      title: t('domain.detail.bands.samples'),
+      aliases: ['samples', 'pages'],
+      formulaKey: 'samples',
+      rows: sampleRows,
+    },
   ]
 
-  const ledgerVisible = scores.some((s) =>
-    scoreMatches(s.label, s.kind, s.value, scoreMetricTone(s.value), query),
+  const ledgerVisible = scores.some((score) =>
+    scoreMatches(score.label, score.kind, score.value, scoreMetricTone(score.value), query),
   )
 
   const visibleBands = bands
@@ -472,7 +562,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
       const visible = bandVisible(band.title, band.aliases, rows, band.rows, query)
       return { ...band, rows, visible }
     })
-    .filter((b) => b.visible && b.rows.length > 0)
+    .filter((band) => band.visible && band.rows.length > 0)
 
   const hasResults = ledgerVisible || visibleBands.length > 0
 
@@ -495,7 +585,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
           block
           size="md"
           value={rawQuery}
-          onChange={(e) => setRawQuery(e.target.value)}
+          onChange={(event) => setRawQuery(event.target.value)}
           placeholder={t('domain.searchPlaceholderDetail')}
           autoComplete="off"
           spellCheck={false}
@@ -507,9 +597,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
               : t('results.detail.noMatchesQuery', { query: rawQuery.trim() })}
           </p>
         ) : (
-          <p className="checkion-report__search-meta">
-            {t('results.detail.searchHint')}
-          </p>
+          <p className="checkion-report__search-meta">{t('domain.detail.searchHint')}</p>
         )}
       </div>
 
@@ -523,7 +611,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
               key={band.id}
               id={band.id}
               title={band.title}
-              formula={domainFormulaForBand(band.formulaKey)}
+              formula={formulaText(band.formulaKey, t)}
               rows={band.rows}
             />
           ))}
