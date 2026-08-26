@@ -36,7 +36,9 @@ export function buildVirtualPageScanSummary(input: {
 
 /**
  * Magazine payload for virtual domain→page links.
- * Uses the bundled live single fixture when no seeded `scan-single-1` row exists (staging/prod).
+ * Uses bundled score/issue chrome when no seeded `scan-single-1` row exists,
+ * but strips Dürr capture + page-identity fields so Provinzial (etc.) URLs
+ * are not shown with a mismatched screenshot or SEO title.
  */
 export function buildVirtualPageScanOverview(
   virtualScan: ScanSummary,
@@ -53,6 +55,19 @@ export function buildVirtualPageScanOverview(
   return {
     ...rich,
     scan: virtualScan,
+    lede: `Corpus page from the deep scan — ${virtualScan.url}. No dedicated live capture for this URL yet; scores and issue chrome are magazine placeholders.`,
+    screenshotUrl: undefined,
+    visualLayers: undefined,
+    classification: undefined,
+    seo: undefined,
+    performance: undefined,
+    eco: undefined,
+    links: undefined,
+    securityPrivacy: undefined,
+    generative: undefined,
+    infra: undefined,
+    freshness: undefined,
+    passedChecks: undefined,
     topIssues: enrichIssueInspect(rich.topIssues).map((issue) => ({
       ...issue,
       scanId: virtualScan.id,

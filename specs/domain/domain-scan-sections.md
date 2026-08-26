@@ -24,7 +24,7 @@ Deep magazine summarizes **all single-page scans in a deep scan corpus**. It is 
 
 ## Magazine chapters
 - **Overview** — scoreline · `StatusMeterPanel` corpus signal · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList` (rows → single-page `/results/{scanId}/overview`)
-- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to single-page `/results/{scanId}`); virtual `dpage__` / `dsample__` ids resolve from the domain corpus + bundled magazine template (no seeded `scan-single-1` row required)
+- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to single-page `/results/{scanId}`); virtual `dpage__` / `dsample__` ids resolve from the domain corpus + bundled magazine chrome **without** the fixture capture/SEO identity (no mismatched Dürr screenshot on foreign URLs)
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 
 ## Deferred
