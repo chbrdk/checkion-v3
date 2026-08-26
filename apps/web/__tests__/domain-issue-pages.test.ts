@@ -31,6 +31,17 @@ describe('domain issue affected pages', () => {
     }
   })
 
+  it('resolves overview page-sample rows to single-page magazines', async () => {
+    const { getDomainOverview, getScanOverview } = await import('../lib/fixtures/scan-store')
+    const domain = await getDomainOverview('domain-1')
+    const sample = domain!.pageSamples![0]!
+    expect(sample.scanId).toMatch(/^dsample__domain-1__0$/)
+    const overview = await getScanOverview(sample.scanId!)
+    expect(overview).toBeTruthy()
+    expect(overview!.scan.url).toBe(sample.url)
+    expect(overview!.scan.mode).toBe('single')
+  })
+
   it('sorts fewest issues first when requested', async () => {
     const asc = await listIssueAffectedPages('domain-1', 'live-d-iss-1', {
       page: 1,

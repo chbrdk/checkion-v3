@@ -21,8 +21,16 @@ import { LIVE_DOMAIN_OVERVIEW } from './live-scan-domain-1'
 import { normalizeUxReadability } from '../readability-cefr'
 import {
   parseDomainPageScanId,
+  parseDomainPageSampleScanId,
   synthesizeAffectedPageUrl,
+  withPageSampleScanIds,
 } from '../domain-issue-page-synth'
+import {
+  buildVirtualPageScanOverview,
+  buildVirtualPageScanSummary,
+  virtualPageTemplateIssues,
+  virtualPageTemplateScores,
+} from '../virtual-domain-page-scan'
 import { isDatabaseConfigured } from '../db/config'
 import { shouldRunLiveScans } from '../scan/live-scan-gate'
 import { executeSingleLiveScan } from '../scan/pipeline'
@@ -76,30 +84,50 @@ function memoryListScans(projectId?: string): ScanSummary[] {
 }
 
 function resolveVirtualDomainPageScan(id: string): ScanSummary | null {
+  const sampleParsed = parseDomainPageSampleScanId(id)
+  if (sampleParsed) {
+    const overview = memoryGetDomainOverview(sampleParsed.domainId)
+    const page = overview?.pageSamples?.[sampleParsed.pageIndex]
+    if (!page || !overview) return null
+    return buildVirtualPageScanSummary({
+      id,
+      projectId: overview.scan.projectId,
+      url: page.url,
+      domainScanId: sampleParsed.domainId,
+      overallScore: page.score,
+      issueCount: page.errors ?? 0,
+      startedAt: overview.scan.startedAt,
+      completedAt: overview.scan.completedAt,
+    })
+  }
+
   const parsed = parseDomainPageScanId(id)
   if (!parsed) return null
-
-  const template = store.scans.find((s) => s.id === TEMPLATE_SINGLE_SCAN_ID)
-  if (!template) return null
 
   const domainIssues = issuesByScan[parsed.domainId] ?? []
   const issue = domainIssues.find((i) => i.id === parsed.issueId)
   if (!issue) return null
 
   const overview = memoryGetDomainOverview(parsed.domainId)
-  const rootUrl = overview?.scan.rootUrl ?? template.url
+  const domain = memoryGetDomainScan(parsed.domainId)
+  if (!domain) return null
+  const rootUrl = overview?.scan.rootUrl ?? domain.rootUrl
   const seeds =
     issue.affectedPages?.length
       ? issue.affectedPages
       : (overview?.pageSamples ?? []).map((p) => p.url)
   const url = synthesizeAffectedPageUrl(rootUrl, parsed.issueId, parsed.pageIndex, seeds)
 
-  return {
-    ...template,
+  return buildVirtualPageScanSummary({
     id,
-    mode: 'single',
+    projectId: domain.projectId,
     url,
-  }
+    domainScanId: parsed.domainId,
+    overallScore: overview?.scan.overallScore ?? domain.overallScore,
+    issueCount: issue.affectedCount,
+    startedAt: domain.startedAt,
+    completedAt: domain.completedAt,
+  })
 }
 
 function memoryGetScan(id: string): ScanSummary | null {
@@ -107,26 +135,16 @@ function memoryGetScan(id: string): ScanSummary | null {
 }
 
 function memoryGetScanOverview(id: string): ScanOverview | null {
-  const virtual = parseDomainPageScanId(id)
-  if (virtual) {
+  const virtualIssue = parseDomainPageScanId(id)
+  const virtualSample = parseDomainPageSampleScanId(id)
+  if (virtualIssue || virtualSample) {
     const scan = resolveVirtualDomainPageScan(id)
     if (!scan) return null
-    const rich = buildRichScanOverview(
-      TEMPLATE_SINGLE_SCAN_ID,
-      null,
+    return buildVirtualPageScanOverview(
+      scan,
       scoresByScan[TEMPLATE_SINGLE_SCAN_ID],
       issuesByScan[TEMPLATE_SINGLE_SCAN_ID],
     )
-    if (!rich) return null
-    return {
-      ...rich,
-      scan,
-      topIssues: enrichIssueInspect(rich.topIssues).map((issue) => ({
-        ...issue,
-        scanId: id,
-      })),
-      ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
-    }
   }
 
   const stored = overviewByScan[id]
@@ -158,8 +176,8 @@ function memoryGetScanOverview(id: string): ScanOverview | null {
 }
 
 function memoryGetScanIssues(id: string): IssueSummary[] {
-  if (parseDomainPageScanId(id)) {
-    return enrichIssueInspect(issuesByScan[TEMPLATE_SINGLE_SCAN_ID] ?? []).map((issue) => ({
+  if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
+    return virtualPageTemplateIssues(issuesByScan[TEMPLATE_SINGLE_SCAN_ID]).map((issue) => ({
       ...issue,
       scanId: id,
     }))
@@ -170,7 +188,9 @@ function memoryGetScanIssues(id: string): IssueSummary[] {
 function memoryGetScanScores(id: string): ScoreCard[] {
   const overview = memoryGetScanOverview(id)
   if (overview?.scores.length) return overview.scores
-  if (parseDomainPageScanId(id)) return scoresByScan[TEMPLATE_SINGLE_SCAN_ID] ?? []
+  if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
+    return virtualPageTemplateScores(scoresByScan[TEMPLATE_SINGLE_SCAN_ID])
+  }
   return scoresByScan[id] ?? []
 }
 
@@ -199,6 +219,7 @@ function memoryGetDomainOverview(id: string): DomainOverview | null {
     return {
       ...LIVE_DOMAIN_OVERVIEW,
       scores: scoresByScan[id] ?? LIVE_DOMAIN_OVERVIEW.scores,
+      pageSamples: withPageSampleScanIds(id, LIVE_DOMAIN_OVERVIEW.pageSamples),
     }
   }
 
@@ -207,7 +228,7 @@ function memoryGetDomainOverview(id: string): DomainOverview | null {
   const issues = issuesByScan[id] ?? []
   const extras = domainOverviewExtras[id] ?? {}
 
-  return {
+  const overview: DomainOverview = {
     scan: domain,
     scores: scoresByScan[id] ?? [],
     lede:
@@ -217,6 +238,10 @@ function memoryGetDomainOverview(id: string): DomainOverview | null {
     systemicIssues:
       (extras.systemicIssues as DomainSystemicIssue[] | undefined) ?? systemicFromIssues(issues),
     ...extras,
+  }
+  return {
+    ...overview,
+    pageSamples: withPageSampleScanIds(id, overview.pageSamples),
   }
 }
 

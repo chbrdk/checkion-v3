@@ -79,3 +79,39 @@ export function parseDomainPageScanId(
 export function isDomainPageScanId(id: string): boolean {
   return parseDomainPageScanId(id) != null
 }
+
+const PAGE_SAMPLE_PREFIX = 'dsample__'
+
+/** Single-page magazine id for an overview page-sample row. */
+export function synthesizeDomainPageSampleScanId(domainId: string, pageIndex: number): string {
+  return `${PAGE_SAMPLE_PREFIX}${domainId}__${pageIndex}`
+}
+
+export function parseDomainPageSampleScanId(
+  id: string,
+): { domainId: string; pageIndex: number } | null {
+  if (!id.startsWith(PAGE_SAMPLE_PREFIX)) return null
+  const rest = id.slice(PAGE_SAMPLE_PREFIX.length)
+  const sep = rest.lastIndexOf('__')
+  if (sep <= 0) return null
+  const pageIndex = Number(rest.slice(sep + 2))
+  const domainId = rest.slice(0, sep)
+  if (!domainId || !Number.isFinite(pageIndex) || pageIndex < 0) return null
+  return { domainId, pageIndex }
+}
+
+export function isDomainPageSampleScanId(id: string): boolean {
+  return parseDomainPageSampleScanId(id) != null
+}
+
+/** Attach stable virtual scan ids so overview teaser rows can deep-link. */
+export function withPageSampleScanIds(
+  domainId: string,
+  samples: Array<{ url: string; score: number | null; errors?: number; warnings?: number; scanId?: string }> | undefined,
+): typeof samples {
+  if (!samples) return samples
+  return samples.map((page, index) => ({
+    ...page,
+    scanId: page.scanId?.trim() || synthesizeDomainPageSampleScanId(domainId, index),
+  }))
+}

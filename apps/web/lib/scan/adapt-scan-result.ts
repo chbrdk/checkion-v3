@@ -29,6 +29,7 @@ import type {
   Issue,
   ScanResult,
 } from './types'
+import { synthesizeDomainPageSampleScanId } from '../domain-issue-page-synth'
 import { normalizeUxReadability } from '../readability-cefr'
 import { apiScanScreenshot } from './constants'
 import { selectTopIssueGroups } from '../issue-groups'
@@ -764,11 +765,12 @@ export function adaptDomainResultToContracts(
     scores,
     lede: `Deep scan of ${input.rootUrl} — ${domain.pageCount} pages, ${issues.length} systemic groups.`,
     systemicIssues: systemic,
-    pageSamples: pages.slice(0, 20).map((p) => ({
+    pageSamples: pages.slice(0, 20).map((p, idx) => ({
       url: p.url,
       score: Math.round(p.ux?.score ?? p.score),
       errors: p.stats.errors,
       warnings: p.stats.warnings,
+      scanId: synthesizeDomainPageSampleScanId(input.id, idx),
     })),
     ...aggregates,
   }

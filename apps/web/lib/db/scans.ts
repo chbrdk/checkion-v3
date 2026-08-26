@@ -17,8 +17,16 @@ import { LIVE_DOMAIN_OVERVIEW } from '../fixtures/live-scan-domain-1'
 import { normalizeUxReadability } from '../readability-cefr'
 import {
   parseDomainPageScanId,
+  parseDomainPageSampleScanId,
   synthesizeAffectedPageUrl,
+  withPageSampleScanIds,
 } from '../domain-issue-page-synth'
+import {
+  buildVirtualPageScanOverview,
+  buildVirtualPageScanSummary,
+  virtualPageTemplateIssues,
+  virtualPageTemplateScores,
+} from '../virtual-domain-page-scan'
 import { shouldRunLiveScans } from '../scan/live-scan-gate'
 import { executeSingleLiveScan } from '../scan/pipeline'
 import { startDomainScan } from '../scan/domain-scan-start'
@@ -206,33 +214,54 @@ export async function dbGetScan(id: string): Promise<ScanSummary | null> {
 }
 
 async function resolveVirtualDomainPageScan(id: string): Promise<ScanSummary | null> {
+  const sampleParsed = parseDomainPageSampleScanId(id)
+  if (sampleParsed) {
+    const overview = await dbGetDomainOverview(sampleParsed.domainId)
+    const page = overview?.pageSamples?.[sampleParsed.pageIndex]
+    if (!page || !overview) return null
+    return buildVirtualPageScanSummary({
+      id,
+      projectId: overview.scan.projectId,
+      url: page.url,
+      domainScanId: sampleParsed.domainId,
+      overallScore: page.score,
+      issueCount: page.errors ?? 0,
+      startedAt: overview.scan.startedAt,
+      completedAt: overview.scan.completedAt,
+    })
+  }
+
   const parsed = parseDomainPageScanId(id)
   if (!parsed) return null
-  const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
-  if (!template) return null
   const domainRow = await dbGetDomainScanRow(parsed.domainId)
-  const issues = domainRow?.payload?.issues ?? []
+  if (!domainRow) return null
+  const domain = rowToDomain(domainRow)
+  const issues = domainRow.payload?.issues ?? []
   const issue = issues.find((i) => i.id === parsed.issueId)
   if (!issue) return null
   const overview = await dbGetDomainOverview(parsed.domainId)
-  const rootUrl = overview?.scan.rootUrl ?? template.url
+  const rootUrl = overview?.scan.rootUrl ?? domain.rootUrl
   const seeds =
     issue.affectedPages?.length
       ? issue.affectedPages
       : (overview?.pageSamples ?? []).map((p) => p.url)
   const url = synthesizeAffectedPageUrl(rootUrl, parsed.issueId, parsed.pageIndex, seeds)
-  return {
-    ...rowToScan(template),
+  return buildVirtualPageScanSummary({
     id,
-    mode: 'single',
+    projectId: domain.projectId,
     url,
-  }
+    domainScanId: parsed.domainId,
+    overallScore: overview?.scan.overallScore ?? domain.overallScore,
+    issueCount: issue.affectedCount,
+    startedAt: domain.startedAt,
+    completedAt: domain.completedAt,
+  })
 }
 
 export async function dbGetScanIssues(id: string): Promise<IssueSummary[]> {
-  if (parseDomainPageScanId(id)) {
+  if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
     const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
-    return enrichIssueInspect(template?.payload?.issues ?? []).map((issue) => ({
+    return virtualPageTemplateIssues(template?.payload?.issues).map((issue) => ({
       ...issue,
       scanId: id,
     }))
@@ -246,36 +275,25 @@ export async function dbGetScanIssues(id: string): Promise<IssueSummary[]> {
 export async function dbGetScanScores(id: string): Promise<ScoreCard[]> {
   const overview = await dbGetScanOverview(id)
   if (overview?.scores.length) return overview.scores
-  if (parseDomainPageScanId(id)) {
+  if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
     const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
-    return template?.payload?.scores ?? []
+    return virtualPageTemplateScores(template?.payload?.scores)
   }
   const row = await dbGetScanRow(id)
   return row?.payload?.scores ?? []
 }
 
 export async function dbGetScanOverview(id: string): Promise<ScanOverview | null> {
-  const virtual = parseDomainPageScanId(id)
+  const virtual = parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)
   if (virtual) {
     const scan = await resolveVirtualDomainPageScan(id)
     if (!scan) return null
     const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
-    const rich = buildRichScanOverview(
-      TEMPLATE_SINGLE_SCAN_ID,
-      null,
+    return buildVirtualPageScanOverview(
+      scan,
       template?.payload?.scores,
       template?.payload?.issues,
     )
-    if (!rich) return null
-    return {
-      ...rich,
-      scan,
-      topIssues: enrichIssueInspect(rich.topIssues).map((issue) => ({
-        ...issue,
-        scanId: id,
-      })),
-      ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
-    }
   }
 
   const row = await dbGetScanRow(id)
@@ -351,6 +369,7 @@ export async function dbGetDomainOverview(id: string): Promise<DomainOverview | 
     return {
       ...LIVE_DOMAIN_OVERVIEW,
       scores: row?.payload?.scores ?? LIVE_DOMAIN_OVERVIEW.scores,
+      pageSamples: withPageSampleScanIds(id, LIVE_DOMAIN_OVERVIEW.pageSamples),
     }
   }
 
@@ -359,7 +378,7 @@ export async function dbGetDomainOverview(id: string): Promise<DomainOverview | 
   const domain = rowToDomain(row)
   const issues = row.payload?.issues ?? []
   const extras = row.payload?.overviewExtras ?? {}
-  return {
+  const overview: DomainOverview = {
     scan: domain,
     scores: row.payload?.scores ?? [],
     lede:
@@ -369,6 +388,10 @@ export async function dbGetDomainOverview(id: string): Promise<DomainOverview | 
     systemicIssues:
       (extras.systemicIssues as DomainSystemicIssue[] | undefined) ?? systemicFromIssues(issues),
     ...extras,
+  }
+  return {
+    ...overview,
+    pageSamples: withPageSampleScanIds(id, overview.pageSamples),
   }
 }
 

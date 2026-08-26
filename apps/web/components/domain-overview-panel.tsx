@@ -666,15 +666,21 @@ export function DomainOverviewPanel({
             <h3 id="samples-heading" className="checkion-spread__headline">
               Weakest pages in the deep scan
             </h3>
-            <Text role="meta">Teaser only — full slim-pages table comes later.</Text>
+            <Text role="meta">Open a page magazine for the single-page scan behind each sample.</Text>
           </header>
           <RankedList>
             {overview.pageSamples.slice(0, 8).map((page, i) => (
               <RankedRow
-                key={page.url}
+                key={page.scanId ?? page.url}
                 index={i + 1}
                 label={compactPath(page.url)}
                 secondary={page.url}
+                href={
+                  page.scanId
+                    ? paths.routes.resultSection(page.scanId, 'overview')
+                    : undefined
+                }
+                linkComponent={Link}
                 value={
                   page.score != null
                     ? `${page.score}${page.errors != null ? ` · ${page.errors} err` : ''}`

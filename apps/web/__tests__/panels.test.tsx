@@ -200,6 +200,12 @@ describe('panels smoke', () => {
     expect(screen.getByRole('heading', { name: /How the domain presents itself/i })).toBeTruthy()
     expect(screen.getByLabelText(/Trust and GEO reading/i)).toBeTruthy()
     expect(overview!.seoCoverage?.withTitle).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { name: /Weakest pages in the deep scan/i })).toBeTruthy()
+    const firstSample = overview!.pageSamples?.[0]
+    expect(firstSample?.scanId).toMatch(/^dsample__domain-1__/)
+    expect(
+      document.querySelector(`a[href="/results/${firstSample!.scanId}/overview"]`),
+    ).toBeTruthy()
   })
 
   it('renders domain issues without capture canvas', async () => {

@@ -521,6 +521,8 @@ export interface DomainPageSample {
   score: number | null
   errors?: number
   warnings?: number
+  /** Single-page magazine id (`/results/{scanId}`) — virtual corpus page or persisted page scan. */
+  scanId?: string
 }
 
 /**

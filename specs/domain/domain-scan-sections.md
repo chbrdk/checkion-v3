@@ -20,11 +20,11 @@ Deep magazine summarizes **all single-page scans in a deep scan corpus**. It is 
 - `scan: DomainScanLight` (+ optional `industry`, `tags`, `issueStats`)
 - `scores`, `lede`, `systemicIssues[{ id, title, pageCount, severity? }]`
 - Aggregate chapters: `performance` (avgs), `seoCoverage`, `ux` (+ readability bands), `eco` (+ gradeDistribution), `links`, `securityPrivacy`, `eeat`, `generative`, `infra`, `classification`
-- `pageSamples[]` — overview teaser only (not full slim-pages table)
+- `pageSamples[]` — overview teaser only (not full slim-pages table); each row links to the single-page magazine (`/results/{scanId}/overview`) when `scanId` is present (virtual `dsample__` ids resolve URL + template magazine)
 
 ## Magazine chapters
-- **Overview** — scoreline · `StatusMeterPanel` corpus signal · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList`
-- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to single-page `/results/{scanId}`); no screenshot canvas
+- **Overview** — scoreline · `StatusMeterPanel` corpus signal · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList` (rows → single-page `/results/{scanId}/overview`)
+- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to single-page `/results/{scanId}`); virtual `dpage__` / `dsample__` ids resolve from the domain corpus + bundled magazine template (no seeded `scan-single-1` row required)
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 
 ## Deferred

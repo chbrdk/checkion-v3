@@ -1,0 +1,77 @@
+import type { IssueSummary, ScanOverview, ScanSummary, ScoreCard } from '@checkion-v3/contracts'
+import {
+  LIVE_ISSUES,
+  LIVE_SCAN_SUMMARY,
+  LIVE_SCORE_CARDS,
+} from './fixtures/live-scan-single-1'
+import { buildRichScanOverview, enrichIssueInspect } from './fixtures/scan-overview-rich'
+import { normalizeUxReadability } from './readability-cefr'
+
+/** Build a virtual single-page summary from a domain corpus page (no DB template row). */
+export function buildVirtualPageScanSummary(input: {
+  id: string
+  projectId: string
+  url: string
+  domainScanId: string
+  overallScore: number | null
+  issueCount: number
+  startedAt: string
+  completedAt: string | null
+}): ScanSummary {
+  return {
+    id: input.id,
+    projectId: input.projectId,
+    mode: 'single',
+    url: input.url,
+    domainScanId: input.domainScanId,
+    status: 'completed',
+    startedAt: input.startedAt,
+    completedAt: input.completedAt,
+    overallScore: input.overallScore,
+    issueCount: input.issueCount,
+    device: 'desktop',
+    standard: 'WCAG2AA',
+  }
+}
+
+/**
+ * Magazine payload for virtual domain→page links.
+ * Uses the bundled live single fixture when no seeded `scan-single-1` row exists (staging/prod).
+ */
+export function buildVirtualPageScanOverview(
+  virtualScan: ScanSummary,
+  scores?: ScoreCard[] | null,
+  issues?: IssueSummary[] | null,
+): ScanOverview | null {
+  const rich = buildRichScanOverview(
+    'scan-single-1',
+    LIVE_SCAN_SUMMARY,
+    scores?.length ? scores : LIVE_SCORE_CARDS,
+    issues?.length ? issues : LIVE_ISSUES,
+  )
+  if (!rich) return null
+  return {
+    ...rich,
+    scan: virtualScan,
+    topIssues: enrichIssueInspect(rich.topIssues).map((issue) => ({
+      ...issue,
+      scanId: virtualScan.id,
+    })),
+    deviceSiblings: [
+      {
+        id: virtualScan.id,
+        device: 'desktop',
+        overallScore: virtualScan.overallScore,
+      },
+    ],
+    ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
+  }
+}
+
+export function virtualPageTemplateIssues(issues?: IssueSummary[] | null): IssueSummary[] {
+  return enrichIssueInspect(issues?.length ? issues : LIVE_ISSUES)
+}
+
+export function virtualPageTemplateScores(scores?: ScoreCard[] | null): ScoreCard[] {
+  return scores?.length ? scores : LIVE_SCORE_CARDS
+}
