@@ -30,7 +30,7 @@ export default async function ProjectDetailPage({
     })
 
   return (
-    <AppShell title={project.name} description={project.domain}>
+    <AppShell>
       <ProjectWorkspace
         project={project}
         recentScans={recentScans}

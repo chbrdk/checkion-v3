@@ -28,13 +28,16 @@ Magazine collection hub (same composition as plexon-v3 Collection cards — rebu
 ## Workspace (`/projects/:id`)
 One editorial magazine composition (Audion project magazine / GEO cover / launch hero language) — **rebuild, not Panel skin**:
 
-1. **Topbar** — breadcrumb `Projects / {name}` · ghost Edit · Delete
-2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · primary CTAs (New scan · Open GEO / Start GEO)
-3. **Corpus pulse** — magazine chapter band (single / deep scan / GEO counts · latest score · last scan) as hairline editorial meters — not a dense boxed dashboard
-4. **Chapters** — numbered magazine lists (not Panel tables):
-   - Single scans → `/results/:id/overview`
-   - Deep scans → `/domain/:id/overview`
-   - GEO runs → `/geo/:id/overview` (when present for this project)
+- No AppShell `checkion-page-lead` (domain lives on the cover host line)
+- Comfortable **top padding** under the rail (same breath as projects hub / home)
+
+1. **Topbar** — breadcrumb `Projects / {name}` · primary CTAs (New scan · Open GEO / Start GEO)
+2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · ghost Edit · Delete
+3. **Corpus pulse** — magazine chapter band (single / deep scan / GEO counts · latest score) as hairline editorial meters — not a dense boxed dashboard
+4. **Latest runs** — three equal columns (same composition as home `checkion-home-run-columns`):
+   - **Singles** → `/results/:id/overview`
+   - **Deep scans** → `/domain/:id/overview`
+   - **GEO runs** — always show the column; EmptyState when empty → `/geo/:id/overview`
 
 Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub.
 
