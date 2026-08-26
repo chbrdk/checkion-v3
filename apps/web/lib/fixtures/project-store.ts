@@ -241,13 +241,44 @@ async function memoryDeleteProject(id: string): Promise<boolean> {
 
 /** Visible capability projects (excludes the system unassigned bucket). */
 export async function listProjects(): Promise<ProjectSummary[]> {
-  if (isDatabaseConfigured()) return (await dbApi()).dbListProjects()
-  return memoryListProjects()
+  const base = isDatabaseConfigured()
+    ? await (await dbApi()).dbListProjects()
+    : memoryListProjects()
+  const [{ listScans, listDomainScans }, { listGeoJobs }] = await Promise.all([
+    import('./scan-store'),
+    import('./geo-store'),
+  ])
+  const [scans, domains, geoJobs] = await Promise.all([
+    listScans(),
+    listDomainScans(),
+    listGeoJobs(),
+  ])
+  const { enrichProjectSummariesWithActivity } = await import('../project-activity')
+  return enrichProjectSummariesWithActivity(base, { scans, domains, geoJobs })
 }
 
 export async function getProject(id: string): Promise<ProjectDetail | null> {
-  if (isDatabaseConfigured()) return (await dbApi()).dbGetProject(id)
-  return memoryGetProject(id)
+  const base = isDatabaseConfigured()
+    ? await (await dbApi()).dbGetProject(id)
+    : memoryGetProject(id)
+  if (!base) return null
+  const [{ listScans, listDomainScans }, { listGeoJobs }] = await Promise.all([
+    import('./scan-store'),
+    import('./geo-store'),
+  ])
+  const [scans, domains, geoJobs] = await Promise.all([
+    listScans(id),
+    listDomainScans(id),
+    listGeoJobs(),
+  ])
+  const { computeProjectActivityMetrics } = await import('../project-activity')
+  const metrics = computeProjectActivityMetrics(id, { scans, domains, geoJobs })
+  return {
+    ...base,
+    scanCount: metrics.scanCount,
+    lastScanAt: metrics.lastScanAt,
+    recentScanIds: metrics.recentScanIds,
+  }
 }
 
 export async function getProjectByPlatformId(

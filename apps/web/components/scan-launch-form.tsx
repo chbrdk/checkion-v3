@@ -96,14 +96,14 @@ export function initialWcagDepth(
 
 export function initialGeoMeasurements(
   fromAudion: boolean,
-  defaultMode?: LaunchMode,
+  _defaultMode?: LaunchMode,
   defaultMeasurement?: GeoMeasurement,
   defaultMeasurements?: GeoMeasurement[],
 ): GeoMeasurement[] {
   if (fromAudion) return []
   if (defaultMeasurements?.length) return parseGeoMeasurements(defaultMeasurements)
   if (defaultMeasurement) return parseGeoMeasurements(defaultMeasurement)
-  if (defaultMode === 'geo') return [GEO_MEASUREMENT_DEFAULT]
+  // mode=geo alone does not pre-select a layer — same progressive step as WCAG depth.
   return []
 }
 
@@ -365,8 +365,13 @@ export function ScanLaunchForm({
     setError(null)
     // GEO: empty project by default. WCAG / SEO: keep / restore a Collection pick.
     if (next === 'geo') {
+      // Progressive: measurement tiles first; only explicit deep-link layers skip ahead.
       setGeoMeasurements(
-        initialGeoMeasurements(fromAudion, defaultMode, defaultMeasurement, defaultMeasurements),
+        defaultMeasurements?.length
+          ? parseGeoMeasurements(defaultMeasurements)
+          : defaultMeasurement
+            ? parseGeoMeasurements(defaultMeasurement)
+            : [],
       )
       if (!(defaultProjectId && projectOptions.some((p) => p.id === defaultProjectId))) {
         setProjectId('')

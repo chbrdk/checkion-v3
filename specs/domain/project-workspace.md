@@ -16,10 +16,13 @@ Dummy mode owns full CRUD in the fixture store. Plexon live federation is deferr
 ## Administration (`/projects`)
 Magazine collection hub (same composition as plexon-v3 Collection cards — rebuild, not ledger skin):
 
-- Hairline **collection grid**: create tile first, then project tiles
+- Comfortable **top padding** under the rail (same breath as home / launch covers)
+- Hairline **collection grid** (default) **or** numbered **magazine list** — view toggle in the band (Tiles · List)
 - Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (scans · last scan) · **ghost actions** (Open · Edit · Delete)
-- Magazine band: search + capability filters (All · In sync · Pending · Error) — not a Panel table
-- Create via dashed create card → `Dialog`: name, domain, description
+- **Stats** `scanCount` / `lastScanAt` are computed on read: standalone singles + deep domain jobs + GEO jobs (deep page-scan rows are not double-counted)
+- List anatomy: numbered row · name + domain · capability badge · scans / last scan · ghost actions; create as first list control
+- Magazine band: search + capability filters (All · In sync · Pending · Error) + view toggle — not a Panel table
+- Create via dashed create card (tiles) or list “New project” control → `Dialog`: name, domain, description
 - Deep-link: `/projects?platformProjectId=` → detail when bound; otherwise opens create with that collection id
 
 ## Workspace (`/projects/:id`)

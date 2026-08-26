@@ -35,7 +35,15 @@ export interface ProjectSummary {
   /** Plexon collection / platform project id */
   platformProjectId: string
   capabilityStatus: CapabilitySyncStatus
+  /**
+   * Newest completed activity across standalone singles, deep domain jobs, and GEO jobs.
+   * Computed on read in CHECKION stores (not a stale denormalized counter alone).
+   */
   lastScanAt: string | null
+  /**
+   * Activity count: standalone singles + deep domain jobs + GEO jobs
+   * (excludes deep crawl page-scan rows to avoid double-counting).
+   */
   scanCount: number
 }
 

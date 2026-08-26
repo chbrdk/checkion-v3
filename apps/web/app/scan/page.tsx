@@ -60,8 +60,11 @@ export default async function ScanPage({
   )
   /** AUDION journey handoff always launches WCAG Quick single (never deep / GEO / SEO). */
   const defaultMode: LaunchMode | undefined = fromAudion ? 'single' : parseLaunchMode(params.mode)
+  /** Explicit `measurement=` deep-link only — bare `mode=geo` keeps the progressive measurement step. */
   const defaultMeasurements: GeoMeasurement[] | undefined =
-    defaultMode === 'geo' ? parseGeoMeasurementsOrDefault(params.measurement) : undefined
+    defaultMode === 'geo' && params.measurement != null && String(params.measurement).trim() !== ''
+      ? parseGeoMeasurementsOrDefault(params.measurement)
+      : undefined
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined

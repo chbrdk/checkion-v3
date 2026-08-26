@@ -22,8 +22,6 @@ export default async function HomePage() {
         scans={scans}
         domains={domains}
         geoJobs={geoJobs}
-        scanCount={scans.length}
-        domainCount={domains.length}
       />
     </AppShell>
   )

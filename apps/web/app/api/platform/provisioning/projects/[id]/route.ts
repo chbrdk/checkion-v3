@@ -42,14 +42,15 @@ export async function GET(
   const scans = await listScans(project.id)
   const domains = await listDomainScans(project.id)
   const geoJobs = (await listGeoJobs()).filter((j) => j.projectId === project.id)
-  const standalone = scans.filter((s) => s.mode === 'single').slice(0, CATALOG_LIMIT)
+  const standalone = scans.filter((s) => s.mode === 'single' && !s.domainScanId).slice(0, CATALOG_LIMIT)
   const domainCatalog = domains.slice(0, CATALOG_LIMIT)
   const geoCatalog = geoJobs.slice(0, CATALOG_LIMIT)
+  const activitySingles = scans.filter((s) => !s.domainScanId).length
 
   return jsonWithContract({
     externalProjectId: project.id,
     platformProjectId,
-    scanCount: scans.length + domains.length,
+    scanCount: activitySingles + domains.length + geoJobs.length,
     domainScanCount: domains.length,
     standaloneScanCount: standalone.length,
     geoJobCount: geoJobs.length,

@@ -5,13 +5,13 @@ import path from 'node:path'
 const root = path.resolve(__dirname, '..')
 
 describe('magazine lede + filter cutover', () => {
-  it('home magazine composes Lede / LedeStrip', () => {
+  it('home magazine drops StatLede and pulse LedeStrip', () => {
     const page = readFileSync(path.join(root, 'app/page.tsx'), 'utf8')
     const home = readFileSync(path.join(root, 'components/home-magazine.tsx'), 'utf8')
     expect(page).toContain('HomeMagazine')
-    expect(home).toContain('LedeStrip')
-    expect(home).toContain('Lede')
     expect(home).not.toContain('StatLede')
+    expect(home).not.toContain('LedeStrip')
+    expect(home).not.toContain('Corpus pulse')
   })
 
   it('project and domain filters use FilterRow + Chip', () => {

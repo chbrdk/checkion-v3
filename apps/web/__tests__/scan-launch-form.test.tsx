@@ -6,6 +6,7 @@ import {
   capabilityFromLaunchMode,
   defaultGeoQueries,
   initialCapability,
+  initialGeoMeasurements,
   initialProjectId,
   initialWcagDepth,
   launchModeFromState,
@@ -52,6 +53,12 @@ describe('launch mode mapping', () => {
     expect(initialWcagDepth(false, 'deep')).toBe('deep')
     expect(initialCapability(true)).toBe('wcag')
     expect(initialWcagDepth(true)).toBe('single')
+    expect(initialGeoMeasurements(false, 'geo')).toEqual([])
+    expect(initialGeoMeasurements(false, 'geo', 'live')).toEqual(['live'])
+    expect(initialGeoMeasurements(false, 'geo', undefined, ['recall', 'live'])).toEqual([
+      'recall',
+      'live',
+    ])
   })
 
   it('GEO starts with empty projectId unless deep-linked; WCAG/SEO pick first', () => {
@@ -152,8 +159,20 @@ describe('ScanLaunchForm', () => {
     expect(screen.getByRole('button', { name: /Launch single scan/i })).toBeTruthy()
   })
 
-  it('GEO deep-link skips ahead to full GEO compose with URL+Company+Project', () => {
+  it('GEO mode=geo alone keeps measurement step (no compose yet)', () => {
     render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('group', { name: /GEO measurement/i })).toBeTruthy()
+    expect(screen.getByRole('checkbox', { name: /Model memory\./i })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+    expect(screen.queryByRole('button', { name: /Start GEO job/i })).toBeNull()
+    expect(screen.queryByLabelText(/Scan URL/i)).toBeNull()
+  })
+
+  it('GEO measurement deep-link skips ahead to full GEO compose with URL+Company+Project', () => {
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     expect(screen.getByRole('radio', { name: /GEO\./i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('radiogroup', { name: /WCAG depth/i })).toBeNull()
     expect(screen.getByRole('group', { name: /GEO measurement/i })).toBeTruthy()
@@ -194,7 +213,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('shows GEO fields when GEO capability is selected', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     expect(screen.getByRole('button', { name: /Start GEO job/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /^GEO queries$/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /AI suggest GEO queries/i })).toBeTruthy()
@@ -233,7 +252,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('requires URL or company name before GEO start', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.change(screen.getByLabelText(/Scan URL/i), { target: { value: '' } })
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: '' } })
     expect(screen.getByText(/Provide a URL or company name/i)).toBeTruthy()
@@ -245,7 +264,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('GEO project defaults empty with placeholder and New project affordance', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     const projectTrigger = screen.getByRole('combobox', { name: /^Project$/i })
     expect(projectTrigger).toHaveTextContent(/Select or create project/i)
     expect(screen.getByRole('button', { name: /\+ New project/i })).toBeTruthy()
@@ -254,7 +273,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('opens New project dialog from GEO compose', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
     fireEvent.click(screen.getByRole('button', { name: /\+ New project/i }))
     expect(screen.getByRole('heading', { name: /New project/i })).toBeTruthy()
@@ -262,7 +281,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('adds GEO models via dialog search and Suggest restores default', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
     expect(screen.getByRole('heading', { name: /Add model/i })).toBeTruthy()
     expect(screen.getByRole('group', { name: /Model provider/i })).toBeTruthy()
@@ -295,7 +314,7 @@ describe('ScanLaunchForm', () => {
   })
 
   it('adds and removes GEO query rows from the list', () => {
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     const before = screen.getAllByRole('button', { name: /Remove GEO query/i }).length
     fireEvent.click(screen.getByRole('button', { name: /Add GEO query/i }))
     expect(screen.getByLabelText(/Edit GEO query/i)).toBeTruthy()
@@ -332,7 +351,7 @@ describe('ScanLaunchForm', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.click(screen.getByRole('button', { name: /AI suggest GEO queries/i }))
 
     await waitFor(() => {
@@ -377,7 +396,7 @@ describe('ScanLaunchForm', () => {
     })) as unknown as typeof fetch & { mock: { calls: Array<[unknown, RequestInit?]> } }
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Bosch eBike' } })
     fireEvent.click(screen.getByRole('button', { name: /Add GEO model/i }))
     fireEvent.change(screen.getByLabelText(/Search models/i), { target: { value: 'nano' } })
@@ -428,7 +447,7 @@ describe('ScanLaunchForm', () => {
     })) as unknown as typeof fetch & { mock: { calls: Array<[unknown, RequestInit?]> } }
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultProjectId="proj-1" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" defaultProjectId="proj-1" />)
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
@@ -504,7 +523,7 @@ describe('ScanLaunchForm', () => {
     render(
       <ScanLaunchForm
         projects={projects}
-        defaultMode="geo"
+        defaultMode="geo" defaultMeasurement="recall"
         defaultProjectId="proj-2"
         defaultUrl="https://acme.example/geo"
       />,
@@ -531,7 +550,7 @@ describe('ScanLaunchForm', () => {
     }))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={projects} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={projects} defaultMode="geo" defaultMeasurement="recall" />)
     fireEvent.change(screen.getByLabelText(/Scan URL/i), { target: { value: '' } })
     fireEvent.change(screen.getByLabelText(/Company name/i), { target: { value: 'Acme Robotics' } })
     fireEvent.click(screen.getByRole('button', { name: /Start GEO job/i }))
@@ -563,7 +582,7 @@ describe('ScanLaunchForm', () => {
     }))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<ScanLaunchForm projects={[]} defaultMode="geo" />)
+    render(<ScanLaunchForm projects={[]} defaultMode="geo" defaultMeasurement="recall" />)
     expect(screen.getByText(/No project selected — Start will auto-create/i)).toBeTruthy()
     const start = screen.getByRole('button', { name: /Start GEO job/i })
     expect(start).not.toBeDisabled()
@@ -610,7 +629,7 @@ describe('ScanLaunchForm', () => {
     render(
       <ScanLaunchForm
         projects={[{ id: 'proj-1', name: 'Demo Project', domain: 'demo.example' }]}
-        defaultMode="geo"
+        defaultMode="geo" defaultMeasurement="recall"
         defaultProjectId="proj-1"
         defaultUrl="https://acme.example/"
       />,

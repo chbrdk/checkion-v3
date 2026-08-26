@@ -103,8 +103,6 @@ describe('HomeMagazine', () => {
         scans={[baseScan({ id: 's1', overallScore: 88 })]}
         domains={[baseDomain({ id: 'd1', overallScore: 35 })]}
         geoJobs={[]}
-        scanCount={1}
-        domainCount={1}
       />,
     )
     expect(screen.getByRole('heading', { level: 1, name: 'Reading the site' })).toBeTruthy()

@@ -47,6 +47,7 @@ function compactUrl(url: string): string {
 }
 
 type CapFilter = 'all' | CapabilitySyncStatus
+type ProjectsView = 'tiles' | 'list'
 
 function ProjectMetric({
   icon,
@@ -158,6 +159,61 @@ function CreateProjectCard({ onClick }: { onClick: () => void }) {
   )
 }
 
+function ProjectListRow({
+  project,
+  index,
+  onEdit,
+  onDelete,
+}: {
+  project: ProjectSummary
+  index: number
+  onEdit: (project: ProjectSummary) => void
+  onDelete: (project: ProjectSummary) => void
+}) {
+  const domain = project.domain?.trim() || null
+  return (
+    <li className="checkion-projects-list-row">
+      <span className="checkion-magazine-list-num" aria-hidden>
+        {String(index + 1).padStart(2, '0')}
+      </span>
+      <div className="checkion-projects-list-row__main">
+        <Link
+          href={paths.routes.projectDetail(project.id)}
+          className="checkion-projects-list-row__title"
+        >
+          {project.name}
+        </Link>
+        <Text role="meta" as="p" className="checkion-projects-list-row__meta">
+          {domain ?? 'No domain'}
+          {' · '}
+          {project.scanCount.toLocaleString()} scans
+          {' · '}
+          {formatScanShort(project.lastScanAt)}
+        </Text>
+      </div>
+      <span
+        className="checkion-collection-card-badge checkion-projects-list-row__badge"
+        data-status={project.capabilityStatus}
+      >
+        {capabilityLabel(project.capabilityStatus)}
+      </span>
+      <div className="checkion-projects-list-row__actions">
+        <Link href={paths.routes.projectDetail(project.id)}>
+          <Button variant="ghost" size="sm">
+            Open
+          </Button>
+        </Link>
+        <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
+          Edit
+        </Button>
+        <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
+          Delete
+        </Button>
+      </div>
+    </li>
+  )
+}
+
 export function ProjectListPanel({
   projects,
   bindPlatformProjectId,
@@ -168,6 +224,7 @@ export function ProjectListPanel({
 }) {
   const [query, setQuery] = useState('')
   const [capFilter, setCapFilter] = useState<CapFilter>('all')
+  const [view, setView] = useState<ProjectsView>('tiles')
   const [createOpen, setCreateOpen] = useState(Boolean(bindPlatformProjectId))
   const [editTarget, setEditTarget] = useState<ProjectDetail | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null)
@@ -228,20 +285,56 @@ export function ProjectListPanel({
             </Chip>
           ))}
         </FilterRow>
+        <FilterRow role="group" aria-label="Project layout">
+          <Chip size="sm" selected={view === 'tiles'} onClick={() => setView('tiles')}>
+            Tiles
+          </Chip>
+          <Chip size="sm" selected={view === 'list'} onClick={() => setView('list')}>
+            List
+          </Chip>
+        </FilterRow>
       </div>
 
       <div className="checkion-collection-list">
-        <div className="checkion-collection-grid" aria-label="Projects">
-          <CreateProjectCard onClick={() => setCreateOpen(true)} />
-          {filtered.map((project) => (
-            <ProjectCollectionCard
-              key={project.id}
-              project={project}
-              onEdit={(p) => void openEdit(p)}
-              onDelete={setDeleteTarget}
-            />
-          ))}
-        </div>
+        {view === 'tiles' ? (
+          <div className="checkion-collection-grid" aria-label="Projects">
+            <CreateProjectCard onClick={() => setCreateOpen(true)} />
+            {filtered.map((project) => (
+              <ProjectCollectionCard
+                key={project.id}
+                project={project}
+                onEdit={(p) => void openEdit(p)}
+                onDelete={setDeleteTarget}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="checkion-projects-list-wrap">
+            <button
+              type="button"
+              className="checkion-projects-list-create"
+              onClick={() => setCreateOpen(true)}
+            >
+              <span className="checkion-projects-list-create__label">New project</span>
+              <span className="checkion-projects-list-create__deck">
+                Local CHECKION record for a Plexon collection.
+              </span>
+            </button>
+            {filtered.length > 0 ? (
+              <ol className="checkion-magazine-list checkion-projects-list" aria-label="Projects">
+                {filtered.map((project, index) => (
+                  <ProjectListRow
+                    key={project.id}
+                    project={project}
+                    index={index}
+                    onEdit={(p) => void openEdit(p)}
+                    onDelete={setDeleteTarget}
+                  />
+                ))}
+              </ol>
+            ) : null}
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <EmptyState className="checkion-collection-list-status">

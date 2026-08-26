@@ -6,7 +6,7 @@ import type {
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
-import { Button, EmptyState, Lede, LedeStrip, Text } from '@msqdx/ui'
+import { Button, EmptyState, Text } from '@msqdx/ui'
 import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
 import { paths } from '../lib/paths'
 
@@ -171,15 +171,11 @@ export function HomeMagazine({
   scans,
   domains,
   geoJobs,
-  scanCount,
-  domainCount,
 }: {
   projects: ProjectSummary[]
   scans: ScanSummary[]
   domains: DomainScanLight[]
   geoJobs: GeoJobSummary[]
-  scanCount: number
-  domainCount: number
 }) {
   const singleList = buildHomeSingleRuns(scans, 8)
   const deepList = [...domains].sort(byCompletedAtDesc).slice(0, 8)
@@ -212,16 +208,42 @@ export function HomeMagazine({
       </header>
 
       <HomeChapter
-        eyebrow="01 · Pulse"
-        title="Corpus pulse"
-        deck="How much of the corpus this capability has already read."
+        eyebrow="01 · Launch"
+        title="Start a run"
+        deck="Pick a path — single page, host-wide deep, or answer-engine presence."
       >
-        <LedeStrip className="checkion-home-pulse">
-          <Lede label="Projects" value={projects.length} />
-          <Lede label="Scans" value={scanCount} />
-          <Lede label="Deep" value={domainCount} />
-          <Lede label="GEO" value={geoJobs.length} />
-        </LedeStrip>
+        <div className="checkion-home-cta-row" role="group" aria-label="Launch actions">
+          <Link
+            href={paths.routes.scanLaunch({ mode: 'single' })}
+            className="checkion-capability-tile checkion-home-cta"
+          >
+            <span className="checkion-capability-tile__kicker">01 · WCAG</span>
+            <span className="checkion-capability-tile__label">Single</span>
+            <span className="checkion-capability-tile__deck">
+              One page, fast WCAG read — drop into the result magazine.
+            </span>
+          </Link>
+          <Link
+            href={paths.routes.scanLaunch({ mode: 'deep' })}
+            className="checkion-capability-tile checkion-home-cta"
+          >
+            <span className="checkion-capability-tile__kicker">02 · Corpus</span>
+            <span className="checkion-capability-tile__label">Deep</span>
+            <span className="checkion-capability-tile__deck">
+              Host-wide crawl with page counts and systemic issues.
+            </span>
+          </Link>
+          <Link
+            href={paths.routes.scanLaunch({ mode: 'geo' })}
+            className="checkion-capability-tile checkion-home-cta"
+          >
+            <span className="checkion-capability-tile__kicker">03 · Presence</span>
+            <span className="checkion-capability-tile__label">GEO</span>
+            <span className="checkion-capability-tile__deck">
+              Competitive presence across answer engines.
+            </span>
+          </Link>
+        </div>
       </HomeChapter>
 
       <HomeChapter
@@ -356,46 +378,7 @@ export function HomeMagazine({
       </HomeChapter>
 
       <HomeChapter
-        eyebrow="03 · Launch"
-        title="Start a run"
-        deck="Pick a path — single page, host-wide deep, or answer-engine presence."
-      >
-        <div className="checkion-home-cta-row" role="group" aria-label="Launch actions">
-          <Link
-            href={paths.routes.scanLaunch({ mode: 'single' })}
-            className="checkion-capability-tile checkion-home-cta"
-          >
-            <span className="checkion-capability-tile__kicker">01 · WCAG</span>
-            <span className="checkion-capability-tile__label">Single</span>
-            <span className="checkion-capability-tile__deck">
-              One page, fast WCAG read — drop into the result magazine.
-            </span>
-          </Link>
-          <Link
-            href={paths.routes.scanLaunch({ mode: 'deep' })}
-            className="checkion-capability-tile checkion-home-cta"
-          >
-            <span className="checkion-capability-tile__kicker">02 · Corpus</span>
-            <span className="checkion-capability-tile__label">Deep</span>
-            <span className="checkion-capability-tile__deck">
-              Host-wide crawl with page counts and systemic issues.
-            </span>
-          </Link>
-          <Link
-            href={paths.routes.scanLaunch({ mode: 'geo' })}
-            className="checkion-capability-tile checkion-home-cta"
-          >
-            <span className="checkion-capability-tile__kicker">03 · Presence</span>
-            <span className="checkion-capability-tile__label">GEO</span>
-            <span className="checkion-capability-tile__deck">
-              Competitive presence across answer engines.
-            </span>
-          </Link>
-        </div>
-      </HomeChapter>
-
-      <HomeChapter
-        eyebrow="04 · Projects"
+        eyebrow="03 · Projects"
         title="Recent projects"
         deck="Collections this capability has been reading."
         meta={recentProjects.length > 0 ? `${recentProjects.length}` : undefined}
