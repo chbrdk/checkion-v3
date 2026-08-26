@@ -24,6 +24,7 @@ import { ScoresPanel } from './scores-panel'
 import { LabelWithTip } from './help-tip'
 import { buildSeoReadingFallback } from '../lib/domain-seo-reading'
 import { buildTrustGeoReadingFallback } from '../lib/domain-trust-reading'
+import { useT } from '../lib/user-prefs'
 
 function msLabel(value: number): string {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} s`
@@ -130,6 +131,7 @@ export function DomainOverviewPanel({
   overview: DomainOverview
   issuesHref?: string
 }) {
+  const t = useT()
   const sortedScores = [...overview.scores].sort((a, b) => a.value - b.value)
   const seo = overview.seoCoverage
   const perf = overview.performance
@@ -288,9 +290,9 @@ export function DomainOverviewPanel({
     <div className="checkion-magazine-body checkion-spread checkion-domain-overview">
       <section className="checkion-spread__open" aria-labelledby="domain-scoreline-heading">
         <div className="checkion-spread__open-main">
-          <p className="checkion-spread__eyebrow">Scoreline</p>
+          <p className="checkion-spread__eyebrow">{t('domain.scorelineEyebrow')}</p>
           <h3 id="domain-scoreline-heading" className="checkion-spread__headline">
-            Seven lenses on the corpus
+            {t('domain.scorelineHeadline')}
           </h3>
           <ScoresPanel scores={sortedScores as ScoreCard[]} />
         </div>
@@ -298,7 +300,7 @@ export function DomainOverviewPanel({
 
       <StatusMeterPanel
         className="checkion-domain-corpus-signal"
-        title="Corpus signal"
+        title={t('domain.corpusSignal')}
         meta={`${overview.scan.pageCount.toLocaleString()} pages`}
         level={corpusLevel(overview.scores)}
         banner={corpusBanner(overview)}
@@ -308,11 +310,11 @@ export function DomainOverviewPanel({
       {systemicTop.length > 0 ? (
         <section className="checkion-domain-chapter" aria-labelledby="systemic-heading">
           <header className="checkion-domain-chapter__head">
-            <p className="checkion-spread__eyebrow">Systemic</p>
+            <p className="checkion-spread__eyebrow">{t('domain.systemicEyebrow')}</p>
             <h3 id="systemic-heading" className="checkion-spread__headline">
-              Findings that repeat across pages
+              {t('domain.systemicHeadline')}
             </h3>
-            <Hint>Ranked by pages affected — same rule on many single-page scans.</Hint>
+            <Hint>{t('domain.systemicHint')}</Hint>
           </header>
           <RankedList
             className="checkion-domain-systemic-rank"
@@ -339,7 +341,7 @@ export function DomainOverviewPanel({
           </RankedList>
           <p className="checkion-domain-chapter__foot">
             <Link href={issuesPath} className="checkion-domain-callout__link">
-              Open systemic issues →
+              {t('domain.openSystemic')}
             </Link>
           </p>
         </section>
@@ -350,7 +352,7 @@ export function DomainOverviewPanel({
           <header className="checkion-metrics-spread__head">
             <p className="checkion-spread__eyebrow">Field notes</p>
             <h3 id="domain-margins-heading" className="checkion-spread__headline">
-              Margins &amp; pace
+              {t('domain.marginsHeadline')}
             </h3>
           </header>
           <div
@@ -662,11 +664,11 @@ export function DomainOverviewPanel({
       {overview.pageSamples && overview.pageSamples.length > 0 ? (
         <section className="checkion-domain-chapter" aria-labelledby="samples-heading">
           <header className="checkion-domain-chapter__head">
-            <p className="checkion-spread__eyebrow">Page samples</p>
+            <p className="checkion-spread__eyebrow">{t('domain.samplesEyebrow')}</p>
             <h3 id="samples-heading" className="checkion-spread__headline">
-              Weakest pages in the deep scan
+              {t('domain.samplesHeadline')}
             </h3>
-            <Text role="meta">Open a page magazine for the single-page scan behind each sample.</Text>
+            <Text role="meta">{t('domain.samplesMeta')}</Text>
           </header>
           <RankedList>
             {overview.pageSamples.slice(0, 8).map((page, i) => (

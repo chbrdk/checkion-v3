@@ -18,6 +18,8 @@ import type { TipId } from '../lib/help-tips'
 import { paths } from '../lib/paths'
 import { LabelWithTip } from './help-tip'
 import { NavIconJobs } from './nav-icons'
+import { useT } from '../lib/user-prefs'
+import type { Translator } from '../lib/i18n'
 
 type TrackedJobResource = 'scan' | 'domain' | 'geo'
 type TrackedJobStatus = ScanStatus
@@ -163,9 +165,12 @@ async function readRemoteStatus(job: TrackedJob): Promise<{
   return { detail, progress: data.progress }
 }
 
-function jobDetail(job: TrackedJob): string {
+function jobDetail(job: TrackedJob, t: Translator): string {
   if (job.resource === 'domain' && job.progress) {
-    const prefix = `${job.progress.scanned}/${job.progress.total} pages scanned`
+    const prefix = t('jobs.pagesScanned', {
+      scanned: job.progress.scanned,
+      total: job.progress.total,
+    })
     return job.progress.currentUrl ? `${prefix} · ${job.progress.currentUrl}` : prefix
   }
   return job.detail || job.href
@@ -392,6 +397,7 @@ export function JobNotificationCenterPanel({
 }) {
   const { jobs, restartingKey, controllingKey, dismissJob, clearFinished, restartDomainJob, controlDomainJob } =
     useJobNotifications()
+  const t = useT()
   const panelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -405,7 +411,7 @@ export function JobNotificationCenterPanel({
       if (panelRef.current?.contains(target)) return
       const railControl = target.closest?.('.nav-rail .rail-link')
       const aria = railControl?.getAttribute('aria-label') ?? ''
-      if (aria === 'Jobs' || aria.startsWith('Jobs,')) return
+      if (aria === t('nav.jobs') || aria.startsWith(`${t('nav.jobs')},`)) return
       onClose()
     }
     window.addEventListener('keydown', onKey)
@@ -414,7 +420,7 @@ export function JobNotificationCenterPanel({
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('mousedown', onPointer)
     }
-  }, [open, onClose])
+  }, [open, onClose, t])
 
   if (!open) return null
 
@@ -428,20 +434,20 @@ export function JobNotificationCenterPanel({
       className="checkion-job-center checkion-job-center--rail"
       data-edge={edge}
       role="dialog"
-      aria-label="Notification center"
+      aria-label={t('jobs.aria')}
     >
       <div className="checkion-job-center__panel">
         <div className="checkion-job-center__head">
           <div>
-            <Text role="label">Notification center</Text>
-            <Text role="meta">Running scans, deep scans, and GEO jobs.</Text>
+            <Text role="label">{t('jobs.title')}</Text>
+            <Text role="meta">{t('jobs.meta')}</Text>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={clearFinished}>
-            Clear finished
+            {t('jobs.clearFinished')}
           </Button>
         </div>
         {jobs.length === 0 ? (
-          <Text role="meta">No recent jobs.</Text>
+          <Text role="meta">{t('jobs.empty')}</Text>
         ) : (
           <ol className="checkion-job-center__list">
             {jobs.map((job) => (
@@ -449,7 +455,7 @@ export function JobNotificationCenterPanel({
                 <div className="checkion-job-center__row">
                   <div className="checkion-job-center__copy">
                     <strong>{job.title}</strong>
-                    <Text role="meta">{jobDetail(job)}</Text>
+                    <Text role="meta">{jobDetail(job, t)}</Text>
                   </div>
                   <div className="checkion-job-center__status">
                     {JOB_STATUS_TIP[job.status] ? (
@@ -467,7 +473,7 @@ export function JobNotificationCenterPanel({
                 </div>
                 <div className="checkion-job-center__actions">
                   <Link href={job.href} onClick={onClose}>
-                    Open
+                    {t('common.open')}
                   </Link>
                   {job.resource === 'domain' &&
                   (job.status === 'running' || job.status === 'queued') ? (
@@ -477,7 +483,7 @@ export function JobNotificationCenterPanel({
                       className="checkion-job-center__dismiss"
                       disabled={controllingKey === itemKey(job)}
                     >
-                      Pause
+                      {t('common.pause')}
                     </button>
                   ) : null}
                   {job.resource === 'domain' && job.status === 'paused' ? (
@@ -487,7 +493,7 @@ export function JobNotificationCenterPanel({
                       className="checkion-job-center__dismiss"
                       disabled={controllingKey === itemKey(job)}
                     >
-                      Resume
+                      {t('common.resume')}
                     </button>
                   ) : null}
                   {job.resource === 'domain' && isActiveJobStatus(job.status) ? (
@@ -497,7 +503,7 @@ export function JobNotificationCenterPanel({
                       className="checkion-job-center__dismiss"
                       disabled={controllingKey === itemKey(job)}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   ) : null}
                   {job.resource === 'domain' &&
@@ -510,7 +516,7 @@ export function JobNotificationCenterPanel({
                       className="checkion-job-center__dismiss"
                       disabled={restartingKey === itemKey(job)}
                     >
-                      {restartingKey === itemKey(job) ? 'Restarting' : 'Restart'}
+                      {restartingKey === itemKey(job) ? t('common.restarting') : t('common.restart')}
                     </button>
                   ) : null}
                   <button
@@ -518,7 +524,7 @@ export function JobNotificationCenterPanel({
                     onClick={() => dismissJob(job.id, job.resource)}
                     className="checkion-job-center__dismiss"
                   >
-                    Dismiss
+                    {t('common.dismiss')}
                   </button>
                 </div>
               </li>

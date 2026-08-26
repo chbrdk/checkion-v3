@@ -13,7 +13,7 @@ export default async function SettingsRoutePage() {
   const { items: tokens } = await listApiTokensForOwner(toApiTokenOwnerId(session?.user))
 
   return (
-    <AppShell title="Settings" description="Profile, appearance, API tokens, and federation.">
+    <AppShell descriptionKey="pages.settings.lead">
       <SettingsPage
         initialTokens={tokens}
         plexonBase={plexonBaseUrl()}

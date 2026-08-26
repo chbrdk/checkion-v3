@@ -107,6 +107,7 @@ Public landing: `/share/[token]` · API `/api/share`
 - Route: `/settings` (`paths.routes.settings`) — Account, Profile, Appearance, Language, API tokens, Federation
 - Spec: `specs/domain/settings.md` · composition mirrors audion-v3 / plexon-v3 section bands
 - Rail footer avatar entry; prefs via `paths.displayNameStorageKey` / `themeStorageKey` / `localeStorageKey`
+- UI locale (SET-L1): `apps/web/lib/i18n.ts` · `apps/web/locales/{en,de}.json` · `knowledge/i18n.md` — chrome via `useUserPrefs().t`
 - Help tips (bilingual en/de via locale): `apps/web/lib/help-tips.ts` · `apps/web/components/help-tip.tsx` · spec `specs/domain/help-tips.md` · DS `InfoTip` from `@msqdx/ui`
 
 ## API tokens

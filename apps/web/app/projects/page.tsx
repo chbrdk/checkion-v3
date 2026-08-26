@@ -23,7 +23,7 @@ export default async function ProjectsPage({
 
   const projects = await listProjects()
   return (
-    <AppShell title="Projects">
+    <AppShell descriptionKey="pages.projects.lead">
       <ProjectListPanel projects={projects} bindPlatformProjectId={bindPlatformProjectId} />
     </AppShell>
   )

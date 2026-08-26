@@ -6,6 +6,7 @@ import { Alert, Button, Field, Input, Text } from '@msqdx/ui'
 import type { ProjectDetail, ProjectSummary } from '@checkion-v3/contracts'
 import { ConfirmDialog, Dialog } from '../lib/msqdx-ui-client'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
 type ProjectFormState = {
   name: string
@@ -45,6 +46,7 @@ export function ProjectFormDialog({
   onSaved?: (project: ProjectDetail) => void
 }) {
   const router = useRouter()
+  const t = useT()
   const [form, setForm] = useState<ProjectFormState>(emptyForm)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +73,7 @@ export function ProjectFormDialog({
             platformProjectId: platformProjectId,
           }),
         })
-        if (!res.ok) throw new Error(`Create failed (${res.status})`)
+        if (!res.ok) throw new Error(t('errors.createFailed') + ` (${res.status})`)
         const project = (await res.json()) as ProjectDetail
         onClose()
         onSaved?.(project)
@@ -98,7 +100,7 @@ export function ProjectFormDialog({
       onSaved?.(project)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed')
+      setError(err instanceof Error ? err.message : t('errors.createFailed'))
     } finally {
       setBusy(false)
     }
@@ -108,36 +110,36 @@ export function ProjectFormDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={mode === 'create' ? 'New project' : 'Edit project'}
+      title={mode === 'create' ? t('projects.dialogCreateTitle') : t('projects.dialogEditTitle')}
       actions={
         <>
           <Button variant="ghost" size="sm" onClick={onClose} disabled={busy}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button size="sm" onClick={submit} disabled={busy || !form.name.trim() || !form.domain.trim()}>
-            {mode === 'create' ? 'Create' : 'Save'}
+            {mode === 'create' ? t('projects.dialogCreate') : t('projects.dialogSave')}
           </Button>
         </>
       }
     >
       <div className="checkion-project-form">
-        <Field label="Name" hint="CHECKION display name for this collection">
+        <Field label={t('projects.dialogName')} hint={t('projects.dialogNameHint')}>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             required
-            aria-label="Project name"
+            aria-label={t('projects.dialogNameAria')}
           />
         </Field>
-        <Field label="Domain" hint="Primary hostname or URL">
+        <Field label={t('projects.dialogDomain')} hint={t('projects.dialogDomainHint')}>
           <Input
             value={form.domain}
             onChange={(e) => setForm((f) => ({ ...f, domain: e.target.value }))}
             required
-            aria-label="Project domain"
+            aria-label={t('projects.dialogDomainAria')}
           />
         </Field>
-        <Field label="Description" hint="Optional">
+        <Field label={t('projects.dialogDescription')} hint={t('projects.dialogOptional')}>
           <textarea
             className="checkion-project-form__textarea"
             value={form.description}
@@ -145,27 +147,27 @@ export function ProjectFormDialog({
               setForm((f) => ({ ...f, description: e.target.value }))
             }
             rows={3}
-            aria-label="Project description"
+            aria-label={t('projects.dialogDescriptionAria')}
           />
         </Field>
         {mode === 'edit' && initial ? (
           <dl className="checkion-meta-grid checkion-meta-grid--compact">
             <div>
-              <dt>CHECKION id</dt>
+              <dt>{t('projects.dialogCheckionId')}</dt>
               <dd>{initial.id}</dd>
             </div>
             <div>
-              <dt>Collection</dt>
+              <dt>{t('projects.attrCollection')}</dt>
               <dd>{initial.platformProjectId}</dd>
             </div>
             <div>
-              <dt>Capability</dt>
+              <dt>{t('projects.attrCapability')}</dt>
               <dd>{initial.capabilityStatus}</dd>
             </div>
           </dl>
         ) : null}
         {platformProjectId && mode === 'create' ? (
-          <Text role="meta">Will bind to collection {platformProjectId}.</Text>
+          <Text role="meta">{t('projects.dialogBindCollection', { id: platformProjectId })}</Text>
         ) : null}
         {error ? <Alert tone="error">{error}</Alert> : null}
       </div>
@@ -183,6 +185,7 @@ export function ProjectDeleteConfirm({
   onClose: () => void
 }) {
   const router = useRouter()
+  const t = useT()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -210,11 +213,13 @@ export function ProjectDeleteConfirm({
         onConfirm={() => {
           void confirmDelete()
         }}
-        title="Delete project?"
-        confirmLabel={busy ? 'Deleting…' : 'Delete'}
+        title={t('projects.dialogDeleteTitle')}
+        confirmLabel={busy ? t('projects.deleting') : t('projects.dialogDeleteConfirm')}
         danger
       >
-        Removes {project?.name ?? 'this project'}. Scans stay reachable under Unassigned.
+        {t('projects.dialogDeleteBody', {
+          name: project?.name ?? t('projects.dialogDeleteNameFallback'),
+        })}
         {error ? <Alert tone="error">{error}</Alert> : null}
       </ConfirmDialog>
     </>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
 export type GeoSectionId = 'overview' | 'queries'
 
@@ -16,6 +17,7 @@ export function GeoSectionNav({
   jobId: string
   active: GeoSectionId
 }) {
+  const t = useT()
   const [compact, setCompact] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const compactRef = useRef(false)
@@ -48,13 +50,13 @@ export function GeoSectionNav({
     {
       id: 'overview' as const,
       index: '01',
-      label: 'Overview',
+      label: t('nav.overview'),
       href: paths.routes.geoSection(jobId, 'overview'),
     },
     {
       id: 'queries' as const,
       index: '02',
-      label: 'Queries',
+      label: t('nav.queries'),
       href: paths.routes.geoSection(jobId, 'queries'),
     },
   ]
@@ -66,10 +68,10 @@ export function GeoSectionNav({
         className={
           compact ? 'checkion-contents checkion-contents--compact' : 'checkion-contents'
         }
-        aria-label="GEO result sections"
+        aria-label={t('nav.geoSections')}
         data-compact={compact ? 'true' : undefined}
       >
-        <p className="checkion-contents__label">Contents</p>
+        <p className="checkion-contents__label">{t('nav.contents')}</p>
         <ul className="checkion-contents__list" role="tablist">
           {sections.map((s) => {
             const selected = s.id === active

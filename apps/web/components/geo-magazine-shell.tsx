@@ -1,11 +1,9 @@
-import Link from 'next/link'
-import { Chip } from '@msqdx/ui'
-import type { GeoOverview } from '@checkion-v3/contracts'
-import { paths } from '../lib/paths'
-import { scoreTone } from '../lib/scan-display'
-import { getProject } from '../lib/fixtures/project-store'
-import { GeoSectionNav, type GeoSectionId } from './geo-section-nav'
 import type { ReactNode } from 'react'
+import type { GeoOverview } from '@checkion-v3/contracts'
+import { getProject } from '../lib/fixtures/project-store'
+import { scoreTone } from '../lib/scan-display'
+import { GeoSectionNav, type GeoSectionId } from './geo-section-nav'
+import { GeoMagazineChrome } from './magazine-shell-chrome'
 
 function hostFromUrl(url: string): string {
   try {
@@ -39,57 +37,19 @@ export async function GeoMagazineShell({
       className="checkion-magazine checkion-magazine--geo checkion-magazine--editorial"
       data-variant={variant}
     >
-      <div className="checkion-magazine-topbar">
-        <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
-          <Link href={paths.routes.geo}>GEO</Link>
-          <span className="briefing-nav-sep" aria-hidden>
-            /
-          </span>
-          <Link href={paths.routes.projectDetail(job.projectId)}>
-            {project?.name ?? job.projectId}
-          </Link>
-          <span className="briefing-nav-sep" aria-hidden>
-            /
-          </span>
-          <span>{job.id}</span>
-        </nav>
-        {actions ? <div className="checkion-magazine-topbar-actions">{actions}</div> : null}
-      </div>
-
-      <header className="checkion-masthead" data-tone={tone} data-variant={variant}>
-        <div className="checkion-masthead__hero">
-          <div className="checkion-cover__score-col">
-            <div
-              className="checkion-cover__score"
-              aria-label={`GEO score ${job.overallScore ?? 'none'}`}
-            >
-              <span className="checkion-cover__score-num">{job.overallScore ?? '—'}</span>
-              <span className="checkion-cover__score-label">geo</span>
-            </div>
-          </div>
-          <div className="checkion-cover__copy">
-            <p className="checkion-cover__kicker">GEO briefing</p>
-            <p className="checkion-cover__host">{host}</p>
-            <h2 className="checkion-cover__title">
-              {variant === 'cover' ? 'Where answer engines place you' : job.title}
-            </h2>
-            {variant === 'cover' ? (
-              <>
-                <p className="checkion-cover__deck">{overview.lede}</p>
-                <div className="checkion-chip-row checkion-cover__tags">
-                  {overview.models.map((m) => (
-                    <Chip key={m} static size="sm">
-                      {m}
-                    </Chip>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="checkion-cover__deck checkion-cover__deck--folio">{job.title}</p>
-            )}
-          </div>
-        </div>
-      </header>
+      <GeoMagazineChrome
+        tone={tone}
+        projectId={job.projectId}
+        projectName={project?.name ?? job.projectId}
+        jobId={job.id}
+        overallScore={job.overallScore}
+        host={host}
+        title={job.title}
+        lede={overview.lede}
+        models={overview.models}
+        variant={variant}
+        actions={actions}
+      />
 
       <GeoSectionNav jobId={job.id} active={activeSection} />
       {children}

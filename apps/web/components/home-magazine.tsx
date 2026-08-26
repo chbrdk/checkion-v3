@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type {
@@ -9,6 +11,8 @@ import type {
 import { Button, EmptyState, Text } from '@msqdx/ui'
 import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
+import type { Translator } from '../lib/i18n'
 
 export type HomeSingleRun = {
   id: string
@@ -62,10 +66,10 @@ export function buildHomeRecentProjects(projects: ProjectSummary[], limit = 5): 
     .slice(0, limit)
 }
 
-function capabilityLabel(status: ProjectSummary['capabilityStatus']): string {
-  if (status === 'in_sync') return 'In sync'
-  if (status === 'error') return 'Error'
-  return 'Pending'
+function capabilityLabel(status: ProjectSummary['capabilityStatus'], t: Translator): string {
+  if (status === 'in_sync') return t('common.capabilityInSync')
+  if (status === 'error') return t('common.capabilityError')
+  return t('common.capabilityPending')
 }
 
 function HomeChapter({
@@ -124,7 +128,9 @@ function RunColumn({
 }
 
 function HomeProjectCard({ project }: { project: ProjectSummary }) {
+  const t = useT()
   const domain = project.domain?.trim() || null
+  const cap = capabilityLabel(project.capabilityStatus, t)
   return (
     <article className="checkion-collection-card checkion-home-project-card">
       <header className="checkion-collection-card-head">
@@ -134,18 +140,18 @@ function HomeProjectCard({ project }: { project: ProjectSummary }) {
         <span
           className="checkion-collection-card-badge"
           data-status={project.capabilityStatus}
-          title={`Capability ${capabilityLabel(project.capabilityStatus).toLowerCase()}`}
+          title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}
         >
-          {capabilityLabel(project.capabilityStatus)}
+          {cap}
         </span>
       </header>
       <Text role="headline" as="h3" className="checkion-collection-card-title">
         {project.name}
       </Text>
-      <div className="checkion-collection-card-stats" aria-label="Project metrics">
+      <div className="checkion-collection-card-stats" aria-label={t('projects.metricsAria')}>
         <div className="checkion-collection-metric" data-linked="true">
           <span className="checkion-collection-metric-value">{project.scanCount}</span>
-          <span className="checkion-collection-metric-label">Scans</span>
+          <span className="checkion-collection-metric-label">{t('common.scans')}</span>
         </div>
         <div
           className="checkion-collection-metric"
@@ -154,12 +160,12 @@ function HomeProjectCard({ project }: { project: ProjectSummary }) {
           <span className="checkion-collection-metric-value">
             {formatScanShort(project.lastScanAt)}
           </span>
-          <span className="checkion-collection-metric-label">Last scan</span>
+          <span className="checkion-collection-metric-label">{t('common.lastScan')}</span>
         </div>
       </div>
       <div className="checkion-collection-card-actions">
         <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
-          <Button variant="ghost">Open</Button>
+          <Button variant="ghost">{t('common.open')}</Button>
         </Link>
       </div>
     </article>
@@ -177,6 +183,7 @@ export function HomeMagazine({
   domains: DomainScanLight[]
   geoJobs: GeoJobSummary[]
 }) {
+  const t = useT()
   const singleList = buildHomeSingleRuns(scans, 8)
   const deepList = [...domains].sort(byCompletedAtDesc).slice(0, 8)
   const geoList = [...geoJobs].sort(byCompletedAtDesc).slice(0, 8)
@@ -188,75 +195,69 @@ export function HomeMagazine({
       data-section="home-magazine"
     >
       <header className="checkion-home-cover">
-        <p className="checkion-cover__kicker">CHECKION</p>
-        <h1 className="checkion-home-cover__title">Reading the site</h1>
-        <p className="checkion-home-cover__lede">
-          Latest accessibility, deep corpus, and GEO runs — scores at a glance, magazines one click
-          away.
-        </p>
+        <p className="checkion-cover__kicker">{t('home.kicker')}</p>
+        <h1 className="checkion-home-cover__title">{t('home.title')}</h1>
+        <p className="checkion-home-cover__lede">{t('home.lede')}</p>
         <div className="checkion-home-cover__actions">
           <Link href={paths.routes.scan}>
-            <Button>New scan</Button>
+            <Button>{t('projects.newScan')}</Button>
           </Link>
           <Link href={paths.routes.projects}>
-            <Button variant="ghost">Projects</Button>
+            <Button variant="ghost">{t('nav.projects')}</Button>
           </Link>
         </div>
       </header>
 
       <HomeChapter
-        eyebrow="01 · Launch"
-        title="Start a run"
-        deck="Pick a path — single page, host-wide deep, or answer-engine presence."
+        eyebrow={t('home.launchEyebrow')}
+        title={t('home.launchTitle')}
+        deck={t('home.launchDeck')}
       >
-        <div className="checkion-home-cta-row" role="group" aria-label="Launch actions">
+        <div className="checkion-home-cta-row" role="group" aria-label={t('home.launchAria')}>
           <Link
             href={paths.routes.scanLaunch({ mode: 'single' })}
             className="checkion-capability-tile checkion-home-cta"
           >
-            <span className="checkion-capability-tile__kicker">01 · WCAG</span>
-            <span className="checkion-capability-tile__label">Single</span>
-            <span className="checkion-capability-tile__deck">
-              One page, fast WCAG read — drop into the result magazine.
-            </span>
+            <span className="checkion-capability-tile__kicker">{t('home.singleKicker')}</span>
+            <span className="checkion-capability-tile__label">{t('home.singleLabel')}</span>
+            <span className="checkion-capability-tile__deck">{t('home.singleDeck')}</span>
           </Link>
           <Link
             href={paths.routes.scanLaunch({ mode: 'deep' })}
             className="checkion-capability-tile checkion-home-cta"
           >
-            <span className="checkion-capability-tile__kicker">02 · Corpus</span>
-            <span className="checkion-capability-tile__label">Deep</span>
-            <span className="checkion-capability-tile__deck">
-              Host-wide crawl with page counts and systemic issues.
-            </span>
+            <span className="checkion-capability-tile__kicker">{t('home.deepKicker')}</span>
+            <span className="checkion-capability-tile__label">{t('home.deepLabel')}</span>
+            <span className="checkion-capability-tile__deck">{t('home.deepDeck')}</span>
           </Link>
           <Link
             href={paths.routes.scanLaunch({ mode: 'geo' })}
             className="checkion-capability-tile checkion-home-cta"
           >
-            <span className="checkion-capability-tile__kicker">03 · Presence</span>
-            <span className="checkion-capability-tile__label">GEO</span>
-            <span className="checkion-capability-tile__deck">
-              Competitive presence across answer engines.
-            </span>
+            <span className="checkion-capability-tile__kicker">{t('home.geoKicker')}</span>
+            <span className="checkion-capability-tile__label">{t('home.geoLabel')}</span>
+            <span className="checkion-capability-tile__deck">{t('home.geoDeck')}</span>
           </Link>
         </div>
       </HomeChapter>
 
       <HomeChapter
-        eyebrow="02 · Runs"
-        title="Latest runs"
-        deck="Singles, deep corpus, and GEO — numbered lists with score color bands."
+        eyebrow={t('home.runsEyebrow')}
+        title={t('home.runsTitle')}
+        deck={t('home.runsDeck')}
       >
-        <div className="checkion-home-run-columns" aria-label="Latest runs by mode">
+        <div className="checkion-home-run-columns" aria-label={t('home.runsAria')}>
           <RunColumn
-            title="Singles"
-            ariaLabel="Single scans"
+            title={t('home.singles')}
+            ariaLabel={t('home.singlesAria')}
             empty={
               singleList.length === 0 ? (
                 <EmptyState className="checkion-project-chapter__empty">
-                  No singles yet.{' '}
-                  <Link href={paths.routes.scanLaunch({ mode: 'single' })}>Launch one</Link>.
+                  {t('home.emptySingles')}{' '}
+                  <Link href={paths.routes.scanLaunch({ mode: 'single' })}>
+                    {t('home.emptySinglesCta')}
+                  </Link>
+                  .
                 </EmptyState>
               ) : undefined
             }
@@ -291,13 +292,16 @@ export function HomeMagazine({
           </RunColumn>
 
           <RunColumn
-            title="Deep scans"
-            ariaLabel="Deep scans"
+            title={t('home.deepScans')}
+            ariaLabel={t('home.deepScansAria')}
             empty={
               deepList.length === 0 ? (
                 <EmptyState className="checkion-project-chapter__empty">
-                  No deep scans yet.{' '}
-                  <Link href={paths.routes.scanLaunch({ mode: 'deep' })}>Launch a deep scan</Link>.
+                  {t('home.emptyDeep')}{' '}
+                  <Link href={paths.routes.scanLaunch({ mode: 'deep' })}>
+                    {t('home.emptyDeepCta')}
+                  </Link>
+                  .
                 </EmptyState>
               ) : undefined
             }
@@ -316,7 +320,10 @@ export function HomeMagazine({
                     {compactUrl(d.rootUrl)}
                   </Link>
                   <Text role="meta" as="p" className="checkion-project-run-list__meta">
-                    {d.pageCount.toLocaleString()} pages · {d.issueCount.toLocaleString()} issues
+                    {t('home.pagesIssues', {
+                      pages: d.pageCount.toLocaleString(),
+                      issues: d.issueCount.toLocaleString(),
+                    })}
                     {' · '}
                     {formatScanInstant(d.completedAt)}
                   </Text>
@@ -332,13 +339,16 @@ export function HomeMagazine({
           </RunColumn>
 
           <RunColumn
-            title="GEO runs"
-            ariaLabel="GEO runs"
+            title={t('home.geoRuns')}
+            ariaLabel={t('home.geoRunsAria')}
             empty={
               geoList.length === 0 ? (
                 <EmptyState className="checkion-project-chapter__empty">
-                  No GEO runs yet.{' '}
-                  <Link href={paths.routes.scanLaunch({ mode: 'geo' })}>Launch GEO</Link>.
+                  {t('home.emptyGeo')}{' '}
+                  <Link href={paths.routes.scanLaunch({ mode: 'geo' })}>
+                    {t('home.emptyGeoCta')}
+                  </Link>
+                  .
                 </EmptyState>
               ) : undefined
             }
@@ -375,18 +385,21 @@ export function HomeMagazine({
       </HomeChapter>
 
       <HomeChapter
-        eyebrow="03 · Projects"
-        title="Recent projects"
-        deck="Collections this capability has been reading."
+        eyebrow={t('home.projectsEyebrow')}
+        title={t('home.projectsTitle')}
+        deck={t('home.projectsDeck')}
         meta={recentProjects.length > 0 ? `${recentProjects.length}` : undefined}
       >
         {recentProjects.length === 0 ? (
           <EmptyState className="checkion-project-chapter__empty">
-            No projects yet.{' '}
-            <Link href={paths.routes.projects}>Open projects</Link>.
+            {t('home.emptyProjects')}{' '}
+            <Link href={paths.routes.projects}>{t('home.emptyProjectsCta')}</Link>.
           </EmptyState>
         ) : (
-          <div className="checkion-collection-grid checkion-home-projects" aria-label="Recent projects">
+          <div
+            className="checkion-collection-grid checkion-home-projects"
+            aria-label={t('home.projectsAria')}
+          >
             {recentProjects.map((project) => (
               <HomeProjectCard key={project.id} project={project} />
             ))}

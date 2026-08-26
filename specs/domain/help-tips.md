@@ -6,9 +6,9 @@
 
 ## Decision
 
-- **Tip body copy only** is bilingual (`en` / `de`).
+- **Tip body copy** is bilingual (`en` / `de`) via `help-tips.ts`.
 - Locale from Settings prefs (`paths.localeStorageKey` / `useUserPrefs().locale`), fallback `en`.
-- UI chrome (nav, buttons, band titles as visible English labels) stays English for now.
+- UI chrome (nav, buttons, band titles) is localized separately via SET-L1 dictionaries (`knowledge/i18n.md`).
 - DS `InfoTip` receives already-resolved `content` + English `label` (aria-label).
 
 ## Tip-ID convention

@@ -7,10 +7,12 @@ import { signIn } from 'next-auth/react'
 import { Button, Field, Hint, Input, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import { getPlexonForgotPasswordUrl, getPlexonRegisterPageUrl } from '../lib/plexon-links'
+import { useT } from '../lib/user-prefs'
 
 function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useT()
   const redirectTo = searchParams.get('redirect') || paths.routes.home
   const registerUrl = getPlexonRegisterPageUrl()
   const forgotUrl = getPlexonForgotPasswordUrl()
@@ -32,15 +34,15 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
         redirect: false,
         callbackUrl: redirectTo,
       })
-      if (result?.error) throw new Error('Invalid email or password')
+      if (result?.error) throw new Error(t('errors.invalidCredentials'))
       if (result?.ok) {
         router.replace(redirectTo)
         router.refresh()
         return
       }
-      throw new Error('Sign in failed')
+      throw new Error(t('errors.signInFailed'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed')
+      setError(err instanceof Error ? err.message : t('errors.signInFailed'))
     } finally {
       setLoading(false)
     }
@@ -49,17 +51,14 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
   if (!plexonConfigured) {
     return (
       <Panel>
-        <SectionChrome title="Sign in" meta={paths.brandLabel} />
-        <Hint panel>
-          Plexon auth is not configured. Set `PLEXON_AUTH_URL` and `PLEXON_SERVICE_SECRET` to enable
-          login. Fixture mode stays open without authentication.
-        </Hint>
+        <SectionChrome title={t('login.title')} meta={paths.brandLabel} />
+        <Hint panel>{t('login.unconfigured')}</Hint>
         <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
           <Link href={paths.routes.home}>
-            <Button>Continue to app</Button>
+            <Button>{t('login.continueApp')}</Button>
           </Link>
           <Link href={paths.routes.settings}>
-            <Button variant="ghost">Settings</Button>
+            <Button variant="ghost">{t('nav.settings')}</Button>
           </Link>
         </div>
       </Panel>
@@ -68,15 +67,15 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
 
   return (
     <Panel>
-      <SectionChrome title="Sign in" meta={paths.brandLabel} />
-      <Text role="body">Use your Plexon account. Identity lives on the platform control plane.</Text>
+      <SectionChrome title={t('login.title')} meta={paths.brandLabel} />
+      <Text role="body">{t('login.body')}</Text>
       {error ? (
         <p role="alert" style={{ color: 'var(--msqdx-danger, #c00)', marginTop: '0.75rem' }}>
           {error}
         </p>
       ) : null}
       <form onSubmit={handleSubmit} style={{ marginTop: '1rem', display: 'grid', gap: '0.75rem' }}>
-        <Field label="Email" size="md">
+        <Field label={t('login.email')} size="md">
           <Input
             type="email"
             autoComplete="email"
@@ -84,10 +83,10 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
             onChange={(e) => setEmail(e.target.value)}
             required
             block
-            aria-label="Email"
+            aria-label={t('login.email')}
           />
         </Field>
-        <Field label="Password" size="md">
+        <Field label={t('login.password')} size="md">
           <Input
             type="password"
             autoComplete="current-password"
@@ -95,23 +94,23 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
             onChange={(e) => setPassword(e.target.value)}
             required
             block
-            aria-label="Password"
+            aria-label={t('login.password')}
           />
         </Field>
         <Button type="submit" variant="primary" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? t('login.submitting') : t('login.submit')}
         </Button>
       </form>
       <p style={{ marginTop: '0.75rem' }}>
         {registerUrl ? (
           <a href={registerUrl} className="checkion-link">
-            Create account
+            {t('login.createAccount')}
           </a>
         ) : null}
         {registerUrl && forgotUrl ? <span aria-hidden> · </span> : null}
         {forgotUrl ? (
           <a href={forgotUrl} className="checkion-link">
-            Forgot password
+            {t('login.forgotPassword')}
           </a>
         ) : null}
       </p>
@@ -120,11 +119,12 @@ function LoginForm({ plexonConfigured }: { plexonConfigured: boolean }) {
 }
 
 export function LoginPageClient({ plexonConfigured }: { plexonConfigured: boolean }) {
+  const t = useT()
   return (
     <Suspense
       fallback={
         <Panel>
-          <SectionChrome title="Sign in" meta={paths.brandLabel} />
+          <SectionChrome title={t('login.title')} meta={paths.brandLabel} />
         </Panel>
       }
     >

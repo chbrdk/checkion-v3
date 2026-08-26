@@ -19,18 +19,6 @@ import { paths } from '../lib/paths'
 import { useUserPrefs, type UiLocaleId, type UiThemeId } from '../lib/user-prefs'
 import type { ApiTokenStub } from '@checkion-v3/contracts'
 
-const THEME_LABELS: Record<UiThemeId, string> = {
-  msqdx: 'Light',
-  'msqdx-dark': 'Dark',
-  'msqdx-v2': 'V2 light',
-  'msqdx-v2-dark': 'V2 dark',
-}
-
-const LOCALE_LABELS: Record<UiLocaleId, string> = {
-  en: 'English',
-  de: 'Deutsch',
-}
-
 export function SettingsPage({
   initialTokens,
   plexonBase,
@@ -44,9 +32,21 @@ export function SettingsPage({
 }) {
   const router = useRouter()
   const { data: session, status } = useSession()
-  const { displayName, setDisplayName, theme, setTheme, locale, setLocale } = useUserPrefs()
+  const { displayName, setDisplayName, theme, setTheme, locale, setLocale, t } = useUserPrefs()
   const [draft, setDraft] = useState(displayName)
   const [loggingOut, setLoggingOut] = useState(false)
+
+  const themeLabels: Record<UiThemeId, string> = {
+    msqdx: t('settings.themeLight'),
+    'msqdx-dark': t('settings.themeDark'),
+    'msqdx-v2': t('settings.themeV2Light'),
+    'msqdx-v2-dark': t('settings.themeV2Dark'),
+  }
+
+  const localeLabels: Record<UiLocaleId, string> = {
+    en: t('settings.english'),
+    de: t('settings.deutsch'),
+  }
 
   useEffect(() => {
     setDraft(displayName)
@@ -81,50 +81,47 @@ export function SettingsPage({
 
   return (
     <div className="checkion-settings">
-      <Hint panel>
-        Device-local preferences — theme, language, and how you appear in the rail. API tokens and
-        federation status are CHECKION capability settings.
-      </Hint>
+      <Hint panel>{t('settings.hint')}</Hint>
 
       {status === 'authenticated' && accountEmail ? (
         <section className="checkion-settings-section">
-          <SectionChrome quiet title="Account" as="h2" />
+          <SectionChrome quiet title={t('settings.account')} as="h2" />
           <Text role="body" className="checkion-settings-help">
-            Signed in via Plexon. Identity is owned by the platform control plane.
+            {t('settings.accountSignedIn')}
           </Text>
           <dl className="checkion-settings-account">
             {accountName ? (
               <>
-                <dt>Name</dt>
+                <dt>{t('settings.name')}</dt>
                 <dd>{accountName}</dd>
               </>
             ) : null}
-            <dt>Email</dt>
+            <dt>{t('settings.email')}</dt>
             <dd>{accountEmail}</dd>
           </dl>
           <Button type="button" variant="subtle" onClick={handleLogout} disabled={loggingOut}>
-            {loggingOut ? 'Signing out…' : 'Sign out'}
+            {loggingOut ? t('common.signingOut') : t('common.signOut')}
           </Button>
         </section>
       ) : status !== 'loading' ? (
         <section className="checkion-settings-section">
-          <SectionChrome quiet title="Account" as="h2" />
+          <SectionChrome quiet title={t('settings.account')} as="h2" />
           <Text role="body" className="checkion-settings-help">
-            No Plexon session. Fixture mode stays open without login when auth env is unset.
+            {t('settings.accountSignedOut')}
           </Text>
           <p className="checkion-settings-account-link">
             <Link href={paths.routes.login} className="checkion-link">
-              Sign in
+              {t('common.signIn')}
             </Link>
           </p>
         </section>
       ) : null}
 
       <section className="checkion-settings-section">
-        <SectionChrome quiet title="Profile" as="h2" />
+        <SectionChrome quiet title={t('settings.profile')} as="h2" />
         <div className="checkion-settings-profile-row">
           <Avatar name={draft.trim() || displayName} size="lg" />
-          <Field label="Display name" size="sm">
+          <Field label={t('settings.displayName')} size="sm">
             <Input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -135,7 +132,7 @@ export function SettingsPage({
                   commitName()
                 }
               }}
-              aria-label="Display name"
+              aria-label={t('settings.displayName')}
               maxLength={40}
               block
             />
@@ -144,34 +141,34 @@ export function SettingsPage({
       </section>
 
       <section className="checkion-settings-section">
-        <SectionChrome quiet title="Appearance" as="h2" />
+        <SectionChrome quiet title={t('settings.appearance')} as="h2" />
         <Text role="body" className="checkion-settings-help">
-          Theme applies across the shell.
+          {t('settings.appearanceHelp')}
         </Text>
         <ToggleGroup
           className="theme-toggle"
-          aria-label="Theme"
+          aria-label={t('settings.theme')}
           value={theme}
           onChange={(next) => setTheme(next as UiThemeId)}
           options={paths.themeChoices.map((id) => ({
             value: id,
-            label: THEME_LABELS[id],
+            label: themeLabels[id],
           }))}
         />
       </section>
 
       <section className="checkion-settings-section">
-        <SectionChrome quiet title="Language" as="h2" />
+        <SectionChrome quiet title={t('settings.language')} as="h2" />
         <Text role="body" className="checkion-settings-help">
-          Stored locale for help tips (en/de). UI chrome stays English for now.
+          {t('settings.languageHelp')}
         </Text>
         <ToggleGroup
-          aria-label="Language"
+          aria-label={t('settings.language')}
           value={locale}
           onChange={(next) => setLocale(next as UiLocaleId)}
           options={paths.localeChoices.map((id) => ({
             value: id,
-            label: LOCALE_LABELS[id],
+            label: localeLabels[id],
           }))}
         />
       </section>
@@ -179,19 +176,18 @@ export function SettingsPage({
       <SettingsTokens tokens={initialTokens} />
 
       <section className="checkion-settings-section" data-testid="settings-federation">
-        <SectionChrome quiet title="Federation" as="h2" />
+        <SectionChrome quiet title={t('settings.federation')} as="h2" />
         <Text role="body" className="checkion-settings-help">
-          Capability under a Plexon Collection. Live sync follows{' '}
-          <code>{paths.federationContract}</code>.
+          {t('settings.federationHelp', { contract: paths.federationContract })}
         </Text>
         <dl className="checkion-settings-account">
-          <dt>Data source</dt>
+          <dt>{t('settings.dataSource')}</dt>
           <dd>{dataSource}</dd>
-          <dt>Mode</dt>
+          <dt>{t('settings.mode')}</dt>
           <dd>{federationMode}</dd>
-          <dt>Plexon base</dt>
+          <dt>{t('settings.plexonBase')}</dt>
           <dd>{plexonBase}</dd>
-          <dt>Health</dt>
+          <dt>{t('settings.health')}</dt>
           <dd>
             <Link href={paths.routes.apiFederationHealth} className="checkion-link">
               {paths.routes.apiFederationHealth}

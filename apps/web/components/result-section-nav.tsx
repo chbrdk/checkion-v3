@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
 export type ResultSectionId = 'overview' | 'issues' | 'detail'
 
@@ -15,6 +16,7 @@ export function ResultSectionNav({
   active: ResultSectionId
   base?: 'results' | 'domain'
 }) {
+  const t = useT()
   const [compact, setCompact] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -41,7 +43,7 @@ export function ResultSectionNav({
     {
       id: 'overview' as const,
       index: '01',
-      label: 'Overview',
+      label: t('nav.overview'),
       href:
         base === 'results'
           ? paths.routes.resultSection(scanId, 'overview')
@@ -50,7 +52,7 @@ export function ResultSectionNav({
     {
       id: 'issues' as const,
       index: '02',
-      label: 'Issues',
+      label: t('nav.issues'),
       href:
         base === 'results'
           ? paths.routes.resultSection(scanId, 'issues')
@@ -59,7 +61,7 @@ export function ResultSectionNav({
     {
       id: 'detail' as const,
       index: '03',
-      label: 'Detail',
+      label: t('nav.detail'),
       href:
         base === 'results'
           ? paths.routes.resultSection(scanId, 'detail')
@@ -76,10 +78,10 @@ export function ResultSectionNav({
             ? 'checkion-contents checkion-contents--compact'
             : 'checkion-contents'
         }
-        aria-label="Result sections"
+        aria-label={t('nav.resultSections')}
         data-compact={compact ? 'true' : undefined}
       >
-        <p className="checkion-contents__label">Contents</p>
+        <p className="checkion-contents__label">{t('nav.contents')}</p>
         <ul className="checkion-contents__list" role="tablist">
           {sections.map((s) => {
             const selected = s.id === active

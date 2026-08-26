@@ -1,9 +1,9 @@
+'use client'
+
 import Link from 'next/link'
-import type { ReactNode } from 'react'
 import {
   Chip,
   EmptyState,
-  Hint,
   RankedList,
   RankedRow,
   StatusMeterPanel,
@@ -18,16 +18,15 @@ import type {
 } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
 import { scoreTone, severityRank } from '../lib/scan-display'
-import { getProject } from '../lib/fixtures/project-store'
-import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { IssuesWorkspace } from './issues-workspace'
 import { LabelWithTip } from './help-tip'
-import { ResultSectionNav } from './result-section-nav'
 import { ScoresPanel } from './scores-panel'
 import { WeakestSignalCallout } from './weakest-signal-callout'
 import { buildWeakestSignalFallback } from '../lib/weakest-signal-statement'
+import { useT } from '../lib/user-prefs'
 
 export { ScoresPanel } from './scores-panel'
+export { ResultMagazineShell } from './result-magazine-shell'
 
 function msParts(value: number): { n: string; unit: string } {
   if (value >= 1000) {
@@ -59,23 +58,6 @@ function readabilityTone(score: number): 'pos' | 'low' | 'neg' {
   return 'neg'
 }
 
-function hostFromUrl(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
-
-function pathFromUrl(url: string): string {
-  try {
-    const u = new URL(url)
-    return u.pathname === '/' ? '/' : u.pathname
-  } catch {
-    return url
-  }
-}
-
 function shieldStats(snap: SecurityPrivacySnapshot): {
   ok: number
   total: number
@@ -96,134 +78,6 @@ function shieldStats(snap: SecurityPrivacySnapshot): {
   }
 }
 
-export async function ResultMagazineShell({
-  overview,
-  actions,
-  children,
-  variant = 'cover',
-  activeSection = 'overview',
-  sectionBase = 'results',
-}: {
-  overview: ScanOverview
-  actions?: ReactNode
-  children: ReactNode
-  /** Full cover for overview; compact folio masthead for issues/detail */
-  variant?: 'cover' | 'folio'
-  activeSection?: 'overview' | 'issues' | 'detail'
-  sectionBase?: 'results' | 'domain'
-}) {
-  const project = await getProject(overview.scan.projectId)
-  const { scan } = overview
-  const host = hostFromUrl(scan.url)
-  const path = pathFromUrl(scan.url)
-  const deck = overview.classification?.shortSummary ?? overview.lede
-  const tone = scoreTone(scan.overallScore)
-
-  return (
-    <article
-      className="checkion-magazine checkion-magazine--scan checkion-magazine--editorial"
-      data-variant={variant}
-    >
-      <div className="checkion-magazine-topbar">
-        <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
-          <Link href={paths.routes.home}>Home</Link>
-          <span className="briefing-nav-sep" aria-hidden>
-            /
-          </span>
-          <Link href={paths.routes.projectDetail(overview.scan.projectId)}>
-            {project?.name ?? overview.scan.projectId}
-          </Link>
-          <span className="briefing-nav-sep" aria-hidden>
-            /
-          </span>
-          <span>{overview.scan.id}</span>
-        </nav>
-        {actions ? <div className="checkion-magazine-topbar-actions">{actions}</div> : null}
-      </div>
-
-      <header className="checkion-masthead" data-tone={tone} data-variant={variant}>
-        <div className="checkion-masthead__hero">
-          <div className="checkion-cover__score-col">
-            <div
-              className="checkion-cover__score"
-              aria-label={`Overall score ${scan.overallScore ?? 'none'}`}
-            >
-              <span className="checkion-cover__score-num">{scan.overallScore ?? '—'}</span>
-              <span className="checkion-cover__score-label">overall</span>
-            </div>
-            <dl className="checkion-cover__metrics" aria-label="Scan metrics">
-              <div>
-                <dt>Issues</dt>
-                <dd>{scan.issueCount}</dd>
-              </div>
-              {scan.issueStats ? (
-                <>
-                  <div>
-                    <dt>Errors</dt>
-                    <dd>{scan.issueStats.errors}</dd>
-                  </div>
-                  <div>
-                    <dt>Warnings</dt>
-                    <dd>{scan.issueStats.warnings}</dd>
-                  </div>
-                  <div>
-                    <dt>Passed</dt>
-                    <dd>{scan.issueStats.passed}</dd>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {overview.scores.slice(0, 3).map((s) => (
-                    <div key={s.kind}>
-                      <dt>{s.label}</dt>
-                      <dd>{s.value}</dd>
-                    </div>
-                  ))}
-                </>
-              )}
-            </dl>
-          </div>
-
-          <div className="checkion-cover__copy">
-            <p className="checkion-cover__host">{host}</p>
-            <Text role="headline" as="h2" className="checkion-cover__title">
-              {overview.seo?.h1 ?? (path === '/' ? 'Home' : path)}
-            </Text>
-            {variant === 'cover' ? (
-              <>
-                <p className="checkion-cover__deck">{deck}</p>
-                {overview.classification?.tags?.length ? (
-                  <div className="checkion-chip-row checkion-cover__tags">
-                    {overview.classification.tags.map((tag) => (
-                      <Chip key={tag} static size="sm">
-                        {tag}
-                      </Chip>
-                    ))}
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-        </div>
-      </header>
-
-      {hasAudionCorrelation(scan) ? (
-        <Hint panel>
-          From Audion
-          {scan.audionRunId ? ` · run ${scan.audionRunId}` : ''}
-          {scan.stepUrl && scan.stepUrl !== scan.url ? ` · step ${scan.stepUrl}` : ''}
-          {scan.platformProjectId ? ` · Collection ${scan.platformProjectId}` : ''}
-          . Results live in CHECKION for this Collection project.
-        </Hint>
-      ) : null}
-
-      <ResultSectionNav scanId={scan.id} active={activeSection} base={sectionBase} />
-
-      {children}
-    </article>
-  )
-}
-
 export function ResultOverviewPanel({
   overview,
   issuesHref,
@@ -231,6 +85,7 @@ export function ResultOverviewPanel({
   overview: ScanOverview
   issuesHref?: string
 }) {
+  const t = useT()
   const running = overview.scan.status === 'running' || overview.scan.status === 'queued'
   const perf = overview.performance
   const seo = overview.seo
@@ -258,7 +113,7 @@ export function ResultOverviewPanel({
     <div className="checkion-magazine-body checkion-spread">
       {running ? (
         <StatusMeterPanel
-          title="Scan in progress"
+          title={t('results.progressTitle')}
           meta={overview.scan.mode}
           level="warn"
           banner="Dummy fixture still marked running — open a completed scan for full scores."
@@ -273,9 +128,9 @@ export function ResultOverviewPanel({
       {/* Opening spread: scoreline + tension callout */}
       <section className="checkion-spread__open" aria-labelledby="scoreline-heading">
         <div className="checkion-spread__open-main">
-          <p className="checkion-spread__eyebrow">Scoreline</p>
+          <p className="checkion-spread__eyebrow">{t('results.scorelineEyebrow')}</p>
           <h3 id="scoreline-heading" className="checkion-spread__headline">
-            Seven lenses on one page
+            {t('results.scorelineHeadline')}
           </h3>
           <ScoresPanel scores={sortedScores} />
         </div>
@@ -804,7 +659,7 @@ export function ResultOverviewPanel({
             {issuesHref ? (
               <>
                 {' · '}
-                <Link href={issuesHref}>Open issues</Link>
+                <Link href={issuesHref}>{t('results.openIssues')}</Link>
               </>
             ) : null}
           </footer>
@@ -822,7 +677,7 @@ export function ResultOverviewPanel({
           </div>
           {issuesHref ? (
             <Link href={issuesHref} className="checkion-band-action">
-              All issues →
+              {t('results.allIssues')}
             </Link>
           ) : null}
         </div>
@@ -833,8 +688,9 @@ export function ResultOverviewPanel({
 }
 
 export function IssueList({ issues }: { issues: IssueSummary[] }) {
+  const t = useT()
   if (issues.length === 0) {
-    return <EmptyState>No issues in this payload.</EmptyState>
+    return <EmptyState>{t('results.emptyIssues')}</EmptyState>
   }
 
   const maxAffected = Math.max(...issues.map((i) => i.affectedCount), 1)
@@ -873,12 +729,13 @@ export function ResultIssuesPanel({
   screenshotUrl?: string | null
   visualLayers?: VisualLayersSnapshot | null
 }) {
+  const t = useT()
   return (
     <div className="checkion-magazine-body checkion-spread checkion-issues-panel">
       <header className="checkion-issues-panel__head">
         <p className="checkion-spread__eyebrow">Chapter 02 · Issues</p>
         <h3 id="issues-chapter" className="checkion-issues-panel__title">
-          Visual inspect
+          {t('results.visualInspect')}
         </h3>
       </header>
       <IssuesWorkspace
@@ -897,6 +754,7 @@ export function ResultScoresPanel({
   scores: ScoreCard[]
   overall?: number | null
 }) {
+  const t = useT()
   const sorted = [...scores].sort((a, b) => a.value - b.value)
   const worst = sorted[0]
   const best = sorted[sorted.length - 1]
@@ -909,7 +767,7 @@ export function ResultScoresPanel({
         <div className="checkion-spread__open-main">
           <p className="checkion-spread__eyebrow">Chapter 03</p>
           <h3 id="ledger-heading" className="checkion-spread__headline">
-            The ledger
+            {t('results.theLedger')}
           </h3>
           <p className="checkion-spread__prose">
             Category scores from the light payload — sorted weakest first so the tension reads

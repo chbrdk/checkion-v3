@@ -16,6 +16,8 @@ import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
+import { useT } from '../lib/user-prefs'
+import type { Translator } from '../lib/i18n'
 
 function capabilityLevel(status: CapabilitySyncStatus) {
   if (status === 'in_sync') return 'ok' as const
@@ -23,15 +25,15 @@ function capabilityLevel(status: CapabilitySyncStatus) {
   return 'warn' as const
 }
 
-function capabilityLabel(status: CapabilitySyncStatus): string {
-  if (status === 'in_sync') return 'In sync'
-  if (status === 'error') return 'Error'
-  return 'Pending'
+function capabilityLabel(status: CapabilitySyncStatus, t: Translator): string {
+  if (status === 'in_sync') return t('common.capabilityInSync')
+  if (status === 'error') return t('common.capabilityError')
+  return t('common.capabilityPending')
 }
 
-function capabilityHint(status: CapabilitySyncStatus): string | null {
-  if (status === 'pending') return 'Waiting on Plexon capability sync.'
-  if (status === 'error') return 'Capability sync reported an error.'
+function capabilityHint(status: CapabilitySyncStatus, t: Translator): string | null {
+  if (status === 'pending') return t('projects.capabilityHintPending')
+  if (status === 'error') return t('projects.capabilityHintError')
   return null
 }
 
@@ -80,8 +82,10 @@ function ProjectCollectionCard({
   onEdit: (project: ProjectSummary) => void
   onDelete: (project: ProjectSummary) => void
 }) {
-  const hint = capabilityHint(project.capabilityStatus)
+  const t = useT()
+  const hint = capabilityHint(project.capabilityStatus, t)
   const domain = project.domain?.trim() || null
+  const cap = capabilityLabel(project.capabilityStatus, t)
 
   return (
     <article className="checkion-collection-card">
@@ -92,9 +96,9 @@ function ProjectCollectionCard({
         <span
           className="checkion-collection-card-badge"
           data-status={project.capabilityStatus}
-          title={`Capability ${capabilityLabel(project.capabilityStatus).toLowerCase()}`}
+          title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}
         >
-          {capabilityLabel(project.capabilityStatus)}
+          {cap}
         </span>
       </header>
 
@@ -108,32 +112,32 @@ function ProjectCollectionCard({
         </Text>
       ) : null}
 
-      <div className="checkion-collection-card-stats" aria-label="Project metrics">
+      <div className="checkion-collection-card-stats" aria-label={t('projects.metricsAria')}>
         <ProjectMetric
           icon={<MetricIconScans />}
           value={String(project.scanCount)}
-          label="Scans"
+          label={t('common.scans')}
         />
         <ProjectMetric
           icon={<MetricIconLastScan />}
           value={formatScanShort(project.lastScanAt)}
-          label="Last scan"
+          label={t('common.lastScan')}
           linked={project.lastScanAt != null}
         />
       </div>
 
       <CardActions className="checkion-collection-card-actions">
         <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
-          <Button variant="ghost">Open</Button>
+          <Button variant="ghost">{t('common.open')}</Button>
         </Link>
         <span className="checkion-collection-card-link">
           <Button variant="ghost" type="button" onClick={() => onEdit(project)}>
-            Edit
+            {t('common.edit')}
           </Button>
         </span>
         <span className="checkion-collection-card-link">
           <Button variant="ghost" type="button" onClick={() => onDelete(project)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </span>
       </CardActions>
@@ -142,6 +146,7 @@ function ProjectCollectionCard({
 }
 
 function CreateProjectCard({ onClick }: { onClick: () => void }) {
+  const t = useT()
   return (
     <button
       type="button"
@@ -150,10 +155,10 @@ function CreateProjectCard({ onClick }: { onClick: () => void }) {
     >
       <span className="checkion-collection-card-kicker">{'\u00a0'}</span>
       <Text role="headline" as="span" className="checkion-collection-card-title">
-        New project
+        {t('projects.createTitle')}
       </Text>
       <Text role="meta" as="span" className="checkion-collection-card-hint">
-        Local CHECKION record for a Plexon collection.
+        {t('projects.createDeck')}
       </Text>
     </button>
   )
@@ -170,6 +175,7 @@ function ProjectListRow({
   onEdit: (project: ProjectSummary) => void
   onDelete: (project: ProjectSummary) => void
 }) {
+  const t = useT()
   const domain = project.domain?.trim() || null
   return (
     <li className="checkion-projects-list-row">
@@ -184,10 +190,10 @@ function ProjectListRow({
           {project.name}
         </Link>
         <Text role="meta" as="p" className="checkion-projects-list-row__domain">
-          {domain ?? 'No domain'}
+          {domain ?? t('projects.noDomain')}
         </Text>
-        <p className="checkion-projects-list-row__metrics" aria-label="Project metrics">
-          <span>{project.scanCount.toLocaleString()} scans</span>
+        <p className="checkion-projects-list-row__metrics" aria-label={t('projects.metricsAria')}>
+          <span>{t('projects.scanCount', { count: project.scanCount.toLocaleString() })}</span>
           <span aria-hidden>·</span>
           <span>{formatScanShort(project.lastScanAt)}</span>
         </p>
@@ -197,19 +203,19 @@ function ProjectListRow({
           className="checkion-collection-card-badge checkion-projects-list-row__badge"
           data-status={project.capabilityStatus}
         >
-          {capabilityLabel(project.capabilityStatus)}
+          {capabilityLabel(project.capabilityStatus, t)}
         </span>
         <div className="checkion-projects-list-row__actions">
           <Link href={paths.routes.projectDetail(project.id)}>
             <Button variant="ghost" size="sm">
-              Open
+              {t('common.open')}
             </Button>
           </Link>
           <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -231,6 +237,7 @@ export function ProjectListPanel({
   const [createOpen, setCreateOpen] = useState(Boolean(bindPlatformProjectId))
   const [editTarget, setEditTarget] = useState<ProjectDetail | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null)
+  const t = useT()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -266,16 +273,16 @@ export function ProjectListPanel({
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name or domain"
-          aria-label="Search projects"
+          placeholder={t('projects.searchPlaceholder')}
+          aria-label={t('projects.searchAria')}
         />
-        <FilterRow role="group" aria-label="Filter by capability">
+        <FilterRow role="group" aria-label={t('projects.filterCapability')}>
           {(
             [
-              ['all', 'All'],
-              ['in_sync', 'In sync'],
-              ['pending', 'Pending'],
-              ['error', 'Error'],
+              ['all', t('projects.filterAll')],
+              ['in_sync', t('common.capabilityInSync')],
+              ['pending', t('common.capabilityPending')],
+              ['error', t('common.capabilityError')],
             ] as const
           ).map(([id, label]) => (
             <Chip
@@ -288,19 +295,19 @@ export function ProjectListPanel({
             </Chip>
           ))}
         </FilterRow>
-        <FilterRow role="group" aria-label="Project layout">
+        <FilterRow role="group" aria-label={t('projects.layoutAria')}>
           <Chip size="sm" selected={view === 'tiles'} onClick={() => setView('tiles')}>
-            Tiles
+            {t('projects.tiles')}
           </Chip>
           <Chip size="sm" selected={view === 'list'} onClick={() => setView('list')}>
-            List
+            {t('projects.list')}
           </Chip>
         </FilterRow>
       </div>
 
       <div className="checkion-collection-list">
         {view === 'tiles' ? (
-          <div className="checkion-collection-grid" aria-label="Projects">
+          <div className="checkion-collection-grid" aria-label={t('projects.listAria')}>
             <CreateProjectCard onClick={() => setCreateOpen(true)} />
             {filtered.map((project) => (
               <ProjectCollectionCard
@@ -318,13 +325,13 @@ export function ProjectListPanel({
               className="checkion-projects-list-create"
               onClick={() => setCreateOpen(true)}
             >
-              <span className="checkion-projects-list-create__label">New project</span>
+              <span className="checkion-projects-list-create__label">{t('projects.createTitle')}</span>
               <span className="checkion-projects-list-create__deck">
-                Local CHECKION record for a Plexon collection.
+                {t('projects.createDeck')}
               </span>
             </button>
             {filtered.length > 0 ? (
-              <ol className="checkion-magazine-list checkion-projects-list" aria-label="Projects">
+              <ol className="checkion-magazine-list checkion-projects-list" aria-label={t('projects.listAria')}>
                 {filtered.map((project, index) => (
                   <ProjectListRow
                     key={project.id}
@@ -341,9 +348,7 @@ export function ProjectListPanel({
 
         {filtered.length === 0 ? (
           <EmptyState className="checkion-collection-list-status">
-            {projects.length === 0
-              ? 'No projects yet. Create one locally or open a collection deep-link from Plexon.'
-              : 'No projects match this filter.'}
+            {projects.length === 0 ? t('projects.emptyNone') : t('projects.emptyFilter')}
           </EmptyState>
         ) : null}
       </div>
@@ -414,6 +419,7 @@ export function ProjectWorkspace({
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const t = useT()
 
   const singleScans = recentScans.filter((s) => s.mode === 'single')
   const deepScans = recentScans.filter((s) => s.mode === 'deep')
@@ -431,8 +437,8 @@ export function ProjectWorkspace({
         mode: 'geo',
         url: project.domain.startsWith('http') ? project.domain : `https://${project.domain}`,
       })
-  const syncLabel = capabilityLabel(project.capabilityStatus)
-  const syncHint = capabilityHint(project.capabilityStatus)
+  const syncLabel = capabilityLabel(project.capabilityStatus, t)
+  const syncHint = capabilityHint(project.capabilityStatus, t)
 
   return (
     <article
@@ -440,8 +446,8 @@ export function ProjectWorkspace({
       data-section="project-workspace"
     >
       <div className="checkion-magazine-topbar">
-        <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
-          <Link href={paths.routes.projects}>Projects</Link>
+        <nav className="briefing-nav signal-nav" aria-label={t('common.breadcrumb')}>
+          <Link href={paths.routes.projects}>{t('nav.projects')}</Link>
           <span className="briefing-nav-sep" aria-hidden>
             /
           </span>
@@ -450,12 +456,12 @@ export function ProjectWorkspace({
         <div className="checkion-magazine-topbar-actions">
           <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
             <Button variant="primary" size="sm">
-              New scan
+              {t('projects.newScan')}
             </Button>
           </Link>
           <Link href={geoHref}>
             <Button variant="ghost" size="sm">
-              {latestGeo ? 'Open GEO' : 'Start GEO'}
+              {latestGeo ? t('projects.openGeo') : t('projects.startGeo')}
             </Button>
           </Link>
         </div>
@@ -463,26 +469,26 @@ export function ProjectWorkspace({
 
       <header className="checkion-project-cover">
         <div className="checkion-project-cover__copy">
-          <p className="checkion-cover__kicker">CHECKION capability</p>
+          <p className="checkion-cover__kicker">{t('projects.kicker')}</p>
           <h1 className="checkion-project-cover__title">{project.name}</h1>
           <p className="checkion-project-cover__host">{project.domain}</p>
           <p className="checkion-project-cover__lede">
-            {project.description || `Capability mirror for ${project.domain}.`}
+            {project.description || t('projects.ledeFallback', { domain: project.domain })}
           </p>
-          <ul className="checkion-magazine-facets geo-places" aria-label="Project attributes">
+          <ul className="checkion-magazine-facets geo-places" aria-label={t('projects.attrsAria')}>
             <li data-kind={project.capabilityStatus}>
-              <span className="meta">Capability</span>
+              <span className="meta">{t('projects.attrCapability')}</span>
               <span className="checkion-status-line">
                 <StatusDot level={capabilityLevel(project.capabilityStatus)} />
                 {syncLabel}
               </span>
             </li>
             <li data-kind="collection">
-              <span className="meta">Collection</span>
-              <span title="Plexon collection id">{project.platformProjectId}</span>
+              <span className="meta">{t('projects.attrCollection')}</span>
+              <span title={t('projects.collectionIdTitle')}>{project.platformProjectId}</span>
             </li>
             <li data-kind="time">
-              <span className="meta">Last activity</span>
+              <span className="meta">{t('projects.attrLastActivity')}</span>
               <span>{formatScanInstant(project.lastScanAt)}</span>
             </li>
           </ul>
@@ -494,54 +500,54 @@ export function ProjectWorkspace({
         </div>
         <div className="checkion-project-cover__actions">
           <Button type="button" size="lg" variant="ghost" onClick={() => setEditOpen(true)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button type="button" size="lg" variant="ghost" onClick={() => setDeleteOpen(true)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </header>
 
       <WorkspaceChapter
-        eyebrow="01 · Pulse"
-        title="Corpus pulse"
-        deck="How this capability has been reading the site — singles, deep scans, and answer-engine presence."
+        eyebrow={t('projects.pulseEyebrow')}
+        title={t('projects.pulseTitle')}
+        deck={t('projects.pulseDeck')}
       >
-        <div className="checkion-project-pulse" aria-label="Corpus pulse">
+        <div className="checkion-project-pulse" aria-label={t('projects.pulseAria')}>
           <div className="checkion-project-pulse__meter">
             <p className="checkion-project-pulse__value">{singleScans.length}</p>
-            <p className="checkion-project-pulse__label">Single scans</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseSingles')}</p>
           </div>
           <div className="checkion-project-pulse__meter">
             <p className="checkion-project-pulse__value">{domainCount}</p>
-            <p className="checkion-project-pulse__label">Deep scans</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseDeep')}</p>
           </div>
           <div className="checkion-project-pulse__meter">
             <p className="checkion-project-pulse__value">{geoJobs.length}</p>
-            <p className="checkion-project-pulse__label">GEO runs</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseGeo')}</p>
           </div>
           <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
             <p className="checkion-project-pulse__value">
               {latestScore != null ? latestScore : '—'}
             </p>
-            <p className="checkion-project-pulse__label">Latest score</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseLatestScore')}</p>
           </div>
         </div>
       </WorkspaceChapter>
 
       <WorkspaceChapter
-        eyebrow="02 · Runs"
-        title="Latest runs"
-        deck="Singles, deep corpus, and GEO — numbered lists with score color bands."
+        eyebrow={t('projects.runsEyebrow')}
+        title={t('projects.runsTitle')}
+        deck={t('projects.runsDeck')}
       >
-        <div className="checkion-home-run-columns" aria-label="Latest runs by mode">
-          <div className="checkion-home-run-col" aria-label="Single scans">
-            <h3 className="checkion-home-run-col__title">Singles</h3>
+        <div className="checkion-home-run-columns" aria-label={t('projects.runsAria')}>
+          <div className="checkion-home-run-col" aria-label={t('projects.pulseSingles')}>
+            <h3 className="checkion-home-run-col__title">{t('projects.runsSingles')}</h3>
             {singleScans.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
-                No singles yet.{' '}
+                {t('projects.emptySingles')}{' '}
                 <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
-                  Start one
+                  {t('projects.emptySinglesCta')}
                 </Link>
                 .
               </EmptyState>
@@ -562,7 +568,7 @@ export function ProjectWorkspace({
                       </Link>
                       <Text role="meta" as="p" className="checkion-project-run-list__meta">
                         {scan.status}
-                        {hasAudionCorrelation(scan) ? ' · From Audion' : null}
+                        {hasAudionCorrelation(scan) ? ` · ${t('projects.fromAudion')}` : null}
                         {' · '}
                         {formatScanInstant(scan.completedAt)}
                       </Text>
@@ -579,13 +585,13 @@ export function ProjectWorkspace({
             )}
           </div>
 
-          <div className="checkion-home-run-col" aria-label="Deep scans">
-            <h3 className="checkion-home-run-col__title">Deep scans</h3>
+          <div className="checkion-home-run-col" aria-label={t('projects.pulseDeep')}>
+            <h3 className="checkion-home-run-col__title">{t('projects.runsDeep')}</h3>
             {domains.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
-                No deep scans yet.{' '}
+                {t('projects.emptyDeep')}{' '}
                 <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'deep' })}>
-                  Launch a deep scan
+                  {t('projects.emptyDeepCta')}
                 </Link>
                 .
               </EmptyState>
@@ -605,7 +611,10 @@ export function ProjectWorkspace({
                         {compactUrl(d.rootUrl)}
                       </Link>
                       <Text role="meta" as="p" className="checkion-project-run-list__meta">
-                        {d.pageCount.toLocaleString()} pages · {d.issueCount.toLocaleString()} issues
+                        {t('projects.pagesIssues', {
+                          pages: d.pageCount.toLocaleString(),
+                          issues: d.issueCount.toLocaleString(),
+                        })}
                         {' · '}
                         {formatScanInstant(d.completedAt)}
                       </Text>
@@ -622,11 +631,11 @@ export function ProjectWorkspace({
             )}
           </div>
 
-          <div className="checkion-home-run-col" aria-label="GEO runs">
-            <h3 className="checkion-home-run-col__title">GEO runs</h3>
+          <div className="checkion-home-run-col" aria-label={t('projects.pulseGeo')}>
+            <h3 className="checkion-home-run-col__title">{t('projects.runsGeo')}</h3>
             {geoJobs.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
-                No GEO magazines yet.{' '}
+                {t('projects.emptyGeo')}{' '}
                 <Link
                   href={paths.routes.scanLaunch({
                     projectId: project.id,
@@ -636,7 +645,7 @@ export function ProjectWorkspace({
                       : `https://${project.domain}`,
                   })}
                 >
-                  Start GEO
+                  {t('projects.emptyGeoCta')}
                 </Link>
                 .
               </EmptyState>
@@ -656,7 +665,11 @@ export function ProjectWorkspace({
                         {job.title}
                       </Link>
                       <Text role="meta" as="p" className="checkion-project-run-list__meta">
-                        {job.status} · {job.queryCount} queries · {job.citedShare}% cited
+                        {t('projects.geoMeta', {
+                          status: job.status,
+                          queries: job.queryCount,
+                          cited: job.citedShare,
+                        })}
                         {' · '}
                         {formatScanInstant(job.completedAt)}
                       </Text>

@@ -27,19 +27,16 @@ import { PlatformAssistantHost } from './platform-assistant-host'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
 
-const PRIMARY_NAV = [
-  { id: 'home', href: paths.routes.home, label: 'Home', icon: <NavIconOverview /> },
-  { id: 'scan', href: paths.routes.scan, label: 'Scan', icon: <NavIconScan /> },
-  { id: 'projects', href: paths.routes.projects, label: 'Projects', icon: <NavIconProjects /> },
-]
-
 export function AppShell({
   children,
   description,
+  descriptionKey,
 }: {
   children: ReactNode
   /** Optional in-page lead under the rail chrome (not a global topbar). */
   description?: string
+  /** Prefer over `description` — resolves via locale dictionary. */
+  descriptionKey?: string
   /** @deprecated Global AppShell topbar removed — ignored. */
   title?: string | null
   /** @deprecated Global AppShell topbar removed — ignored. */
@@ -48,7 +45,8 @@ export function AppShell({
   status?: ReactNode
 }) {
   const pathname = usePathname()
-  const { displayName } = useUserPrefs()
+  const { displayName, t } = useUserPrefs()
+  const pageLead = descriptionKey ? t(descriptionKey) : description
   const [railEdge, setRailEdge] = useState<RailDockEdge>(paths.railDockEdge)
   const [jobsOpen, setJobsOpen] = useState(false)
   const { jobs, runningCount } = useJobNotifications()
@@ -69,12 +67,26 @@ export function AppShell({
     return href === '/' ? pathname === href : pathname.startsWith(href)
   }
 
+  const primaryNav = useMemo(
+    () => [
+      { id: 'home', href: paths.routes.home, label: t('nav.home'), icon: <NavIconOverview /> },
+      { id: 'scan', href: paths.routes.scan, label: t('nav.scan'), icon: <NavIconScan /> },
+      {
+        id: 'projects',
+        href: paths.routes.projects,
+        label: t('nav.projects'),
+        icon: <NavIconProjects />,
+      },
+    ],
+    [t],
+  )
+
   const jobsAria =
     runningCount > 0
-      ? `Jobs, ${runningCount} running`
+      ? t('nav.jobsRunning', { count: runningCount })
       : failedCount > 0
-        ? `Jobs, ${failedCount} failed`
-        : 'Jobs'
+        ? t('nav.jobsFailed', { count: failedCount })
+        : t('nav.jobs')
 
   return (
     <AppFrame
@@ -88,13 +100,13 @@ export function AppShell({
           defaultDockEdge={paths.railDockEdge}
           onDockEdgeChange={setRailEdge}
           logo={<MsqdxLogoMark size={26} title="MSQ DX" />}
-          logoLabel={`${paths.brandLabel} home`}
+          logoLabel={t('nav.homeAria', { brand: paths.brandLabel })}
           linkComponent={Link}
-          items={PRIMARY_NAV.map((item) => ({ ...item, active: isActive(item.href) }))}
+          items={primaryNav.map((item) => ({ ...item, active: isActive(item.href) }))}
           footerItems={[
             {
               id: 'jobs',
-              label: 'Jobs',
+              label: t('nav.jobs'),
               active: jobsOpen,
               ariaLabel: jobsAria,
               title: jobsAria,
@@ -103,10 +115,10 @@ export function AppShell({
             },
             {
               id: 'settings',
-              label: 'Settings',
+              label: t('nav.settings'),
               href: paths.routes.settings,
               active: isActive(paths.routes.settings),
-              ariaLabel: 'Settings',
+              ariaLabel: t('nav.settingsAria'),
               icon: <Avatar name={displayName} size="sm" className="rail-avatar" />,
             },
           ]}
@@ -119,7 +131,7 @@ export function AppShell({
         railEdge={railEdge}
       />
       <div className="app-main checkion-stage">
-        {description ? <p className="checkion-page-lead">{description}</p> : null}
+        {pageLead ? <p className="checkion-page-lead">{pageLead}</p> : null}
         {children}
       </div>
       <PlatformAssistantHost />

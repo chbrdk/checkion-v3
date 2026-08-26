@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { Button, Field, Input, SectionChrome, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 import type { ApiTokenStub } from '@checkion-v3/contracts'
 
 export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub[] }) {
+  const t = useT()
   const [tokens, setTokens] = useState(initialTokens)
   const [label, setLabel] = useState('')
   const [rawSecret, setRawSecret] = useState<string | null>(null)
@@ -30,7 +32,7 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
         body: JSON.stringify({ label: label.trim() || undefined }),
       })
       if (!res.ok) {
-        setError('Create failed')
+        setError(t('errors.createFailed'))
         return
       }
       const created = (await res.json()) as ApiTokenStub & { token: string }
@@ -43,13 +45,13 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
   }
 
   async function revokeToken(tokenId: string) {
-    if (!window.confirm('Revoke this API token? Scripts using it will stop working.')) return
+    if (!window.confirm(t('settings.tokensRevokeConfirm'))) return
     setBusy(true)
     setError(null)
     try {
       const res = await fetch(paths.routes.apiTokenDetail(tokenId), { method: 'DELETE' })
       if (!res.ok) {
-        setError('Revoke failed')
+        setError(t('errors.revokeFailed'))
         return
       }
       if (rawSecret) setRawSecret(null)
@@ -66,37 +68,38 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
 
   return (
     <section className="checkion-settings-section" data-testid="settings-tokens">
-      <SectionChrome quiet title="API tokens" as="h2" />
+      <SectionChrome quiet title={t('settings.tokensTitle')} as="h2" />
       <Text role="body" className="checkion-settings-help">
-        Personal Bearer tokens for MCP/CLI. Raw secret shown once on create; only the hash is stored.
-        Use <code>Authorization: Bearer {paths.apiTokenPrefix}…</code> on selected APIs (
-        <code>POST /api/scans</code>, <code>POST /api/geo-jobs</code>, <code>POST /api/projects</code>).
+        {t('settings.tokensHelp')}{' '}
+        <code>Authorization: Bearer {paths.apiTokenPrefix}…</code> (
+        <code>POST /api/scans</code>, <code>POST /api/geo-jobs</code>, <code>POST /api/projects</code>
+        ).
       </Text>
 
       {rawSecret ? (
         <div className="checkion-settings-token-reveal">
-          <Text role="title">Copy your token now</Text>
+          <Text role="title">{t('settings.tokensCopyNow')}</Text>
           <code className="checkion-settings-token-code" data-testid="settings-token-secret">
             {rawSecret}
           </code>
-          <Text role="hint">This value will not be shown again.</Text>
+          <Text role="hint">{t('settings.tokensNotShownAgain')}</Text>
           <div className="checkion-settings-actions">
             <Button type="button" variant="ghost" size="sm" onClick={handleCopySecret}>
-              Copy
+              {t('common.copy')}
             </Button>
             <Button type="button" variant="link" size="sm" onClick={() => setRawSecret(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </div>
         </div>
       ) : (
         <div className="checkion-settings-token-create">
-          <Field label="Label" size="sm">
+          <Field label={t('settings.tokensLabel')} size="sm">
             <Input
               data-testid="settings-token-label"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="Local CLI"
+              placeholder={t('settings.tokensLabelPlaceholder')}
               block
             />
           </Field>
@@ -107,14 +110,14 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
             data-testid="settings-token-create"
             onClick={() => void createToken()}
           >
-            {busy ? 'Creating…' : 'Create token'}
+            {busy ? t('settings.tokensCreating') : t('settings.tokensCreate')}
           </Button>
         </div>
       )}
 
-      <Text role="label">Your tokens</Text>
+      <Text role="label">{t('settings.tokensYours')}</Text>
       {tokens.length === 0 ? (
-        <Text role="meta">No tokens yet.</Text>
+        <Text role="meta">{t('settings.tokensEmpty')}</Text>
       ) : (
         <ul className="checkion-settings-token-list">
           {tokens.map((token) => (
@@ -123,7 +126,9 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
                 <Text role="body">{token.label}</Text>
                 <Text role="meta">
                   {token.prefix}…
-                  {token.lastUsedAt ? ` · used ${token.lastUsedAt.slice(0, 10)}` : ''}
+                  {token.lastUsedAt
+                    ? ` · ${t('settings.tokensUsed', { date: token.lastUsedAt.slice(0, 10) })}`
+                    : ''}
                 </Text>
               </div>
               <Button
@@ -133,7 +138,7 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
                 disabled={busy}
                 onClick={() => void revokeToken(token.id)}
               >
-                Revoke
+                {t('settings.tokensRevoke')}
               </Button>
             </li>
           ))}

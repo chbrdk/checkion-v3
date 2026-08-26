@@ -36,6 +36,8 @@ import { LabelWithTip } from './help-tip'
 import { useJobNotifications } from './job-notification-center'
 import { GeoQueryList } from './geo-query-list'
 import { ProjectFormDialog } from './project-form-dialog'
+import { useT } from '../lib/user-prefs'
+import type { Translator } from '../lib/i18n'
 
 export { defaultGeoQueries } from '../lib/geo-query-suggest'
 export { defaultGeoModelIds } from '../lib/geo/model-catalog'
@@ -137,71 +139,62 @@ export function initialProjectId(
   return projects[0]?.id ?? ''
 }
 
-const CAPABILITY_CARDS: Array<{
-  id: LaunchCapability
-  label: string
-  kicker: string
-  deck: string
-}> = [
-  {
-    id: 'wcag',
-    label: 'WCAG',
-    kicker: 'Accessibility',
-    deck: 'Page or domain — contrast, structure, and assistive tech readiness.',
-  },
-  {
-    id: 'geo',
-    label: 'GEO',
-    kicker: 'Answer engines',
-    deck: 'Citations, placement, and share of voice in LLM answers.',
-  },
-  {
-    id: 'seo',
-    label: 'SEO',
-    kicker: 'Findability',
-    deck: 'Titles, meta, headings, and corpus coverage across the host.',
-  },
-]
+function capabilityCards(t: Translator) {
+  return [
+    {
+      id: 'wcag' as const,
+      label: t('scan.wcagLabel'),
+      kicker: t('scan.wcagKicker'),
+      deck: t('scan.wcagDeck'),
+    },
+    {
+      id: 'geo' as const,
+      label: t('scan.geoLabel'),
+      kicker: t('scan.geoKicker'),
+      deck: t('scan.geoDeck'),
+    },
+    {
+      id: 'seo' as const,
+      label: t('scan.seoLabel'),
+      kicker: t('scan.seoKicker'),
+      deck: t('scan.seoDeck'),
+    },
+  ]
+}
 
-const WCAG_DEPTH_CARDS: Array<{
-  id: WcagDepth
-  label: string
-  kicker: string
-  deck: string
-}> = [
-  {
-    id: 'single',
-    label: 'Quick single scan',
-    kicker: 'One page',
-    deck: 'One URL, one magazine — accessibility first with SEO and performance beside it.',
-  },
-  {
-    id: 'deep',
-    label: 'Deep scan',
-    kicker: 'Host-wide',
-    deck: 'Spider from this URL into a light corpus magazine alongside the page result.',
-  },
-]
+function wcagDepthCards(t: Translator) {
+  return [
+    {
+      id: 'single' as const,
+      label: t('scan.singleLabel'),
+      kicker: t('scan.singleKicker'),
+      deck: t('scan.singleDeck'),
+    },
+    {
+      id: 'deep' as const,
+      label: t('scan.deepLabel'),
+      kicker: t('scan.deepKicker'),
+      deck: t('scan.deepDeck'),
+    },
+  ]
+}
 
-const GEO_MEASUREMENT_CARDS: Array<{
-  id: GeoMeasurement
-  label: string
-  kicker: string
-  deck: string
-}> = [
-  {
-    id: 'recall',
-    label: 'Model memory',
-    kicker: 'Layer 1',
-    deck: 'Ungrounded probe — brands the model already knows from training.',
-  },
-  {
-    id: 'live',
-    label: 'Live search',
-    kicker: 'Layer 2',
-    deck: 'Web-grounded answers — citations from search, closer to ChatGPT with browse.',
-  },
-]
+function geoMeasurementCards(t: Translator) {
+  return [
+    {
+      id: 'recall' as const,
+      label: t('scan.recallLabel'),
+      kicker: t('scan.recallKicker'),
+      deck: t('scan.recallDeck'),
+    },
+    {
+      id: 'live' as const,
+      label: t('scan.liveLabel'),
+      kicker: t('scan.liveKicker'),
+      deck: t('scan.liveDeck'),
+    },
+  ]
+}
 
 export function ScanLaunchForm({
   projects,
@@ -230,6 +223,7 @@ export function ScanLaunchForm({
   defaultMeasurements?: GeoMeasurement[]
 }) {
   const { trackJob } = useJobNotifications()
+  const t = useT()
   const initialUrl = defaultUrl?.trim() || DEFAULT_DEMO_URL
 
   const [capability, setCapability] = useState<LaunchCapability | null>(() =>
@@ -267,7 +261,6 @@ export function ScanLaunchForm({
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
   const activeGeoMeasurements = fromAudion ? [] : geoMeasurements
-  const primaryGeoMeasurement = activeGeoMeasurements[0] ?? null
   const geoBothLayers = activeGeoMeasurements.length > 1
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
   const geoSuggestUrl =
@@ -302,62 +295,45 @@ export function ScanLaunchForm({
   const modeCopy = useMemo(() => {
     if (fromAudion) {
       return {
-        title: 'Scan this page',
-        deck: 'AUDION handed off this step URL. Confirm the Collection project, then launch a single-page accessibility scan.',
-        cta: 'Launch single scan',
-        loading: 'Starting single-page scan…',
+        cta: t('scan.ctaSingle'),
+        loading: t('scan.loadingSingle'),
       }
     }
     switch (activeCapability) {
       case 'seo':
         return {
-          title: 'SEO coverage',
-          deck: 'Crawl the host and open the domain magazine where SEO coverage is a first-class chapter — titles, meta, H1s, and keyword density across pages.',
-          cta: 'Launch SEO crawl',
-          loading: 'Starting SEO scan…',
+          cta: t('scan.ctaSeo'),
+          loading: t('scan.loadingSeo'),
         }
       case 'geo':
         if (geoBothLayers) {
           return {
-            title: 'GEO both layers',
-            deck: 'Two separate jobs — model memory and live search. Hit rates stay unmixed.',
-            cta: 'Start GEO jobs',
-            loading: 'Starting GEO jobs…',
+            cta: t('scan.ctaGeoBoth'),
+            loading: t('scan.loadingGeoBoth'),
           }
         }
         return {
-          title: primaryGeoMeasurement === 'live' ? 'GEO live search' : 'GEO presence',
-          deck:
-            primaryGeoMeasurement === 'live'
-              ? 'Ask answer engines with web search where this host is cited — closer to ChatGPT with browse, not model memory.'
-              : 'Ask answer engines where this host shows up from model memory — citations, placement, and competitive share of voice.',
-          cta: 'Start GEO job',
-          loading: 'Starting GEO job…',
+          cta: t('scan.ctaGeo'),
+          loading: t('scan.loadingGeo'),
         }
       case 'wcag':
         if (activeWcagDepth === 'deep') {
           return {
-            title: 'Deep scan',
-            deck: 'Spider the domain from this URL and open a light corpus magazine alongside the page result.',
-            cta: 'Launch deep scan',
-            loading: 'Starting deep scan…',
+            cta: t('scan.ctaDeep'),
+            loading: t('scan.loadingDeep'),
           }
         }
         return {
-          title: 'Quick single scan',
-          deck: 'One URL, one magazine result — accessibility first, with SEO and performance signals in the same reading.',
-          cta: 'Launch single scan',
-          loading: 'Starting single-page scan…',
+          cta: t('scan.ctaSingle'),
+          loading: t('scan.loadingSingle'),
         }
       default:
         return {
-          title: 'Start a run',
-          deck: 'Choose a capability to continue.',
-          cta: 'Launch',
-          loading: 'Starting…',
+          cta: t('scan.ctaLaunch'),
+          loading: t('scan.ctaStarting'),
         }
     }
-  }, [activeCapability, activeWcagDepth, primaryGeoMeasurement, geoBothLayers, fromAudion])
+  }, [activeCapability, activeWcagDepth, geoBothLayers, fromAudion, t])
 
   function onCapabilityChange(next: LaunchCapability) {
     if (fromAudion) return
@@ -614,13 +590,13 @@ export function ScanLaunchForm({
       setStatus('idle')
     } catch (err) {
       setStatus('error')
-      setError(err instanceof Error ? err.message : 'Launch failed')
+      setError(err instanceof Error ? err.message : t('errors.launchFailed'))
     }
   }
 
   const visibleCards = fromAudion
-    ? CAPABILITY_CARDS.filter((c) => c.id === 'wcag')
-    : CAPABILITY_CARDS
+    ? capabilityCards(t).filter((c) => c.id === 'wcag')
+    : capabilityCards(t)
 
   const composeKey =
     activeCapability === 'wcag'
@@ -632,33 +608,31 @@ export function ScanLaunchForm({
       <header className="checkion-launch-hero">
         <p className="checkion-launch-hero__eyebrow">{paths.brandLabel}</p>
         <Text role="headline" as="h1" className="checkion-launch-hero__title">
-          {fromAudion ? 'Scan this page' : 'Start a run'}
+          {fromAudion ? t('scan.heroTitleAudion') : t('scan.heroTitle')}
         </Text>
         <p className="checkion-launch-hero__deck">
-          {fromAudion
-            ? 'Single-page accessibility for this AUDION step — results live in CHECKION.'
-            : 'Choose a capability, drop a URL, launch. WCAG, GEO presence, or SEO coverage — one magazine to begin.'}
+          {fromAudion ? t('scan.heroDeckAudion') : t('scan.heroDeck')}
         </p>
       </header>
 
       <Panel className="checkion-launch-stage">
         <form className="checkion-scan-form checkion-scan-form--launch" onSubmit={onSubmit}>
           <div className="checkion-launch-capability">
-            <div className="checkion-launch-tip-row" aria-label="Capability tips">
+            <div className="checkion-launch-tip-row" aria-label={t('scan.capabilityTipsAria')}>
               <LabelWithTip tipId="launch.wcag">
-                <span>WCAG</span>
+                <span>{t('scan.wcagLabel')}</span>
               </LabelWithTip>
               <LabelWithTip tipId="launch.geo">
-                <span>GEO</span>
+                <span>{t('scan.geoLabel')}</span>
               </LabelWithTip>
               <LabelWithTip tipId="launch.seo">
-                <span>SEO</span>
+                <span>{t('scan.seoLabel')}</span>
               </LabelWithTip>
             </div>
             <div
               className="checkion-capability-grid"
               role="radiogroup"
-              aria-label="Capability"
+              aria-label={t('scan.capabilityAria')}
             >
               {visibleCards.map((card) => {
                 const selected = activeCapability === card.id
@@ -691,20 +665,20 @@ export function ScanLaunchForm({
               key={`depth-${activeCapability}`}
               className="checkion-launch-depth checkion-launch-reveal"
             >
-              <div className="checkion-launch-tip-row" aria-label="Depth tips">
+              <div className="checkion-launch-tip-row" aria-label={t('scan.depthTipsAria')}>
                 <LabelWithTip tipId="launch.depth.single">
-                  <span>Quick single</span>
+                  <span>{t('scan.tipSingle')}</span>
                 </LabelWithTip>
                 <LabelWithTip tipId="launch.depth.deep">
-                  <span>Deep scan</span>
+                  <span>{t('scan.tipDeep')}</span>
                 </LabelWithTip>
               </div>
               <div
                 className="checkion-depth-grid"
                 role="radiogroup"
-                aria-label="WCAG depth"
+                aria-label={t('scan.depthAria')}
               >
-                {WCAG_DEPTH_CARDS.map((card) => {
+                {wcagDepthCards(t).map((card) => {
                   const selected = activeWcagDepth === card.id
                   return (
                     <button
@@ -735,20 +709,20 @@ export function ScanLaunchForm({
               key="geo-measurement"
               className="checkion-launch-depth checkion-launch-reveal"
             >
-              <div className="checkion-launch-tip-row" aria-label="GEO measurement tips">
+              <div className="checkion-launch-tip-row" aria-label={t('scan.geoTipsAria')}>
                 <LabelWithTip tipId="launch.geo.recall">
-                  <span>Model memory</span>
+                  <span>{t('scan.recallLabel')}</span>
                 </LabelWithTip>
                 <LabelWithTip tipId="launch.geo.live">
-                  <span>Live search</span>
+                  <span>{t('scan.liveLabel')}</span>
                 </LabelWithTip>
               </div>
               <div
                 className="checkion-depth-grid"
                 role="group"
-                aria-label="GEO measurement"
+                aria-label={t('scan.geoMeasureAria')}
               >
-                {GEO_MEASUREMENT_CARDS.map((card) => {
+                {geoMeasurementCards(t).map((card) => {
                   const selected = activeGeoMeasurements.includes(card.id)
                   return (
                     <button
@@ -771,13 +745,13 @@ export function ScanLaunchForm({
                   )
                 })}
               </div>
-              <Hint>Select one or both — each layer is a separate job. Hit rates are never mixed.</Hint>
+              <Hint>{t('scan.geoMeasureHint')}</Hint>
             </div>
           ) : null}
 
           {fromAudion && projectId ? (
             <Hint panel>
-              CHECKION project:{' '}
+              {t('scan.projectAudion')}{' '}
               <a className="ds-link" href={paths.routes.projectDetail(projectId)}>
                 {activeProjectName}
               </a>
@@ -795,51 +769,51 @@ export function ScanLaunchForm({
                   <div className="checkion-launch-compose__row checkion-launch-compose__row--geo">
                     <Field
                       className="checkion-launch-compose__url"
-                      label="URL"
+                      label={t('scan.url')}
                       size="md"
-                      hint="Target host for citation checks (or use company name)"
+                      hint={t('scan.urlHintGeo')}
                     >
                       <Input
                         value={url}
                         onChange={(e) => onUrlChange(e.target.value)}
                         block
-                        aria-label="Scan URL"
-                        placeholder="https://"
+                        aria-label={t('scan.urlAria')}
+                        placeholder={t('scan.urlPlaceholder')}
                       />
                     </Field>
 
                     <Field
                       className="checkion-launch-compose__company"
-                      label="Company name"
+                      label={t('scan.company')}
                       size="md"
-                      hint="Brand when you do not have a URL yet"
+                      hint={t('scan.companyHint')}
                     >
                       <Input
                         value={companyName}
                         onChange={(e) => onCompanyNameChange(e.target.value)}
                         block
-                        aria-label="Company name"
-                        placeholder="Acme"
+                        aria-label={t('scan.company')}
+                        placeholder={t('scan.companyPlaceholder')}
                       />
                     </Field>
 
                     <Field
                       className="checkion-launch-compose__project"
-                      label="Project"
+                      label={t('scan.project')}
                       size="md"
-                      hint="Optional — select, create, or auto-create on Start"
+                      hint={t('scan.projectHintGeo')}
                     >
                       <div className="checkion-launch-compose__project-stack">
                         <Select
                           value={projectId}
                           onChange={setProjectId}
                           size="md"
-                          placeholder="Select or create project…"
+                          placeholder={t('scan.projectPlaceholder')}
                           options={projectOptions.map((p) => ({
                             value: p.id,
                             label: p.name,
                           }))}
-                          aria-label="Project"
+                          aria-label={t('scan.project')}
                         />
                         <Button
                           type="button"
@@ -849,7 +823,7 @@ export function ScanLaunchForm({
                           onClick={openCreateProject}
                           disabled={status === 'submitting'}
                         >
-                          + New project
+                          {t('scan.newProject')}
                         </Button>
                       </div>
                     </Field>
@@ -858,12 +832,10 @@ export function ScanLaunchForm({
                   <div className="checkion-launch-compose__row">
                     <Field
                       className="checkion-launch-compose__url"
-                      label="URL"
+                      label={t('scan.url')}
                       size="md"
                       hint={
-                        activeCapability === 'seo'
-                          ? 'Host root to crawl for SEO coverage'
-                          : 'Page to evaluate'
+                        activeCapability === 'seo' ? t('scan.urlHintSeo') : t('scan.urlHintPage')
                       }
                     >
                       <Input
@@ -871,24 +843,24 @@ export function ScanLaunchForm({
                         onChange={(e) => onUrlChange(e.target.value)}
                         required
                         block
-                        aria-label="Scan URL"
-                        placeholder="https://"
+                        aria-label={t('scan.urlAria')}
+                        placeholder={t('scan.urlPlaceholder')}
                       />
                     </Field>
 
                     {!fromAudion ? (
                       <Field
                         className="checkion-launch-compose__project"
-                        label="Project"
+                        label={t('scan.project')}
                         size="md"
-                        hint="CHECKION Collection capability"
+                        hint={t('scan.projectHint')}
                       >
                         <Select
                           value={projectId}
                           onChange={setProjectId}
                           size="md"
                           options={projectOptions.map((p) => ({ value: p.id, label: p.name }))}
-                          aria-label="Project"
+                          aria-label={t('scan.project')}
                         />
                       </Field>
                     ) : null}
@@ -944,14 +916,11 @@ export function ScanLaunchForm({
               </div>
 
               {activeCapability === 'geo' && !geoTargetReady ? (
-                <Alert tone="info">Provide a URL or company name to start a GEO check.</Alert>
+                <Alert tone="info">{t('scan.geoNeedTarget')}</Alert>
               ) : null}
 
               {activeCapability === 'geo' && geoTargetReady && !projectId.trim() ? (
-                <Alert tone="info">
-                  No project selected — Start will auto-create one from the target URL or company
-                  name (federation company from session or PLEXON_DEMO_COMPANY_ID when set).
-                </Alert>
+                <Alert tone="info">{t('scan.geoAutoCreate')}</Alert>
               ) : null}
 
               {error ? <Alert tone="error">{error}</Alert> : null}
