@@ -17,6 +17,7 @@ export function ResultMagazineChrome({
   scoreFallback,
   host,
   title,
+  titleIsHome = false,
   deck,
   tags,
   variant,
@@ -33,6 +34,7 @@ export function ResultMagazineChrome({
   scoreFallback: Array<{ kind: string; label: string; value: number }>
   host: string
   title: string
+  titleIsHome?: boolean
   deck: string | null | undefined
   tags?: string[]
   variant: 'cover' | 'folio'
@@ -41,6 +43,7 @@ export function ResultMagazineChrome({
 }) {
   const t = useT()
   const scoreDisplay = overallScore ?? t('results.scoreNone')
+  const displayTitle = titleIsHome ? t('nav.home') : title
 
   return (
     <>
@@ -105,7 +108,7 @@ export function ResultMagazineChrome({
           <div className="checkion-cover__copy">
             <p className="checkion-cover__host">{host}</p>
             <Text role="headline" as="h2" className="checkion-cover__title">
-              {title}
+              {displayTitle}
             </Text>
             {variant === 'cover' ? (
               <>

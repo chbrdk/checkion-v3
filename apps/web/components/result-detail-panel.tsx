@@ -37,6 +37,8 @@ import {
 import { DETAIL_SCORE_FORMULAS, formulaForBand } from '../lib/detail-score-formulas'
 import { tipIdForDetailBand } from '../lib/help-tips'
 import { scoreTone } from '../lib/scan-display'
+import { useT } from '../lib/user-prefs'
+import type { Translator } from '../lib/i18n'
 import { LabelWithTip } from './help-tip'
 
 function msLabel(value: number): string {
@@ -46,16 +48,16 @@ function msLabel(value: number): string {
   return `${Math.round(value)} ms`
 }
 
-function yesNo(value: boolean): string {
-  return value ? 'Yes' : 'No'
+function yesNo(value: boolean, t: Translator): string {
+  return value ? t('results.detail.yes') : t('results.detail.no')
 }
 
-function intensityLabel(tier: number): string {
-  if (tier <= 1) return 'Light'
-  if (tier === 2) return 'Moderate'
-  if (tier === 3) return 'Dense'
-  if (tier === 4) return 'Heavy'
-  return 'Extreme'
+function intensityLabel(tier: number, t: Translator): string {
+  if (tier <= 1) return t('results.intensityLight')
+  if (tier === 2) return t('results.intensityModerate')
+  if (tier === 3) return t('results.intensityDense')
+  if (tier === 4) return t('results.intensityHeavy')
+  return t('results.intensityExtreme')
 }
 
 function fmtDuration(ms: number | null | undefined): string {
@@ -139,6 +141,7 @@ function ScoreLedgerStrip({
   overall?: number | null
   query: DetailSearchQuery
 }) {
+  const t = useT()
   const sorted = [...scores].sort((a, b) => a.value - b.value)
   const filtered = sorted.filter((score) =>
     scoreMatches(
@@ -159,17 +162,17 @@ function ScoreLedgerStrip({
     <section className="checkion-report__ledger" aria-labelledby="detail-ledger-heading">
       <header className="checkion-report__band-head">
         <h3 id="detail-ledger-heading" className="checkion-report__band-title">
-          <LabelWithTip tipId="detail.ledger">Ledger</LabelWithTip>
+          <LabelWithTip tipId="detail.ledger">{t('results.detail.ledger')}</LabelWithTip>
         </h3>
         <p className="checkion-report__formula">{DETAIL_SCORE_FORMULAS.ledger}</p>
       </header>
-      <table className="checkion-report__table checkion-report__table--ledger" aria-label="Score ledger">
+      <table className="checkion-report__table checkion-report__table--ledger" aria-label={t('results.detail.scoreLedger')}>
         <thead>
           <tr>
-            <th scope="col">#</th>
-            <th scope="col">Category</th>
-            <th scope="col">Score</th>
-            <th scope="col">Max</th>
+            <th scope="col">{t('results.detail.colIndex')}</th>
+            <th scope="col">{t('results.detail.colCategory')}</th>
+            <th scope="col">{t('results.detail.colScore')}</th>
+            <th scope="col">{t('results.detail.colMax')}</th>
           </tr>
         </thead>
         <tbody>
@@ -186,12 +189,12 @@ function ScoreLedgerStrip({
         </tbody>
       </table>
       <p className="checkion-report__range-line">
-        <span className="checkion-report__range-label">Range</span>
+        <span className="checkion-report__range-label">{t('results.detail.range')}</span>
         <strong>{span ?? '—'}</strong>
         {worst && best
           ? ` · ${worst.label} ${worst.value} → ${best.label} ${best.value}`
-          : ' · no scores'}
-        {overall != null ? ` · overall ${overall}` : ''}
+          : t('results.detail.noScores')}
+        {overall != null ? t('results.detail.overallLine', { score: overall }) : ''}
       </p>
     </section>
   )
@@ -199,6 +202,8 @@ function ScoreLedgerStrip({
 
 /** Compact light-payload report — Chapter 03 Detail. */
 export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
+  const t = useT()
+  const f = (key: string) => t(`results.detail.fields.${key}`)
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const parsedQuery = useMemo(
@@ -228,28 +233,27 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   const cleared = passedChecks ?? []
 
   const scanRows: Fact[] = [
-    { label: 'URL', value: scan.url },
-    { label: 'Status', value: scan.status, tone: scanStatusTone(scan.status) },
-    { label: 'Mode', value: scan.mode },
+    { label: f('url'), value: scan.url },
+    { label: f('status'), value: scan.status, tone: scanStatusTone(scan.status) },
+    { label: f('mode'), value: scan.mode },
   ]
-  pushIf(scanRows, 'Device', scan.device)
-  pushIf(scanRows, 'Standard', scan.standard)
+  pushIf(scanRows, f('device'), scan.device)
+  pushIf(scanRows, f('standard'), scan.standard)
   pushIf(
-    scanRows,
-    'Runners',
+    scanRows, f('runners'),
     scan.runners?.length ? <ChipRow values={scan.runners} /> : null,
     Boolean(scan.runners?.length),
   )
-  pushIf(scanRows, 'Duration', fmtDuration(scan.durationMs), scan.durationMs != null)
-  pushIf(scanRows, 'Group', scan.groupId)
+  pushIf(scanRows, f('duration'), fmtDuration(scan.durationMs), scan.durationMs != null)
+  pushIf(scanRows, f('group'), scan.groupId)
   if (stats) {
     scanRows.push(
       {
-        label: 'Issues',
+        label: f('issues'),
         value: `${stats.total} · E ${stats.errors} / W ${stats.warnings} / N ${stats.notices}`,
         tone: issueStatsTone(stats.errors, stats.warnings),
       },
-      { label: 'Passed', value: stats.passed, tone: stats.passed > 0 ? 'pos' : undefined },
+      { label: f('passed'), value: stats.passed, tone: stats.passed > 0 ? 'pos' : undefined },
     )
     if (stats.byWcagLevel) {
       const parts = (['A', 'AA', 'AAA'] as const)
@@ -260,7 +264,7 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
         .filter(Boolean) as string[]
       if (parts.length) {
         scanRows.push({
-          label: 'WCAG levels',
+          label: f('wcagLevels'),
           value: parts.join(' · '),
           tone: issueStatsTone(stats.errors, stats.warnings),
         })
@@ -272,42 +276,40 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   if (performance) {
     perfRows.push(
       {
-        label: 'TTFB',
+        label: f('ttfb'),
         value: msLabel(performance.ttfb),
         tone: timingTone(performance.ttfb, 200, 500),
       },
       {
-        label: 'FCP',
+        label: f('fcp'),
         value: msLabel(performance.fcp),
         tone: timingTone(performance.fcp, 1800, 3000),
       },
       {
-        label: 'LCP',
+        label: f('lcp'),
         value: msLabel(performance.lcp),
         tone: timingTone(performance.lcp, 2500, 4000),
       },
       {
-        label: 'DOM',
+        label: f('dom'),
         value: msLabel(performance.domLoad),
         tone: timingTone(performance.domLoad, 2000, 3500),
       },
       {
-        label: 'Load',
+        label: f('load'),
         value: msLabel(performance.windowLoad),
         tone: timingTone(performance.windowLoad, 3000, 5000),
       },
     )
     pushIf(
-      perfRows,
-      'INP',
+      perfRows, f('inp'),
       performance.inp != null ? msLabel(performance.inp) : null,
       performance.inp != null,
       timingTone(performance.inp, 200, 500),
     )
-    pushIf(perfRows, 'Protocol', performance.nextHopProtocol)
+    pushIf(perfRows, f('protocol'), performance.nextHopProtocol)
     pushIf(
-      perfRows,
-      'Scripts',
+      perfRows, f('scripts'),
       performance.scriptTransferKb != null ? `${performance.scriptTransferKb} KB` : null,
       performance.scriptTransferKb != null,
       scriptKbTone(performance.scriptTransferKb),
@@ -318,45 +320,45 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   if (seo) {
     seoRows.push(
       {
-        label: 'Title',
+        label: f('title'),
         value: seo.title ?? '—',
         tone: seo.title ? undefined : 'neg',
       },
       {
-        label: 'Meta',
+        label: f('meta'),
         value: seo.metaDescription ?? '—',
         tone: seo.metaDescription ? undefined : 'neg',
       },
       {
-        label: 'H1',
+        label: f('h1'),
         value: seo.h1 ?? '—',
         tone: seo.h1 ? undefined : 'neg',
       },
-      { label: 'Title len', value: seo.titleLength, tone: titleLenTone(seo.titleLength) },
+      { label: f('titleLen'), value: seo.titleLength, tone: titleLenTone(seo.titleLength) },
       {
-        label: 'Meta len',
+        label: f('metaLen'),
         value: seo.metaDescriptionLength,
         tone: metaLenTone(seo.metaDescriptionLength),
       },
       {
-        label: 'Canonical',
+        label: f('canonical'),
         value: seo.canonical ?? '—',
         tone: seo.canonical ? 'pos' : 'neg',
       },
       {
-        label: 'Words',
-        value: seo.wordCount.toLocaleString('en'),
+        label: f('words'),
+        value: seo.wordCount.toLocaleString(),
         tone: wordCountTone(seo.wordCount),
       },
       {
-        label: 'Signals',
+        label: f('signals'),
         value: (
           <ChipRow
             values={[
-              seo.skinnyContent ? 'Skinny' : 'Dense',
-              seo.hasOpenGraph ? 'OG' : 'No OG',
-              seo.hasJsonLd ? 'JSON-LD' : 'No JSON-LD',
-              seo.robots ?? 'robots —',
+              seo.skinnyContent ? t('results.skinny') : t('results.dense'),
+              seo.hasOpenGraph ? 'OG' : t('results.detail.noOg'),
+              seo.hasJsonLd ? 'JSON-LD' : t('results.detail.noJsonLd'),
+              seo.robots ?? t('results.detail.robotsDash'),
             ]}
           />
         ),
@@ -367,28 +369,26 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
             : 'low',
       },
     )
-    pushIf(seoRows, 'OG title', seo.ogTitle)
-    pushIf(seoRows, 'OG desc', seo.ogDescription)
-    pushIf(seoRows, 'OG image', seo.ogImage)
-    pushIf(seoRows, 'Twitter', seo.twitterCard)
+    pushIf(seoRows, f('ogTitle'), seo.ogTitle)
+    pushIf(seoRows, f('ogDesc'), seo.ogDescription)
+    pushIf(seoRows, f('ogImage'), seo.ogImage)
+    pushIf(seoRows, f('twitter'), seo.twitterCard)
     pushIf(
-      seoRows,
-      'robots.txt',
-      seo.robotsTxtPresent == null ? null : yesNo(seo.robotsTxtPresent),
+      seoRows, f('robotsTxt'),
+      seo.robotsTxtPresent == null ? null : yesNo(seo.robotsTxtPresent, t),
       seo.robotsTxtPresent != null,
       goodWhenTrue(seo.robotsTxtPresent),
     )
-    pushIf(seoRows, 'Sitemap', seo.sitemapUrl, Boolean(seo.sitemapUrl), seo.sitemapUrl ? 'pos' : undefined)
+    pushIf(seoRows, f('sitemap'), seo.sitemapUrl, Boolean(seo.sitemapUrl), seo.sitemapUrl ? 'pos' : undefined)
     pushIf(
-      seoRows,
-      'Duplicate warn',
-      seo.duplicateContentWarning == null ? null : yesNo(seo.duplicateContentWarning),
+      seoRows, f('duplicateWarn'),
+      seo.duplicateContentWarning == null ? null : yesNo(seo.duplicateContentWarning, t),
       seo.duplicateContentWarning != null,
       badWhenTrue(seo.duplicateContentWarning),
     )
     if (seo.structuredDataGaps?.length) {
       seoRows.push({
-        label: 'Schema gaps',
+        label: f('schemaGaps'),
         value: seo.structuredDataGaps
           .map((g) => `${g.type}: ${g.missing.join(', ')}`)
           .join(' · '),
@@ -396,171 +396,154 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
       })
     }
     if (seo.topKeywords?.length) {
-      seoRows.push({ label: 'Keywords', value: <ChipRow values={seo.topKeywords} /> })
+      seoRows.push({ label: f('keywords'), value: <ChipRow values={seo.topKeywords} /> })
     }
   }
 
   const uxRows: Fact[] = []
   if (ux) {
     uxRows.push(
-      { label: 'Score', value: ux.score, tone: scoreMetricTone(ux.score) },
-      { label: 'CLS', value: ux.cls, tone: clsTone(ux.cls) },
+      { label: f('score'), value: ux.score, tone: scoreMetricTone(ux.score) },
+      { label: f('cls'), value: ux.cls, tone: clsTone(ux.cls) },
       {
-        label: 'Readability',
+        label: f('readability'),
         value: `${ux.readabilityGrade} · ${ux.readabilityScore}`,
         tone: clarityTone(ux.readabilityScore),
       },
       {
-        label: 'Mobile',
-        value: ux.mobileFriendly ? 'Friendly' : 'Issues',
+        label: f('mobile'),
+        value: ux.mobileFriendly ? t('results.detail.friendly') : t('results.detail.mobileIssues'),
         tone: ux.mobileFriendly ? 'pos' : 'neg',
       },
       {
-        label: 'Tap targets',
+        label: f('tapTargets'),
         value: ux.tapTargetIssueCount,
         tone: countTone(ux.tapTargetIssueCount, 1, 3),
       },
       {
-        label: 'Skip link',
-        value: yesNo(ux.hasSkipLink),
+        label: f('skipLink'),
+        value: yesNo(ux.hasSkipLink, t),
         tone: goodWhenTrue(ux.hasSkipLink),
       },
       {
-        label: 'H1 count',
+        label: f('h1Count'),
         value: ux.headingH1Count,
         tone: h1CountTone(ux.headingH1Count),
       },
       {
-        label: 'Levels',
-        value: ux.skippedHeadingLevels ? 'Skipped' : 'Intact',
+        label: f('levels'),
+        value: ux.skippedHeadingLevels ? t('results.detail.skipped') : t('results.detail.intact'),
         tone: ux.skippedHeadingLevels ? 'neg' : 'pos',
       },
       {
-        label: 'Broken links',
+        label: f('brokenLinks'),
         value: ux.brokenLinkCount,
         tone: countTone(ux.brokenLinkCount, 1, 3),
       },
     )
-    pushIf(uxRows, 'Skip href', ux.skipLinkHref)
+    pushIf(uxRows, f('skipHref'), ux.skipLinkHref)
     pushIf(
-      uxRows,
-      'Dwell median',
+      uxRows, f('dwellMedian'),
       ux.dwellSecondsMedian != null ? `${ux.dwellSecondsMedian} s` : null,
       ux.dwellSecondsMedian != null,
     )
     pushIf(
-      uxRows,
-      'Dwell conf.',
+      uxRows, f('dwellConf'),
       ux.dwellConfidence,
       Boolean(ux.dwellConfidence),
       confidenceTone(ux.dwellConfidence),
     )
     pushIf(
-      uxRows,
-      'Preload hints',
+      uxRows, f('preloadHints'),
       ux.resourceHintPreloadCount,
       ux.resourceHintPreloadCount != null,
     )
     pushIf(
-      uxRows,
-      'Preconnect',
+      uxRows, f('preconnect'),
       ux.resourceHintPreconnectCount,
       ux.resourceHintPreconnectCount != null,
     )
     pushIf(
-      uxRows,
-      'Reduced motion',
-      ux.reducedMotionInCss == null ? null : yesNo(ux.reducedMotionInCss),
+      uxRows, f('reducedMotion'),
+      ux.reducedMotionInCss == null ? null : yesNo(ux.reducedMotionInCss, t),
       ux.reducedMotionInCss != null,
       goodWhenTrue(ux.reducedMotionInCss),
     )
     pushIf(
-      uxRows,
-      'Focus-visible fails',
+      uxRows, f('focusVisibleFails'),
       ux.focusVisibleFailCount,
       ux.focusVisibleFailCount != null,
       countTone(ux.focusVisibleFailCount, 1, 3),
     )
     pushIf(
-      uxRows,
-      'Long tasks',
+      uxRows, f('longTasks'),
       ux.longTaskCount,
       ux.longTaskCount != null,
       countTone(ux.longTaskCount, 1, 5),
     )
     pushIf(
-      uxRows,
-      'Long-task max',
+      uxRows, f('longTaskMax'),
       ux.longTaskMaxMs != null ? msLabel(ux.longTaskMaxMs) : null,
       ux.longTaskMaxMs != null,
       timingTone(ux.longTaskMaxMs, 50, 100),
     )
     pushIf(
-      uxRows,
-      'Form autocomplete',
+      uxRows, f('formAutocomplete'),
       ux.formMissingAutocomplete,
       ux.formMissingAutocomplete != null,
       countTone(ux.formMissingAutocomplete, 1, 3),
     )
     pushIf(
-      uxRows,
-      'Form input type',
+      uxRows, f('formInputType'),
       ux.formSuspiciousInputType,
       ux.formSuspiciousInputType != null,
       countTone(ux.formSuspiciousInputType, 1, 3),
     )
     pushIf(
-      uxRows,
-      'Videos w/o captions',
+      uxRows, f('videosNoCaptions'),
       ux.videosWithoutCaptions,
       ux.videosWithoutCaptions != null,
       countTone(ux.videosWithoutCaptions, 1, 2),
     )
     pushIf(
-      uxRows,
-      'Audio w/o transcript',
+      uxRows, f('audioNoTranscript'),
       ux.audiosWithoutTranscript,
       ux.audiosWithoutTranscript != null,
       countTone(ux.audiosWithoutTranscript, 1, 2),
     )
     pushIf(
-      uxRows,
-      'Img dimensions',
+      uxRows, f('imgDimensions'),
       ux.imageMissingDimensions,
       ux.imageMissingDimensions != null,
       countTone(ux.imageMissingDimensions, 1, 5),
     )
     pushIf(
-      uxRows,
-      'Img lazy',
+      uxRows, f('imgLazy'),
       ux.imageMissingLazy,
       ux.imageMissingLazy != null,
       countTone(ux.imageMissingLazy, 1, 5),
     )
     pushIf(
-      uxRows,
-      'Img srcset',
+      uxRows, f('imgSrcset'),
       ux.imageMissingSrcset,
       ux.imageMissingSrcset != null,
       countTone(ux.imageMissingSrcset, 1, 5),
     )
     pushIf(
-      uxRows,
-      'Meta refresh',
-      ux.metaRefreshPresent == null ? null : yesNo(ux.metaRefreshPresent),
+      uxRows, f('metaRefresh'),
+      ux.metaRefreshPresent == null ? null : yesNo(ux.metaRefreshPresent, t),
       ux.metaRefreshPresent != null,
       badWhenTrue(ux.metaRefreshPresent),
     )
     pushIf(
-      uxRows,
-      'font-display',
+      uxRows, f('fontDisplay'),
       ux.fontDisplayIssueCount,
       ux.fontDisplayIssueCount != null,
       countTone(ux.fontDisplayIssueCount, 1, 3),
     )
     if (ux.skippedHeadingPairs?.length) {
       uxRows.push({
-        label: 'Skip pairs',
+        label: f('skipPairs'),
         value: ux.skippedHeadingPairs.join(' · '),
         tone: 'neg',
       })
@@ -570,25 +553,24 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   const ecoRows: Fact[] = []
   if (eco) {
     ecoRows.push(
-      { label: 'Grade', value: eco.grade, tone: ecoGradeTone(eco.grade) },
-      { label: 'CO₂', value: `${eco.co2} g`, tone: co2Tone(eco.co2) },
+      { label: f('grade'), value: eco.grade, tone: ecoGradeTone(eco.grade) },
+      { label: f('co2'), value: `${eco.co2} g`, tone: co2Tone(eco.co2) },
       {
-        label: 'Weight',
+        label: f('weight'),
         value: `${eco.pageWeightKb} KB`,
         tone: pageWeightTone(eco.pageWeightKb),
       },
       {
-        label: 'Green host',
+        label: f('greenHost'),
         value:
-          eco.greenWebHosted == null ? 'Unknown' : yesNo(eco.greenWebHosted),
+          eco.greenWebHosted == null ? t('results.detail.unknown') : yesNo(eco.greenWebHosted, t),
         tone: eco.greenWebHosted == null ? undefined : goodWhenTrue(eco.greenWebHosted),
       },
     )
-    pushIf(ecoRows, 'Green checked', eco.greenWebCheckedAt)
-    pushIf(ecoRows, 'Green source', eco.greenWebSource)
+    pushIf(ecoRows, f('greenChecked'), eco.greenWebCheckedAt)
+    pushIf(ecoRows, f('greenSource'), eco.greenWebSource)
     pushIf(
-      ecoRows,
-      'Cleaner than',
+      ecoRows, f('cleanerThan'),
       eco.cleanerThanPercent != null ? `${eco.cleanerThanPercent}%` : null,
       eco.cleanerThanPercent != null,
       cleanerThanTone(eco.cleanerThanPercent),
@@ -597,21 +579,21 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
 
   const linkRows: Fact[] = []
   if (links) {
-    pushIf(linkRows, 'Total', links.total, links.total != null)
+    pushIf(linkRows, f('total'), links.total, links.total != null)
     linkRows.push(
-      { label: 'Broken', value: links.broken, tone: countTone(links.broken, 1, 3) },
-      { label: 'Internal', value: links.internal },
-      { label: 'External', value: links.external },
+      { label: f('broken'), value: links.broken, tone: countTone(links.broken, 1, 3) },
+      { label: f('internal'), value: links.internal },
+      { label: f('external'), value: links.external },
       {
-        label: 'No noopener',
+        label: f('noNoopener'),
         value: links.missingNoopener,
         tone: countTone(links.missingNoopener, 1, 5),
       },
     )
-    pushIf(linkRows, 'PDFs', links.pdfLinkCount, links.pdfLinkCount != null)
+    pushIf(linkRows, f('pdfs'), links.pdfLinkCount, links.pdfLinkCount != null)
     if (links.brokenSamples?.length) {
       linkRows.push({
-        label: 'Broken sample',
+        label: f('brokenSample'),
         value: links.brokenSamples
           .map((s) => `${s.status ?? '?'} ${s.url}`)
           .join(' · '),
@@ -620,7 +602,7 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
     }
     if (links.noopenerSamples?.length) {
       linkRows.push({
-        label: 'Noopener sample',
+        label: f('noopenerSample'),
         value: links.noopenerSamples.map((s) => s.url).join(' · '),
         tone: 'low',
       })
@@ -630,95 +612,87 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   const shieldRows: Fact[] = []
   if (securityPrivacy) {
     shieldRows.push(
-      { label: 'HTTPS', value: yesNo(securityPrivacy.https), tone: goodWhenTrue(securityPrivacy.https) },
-      { label: 'HSTS', value: yesNo(securityPrivacy.hsts), tone: goodWhenTrue(securityPrivacy.hsts) },
-      { label: 'CSP', value: yesNo(securityPrivacy.csp), tone: goodWhenTrue(securityPrivacy.csp) },
+      { label: f('https'), value: yesNo(securityPrivacy.https, t), tone: goodWhenTrue(securityPrivacy.https) },
+      { label: f('hsts'), value: yesNo(securityPrivacy.hsts, t), tone: goodWhenTrue(securityPrivacy.hsts) },
+      { label: f('csp'), value: yesNo(securityPrivacy.csp, t), tone: goodWhenTrue(securityPrivacy.csp) },
       {
-        label: 'Privacy',
-        value: yesNo(securityPrivacy.hasPrivacyPolicy),
+        label: f('privacy'),
+        value: yesNo(securityPrivacy.hasPrivacyPolicy, t),
         tone: goodWhenTrue(securityPrivacy.hasPrivacyPolicy),
       },
       {
-        label: 'Cookies',
-        value: yesNo(securityPrivacy.hasCookieBanner),
+        label: f('cookies'),
+        value: yesNo(securityPrivacy.hasCookieBanner, t),
         tone: goodWhenTrue(securityPrivacy.hasCookieBanner),
       },
       {
-        label: 'Mixed',
-        value: securityPrivacy.mixedContent ? 'Yes' : 'None',
+        label: f('mixed'),
+        value: securityPrivacy.mixedContent ? t('results.detail.yes') : t('results.detail.none'),
         tone: badWhenTrue(securityPrivacy.mixedContent),
       },
     )
     pushIf(
-      shieldRows,
-      'X-Frame',
+      shieldRows, f('xFrame'),
       securityPrivacy.xFrameOptions == null
         ? null
-        : yesNo(securityPrivacy.xFrameOptions),
+        : yesNo(securityPrivacy.xFrameOptions, t),
       securityPrivacy.xFrameOptions != null,
       goodWhenTrue(securityPrivacy.xFrameOptions),
     )
     pushIf(
-      shieldRows,
-      'X-Content-Type',
+      shieldRows, f('xContentType'),
       securityPrivacy.xContentTypeOptions == null
         ? null
-        : yesNo(securityPrivacy.xContentTypeOptions),
+        : yesNo(securityPrivacy.xContentTypeOptions, t),
       securityPrivacy.xContentTypeOptions != null,
       goodWhenTrue(securityPrivacy.xContentTypeOptions),
     )
     pushIf(
-      shieldRows,
-      'Referrer-Policy',
+      shieldRows, f('referrerPolicy'),
       securityPrivacy.referrerPolicy == null
         ? null
-        : yesNo(securityPrivacy.referrerPolicy),
+        : yesNo(securityPrivacy.referrerPolicy, t),
       securityPrivacy.referrerPolicy != null,
       goodWhenTrue(securityPrivacy.referrerPolicy),
     )
     pushIf(
-      shieldRows,
-      'Permissions-Policy',
+      shieldRows, f('permissionsPolicy'),
       securityPrivacy.permissionsPolicy == null
         ? null
-        : yesNo(securityPrivacy.permissionsPolicy),
+        : yesNo(securityPrivacy.permissionsPolicy, t),
       securityPrivacy.permissionsPolicy != null,
       goodWhenTrue(securityPrivacy.permissionsPolicy),
     )
     pushIf(
-      shieldRows,
-      'Mixed count',
+      shieldRows, f('mixedCount'),
       securityPrivacy.mixedContentCount,
       securityPrivacy.mixedContentCount != null,
       countTone(securityPrivacy.mixedContentCount, 1, 3),
     )
     pushIf(
-      shieldRows,
-      'SRI missing',
+      shieldRows, f('sriMissing'),
       securityPrivacy.sriMissingCount,
       securityPrivacy.sriMissingCount != null,
       countTone(securityPrivacy.sriMissingCount, 1, 5),
     )
     pushIf(
-      shieldRows,
-      'Cookie warns',
+      shieldRows, f('cookieWarns'),
       securityPrivacy.cookieWarningCount,
       securityPrivacy.cookieWarningCount != null,
       countTone(securityPrivacy.cookieWarningCount, 1, 3),
     )
-    pushIf(shieldRows, 'Privacy URL', securityPrivacy.privacyPolicyUrl)
+    pushIf(shieldRows, f('privacyUrl'), securityPrivacy.privacyPolicyUrl)
     pushIf(
-      shieldRows,
-      'ToS',
+      shieldRows, f('tos'),
       securityPrivacy.hasTermsOfService == null
         ? null
-        : yesNo(securityPrivacy.hasTermsOfService),
+        : yesNo(securityPrivacy.hasTermsOfService, t),
       securityPrivacy.hasTermsOfService != null,
       goodWhenTrue(securityPrivacy.hasTermsOfService),
     )
     if (securityPrivacy.cmpHints?.length) {
       shieldRows.push({
-        label: 'CMP hints',
+        label: f('cmpHints'),
         value: <ChipRow values={securityPrivacy.cmpHints} />,
       })
     }
@@ -728,21 +702,21 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   if (freshness) {
     freshnessRows.push(
       {
-        label: 'Age',
-        value: freshness.ageDays == null ? '—' : `${freshness.ageDays} days`,
+        label: f('age'),
+        value: freshness.ageDays == null ? '—' : t('results.detail.days', { n: freshness.ageDays }),
         tone: freshnessAgeTone(freshness.ageDays),
       },
       {
-        label: 'Confidence',
+        label: f('confidence'),
         value: freshness.confidence,
         tone: confidenceTone(freshness.confidence),
       },
-      { label: 'Source', value: freshness.source ?? '—' },
+      { label: f('source'), value: freshness.source ?? '—' },
     )
-    pushIf(freshnessRows, 'Best as-of', freshness.bestAsOfIso)
+    pushIf(freshnessRows, f('bestAsOf'), freshness.bestAsOfIso)
     if (freshness.sources?.length) {
       freshnessRows.push({
-        label: 'Sources',
+        label: f('sources'),
         value: <ChipRow values={freshness.sources} />,
       })
     }
@@ -751,32 +725,32 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   const geoRows: Fact[] = []
   if (generative) {
     geoRows.push(
-      { label: 'Score', value: generative.score, tone: scoreMetricTone(generative.score) },
+      { label: f('score'), value: generative.score, tone: scoreMetricTone(generative.score) },
       {
-        label: 'Discover',
+        label: f('discover'),
         value: generative.discoverability,
         tone: scoreMetricTone(generative.discoverability),
       },
       {
-        label: 'Repurpose',
+        label: f('repurpose'),
         value: generative.repurposing,
         tone: scoreMetricTone(generative.repurposing),
       },
       {
-        label: 'Presence',
+        label: f('presence'),
         value: (
           <ChipRow
             values={[
-              generative.hasFaqSchema ? 'FAQ schema' : 'No FAQ',
-              generative.hasLlmsTxt ? 'llms.txt' : 'No llms.txt',
+              generative.hasFaqSchema ? t('results.detail.faqSchema') : t('results.detail.noFaq'),
+              generative.hasLlmsTxt ? t('results.detail.llmsTxt') : t('results.detail.noLlmsTxt'),
               ...(generative.hasHowToSchema != null
-                ? [generative.hasHowToSchema ? 'HowTo' : 'No HowTo']
+                ? [generative.hasHowToSchema ? t('results.detail.howTo') : t('results.detail.noHowTo')]
                 : []),
               ...(generative.hasBreadcrumb != null
-                ? [generative.hasBreadcrumb ? 'Breadcrumb' : 'No breadcrumb']
+                ? [generative.hasBreadcrumb ? t('results.detail.breadcrumb') : t('results.detail.noBreadcrumb')]
                 : []),
               ...(generative.hasOrganizationTrust != null
-                ? [generative.hasOrganizationTrust ? 'Org trust' : 'No org trust']
+                ? [generative.hasOrganizationTrust ? t('results.detail.orgTrust') : t('results.detail.noOrgTrust')]
                 : []),
             ]}
           />
@@ -789,85 +763,81 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
     )
     if (generative.schemaCoverage?.length) {
       geoRows.push({
-        label: 'Schemas',
+        label: f('schemas'),
         value: <ChipRow values={generative.schemaCoverage} />,
         tone: 'pos',
       })
     }
     if (generative.llmsTxtSections?.length) {
       geoRows.push({
-        label: 'llms sections',
+        label: f('llmsSections'),
         value: <ChipRow values={generative.llmsTxtSections} />,
         tone: 'pos',
       })
     }
     if (generative.aiBotsBlocked?.length) {
       geoRows.push({
-        label: 'Bots blocked',
+        label: f('botsBlocked'),
         value: <ChipRow values={generative.aiBotsBlocked} />,
         tone: 'low',
       })
     }
-    pushIf(geoRows, 'FAQ entities', generative.faqEntityCount, generative.faqEntityCount != null)
-    pushIf(geoRows, 'Tables', generative.tableCount, generative.tableCount != null)
+    pushIf(geoRows, f('faqEntities'), generative.faqEntityCount, generative.faqEntityCount != null)
+    pushIf(geoRows, f('tables'), generative.tableCount, generative.tableCount != null)
     pushIf(
-      geoRows,
-      'Citations',
+      geoRows, f('citations'),
       generative.citationDensity,
       generative.citationDensity != null,
     )
     pushIf(
-      geoRows,
-      'Author bio',
-      generative.hasAuthorBio == null ? null : yesNo(generative.hasAuthorBio),
+      geoRows, f('authorBio'),
+      generative.hasAuthorBio == null ? null : yesNo(generative.hasAuthorBio, t),
       generative.hasAuthorBio != null,
       goodWhenTrue(generative.hasAuthorBio),
     )
     pushIf(
-      geoRows,
-      'YMYL',
+      geoRows, f('ymyl'),
       generative.isYmyl == null
         ? null
-        : `${yesNo(generative.isYmyl)}${generative.ymylConfidence ? ` · ${generative.ymylConfidence}` : ''}`,
+        : `${yesNo(generative.isYmyl, t)}${generative.ymylConfidence ? ` · ${generative.ymylConfidence}` : ''}`,
       generative.isYmyl != null,
     )
   }
 
   const infraRows: Fact[] = []
   if (infra) {
-    pushIf(infraRows, 'IP', infra.serverIp)
+    pushIf(infraRows, f('ip'), infra.serverIp)
     pushIf(
-      infraRows,
-      'Location',
+      infraRows, f('location'),
       [infra.city, infra.country].filter(Boolean).join(', ') || null,
       Boolean(infra.city || infra.country),
     )
-    pushIf(infraRows, 'CDN', infra.cdnProvider)
-    pushIf(infraRows, 'html lang', infra.htmlLang)
-    pushIf(infraRows, 'hreflang', infra.hreflangCount, infra.hreflangCount != null)
+    pushIf(infraRows, f('cdn'), infra.cdnProvider)
+    pushIf(infraRows, f('htmlLang'), infra.htmlLang)
+    pushIf(infraRows, f('hreflang'), infra.hreflangCount, infra.hreflangCount != null)
     if (infra.platforms?.length) {
-      infraRows.push({ label: 'Platforms', value: <ChipRow values={infra.platforms} /> })
+      infraRows.push({ label: f('platforms'), value: <ChipRow values={infra.platforms} /> })
     }
     if (infra.tracking?.length) {
-      infraRows.push({ label: 'Tracking', value: <ChipRow values={infra.tracking} /> })
+      infraRows.push({ label: f('tracking'), value: <ChipRow values={infra.tracking} /> })
     }
-    pushIf(infraRows, 'Server', infra.hostingServer)
-    pushIf(infraRows, 'Powered-By', infra.hostingPoweredBy)
+    pushIf(infraRows, f('server'), infra.hostingServer)
+    pushIf(infraRows, f('poweredBy'), infra.hostingPoweredBy)
   }
 
   const classRows: Fact[] = []
   if (classification) {
     classRows.push(
-      { label: 'Summary', value: classification.shortSummary },
-      { label: 'Tags', value: <ChipRow values={classification.tags} /> },
+      { label: f('summary'), value: classification.shortSummary },
+      { label: f('tags'), value: <ChipRow values={classification.tags} /> },
       {
-        label: 'Intensity',
-        value: `${intensityLabel(classification.intensityTier)} · ${classification.intensityTier}`,
+        label: f('intensity'),
+        value: `${intensityLabel(classification.intensityTier, t)} · ${classification.intensityTier}`,
       },
     )
     if (classification.tagTiers?.length) {
       classRows.push({
-        label: 'Tag tiers',
+        label: f('tagTiers'),
         value: classification.tagTiers.map((t) => `${t.tag}·${t.tier}`).join(' · '),
       })
     }
@@ -877,7 +847,7 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
       .map((s) => s.overallScore)
       .filter((v): v is number => v != null)
     classRows.push({
-      label: 'Devices',
+      label: f('devices'),
       value: deviceSiblings
         .map(
           (sib) =>
@@ -909,73 +879,73 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   }> = [
     {
       id: 'report-scan',
-      title: 'Scan',
-      aliases: ['run', 'meta', 'wcag', 'status', 'device', 'issues'],
+      title: t('results.detail.bands.scan'),
+      aliases: ['run', 'meta', 'wcag', 'status', 'device', 'issues', 'scan'],
       rows: scanRows,
     },
     {
       id: 'report-performance',
-      title: 'Performance',
-      aliases: ['cwv', 'vitals', 'speed', 'lcp', 'fcp', 'ttfb', 'inp', 'load'],
+      title: t('results.detail.bands.performance'),
+      aliases: ['cwv', 'vitals', 'speed', 'lcp', 'fcp', 'ttfb', 'inp', 'load', 'performance'],
       rows: perfRows,
     },
     {
       id: 'report-seo',
-      title: 'SEO',
-      aliases: ['title', 'meta', 'canonical', 'og', 'schema', 'keywords'],
+      title: t('results.detail.bands.seo'),
+      aliases: ['title', 'meta', 'canonical', 'og', 'schema', 'keywords', 'seo'],
       rows: seoRows,
     },
     {
       id: 'report-ux',
-      title: 'UX',
-      aliases: ['cls', 'readability', 'cefr', 'mobile', 'heading', 'a11y'],
+      title: t('results.detail.bands.ux'),
+      aliases: ['cls', 'readability', 'cefr', 'mobile', 'heading', 'a11y', 'ux'],
       rows: uxRows,
     },
     {
       id: 'report-eco',
-      title: 'Eco',
-      aliases: ['co2', 'carbon', 'green', 'weight'],
+      title: t('results.detail.bands.eco'),
+      aliases: ['co2', 'carbon', 'green', 'weight', 'eco'],
       rows: ecoRows,
     },
     {
       id: 'report-links',
-      title: 'Links',
-      aliases: ['broken', 'noopener', 'internal', 'external'],
+      title: t('results.detail.bands.links'),
+      aliases: ['broken', 'noopener', 'internal', 'external', 'links'],
       rows: linkRows,
     },
     {
       id: 'report-shield',
-      title: 'Shield',
-      aliases: ['security', 'privacy', 'https', 'hsts', 'csp', 'cookies'],
+      title: t('results.detail.bands.shield'),
+      aliases: ['security', 'privacy', 'https', 'hsts', 'csp', 'cookies', 'shield'],
       rows: shieldRows,
     },
     {
       id: 'report-freshness',
-      title: 'Freshness',
-      aliases: ['age', 'stale', 'fresh'],
+      title: t('results.detail.bands.freshness'),
+      aliases: ['age', 'stale', 'fresh', 'freshness'],
       rows: freshnessRows,
     },
     {
       id: 'report-geo',
-      title: 'GEO',
-      aliases: ['generative', 'ai', 'llm', 'faq', 'schema'],
+      title: t('results.detail.bands.geo'),
+      aliases: ['generative', 'ai', 'llm', 'faq', 'schema', 'geo'],
       rows: geoRows,
     },
     {
       id: 'report-infra',
-      title: 'Infra',
-      aliases: ['hosting', 'cdn', 'ip', 'platform', 'tracking'],
+      title: t('results.detail.bands.infra'),
+      aliases: ['hosting', 'cdn', 'ip', 'platform', 'tracking', 'infra'],
       rows: infraRows,
     },
     {
       id: 'report-class',
-      title: 'Class / devices',
-      aliases: ['intensity', 'tags', 'devices', 'siblings'],
+      title: t('results.detail.bands.class'),
+      aliases: ['intensity', 'tags', 'devices', 'siblings', 'class'],
       rows: classRows,
     },
     {
       id: 'report-cleared',
-      title: 'Cleared checks',
+      title: t('results.detail.bands.cleared'),
       aliases: ['passed', 'clean', 'cleared'],
       rows: clearedRows,
     },
@@ -1012,15 +982,15 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
   return (
     <div className="checkion-magazine-body checkion-spread checkion-report">
       <header className="checkion-report__head">
-        <p className="checkion-spread__eyebrow">Detail</p>
+        <p className="checkion-spread__eyebrow">{t('results.detail.eyebrow')}</p>
         <h3 id="detail-chapter" className="checkion-report__title">
-          Full report
+          {t('results.detail.title')}
         </h3>
       </header>
 
       <div className="checkion-report__search">
         <label className="checkion-report__search-label" htmlFor="detail-report-search">
-          Search report
+          {t('results.detail.searchLabel')}
         </label>
         <Input
           id="detail-report-search"
@@ -1029,19 +999,19 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
           size="md"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="LCP, HTTPS, bad, Eco, readability…"
+          placeholder={t('results.detail.searchPlaceholder')}
           autoComplete="off"
           spellCheck={false}
         />
         {parsedQuery.raw ? (
           <p className="checkion-report__search-meta" aria-live="polite">
             {hasResults
-              ? `Showing matches for “${query.trim()}”`
-              : `No matches for “${query.trim()}”`}
+              ? t('results.detail.showingMatches', { query: query.trim() })
+              : t('results.detail.noMatchesQuery', { query: query.trim() })}
           </p>
         ) : (
           <p className="checkion-report__search-meta">
-            Labels, values, categories — or try <em>bad</em>, <em>good</em>, <em>LCP</em>
+            {t('results.detail.searchHint')}
           </p>
         )}
       </div>
@@ -1049,12 +1019,12 @@ export function ResultDetailPanel({ overview }: { overview: ScanOverview }) {
       {screenshotUrl && !parsedQuery.raw ? (
         <figure className="checkion-report__shot">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={screenshotUrl} alt="Scan capture" />
+          <img src={screenshotUrl} alt={t('results.detail.scanCapture')} />
         </figure>
       ) : null}
 
       {!hasResults ? (
-        <EmptyState>No matches — try another metric, category, or tone (bad / good / warn).</EmptyState>
+        <EmptyState>{t('results.detail.emptySearch')}</EmptyState>
       ) : (
         <>
           <ScoreLedgerStrip scores={scores} overall={overall} query={parsedQuery} />

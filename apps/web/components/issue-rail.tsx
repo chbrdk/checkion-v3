@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Chip, EmptyState, FilterRow, Text } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
 import type { TipId } from '../lib/help-tips'
+import { useT } from '../lib/user-prefs'
 import { LabelWithTip } from './help-tip'
 
 const SEVERITIES: Array<IssueSeverity | 'all'> = [
@@ -31,6 +32,7 @@ export function IssueRail({
   openId: string | null
   onOpenChange: (id: string | null) => void
 }) {
+  const t = useT()
   const [severity, setSeverity] = useState<IssueSeverity | 'all'>('all')
   const listRef = useRef<HTMLUListElement>(null)
 
@@ -63,24 +65,27 @@ export function IssueRail({
   }, [openId])
 
   return (
-    <aside className="checkion-issue-rail" aria-label="Findings">
+    <aside className="checkion-issue-rail" aria-label={t('results.issuesChrome.findings')}>
       <header className="checkion-issue-rail__head">
-        <p className="checkion-spread__eyebrow">Findings</p>
+        <p className="checkion-spread__eyebrow">{t('results.issuesChrome.findings')}</p>
         <p className="checkion-issue-rail__count">
           {filtered.length}/{issues.length}
         </p>
       </header>
 
       <div className="checkion-issue-rail__filters">
-        <span className="checkion-issue-rail__filter-label">Severity</span>
-        <div className="checkion-issue-rail__sev-tips" aria-label="Severity glossary">
+        <span className="checkion-issue-rail__filter-label">{t('results.issuesChrome.severity')}</span>
+        <div
+          className="checkion-issue-rail__sev-tips"
+          aria-label={t('results.issuesChrome.severityGlossary')}
+        >
           {(['critical', 'serious', 'moderate', 'minor'] as const).map((s) => (
             <LabelWithTip key={s} tipId={SEVERITY_TIP[s]!}>
               <span className="checkion-issue-rail__sev-tip">{s}</span>
             </LabelWithTip>
           ))}
         </div>
-        <FilterRow role="group" aria-label="Severity">
+        <FilterRow role="group" aria-label={t('results.issuesChrome.severity')}>
           {SEVERITIES.map((s) => (
             <Chip
               key={s}
@@ -89,14 +94,16 @@ export function IssueRail({
               onClick={() => setSeverity(s)}
               aria-pressed={severity === s}
             >
-              {s === 'all' ? `All ${counts.all}` : `${s[0]!.toUpperCase()} ${counts[s] ?? 0}`}
+              {s === 'all'
+                ? t('results.issuesChrome.allCount', { count: counts.all })
+                : `${s[0]!.toUpperCase()} ${counts[s] ?? 0}`}
             </Chip>
           ))}
         </FilterRow>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState>No matches.</EmptyState>
+        <EmptyState>{t('results.issuesChrome.noMatches')}</EmptyState>
       ) : (
         <ul className="checkion-issue-rail__list" ref={listRef}>
           {filtered.map((issue, index) => {
@@ -120,7 +127,7 @@ export function IssueRail({
                   <span className="checkion-issue-rail__title">{issue.title}</span>
                   <span className="checkion-issue-rail__meta">
                     {issue.severity}
-                    {issue.boundingBox ? ' · map' : ''}
+                    {issue.boundingBox ? t('results.issuesChrome.mapSuffix') : ''}
                   </span>
                 </button>
                 {open ? (
@@ -131,8 +138,7 @@ export function IssueRail({
                       {issue.runner ? ` · ${issue.runner}` : ''}
                     </Text>
                     <p>
-                      {issue.detail ??
-                        'Dummy finding — remediation copy lands when the live scanner is wired.'}
+                      {issue.detail ?? t('results.issuesChrome.dummyDetail')}
                     </p>
                     {issue.selector ? (
                       <Text role="mono" as="p">
@@ -146,7 +152,7 @@ export function IssueRail({
                         rel="noreferrer"
                         className="checkion-band-action"
                       >
-                        Rule help →
+                        {t('results.issuesChrome.ruleHelp')}
                       </a>
                     ) : null}
                   </div>

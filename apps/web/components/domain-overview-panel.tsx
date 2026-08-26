@@ -85,7 +85,10 @@ function compactPath(url: string): string {
   }
 }
 
-function shieldStats(snap: SecurityPrivacySnapshot): {
+function shieldStats(
+  snap: SecurityPrivacySnapshot,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): {
   ok: number
   total: number
   gaps: string[]
@@ -94,9 +97,9 @@ function shieldStats(snap: SecurityPrivacySnapshot): {
     { ok: snap.https, gap: 'HTTPS' },
     { ok: snap.hsts, gap: 'HSTS' },
     { ok: snap.csp, gap: 'CSP' },
-    { ok: snap.hasPrivacyPolicy, gap: 'Privacy' },
-    { ok: snap.hasCookieBanner, gap: 'Cookies' },
-    { ok: !snap.mixedContent, gap: 'Mix' },
+    { ok: snap.hasPrivacyPolicy, gap: t('domain.gapPrivacy') },
+    { ok: snap.hasCookieBanner, gap: t('domain.gapCookies') },
+    { ok: !snap.mixedContent, gap: t('domain.gapMix') },
   ]
   return {
     ok: items.filter((i) => i.ok).length,
@@ -140,7 +143,7 @@ export function DomainOverviewPanel({
   const geo = overview.generative
   const eeat = overview.eeat
   const links = overview.links
-  const shield = overview.securityPrivacy ? shieldStats(overview.securityPrivacy) : null
+  const shield = overview.securityPrivacy ? shieldStats(overview.securityPrivacy, t) : null
   const issueStats = overview.scan.issueStats
   const issuesPath = issuesHref ?? paths.routes.domainSection(overview.scan.id, 'issues')
   const systemicTop = overview.systemicIssues.slice(0, 8)
@@ -150,7 +153,7 @@ export function DomainOverviewPanel({
     label: s.label,
     value: `${s.value}`,
     fillPct: Math.max(0, Math.min(100, s.value)),
-    meta: scoreTone(s.value) === 'neg' ? 'Pulls the corpus down' : undefined,
+    meta: scoreTone(s.value) === 'neg' ? t('domain.pullsCorpus') : undefined,
   }))
 
   const notesTiles = [
@@ -160,7 +163,7 @@ export function DomainOverviewPanel({
           tone: links.broken > 0 ? ('neg' as const) : ('pos' as const),
           value: (links.total ?? links.internal + links.external).toLocaleString(),
           unit: undefined as string | undefined,
-          label: 'Links',
+          label: t('domain.links'),
           meta: `${links.internal.toLocaleString()} in · ${links.external.toLocaleString()} out · ${links.broken.toLocaleString()} broken`,
         }
       : null,
@@ -175,8 +178,8 @@ export function DomainOverviewPanel({
                 : ('neg' as const),
           value: String(shield.ok),
           unit: `/${shield.total}`,
-          label: 'Shield',
-          meta: shield.gaps.length === 0 ? 'All clear' : `Missing ${shield.gaps.join(' · ')}`,
+          label: t('domain.shield'),
+          meta: shield.gaps.length === 0 ? t('domain.allClear') : t('domain.missingGaps', { gaps: shield.gaps.join(' · ') }),
         }
       : null,
     issueStats
@@ -185,7 +188,7 @@ export function DomainOverviewPanel({
           tone: 'neg' as const,
           value: issueStats.errors.toLocaleString(),
           unit: undefined as string | undefined,
-          label: 'Error findings',
+          label: t('domain.errorFindings'),
           meta: `${issueStats.total.toLocaleString()} total across ${overview.scan.pageCount.toLocaleString()} pages`,
         }
       : null,
@@ -195,7 +198,7 @@ export function DomainOverviewPanel({
           tone: ux.tapTargetIssueCount > 0 ? ('low' as const) : ('pos' as const),
           value: ux.tapTargetIssueCount.toLocaleString(),
           unit: undefined as string | undefined,
-          label: 'Tap targets',
+          label: t('domain.tapTargets'),
           meta: `${ux.pagesWithSkippedLevels.toLocaleString()} pages with skipped headings`,
         }
       : null,
@@ -224,7 +227,7 @@ export function DomainOverviewPanel({
               }
             : null,
           {
-            key: 'Pages',
+            key: t('domain.pages'),
             value: perf.pageCount.toLocaleString(),
             meta: 'measured',
           },
@@ -247,10 +250,10 @@ export function DomainOverviewPanel({
 
   const readabilityItems = ux?.readabilityBands
     ? [
-        { id: 'easy', label: 'Easy', value: ux.readabilityBands.easy },
-        { id: 'standard', label: 'Standard', value: ux.readabilityBands.standard },
-        { id: 'complex', label: 'Complex', value: ux.readabilityBands.complex },
-        { id: 'very', label: 'Very complex', value: ux.readabilityBands.veryComplex },
+        { id: 'easy', label: t('domain.easy'), value: ux.readabilityBands.easy },
+        { id: 'standard', label: t('domain.standard'), value: ux.readabilityBands.standard },
+        { id: 'complex', label: t('domain.complex'), value: ux.readabilityBands.complex },
+        { id: 'very', label: t('domain.veryComplex'), value: ux.readabilityBands.veryComplex },
       ]
     : []
 
@@ -272,9 +275,9 @@ export function DomainOverviewPanel({
 
   const linkSlices = links
     ? [
-        { id: 'internal', label: 'Internal', value: links.internal },
-        { id: 'external', label: 'External', value: links.external },
-        { id: 'broken', label: 'Broken', value: links.broken },
+        { id: 'internal', label: t('domain.internal'), value: links.internal },
+        { id: 'external', label: t('domain.external'), value: links.external },
+        { id: 'broken', label: t('domain.broken'), value: links.broken },
       ].filter((s) => s.value > 0)
     : []
 
@@ -318,7 +321,7 @@ export function DomainOverviewPanel({
           </header>
           <RankedList
             className="checkion-domain-systemic-rank"
-            hint={<Text role="meta">Top {systemicTop.length} · open Issues for the full list</Text>}
+            hint={<Text role="meta">{t('domain.topSystemic', { n: systemicTop.length })}</Text>}
           >
             {systemicTop.map((issue, i) => (
               <RankedRow
@@ -334,7 +337,7 @@ export function DomainOverviewPanel({
                     <span>{issue.title}</span>
                   </span>
                 }
-                value={`${issue.pageCount.toLocaleString()} pages`}
+                value={t('domain.pagesUnit', { n: issue.pageCount.toLocaleString() })}
                 barPct={Math.max(8, Math.round((100 * issue.pageCount) / maxSystemic))}
               />
             ))}
@@ -350,7 +353,7 @@ export function DomainOverviewPanel({
       {(notesTileCount > 0 || vitalsTileCount > 0) && (
         <section className="checkion-metrics-spread" aria-labelledby="domain-margins-heading">
           <header className="checkion-metrics-spread__head">
-            <p className="checkion-spread__eyebrow">Field notes</p>
+            <p className="checkion-spread__eyebrow">{t('domain.fieldNotes')}</p>
             <h3 id="domain-margins-heading" className="checkion-spread__headline">
               {t('domain.marginsHeadline')}
             </h3>
@@ -368,7 +371,7 @@ export function DomainOverviewPanel({
           >
             {notesTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="notes">
-                <p className="checkion-metrics-spread__kicker">Also noted</p>
+                <p className="checkion-metrics-spread__kicker">{t('domain.alsoNoted')}</p>
                 <div
                   className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
                   style={{ ['--notes-cols' as string]: String(Math.min(notesTileCount, 3)) }}
@@ -389,7 +392,7 @@ export function DomainOverviewPanel({
 
             {vitalsTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="vitals">
-                <p className="checkion-metrics-spread__kicker">Avg lab timings</p>
+                <p className="checkion-metrics-spread__kicker">{t('domain.avgLabTimings')}</p>
                 <div
                   className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
                   style={{ ['--notes-cols' as string]: String(Math.min(vitalsTileCount, 3)) }}
@@ -428,18 +431,18 @@ export function DomainOverviewPanel({
               />
             </div>
             <div className="checkion-domain-seo__meters">
-              <ReadoutMeterList aria-label="SEO coverage meters">
+              <ReadoutMeterList aria-label={t('domain.seoCoverageMeters')}>
                 {(
                   [
-                    { id: 'title', label: 'Title', have: seo.withTitle },
+                    { id: 'title', label: t('results.detail.fields.title'), have: seo.withTitle },
                     { id: 'h1', label: 'H1', have: seo.withH1 },
-                    { id: 'meta', label: 'Meta description', have: seo.withMetaDescription },
-                    { id: 'canonical', label: 'Canonical', have: seo.withCanonical },
+                    { id: 'meta', label: t('domain.metaDescription'), have: seo.withMetaDescription },
+                    { id: 'canonical', label: t('results.detail.fields.canonical'), have: seo.withCanonical },
                     seo.withOgTitle != null
-                      ? { id: 'og', label: 'Open Graph title', have: seo.withOgTitle }
+                      ? { id: 'og', label: t('domain.openGraphTitle'), have: seo.withOgTitle }
                       : null,
                     seo.withTwitterCard != null
-                      ? { id: 'tw', label: 'Twitter card', have: seo.withTwitterCard }
+                      ? { id: 'tw', label: t('domain.twitterCard'), have: seo.withTwitterCard }
                       : null,
                   ] as Array<{ id: string; label: string; have: number } | null>
                 )
@@ -470,11 +473,11 @@ export function DomainOverviewPanel({
       {hasDistributions ? (
         <section className="checkion-domain-chapter" aria-labelledby="dist-heading">
           <header className="checkion-domain-chapter__head">
-            <p className="checkion-spread__eyebrow">Distributions</p>
+            <p className="checkion-spread__eyebrow">{t('domain.distributions')}</p>
             <h3 id="dist-heading" className="checkion-spread__headline">
-              <LabelWithTip tipId="domain.distribution">Share across the corpus</LabelWithTip>
+              <LabelWithTip tipId="domain.distribution">{t('domain.shareAcross')}</LabelWithTip>
             </h3>
-            <Hint>Donuts for composition — rankings stay as bars above.</Hint>
+            <Hint>{t('domain.distHint')}</Hint>
           </header>
           <div className="checkion-domain-grid checkion-domain-grid--dist">
             {readabilityItems.length > 0 ? (
@@ -489,7 +492,7 @@ export function DomainOverviewPanel({
                   </Text>
                 ) : null}
                 <DistributionDonut
-                  aria-label="Readability band share"
+                  aria-label={t('domain.readabilityBandShare')}
                   slices={readabilityItems}
                   centerValue={ux?.readabilityScore}
                   centerLabel="score"
@@ -503,7 +506,7 @@ export function DomainOverviewPanel({
                   Dominant {eco.grade} · avg {eco.avgCo2} g CO₂
                 </Text>
                 <DistributionDonut
-                  aria-label="Eco grade share"
+                  aria-label={t('domain.ecoGradeShare')}
                   slices={ecoGrades}
                   centerValue={eco.grade}
                   centerLabel="mode"
@@ -517,7 +520,7 @@ export function DomainOverviewPanel({
                   {(links.total ?? links.internal + links.external).toLocaleString()} total
                 </Text>
                 <DistributionDonut
-                  aria-label="Internal, external and broken links"
+                  aria-label={t('domain.linksMixAria')}
                   slices={linkSlices}
                   centerValue={links.broken.toLocaleString()}
                   centerLabel="broken"
@@ -565,11 +568,11 @@ export function DomainOverviewPanel({
                 <ReadoutMeterList aria-label="E-E-A-T page coverage">
                   {(
                     [
-                      { id: 'contact', label: 'Contact', have: eeat.trust.pagesWithContact },
-                      { id: 'privacy', label: 'Privacy', have: eeat.trust.pagesWithPrivacy },
-                      { id: 'impressum', label: 'Impressum', have: eeat.trust.pagesWithImpressum },
-                      { id: 'about', label: 'About', have: eeat.experience.pagesWithAbout },
-                      { id: 'team', label: 'Team', have: eeat.experience.pagesWithTeam },
+                      { id: 'contact', label: t('domain.contact'), have: eeat.trust.pagesWithContact },
+                      { id: 'privacy', label: t('domain.privacy'), have: eeat.trust.pagesWithPrivacy },
+                      { id: 'impressum', label: t('domain.impressum'), have: eeat.trust.pagesWithImpressum },
+                      { id: 'about', label: t('domain.about'), have: eeat.experience.pagesWithAbout },
+                      { id: 'team', label: t('domain.team'), have: eeat.experience.pagesWithTeam },
                     ] as const
                   ).map((row) => {
                     const pct = coveragePct(row.have, eeat.totalPages)

@@ -5,6 +5,7 @@ import type {
   IssueSummary,
   VisualLayersSnapshot,
 } from '@checkion-v3/contracts'
+import { useT } from '../lib/user-prefs'
 import { LabelWithTip } from './help-tip'
 
 /** Capture coordinate space for live scan-single-1 full-page JPEG (1920×5053). */
@@ -42,6 +43,7 @@ export function IssueCaptureOverlay({
   layer: CaptureLayer
   onLayerChange: (layer: CaptureLayer) => void
 }) {
+  const t = useT()
   const marked = issues.filter((i) => i.boundingBox)
   const { width: vw, height: vh } = ISSUE_CAPTURE_VIEWPORT
   const layers = availableLayers(visualLayers)
@@ -56,19 +58,25 @@ export function IssueCaptureOverlay({
 
   const caption =
     layer === 'heatmap'
-      ? 'Saliency heatmap · fixture overlay'
+      ? t('results.issuesChrome.capHeatmap')
       : layer === 'regions'
-        ? `${regions.length} page regions`
-        : `${marked.length} marked · click a box to inspect`
+        ? t('results.issuesChrome.capRegions', { count: regions.length })
+        : t('results.issuesChrome.capIssues', { count: marked.length })
 
   return (
-    <figure className="checkion-issue-capture" aria-label="Issue capture">
+    <figure className="checkion-issue-capture" aria-label={t('results.issuesChrome.capture')}>
       {layers.length > 1 ? (
         <div className="checkion-issue-capture__layers-row">
           <LabelWithTip tipId="issue.layer.issues">
-            <span className="checkion-issue-capture__layers-label">Layers</span>
+            <span className="checkion-issue-capture__layers-label">
+              {t('results.issuesChrome.layers')}
+            </span>
           </LabelWithTip>
-          <div className="checkion-issue-capture__layers" role="tablist" aria-label="Capture layers">
+          <div
+            className="checkion-issue-capture__layers"
+            role="tablist"
+            aria-label={t('results.issuesChrome.captureLayers')}
+          >
             {layers.map((id) => (
               <button
                 key={id}
@@ -82,7 +90,11 @@ export function IssueCaptureOverlay({
                 }
                 onClick={() => onLayerChange(id)}
               >
-                {id === 'issues' ? 'Issues' : id === 'heatmap' ? 'Heatmap' : 'Regions'}
+                {id === 'issues'
+                  ? t('results.issuesChrome.layerIssues')
+                  : id === 'heatmap'
+                    ? t('results.issuesChrome.layerHeatmap')
+                    : t('results.issuesChrome.layerRegions')}
               </button>
             ))}
           </div>
@@ -93,7 +105,7 @@ export function IssueCaptureOverlay({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={screenshotUrl}
-          alt="Page capture"
+          alt={t('results.issuesChrome.pageCapture')}
           className="checkion-issue-capture__img"
           width={vw}
           height={vh}
@@ -132,7 +144,10 @@ export function IssueCaptureOverlay({
         ) : null}
 
         {showRegions ? (
-          <div className="checkion-issue-capture__layer" aria-label="Page regions">
+          <div
+            className="checkion-issue-capture__layer"
+            aria-label={t('results.issuesChrome.pageRegions')}
+          >
             {regions.map((region) => (
               <div
                 key={region.id}
@@ -174,7 +189,10 @@ export function IssueCaptureOverlay({
                     width: `${(box.width / vw) * 100}%`,
                     height: `${(box.height / vh) * 100}%`,
                   }}
-                  aria-label={`Issue ${index + 1}: ${issue.title}`}
+                  aria-label={t('results.issuesChrome.issueAria', {
+                    n: index + 1,
+                    title: issue.title,
+                  })}
                   aria-pressed={active}
                   onClick={() => onSelect(issue.id)}
                 >

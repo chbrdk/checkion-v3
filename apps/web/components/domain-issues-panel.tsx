@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Button, Chip, EmptyState, FilterRow, Input } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
+import { useT } from '../lib/user-prefs'
 import { DomainIssueAffectedPages } from './domain-issue-affected-pages'
 
 const SEVERITIES: Array<IssueSeverity | 'all'> = [
@@ -23,6 +24,7 @@ export function DomainIssuesPanel({
   domainId: string
   issues: IssueSummary[]
 }) {
+  const t = useT()
   const [q, setQ] = useState('')
   const [severity, setSeverity] = useState<IssueSeverity | 'all'>('all')
   const [page, setPage] = useState(1)
@@ -68,20 +70,20 @@ export function DomainIssuesPanel({
   return (
     <div className="checkion-magazine-body checkion-spread checkion-domain-issues">
       <header className="checkion-issues-panel__head">
-        <p className="checkion-spread__eyebrow">Chapter 02 · Issues</p>
+        <p className="checkion-spread__eyebrow">{t('domain.chapter02Issues')}</p>
         <h3 id="domain-issues-chapter" className="checkion-issues-panel__title">
-          Systemic issue groups
+          {t('domain.systemicGroups')}
         </h3>
       </header>
 
       <div className="checkion-domain-issues__toolbar">
         <Input
-          aria-label="Filter issue groups"
-          placeholder="Filter by rule or title…"
+          aria-label={t('domain.filterGroupsAria')}
+          placeholder={t('domain.filterGroupsPlaceholder')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <FilterRow role="group" aria-label="Severity filter">
+        <FilterRow role="group" aria-label={t('domain.severityFilter')}>
           {SEVERITIES.map((s) => (
             <Chip key={s} size="sm" selected={severity === s} onClick={() => setSeverity(s)}>
               {s}
@@ -91,7 +93,7 @@ export function DomainIssuesPanel({
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState>No issue groups match.</EmptyState>
+        <EmptyState>{t('domain.noGroupsMatch')}</EmptyState>
       ) : (
         <>
           <ul className="checkion-domain-issues__list">
@@ -166,10 +168,13 @@ export function DomainIssuesPanel({
             })}
           </ul>
 
-          <nav className="checkion-domain-issues__pager" aria-label="Issue groups pages">
+          <nav className="checkion-domain-issues__pager" aria-label={t('domain.issueGroupsPages')}>
             <p className="checkion-domain-issues__pager-meta" aria-live="polite">
-              Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{' '}
-              {total.toLocaleString()}
+              {t('domain.showingRange', {
+                start: rangeStart.toLocaleString(),
+                end: rangeEnd.toLocaleString(),
+                total: total.toLocaleString(),
+              })}
             </p>
             <div className="checkion-domain-issues__pager-actions">
               <Button
@@ -178,7 +183,7 @@ export function DomainIssuesPanel({
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                Previous
+                {t('domain.previous')}
               </Button>
               <Button
                 variant="ghost"
@@ -186,7 +191,7 @@ export function DomainIssuesPanel({
                 disabled={page >= pageCount}
                 onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
               >
-                Next
+                {t('domain.next')}
               </Button>
             </div>
           </nav>

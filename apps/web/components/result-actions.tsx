@@ -8,6 +8,7 @@ import { ConfirmDialog, Dialog } from '../lib/msqdx-ui-client'
 import { useJobNotifications } from './job-notification-center'
 import { paths } from '../lib/paths'
 import type { ShareResourceType } from '@checkion-v3/contracts'
+import { useT } from '../lib/user-prefs'
 
 function isActiveDomainStatus(status?: ScanStatus): boolean {
   return (
@@ -33,6 +34,7 @@ export function ResultActions({
   mode: 'single' | 'deep'
   status?: ScanStatus
 }) {
+  const t = useT()
   const router = useRouter()
   const { trackJob, controlDomainJob } = useJobNotifications()
   const [shareOpen, setShareOpen] = useState(false)
@@ -58,12 +60,12 @@ export function ResultActions({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ resourceType, resourceId }),
       })
-      if (!res.ok) throw new Error(`Share failed (${res.status})`)
+      if (!res.ok) throw new Error(t('results.shareFailedStatus', { status: res.status }))
       const data = (await res.json()) as { token: string }
       setShareUrl(`${publicOrigin}${paths.routes.shareDetail(data.token)}`)
       setShareOpen(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Share failed')
+      setError(err instanceof Error ? err.message : t('results.shareFailed'))
     } finally {
       setBusy(false)
     }
@@ -90,7 +92,10 @@ export function ResultActions({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error(`${isDomainRerun ? 'Restart' : 'Re-run'} failed (${res.status})`)
+      const actionLabel = isDomainRerun ? t('common.restart') : t('results.rerun')
+      if (!res.ok) {
+        throw new Error(t('results.actionFailedStatus', { action: actionLabel, status: res.status }))
+      }
       const data = (await res.json()) as { id: string; domainScanId?: string }
       const isDeep = isDomainRerun || (mode === 'deep' && Boolean(data.domainScanId))
       trackJob({
@@ -98,10 +103,10 @@ export function ResultActions({
         resource: isDeep ? 'domain' : 'scan',
         status: 'queued',
         title: isDomainRerun
-          ? 'Deep scan restart'
+          ? t('results.jobDeepRestart')
           : mode === 'deep'
-            ? 'Deep scan re-run'
-            : 'Single scan re-run',
+            ? t('results.jobDeepRerun')
+            : t('results.jobSingleRerun'),
         href: isDomainRerun
           ? paths.routes.domainSection(data.id, 'overview')
           : isDeep
@@ -113,7 +118,7 @@ export function ResultActions({
       })
       setRerunOpen(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Re-run failed')
+      setError(err instanceof Error ? err.message : t('results.rerunFailed'))
     } finally {
       setBusy(false)
     }
@@ -126,10 +131,10 @@ export function ResultActions({
       const res = await fetch(paths.routes.apiScanDetail(resourceId), {
         method: 'DELETE',
       })
-      if (!res.ok) throw new Error(`Delete failed (${res.status})`)
+      if (!res.ok) throw new Error(t('results.deleteFailedStatus', { status: res.status }))
       router.push(paths.routes.projectDetail(projectId))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed')
+      setError(err instanceof Error ? err.message : t('results.deleteFailed'))
     } finally {
       setBusy(false)
     }
@@ -145,7 +150,7 @@ export function ResultActions({
           id: resourceId,
           resource: 'domain',
           status: status ?? 'running',
-          title: 'Deep scan',
+          title: t('results.deepScanTitle'),
           href: paths.routes.domainSection(resourceId, 'overview'),
           projectId,
           targetUrl: url,
@@ -156,7 +161,7 @@ export function ResultActions({
       )
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Control failed')
+      setError(err instanceof Error ? err.message : t('results.controlFailed'))
     } finally {
       setBusy(false)
     }
@@ -165,15 +170,15 @@ export function ResultActions({
   return (
     <div className="checkion-result-actions">
       <Button type="button" size="sm" onClick={openShare} disabled={busy}>
-        Share
+        {t('common.share')}
       </Button>
       {resourceType === 'single' ? (
         <>
           <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
-            Re-run
+            {t('results.rerun')}
           </Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteOpen(true)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </>
       ) : resourceType === 'domain' ? (
@@ -188,7 +193,7 @@ export function ResultActions({
                   disabled={busy}
                   onClick={() => void sendDomainControl('pause')}
                 >
-                  Pause
+                  {t('common.pause')}
                 </Button>
               ) : null}
               {status === 'paused' ? (
@@ -199,7 +204,7 @@ export function ResultActions({
                   disabled={busy}
                   onClick={() => void sendDomainControl('resume')}
                 >
-                  Resume
+                  {t('common.resume')}
                 </Button>
               ) : null}
               <Button
@@ -209,12 +214,14 @@ export function ResultActions({
                 disabled={busy}
                 onClick={() => void sendDomainControl('cancel')}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </>
           ) : (
             <Button type="button" size="sm" variant="ghost" onClick={() => setRerunOpen(true)}>
-              {status === 'failed' || status === 'cancelled' ? 'Restart deep scan' : 'Re-run deep scan'}
+              {status === 'failed' || status === 'cancelled'
+                ? t('results.restartDeepScan')
+                : t('results.rerunDeepScan')}
             </Button>
           )}
         </>
@@ -224,21 +231,21 @@ export function ResultActions({
       <Dialog
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        title="Share result"
+        title={t('results.shareTitle')}
         actions={
           <>
             <Button variant="ghost" size="sm" onClick={() => setShareOpen(false)}>
-              Close
+              {t('common.close')}
             </Button>
             <Button size="sm" onClick={copyLink}>
-              {copied ? 'Copied' : 'Copy link'}
+              {copied ? t('common.copied') : t('common.copyLink')}
             </Button>
           </>
         }
       >
-        <Text role="meta">Anyone with the link can view the overview (no password in MVP).</Text>
-        <Field label="Public link">
-          <Input readOnly value={shareUrl} aria-label="Share link" />
+        <Text role="meta">{t('results.shareMeta')}</Text>
+        <Field label={t('results.publicLink')}>
+          <Input readOnly value={shareUrl} aria-label={t('results.shareLinkAria')} />
         </Field>
       </Dialog>
 
@@ -246,21 +253,27 @@ export function ResultActions({
         open={rerunOpen}
         onClose={() => setRerunOpen(false)}
         onConfirm={confirmRerun}
-        title={resourceType === 'domain' ? 'Restart deep scan?' : 'Re-run scan?'}
-        confirmLabel={resourceType === 'domain' ? 'Restart' : 'Re-run'}
+        title={resourceType === 'domain' ? t('results.restartDeepTitle') : t('results.rerunTitle')}
+        confirmLabel={resourceType === 'domain' ? t('common.restart') : t('results.rerun')}
       >
-        Queues a new {resourceType === 'domain' ? 'deep scan' : mode + ' scan'} for {url}.
+        {t('results.rerunBody', {
+          kind:
+            resourceType === 'domain'
+              ? t('results.deepScanKind')
+              : t('results.scanKind', { mode }),
+          url,
+        })}
       </ConfirmDialog>
 
       <ConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete scan?"
-        confirmLabel="Delete"
+        title={t('results.deleteTitle')}
+        confirmLabel={t('common.delete')}
         danger
       >
-        Removes this scan from the local fixture store. Shared links for it will 404.
+        {t('results.deleteBody')}
       </ConfirmDialog>
     </div>
   )

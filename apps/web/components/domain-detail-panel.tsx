@@ -21,6 +21,7 @@ import {
 import { domainFormulaForBand } from '../lib/domain-detail-score-formulas'
 import { tipIdForDetailBand } from '../lib/help-tips'
 import { scoreTone } from '../lib/scan-display'
+import { useT } from '../lib/user-prefs'
 import { LabelWithTip } from './help-tip'
 
 function msLabel(value: number): string {
@@ -28,8 +29,8 @@ function msLabel(value: number): string {
   return `${Math.round(value)} ms`
 }
 
-function yesNo(value: boolean): string {
-  return value ? 'Yes' : 'No'
+function yesNo(value: boolean, t: (k: string) => string): string {
+  return value ? t('results.detail.yes') : t('results.detail.no')
 }
 
 function coveragePct(have: number, total: number): number {
@@ -113,6 +114,7 @@ function ScoreLedgerStrip({
   overall?: number | null
   query: DetailSearchQuery
 }) {
+  const t = useT()
   const sorted = [...scores].sort((a, b) => a.value - b.value)
   const filtered = sorted.filter((score) =>
     scoreMatches(
@@ -133,17 +135,20 @@ function ScoreLedgerStrip({
     <section className="checkion-report__ledger" aria-labelledby="domain-detail-ledger-heading">
       <header className="checkion-report__band-head">
         <h3 id="domain-detail-ledger-heading" className="checkion-report__band-title">
-          Ledger
+          {t('results.detail.ledger')}
         </h3>
         <p className="checkion-report__formula">{domainFormulaForBand('ledger')}</p>
       </header>
-      <table className="checkion-report__table checkion-report__table--ledger" aria-label="Score ledger">
+      <table
+        className="checkion-report__table checkion-report__table--ledger"
+        aria-label={t('results.detail.scoreLedger')}
+      >
         <thead>
           <tr>
-            <th scope="col">#</th>
-            <th scope="col">Category</th>
-            <th scope="col">Score</th>
-            <th scope="col">Max</th>
+            <th scope="col">{t('results.detail.colIndex')}</th>
+            <th scope="col">{t('results.detail.colCategory')}</th>
+            <th scope="col">{t('results.detail.colScore')}</th>
+            <th scope="col">{t('results.detail.colMax')}</th>
           </tr>
         </thead>
         <tbody>
@@ -158,18 +163,19 @@ function ScoreLedgerStrip({
         </tbody>
       </table>
       <p className="checkion-report__range-line">
-        <span className="checkion-report__range-label">Range</span>
+        <span className="checkion-report__range-label">{t('results.detail.range')}</span>
         <strong>{span ?? '—'}</strong>
         {worst && best
           ? ` · ${worst.label} ${worst.value} → ${best.label} ${best.value}`
-          : ' · no scores'}
-        {overall != null ? ` · overall ${overall}` : ''}
+          : t('results.detail.noScores')}
+        {overall != null ? t('results.detail.overallLine', { score: overall }) : ''}
       </p>
     </section>
   )
 }
 
 export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
+  const t = useT()
   const [rawQuery, setRawQuery] = useState('')
   const deferred = useDeferredValue(rawQuery)
   const query: DetailSearchQuery = useMemo(() => parseDetailQuery(deferred), [deferred])
@@ -295,7 +301,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
       push(
         seoRows,
         'Hreflang x-default conflict',
-        yesNo(seo.hreflangXDefaultConflict),
+        yesNo(seo.hreflangXDefaultConflict, t),
         goodWhenTrue(!seo.hreflangXDefaultConflict),
       )
     }
@@ -366,17 +372,17 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
 
   const shieldRows: Fact[] = []
   if (shield) {
-    push(shieldRows, 'HTTPS', yesNo(shield.https), goodWhenTrue(shield.https))
-    push(shieldRows, 'HSTS', yesNo(shield.hsts), goodWhenTrue(shield.hsts))
-    push(shieldRows, 'CSP (majority)', yesNo(shield.csp), goodWhenTrue(shield.csp))
+    push(shieldRows, 'HTTPS', yesNo(shield.https, t), goodWhenTrue(shield.https))
+    push(shieldRows, 'HSTS', yesNo(shield.hsts, t), goodWhenTrue(shield.hsts))
+    push(shieldRows, 'CSP (majority)', yesNo(shield.csp, t), goodWhenTrue(shield.csp))
     push(
       shieldRows,
       'Privacy policy',
-      yesNo(shield.hasPrivacyPolicy),
+      yesNo(shield.hasPrivacyPolicy, t),
       goodWhenTrue(shield.hasPrivacyPolicy),
     )
-    push(shieldRows, 'Cookie banner', yesNo(shield.hasCookieBanner))
-    push(shieldRows, 'Mixed content', yesNo(shield.mixedContent), goodWhenTrue(!shield.mixedContent))
+    push(shieldRows, 'Cookie banner', yesNo(shield.hasCookieBanner, t))
+    push(shieldRows, 'Mixed content', yesNo(shield.mixedContent, t), goodWhenTrue(!shield.mixedContent))
     if (shield.privacyPolicyUrl) push(shieldRows, 'Privacy URL', shield.privacyPolicyUrl)
     if (shield.cmpHints?.length) push(shieldRows, 'Early script hosts', shield.cmpHints.join(', '))
   }
@@ -473,15 +479,15 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
   return (
     <div className="checkion-magazine-body checkion-spread checkion-report">
       <header className="checkion-report__head">
-        <p className="checkion-spread__eyebrow">Chapter 03 · Detail</p>
+        <p className="checkion-spread__eyebrow">{t('domain.chapter03Detail')}</p>
         <h3 id="domain-detail-chapter" className="checkion-report__title">
-          Corpus ledger
+          {t('domain.corpusLedger')}
         </h3>
       </header>
 
       <div className="checkion-report__search">
         <label className="checkion-report__search-label" htmlFor="domain-detail-report-search">
-          Search report
+          {t('results.detail.searchLabel')}
         </label>
         <Input
           id="domain-detail-report-search"
@@ -490,25 +496,25 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
           size="md"
           value={rawQuery}
           onChange={(e) => setRawQuery(e.target.value)}
-          placeholder="LCP, HTTPS, bad, SEO, readability…"
+          placeholder={t('domain.searchPlaceholderDetail')}
           autoComplete="off"
           spellCheck={false}
         />
         {query.raw ? (
           <p className="checkion-report__search-meta" aria-live="polite">
             {hasResults
-              ? `Showing matches for “${rawQuery.trim()}”`
-              : `No matches for “${rawQuery.trim()}”`}
+              ? t('results.detail.showingMatches', { query: rawQuery.trim() })
+              : t('results.detail.noMatchesQuery', { query: rawQuery.trim() })}
           </p>
         ) : (
           <p className="checkion-report__search-meta">
-            Labels, values, categories — or try <em>bad</em>, <em>good</em>, <em>LCP</em>
+            {t('results.detail.searchHint')}
           </p>
         )}
       </div>
 
       {!hasResults ? (
-        <EmptyState>No matches — try another metric, category, or tone (bad / good / warn).</EmptyState>
+        <EmptyState>{t('results.detail.emptySearch')}</EmptyState>
       ) : (
         <>
           <ScoreLedgerStrip scores={scores} overall={scan.overallScore} query={query} />

@@ -9,6 +9,7 @@ import {
   Text,
 } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
+import { useT } from '../lib/user-prefs'
 
 const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'all',
@@ -49,6 +50,7 @@ export function IssueFilterPanel({
   openId?: string | null
   onOpenChange?: (id: string | null) => void
 }) {
+  const t = useT()
   const [severity, setSeverity] = useState<IssueSeverity | 'all'>('all')
   const [section, setSection] = useState<IssueSummary['section'] | 'all'>('all')
   const [internalOpenId, setInternalOpenId] = useState<string | null>(null)
@@ -79,7 +81,7 @@ export function IssueFilterPanel({
     <div className="checkion-issue-filter checkion-dossier">
       {lead ? (
         <blockquote className="checkion-pullquote" cite={lead.ruleId}>
-          <p className="checkion-spread__eyebrow">Lead finding</p>
+          <p className="checkion-spread__eyebrow">{t('results.issuesChrome.leadFinding')}</p>
           <p className="checkion-pullquote__text">{lead.title}</p>
           <footer>
             {lead.severity} · {lead.ruleId} · ×{lead.affectedCount}
@@ -88,7 +90,7 @@ export function IssueFilterPanel({
         </blockquote>
       ) : null}
 
-      <div className="checkion-severity-tally" aria-label="Severity mix">
+      <div className="checkion-severity-tally" aria-label={t('results.issuesChrome.severityMix')}>
         {(['critical', 'serious', 'moderate', 'minor'] as IssueSeverity[]).map((s) => (
           <button
             key={s}
@@ -105,7 +107,7 @@ export function IssueFilterPanel({
       </div>
 
       <div className="checkion-dossier__filters">
-        <FilterRow role="group" aria-label="Severity">
+        <FilterRow role="group" aria-label={t('results.issuesChrome.severity')}>
           {SEVERITIES.map((s) => (
             <Chip
               key={s}
@@ -119,7 +121,7 @@ export function IssueFilterPanel({
             </Chip>
           ))}
         </FilterRow>
-        <FilterRow role="group" aria-label="Section">
+        <FilterRow role="group" aria-label={t('results.issuesChrome.section')}>
           {SECTIONS.map((s) => (
             <Chip
               key={s}
@@ -133,17 +135,20 @@ export function IssueFilterPanel({
           ))}
         </FilterRow>
         <Text role="meta">
-          Showing {filtered.length} of {issues.length}
+          {t('results.issuesChrome.showing', {
+            filtered: filtered.length,
+            total: issues.length,
+          })}
         </Text>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState>No issues match these filters.</EmptyState>
+        <EmptyState>{t('results.issuesChrome.noFilterMatches')}</EmptyState>
       ) : (
         <div className="checkion-dossier__inspect">
-          <p className="checkion-spread__eyebrow">Inspect</p>
+          <p className="checkion-spread__eyebrow">{t('results.issuesChrome.inspect')}</p>
           <Accordion
-            aria-label="Issue details"
+            aria-label={t('results.issuesChrome.issueDetails')}
             value={openId}
             onChange={setOpenId}
             items={filtered.map((issue, index) => ({
@@ -153,13 +158,15 @@ export function IssueFilterPanel({
               panel: (
                 <div className="checkion-issue-detail">
                   <Text role="meta">
-                    Section {issue.section} · rule {issue.ruleId}
+                    {t('results.issuesChrome.sectionRule', {
+                      section: issue.section,
+                      ruleId: issue.ruleId,
+                    })}
                     {issue.runner ? ` · ${issue.runner}` : ''}
                     {issue.wcagLevel ? ` · WCAG ${issue.wcagLevel}` : ''}
                   </Text>
                   <p>
-                    {issue.detail ??
-                      'Dummy finding — remediation copy lands when the live scanner is wired.'}
+                    {issue.detail ?? t('results.issuesChrome.dummyDetail')}
                   </p>
                   {issue.selector ? (
                     <Text role="mono" as="p">
@@ -171,8 +178,12 @@ export function IssueFilterPanel({
                   ) : null}
                   {issue.boundingBox ? (
                     <Text role="meta">
-                      Box {issue.boundingBox.x},{issue.boundingBox.y} ·{' '}
-                      {issue.boundingBox.width}×{issue.boundingBox.height}
+                      {t('results.issuesChrome.box', {
+                        x: issue.boundingBox.x,
+                        y: issue.boundingBox.y,
+                        w: issue.boundingBox.width,
+                        h: issue.boundingBox.height,
+                      })}
                     </Text>
                   ) : null}
                   {issue.helpUrl ? (
@@ -182,7 +193,7 @@ export function IssueFilterPanel({
                       rel="noreferrer"
                       className="checkion-band-action"
                     >
-                      Rule help →
+                      {t('results.issuesChrome.ruleHelp')}
                     </a>
                   ) : null}
                 </div>

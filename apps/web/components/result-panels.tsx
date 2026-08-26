@@ -43,12 +43,12 @@ function vitalTone(msValue: number, good: number, ok: number): 'pos' | 'low' | '
   return 'neg'
 }
 
-function intensityLabel(tier: number): string {
-  if (tier <= 1) return 'Light'
-  if (tier === 2) return 'Moderate'
-  if (tier === 3) return 'Dense'
-  if (tier === 4) return 'Heavy'
-  return 'Extreme'
+function intensityLabel(tier: number, t: (key: string) => string): string {
+  if (tier <= 1) return t('results.intensityLight')
+  if (tier === 2) return t('results.intensityModerate')
+  if (tier === 3) return t('results.intensityDense')
+  if (tier === 4) return t('results.intensityHeavy')
+  return t('results.intensityExtreme')
 }
 
 function readabilityTone(score: number): 'pos' | 'low' | 'neg' {
@@ -57,7 +57,10 @@ function readabilityTone(score: number): 'pos' | 'low' | 'neg' {
   return 'neg'
 }
 
-function shieldStats(snap: SecurityPrivacySnapshot): {
+function shieldStats(
+  snap: SecurityPrivacySnapshot,
+  t: (key: string) => string,
+): {
   ok: number
   total: number
   gaps: string[]
@@ -66,9 +69,9 @@ function shieldStats(snap: SecurityPrivacySnapshot): {
     { ok: snap.https, gap: 'HTTPS' },
     { ok: snap.hsts, gap: 'HSTS' },
     { ok: snap.csp, gap: 'CSP' },
-    { ok: snap.hasPrivacyPolicy, gap: 'Privacy' },
-    { ok: snap.hasCookieBanner, gap: 'Cookies' },
-    { ok: !snap.mixedContent, gap: 'Mix' },
+    { ok: snap.hasPrivacyPolicy, gap: t('results.gapPrivacy') },
+    { ok: snap.hasCookieBanner, gap: t('results.gapCookies') },
+    { ok: !snap.mixedContent, gap: t('results.gapMix') },
   ]
   return {
     ok: items.filter((i) => i.ok).length,
@@ -93,7 +96,7 @@ export function ResultOverviewPanel({
   const links = overview.links
   const geo = overview.generative
   const sortedScores = [...overview.scores].sort((a, b) => a.value - b.value)
-  const shield = overview.securityPrivacy ? shieldStats(overview.securityPrivacy) : null
+  const shield = overview.securityPrivacy ? shieldStats(overview.securityPrivacy, t) : null
   const clearedCount =
     overview.scan.issueStats?.passed ?? overview.passedChecks?.length ?? null
   const notesTileCount =
@@ -115,11 +118,11 @@ export function ResultOverviewPanel({
           title={t('results.progressTitle')}
           meta={overview.scan.mode}
           level="warn"
-          banner="Dummy fixture still marked running — open a completed scan for full scores."
+          banner={t('results.progressBanner')}
           meters={[
-            { id: 'fetch', label: 'Fetch', value: '…', fillPct: 40 },
-            { id: 'rules', label: 'Rules', value: '…', fillPct: 18 },
-            { id: 'score', label: 'Score', value: '…', fillPct: 5 },
+            { id: 'fetch', label: t('results.meterFetch'), value: '…', fillPct: 40 },
+            { id: 'rules', label: t('results.meterRules'), value: '…', fillPct: 18 },
+            { id: 'score', label: t('results.meterScore'), value: '…', fillPct: 5 },
           ]}
         />
       ) : null}
@@ -143,9 +146,9 @@ export function ResultOverviewPanel({
       {(notesTileCount > 0 || perf) && (
         <section className="checkion-metrics-spread" aria-labelledby="metrics-heading">
           <header className="checkion-metrics-spread__head">
-            <p className="checkion-spread__eyebrow">Field notes</p>
+            <p className="checkion-spread__eyebrow">{t('results.fieldNotes')}</p>
             <h3 id="metrics-heading" className="checkion-spread__headline">
-              Margins &amp; pace
+              {t('results.marginsPace')}
             </h3>
           </header>
 
@@ -156,7 +159,7 @@ export function ResultOverviewPanel({
           >
             {notesTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="notes">
-                <p className="checkion-metrics-spread__kicker">Also noted</p>
+                <p className="checkion-metrics-spread__kicker">{t('results.alsoNoted')}</p>
                 <div
                   className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
                   style={{ ['--notes-cols' as string]: String(Math.min(notesTileCount, 3)) }}
@@ -168,10 +171,10 @@ export function ResultOverviewPanel({
                         <span className="checkion-lab-tile__unit">d</span>
                       </strong>
                       <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.freshness">Freshness</LabelWithTip>
+                        <LabelWithTip tipId="lab.freshness">{t('results.freshness')}</LabelWithTip>
                       </span>
                       <span className="checkion-lab-tile__m">
-                        {overview.freshness.confidence} confidence
+                        {t('results.confidenceMeta', { confidence: overview.freshness.confidence })}
                         {overview.freshness.source
                           ? ` · ${overview.freshness.source.replace(/_/g, ' ')}`
                           : ''}
@@ -194,12 +197,12 @@ export function ResultOverviewPanel({
                         <span className="checkion-lab-tile__unit">/{shield.total}</span>
                       </strong>
                       <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.shield">Shield</LabelWithTip>
+                        <LabelWithTip tipId="lab.shield">{t('results.shield')}</LabelWithTip>
                       </span>
                       <span className="checkion-lab-tile__m">
                         {shield.gaps.length === 0
-                          ? 'All clear'
-                          : `Missing ${shield.gaps.join(' · ')}`}
+                          ? t('results.allClear')
+                          : t('results.missingGaps', { gaps: shield.gaps.join(' · ') })}
                       </span>
                     </div>
                   ) : null}
@@ -207,10 +210,10 @@ export function ResultOverviewPanel({
                     <div className="checkion-lab-tile" data-tone="pos">
                       <strong className="checkion-lab-tile__v">{clearedCount}</strong>
                       <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.cleared">Cleared</LabelWithTip>
+                        <LabelWithTip tipId="lab.cleared">{t('results.cleared')}</LabelWithTip>
                       </span>
                       <span className="checkion-lab-tile__m">
-                        {overview.passedChecks?.[0]?.description ?? 'checks already clean'}
+                        {overview.passedChecks?.[0]?.description ?? t('results.checksClean')}
                       </span>
                     </div>
                   ) : null}
@@ -224,7 +227,7 @@ export function ResultOverviewPanel({
                       <strong className="checkion-lab-tile__v">{sib.overallScore ?? '—'}</strong>
                       <span className="checkion-lab-tile__k">{sib.device}</span>
                       <span className="checkion-lab-tile__m">
-                        {sib.id === overview.scan.id ? 'This scan' : 'Sibling device'}
+                        {sib.id === overview.scan.id ? t('results.thisScan') : t('results.siblingDevice')}
                       </span>
                     </div>
                   ))}
@@ -234,7 +237,7 @@ export function ResultOverviewPanel({
 
             {perf ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="vitals">
-                <p className="checkion-metrics-spread__kicker">What slows</p>
+                <p className="checkion-metrics-spread__kicker">{t('results.whatSlows')}</p>
                 <div
                   className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
                   style={{
@@ -249,35 +252,35 @@ export function ResultOverviewPanel({
                         key: 'TTFB',
                         tipId: 'vital.ttfb' as const,
                         value: perf.ttfb,
-                        meta: 'Time to first byte',
+                        meta: t('results.vitalTtfb'),
                         tone: vitalTone(perf.ttfb, 200, 500),
                       },
                       {
                         key: 'FCP',
                         tipId: 'vital.fcp' as const,
                         value: perf.fcp,
-                        meta: 'First contentful paint',
+                        meta: t('results.vitalFcp'),
                         tone: vitalTone(perf.fcp, 1800, 3000),
                       },
                       {
                         key: 'LCP',
                         tipId: 'vital.lcp' as const,
                         value: perf.lcp,
-                        meta: 'Largest contentful paint',
+                        meta: t('results.vitalLcp'),
                         tone: vitalTone(perf.lcp, 2500, 4000),
                       },
                       {
                         key: 'DOM',
                         tipId: 'vital.dom' as const,
                         value: perf.domLoad,
-                        meta: 'DOM content loaded',
+                        meta: t('results.vitalDom'),
                         tone: vitalTone(perf.domLoad, 2000, 3500),
                       },
                       {
                         key: 'Load',
                         tipId: 'vital.load' as const,
                         value: perf.windowLoad,
-                        meta: 'Window load',
+                        meta: t('results.vitalLoad'),
                         tone: vitalTone(perf.windowLoad, 3000, 5000),
                       },
                     ] as const
@@ -312,9 +315,9 @@ export function ResultOverviewPanel({
                         <span className="checkion-lab-tile__unit">kb</span>
                       </strong>
                       <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="vital.scripts">Scripts</LabelWithTip>
+                        <LabelWithTip tipId="vital.scripts">{t('results.scripts')}</LabelWithTip>
                       </span>
-                      <span className="checkion-lab-tile__m">Transfer weight</span>
+                      <span className="checkion-lab-tile__m">{t('results.transferWeight')}</span>
                     </div>
                   ) : null}
                 </div>
@@ -334,7 +337,7 @@ export function ResultOverviewPanel({
             ux?.readabilityScore != null ||
             overview.classification?.intensityTier != null ||
             seo?.wordCount != null) && (
-            <aside className="checkion-page-spread__reading" aria-label="Reading profile">
+            <aside className="checkion-page-spread__reading" aria-label={t('results.readingProfile')}>
               {ux?.readabilityGrade ? (
                 <p
                   className="checkion-page-spread__cefr"
@@ -344,10 +347,10 @@ export function ResultOverviewPanel({
                 >
                   <span className="checkion-page-spread__cefr-copy">
                     <span className="checkion-page-spread__cefr-label">
-                      <LabelWithTip tipId="reading.cefr">Readability</LabelWithTip>
+                      <LabelWithTip tipId="reading.cefr">{t('results.readability')}</LabelWithTip>
                     </span>
                     <span className="checkion-page-spread__cefr-meta">
-                      CEFR band from page copy (mapped from Flesch–Kincaid)
+                      {t('results.cefrMeta')}
                     </span>
                   </span>
                   <span className="checkion-page-spread__cefr-mark">{ux.readabilityGrade}</span>
@@ -361,7 +364,7 @@ export function ResultOverviewPanel({
                 >
                   <div className="checkion-page-spread__clarity-head">
                     <span>
-                      <LabelWithTip tipId="reading.clarity">Clarity</LabelWithTip>
+                      <LabelWithTip tipId="reading.clarity">{t('results.clarity')}</LabelWithTip>
                     </span>
                     <strong>{ux.readabilityScore}</strong>
                   </div>
@@ -378,13 +381,13 @@ export function ResultOverviewPanel({
                 <div className="checkion-page-spread__complexity">
                   <div className="checkion-page-spread__complexity-head">
                     <span>
-                      <LabelWithTip tipId="reading.complexity">Complexity</LabelWithTip>
+                      <LabelWithTip tipId="reading.complexity">{t('results.complexity')}</LabelWithTip>
                     </span>
-                    <strong>{intensityLabel(overview.classification.intensityTier)}</strong>
+                    <strong>{intensityLabel(overview.classification.intensityTier, t)}</strong>
                   </div>
                   <ol
                     className="checkion-page-spread__tiers"
-                    aria-label={`Intensity ${overview.classification.intensityTier} of 5`}
+                    aria-label={t('results.intensityAria', { tier: overview.classification.intensityTier })}
                   >
                     {[1, 2, 3, 4, 5].map((step) => (
                       <li
@@ -400,18 +403,18 @@ export function ResultOverviewPanel({
 
               {seo?.wordCount != null ? (
                 <p className="checkion-page-spread__words">
-                  <em>{seo.wordCount.toLocaleString('en')}</em>
-                  {' words on the page'}
-                  {seo.skinnyContent ? ' — still reading skinny.' : '.'}
+                  <em>{seo.wordCount.toLocaleString()}</em>
+                  {' '}{t('results.wordsOnPage')}
+                  {seo.skinnyContent ? t('results.wordsSkinny') : '.'}
                 </p>
               ) : null}
             </aside>
           )}
 
           <div className="checkion-page-spread__story">
-            <p className="checkion-spread__eyebrow">On the page</p>
+            <p className="checkion-spread__eyebrow">{t('results.onThePage')}</p>
             <h3 id="feature-heading" className="checkion-spread__headline checkion-spread__headline--story">
-              {seo?.title ?? overview.classification?.shortSummary ?? 'Untitled document'}
+              {seo?.title ?? overview.classification?.shortSummary ?? t('results.untitledDocument')}
             </h3>
             {seo?.metaDescription ? (
               <p className="checkion-spread__prose">{seo.metaDescription}</p>
@@ -422,7 +425,7 @@ export function ResultOverviewPanel({
             <dl className="checkion-page-dossier">
               {seo?.h1 ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>H1</dt>
+                  <dt>{t('results.dossierH1')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       <Chip static size="sm">
@@ -434,14 +437,14 @@ export function ResultOverviewPanel({
               ) : null}
               {seo ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>Lengths</dt>
+                  <dt>{t('results.dossierLengths')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       <Chip static size="sm">
-                        Title {seo.titleLength}
+                        {t('results.dossierTitleLen', { n: seo.titleLength })}
                       </Chip>
                       <Chip static size="sm">
-                        Meta {seo.metaDescriptionLength}
+                        {t('results.dossierMetaLen', { n: seo.metaDescriptionLength })}
                       </Chip>
                     </div>
                   </dd>
@@ -449,18 +452,18 @@ export function ResultOverviewPanel({
               ) : null}
               {ux ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>Structure</dt>
+                  <dt>{t('results.dossierStructure')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       <Chip static size="sm">
-                        {ux.headingH1Count} H1
+                        {t('results.dossierH1Count', { n: ux.headingH1Count })}
                       </Chip>
                       <Chip static size="sm">
-                        {ux.skippedHeadingLevels ? 'Skipped levels' : 'Levels intact'}
+                        {ux.skippedHeadingLevels ? t('results.skippedLevels') : t('results.levelsIntact')}
                       </Chip>
                       {ux.hasSkipLink ? (
                         <Chip static size="sm">
-                          Skip link
+                          {t('results.skipLink')}
                         </Chip>
                       ) : null}
                     </div>
@@ -469,7 +472,7 @@ export function ResultOverviewPanel({
               ) : null}
               {seo ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>Signals</dt>
+                  <dt>{t('results.dossierSignals')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       {(
@@ -477,7 +480,7 @@ export function ResultOverviewPanel({
                           seo.hasOpenGraph ? 'OG' : null,
                           seo.hasJsonLd ? 'JSON-LD' : null,
                           seo.robots ?? null,
-                          seo.skinnyContent ? 'Skinny' : 'Dense',
+                          seo.skinnyContent ? t('results.skinny') : t('results.dense'),
                         ].filter(Boolean) as string[]
                       ).map((signal) => (
                         <Chip key={signal} static size="sm">
@@ -490,7 +493,7 @@ export function ResultOverviewPanel({
               ) : null}
               {seo?.canonical ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>Canonical</dt>
+                  <dt>{t('results.dossierCanonical')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       <Chip static size="sm">
@@ -502,7 +505,7 @@ export function ResultOverviewPanel({
               ) : null}
               {overview.classification?.tags?.length ? (
                 <div className="checkion-page-dossier__row checkion-page-dossier__row--chips">
-                  <dt>Classed</dt>
+                  <dt>{t('results.dossierClassed')}</dt>
                   <dd>
                     <div className="checkion-chip-row">
                       {overview.classification.tags.map((tag) => (
@@ -521,18 +524,18 @@ export function ResultOverviewPanel({
 
       {/* Lab strip — UX / Eco / Links teasers (GEO has its own chapter) */}
       {(ux || eco || links) && (
-        <section className="checkion-spread__lab" aria-label="UX eco links">
+        <section className="checkion-spread__lab" aria-label={t('results.labAria')}>
           {ux ? (
             <div className="checkion-lab-tile" data-tone={scoreTone(ux.score)}>
               <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.ux">UX lab</LabelWithTip>
+                <LabelWithTip tipId="lab.ux">{t('results.uxLab')}</LabelWithTip>
               </span>
               <strong className="checkion-lab-tile__v">{ux.score}</strong>
               <span className="checkion-lab-tile__m">
                 {[
                   `CLS ${ux.cls}`,
-                  ux.mobileFriendly ? 'Mobile' : 'Not mobile',
-                  `${ux.tapTargetIssueCount} taps`,
+                  ux.mobileFriendly ? t('results.mobile') : t('results.notMobile'),
+                  t('results.tapsMeta', { n: ux.tapTargetIssueCount }),
                 ].join(' · ')}
               </span>
             </div>
@@ -545,15 +548,15 @@ export function ResultOverviewPanel({
               }
             >
               <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.eco">Eco · {eco.grade}</LabelWithTip>
+                <LabelWithTip tipId="lab.eco">{t('results.ecoGrade', { grade: eco.grade })}</LabelWithTip>
               </span>
               <strong className="checkion-lab-tile__v">{eco.co2.toFixed(2)}g</strong>
               <span className="checkion-lab-tile__m">
                 {eco.pageWeightKb} KB
                 {eco.greenWebHosted === true
-                  ? ' · green host'
+                  ? t('results.greenHost')
                   : eco.greenWebHosted === false
-                    ? ' · not green'
+                    ? t('results.notGreen')
                     : ''}
               </span>
             </div>
@@ -564,12 +567,14 @@ export function ResultOverviewPanel({
               data-tone={links.broken > 0 || links.missingNoopener > 0 ? 'neg' : 'pos'}
             >
               <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.links">Links</LabelWithTip>
+                <LabelWithTip tipId="lab.links">{t('results.links')}</LabelWithTip>
               </span>
               <strong className="checkion-lab-tile__v">{links.broken}</strong>
               <span className="checkion-lab-tile__m">
-                broken · {links.internal}/{links.external} in/out
-                {links.missingNoopener > 0 ? ` · ${links.missingNoopener} noopener` : ''}
+                {t('results.linksMeta', { internal: links.internal, external: links.external })}
+                {links.missingNoopener > 0
+                  ? t('results.noopenerMeta', { n: links.missingNoopener })
+                  : ''}
               </span>
             </div>
           ) : null}
@@ -580,26 +585,26 @@ export function ResultOverviewPanel({
       {geo ? (
         <section className="checkion-geo-spread" aria-labelledby="geo-heading" data-tone={scoreTone(geo.score)}>
           <header className="checkion-geo-spread__head">
-            <p className="checkion-spread__eyebrow">GEO</p>
+            <p className="checkion-spread__eyebrow">{t('results.geoEyebrow')}</p>
             <h3 id="geo-heading" className="checkion-spread__headline">
-              How machines find the page
+              {t('results.geoHeadline')}
             </h3>
             <p className="checkion-geo-spread__lede">
               {geo.hasLlmsTxt && geo.hasFaqSchema
-                ? 'Structured answers and an llms.txt give engines a clear entry.'
+                ? t('results.geoLedeBoth')
                 : geo.hasFaqSchema && !geo.hasLlmsTxt
-                  ? 'FAQ schema is present, but without llms.txt discoverability stays soft.'
+                  ? t('results.geoLedeFaqOnly')
                   : geo.hasLlmsTxt && !geo.hasFaqSchema
-                    ? 'llms.txt is in place; FAQ schema would still sharpen answers.'
-                    : 'Neither FAQ schema nor llms.txt — engines have little to latch onto.'}
+                    ? t('results.geoLedeLlmsOnly')
+                    : t('results.geoLedeNeither')}
             </p>
           </header>
 
           <div className="checkion-geo-spread__body">
-            <p className="checkion-geo-spread__score" aria-label={`GEO score ${geo.score}`}>
+            <p className="checkion-geo-spread__score" aria-label={t('results.geoScoreAria', { score: geo.score })}>
               <span className="checkion-geo-spread__score-num">{geo.score}</span>
               <span className="checkion-geo-spread__score-label">
-                <LabelWithTip tipId="geo.score">GEO score</LabelWithTip>
+                <LabelWithTip tipId="geo.score">{t('results.geoScore')}</LabelWithTip>
               </span>
             </p>
 
@@ -607,7 +612,7 @@ export function ResultOverviewPanel({
               <div className="checkion-geo-spread__meter" data-tone={scoreTone(geo.discoverability)}>
                 <div className="checkion-geo-spread__meter-head">
                   <span>
-                    <LabelWithTip tipId="geo.discoverability">Discoverability</LabelWithTip>
+                    <LabelWithTip tipId="geo.discoverability">{t('results.discoverability')}</LabelWithTip>
                   </span>
                   <strong>{geo.discoverability}</strong>
                 </div>
@@ -623,7 +628,7 @@ export function ResultOverviewPanel({
               <div className="checkion-geo-spread__meter" data-tone={scoreTone(geo.repurposing)}>
                 <div className="checkion-geo-spread__meter-head">
                   <span>
-                    <LabelWithTip tipId="geo.repurposing">Repurposing</LabelWithTip>
+                    <LabelWithTip tipId="geo.repurposing">{t('results.repurposing')}</LabelWithTip>
                   </span>
                   <strong>{geo.repurposing}</strong>
                 </div>
@@ -636,12 +641,12 @@ export function ResultOverviewPanel({
                 </div>
               </div>
 
-              <div className="checkion-chip-row checkion-geo-spread__presence" aria-label="GEO presence">
+              <div className="checkion-chip-row checkion-geo-spread__presence" aria-label={t('results.geoPresence')}>
                 <Chip static size="sm">
-                  {geo.hasFaqSchema ? 'FAQ schema' : 'No FAQ schema'}
+                  {geo.hasFaqSchema ? t('results.faqSchema') : t('results.noFaqSchema')}
                 </Chip>
                 <Chip static size="sm">
-                  {geo.hasLlmsTxt ? 'llms.txt' : 'No llms.txt'}
+                  {geo.hasLlmsTxt ? t('results.llmsTxt') : t('results.noLlmsTxt')}
                 </Chip>
               </div>
             </div>
@@ -651,7 +656,7 @@ export function ResultOverviewPanel({
 
       {overview.topIssues[0] ? (
         <blockquote className="checkion-pullquote checkion-pullquote--center">
-          <p className="checkion-spread__eyebrow">From the dossier</p>
+          <p className="checkion-spread__eyebrow">{t('results.fromDossier')}</p>
           <p className="checkion-pullquote__text">{overview.topIssues[0].title}</p>
           <footer>
             {overview.topIssues[0].severity} · ×{overview.topIssues[0].affectedCount}
@@ -669,9 +674,9 @@ export function ResultOverviewPanel({
       <section className="checkion-spread__breaks" aria-labelledby="breaks-heading">
         <div className="checkion-spread__breaks-head">
           <div>
-            <p className="checkion-spread__eyebrow">Findings</p>
+            <p className="checkion-spread__eyebrow">{t('results.findings')}</p>
             <h3 id="breaks-heading" className="checkion-spread__headline">
-              What breaks
+              {t('results.whatBreaks')}
             </h3>
           </div>
           {issuesHref ? (
@@ -707,7 +712,7 @@ export function IssueList({ issues }: { issues: IssueSummary[] }) {
             </Chip>
           }
           secondary={`${issue.ruleId} · ${issue.section} · ×${issue.affectedCount} ${
-            issue.affectedCount === 1 ? 'hit' : 'hits'
+            issue.affectedCount === 1 ? t('results.hit') : t('results.hits')
           }`}
           barPct={Math.max(
             severityRank(issue.severity) * 0.55 + (issue.affectedCount / maxAffected) * 45,
@@ -732,7 +737,7 @@ export function ResultIssuesPanel({
   return (
     <div className="checkion-magazine-body checkion-spread checkion-issues-panel">
       <header className="checkion-issues-panel__head">
-        <p className="checkion-spread__eyebrow">Chapter 02 · Issues</p>
+        <p className="checkion-spread__eyebrow">{t('results.chapter02Issues')}</p>
         <h3 id="issues-chapter" className="checkion-issues-panel__title">
           {t('results.visualInspect')}
         </h3>
@@ -764,15 +769,14 @@ export function ResultScoresPanel({
     <div className="checkion-magazine-body checkion-spread">
       <section className="checkion-spread__open" aria-labelledby="ledger-heading">
         <div className="checkion-spread__open-main">
-          <p className="checkion-spread__eyebrow">Chapter 03</p>
+          <p className="checkion-spread__eyebrow">{t('results.chapter03')}</p>
           <h3 id="ledger-heading" className="checkion-spread__headline">
             {t('results.theLedger')}
           </h3>
           <p className="checkion-spread__prose">
-            Category scores from the light payload — sorted weakest first so the tension reads
-            immediately.
+            {t('results.ledgerProse')}
           </p>
-          <div className="checkion-score-ledger" aria-label="Score ledger">
+          <div className="checkion-score-ledger" aria-label={t('results.scoreLedger')}>
             {sorted.map((score, index) => (
               <div
                 key={score.kind}
@@ -794,14 +798,19 @@ export function ResultScoresPanel({
           className="checkion-spread__callout"
           data-tone={worst ? scoreTone(worst.value) : 'ok'}
         >
-          <p className="checkion-spread__eyebrow">Range</p>
+          <p className="checkion-spread__eyebrow">{t('results.range')}</p>
           <p className="checkion-spread__callout-num">{span ?? '—'}</p>
-          <p className="checkion-spread__callout-label">points between best &amp; worst</p>
+          <p className="checkion-spread__callout-label">{t('results.pointsBetween')}</p>
           <p className="checkion-spread__callout-body">
             {worst && best
-              ? `${worst.label} at ${worst.value} vs ${best.label} at ${best.value}.`
-              : 'No category scores yet.'}
-            {overall != null ? ` Overall ${overall}.` : ''}
+              ? t('results.rangeCompare', {
+                  worst: worst.label,
+                  worstVal: worst.value,
+                  best: best.label,
+                  bestVal: best.value,
+                })
+              : t('results.noCategoryScores')}
+            {overall != null ? t('results.overallSuffix', { score: overall }) : ''}
           </p>
         </aside>
       </section>

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import { Hint } from '@msqdx/ui'
 import type { ScanOverview } from '@checkion-v3/contracts'
 import { getProject } from '../lib/fixtures/project-store'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { scoreTone } from '../lib/scan-display'
+import { FromAudionHint } from './from-audion-hint'
 import { ResultMagazineChrome } from './magazine-shell-chrome'
 import { ResultSectionNav } from './result-section-nav'
 
@@ -62,21 +62,14 @@ export async function ResultMagazineShell({
         issueStats={scan.issueStats ?? null}
         scoreFallback={overview.scores}
         host={host}
-        title={overview.seo?.h1 ?? (path === '/' ? 'Home' : path)}
+        title={overview.seo?.h1 ?? path}
+        titleIsHome={!overview.seo?.h1 && path === '/'}
         deck={deck}
         tags={overview.classification?.tags}
         variant={variant}
         actions={actions}
         fromAudionHint={
-          hasAudionCorrelation(scan) ? (
-            <Hint panel>
-              From Audion
-              {scan.audionRunId ? ` · run ${scan.audionRunId}` : ''}
-              {scan.stepUrl && scan.stepUrl !== scan.url ? ` · step ${scan.stepUrl}` : ''}
-              {scan.platformProjectId ? ` · Collection ${scan.platformProjectId}` : ''}
-              . Results live in CHECKION for this Collection project.
-            </Hint>
-          ) : null
+          hasAudionCorrelation(scan) ? <FromAudionHint scan={scan} /> : null
         }
       />
 
