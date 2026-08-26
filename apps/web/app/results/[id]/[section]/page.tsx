@@ -3,11 +3,8 @@ import { AppShell } from '../../../../components/app-shell'
 import { ScanStatusPoller } from '../../../../components/scan-status-poller'
 import { ResultActions } from '../../../../components/result-actions'
 import { ResultDetailPanel } from '../../../../components/result-detail-panel'
-import {
-  ResultIssuesPanel,
-  ResultMagazineShell,
-  ResultOverviewPanel,
-} from '../../../../components/result-panels'
+import { ResultMagazineShell } from '../../../../components/result-magazine-shell'
+import { ResultIssuesPanel, ResultOverviewPanel } from '../../../../components/result-panels'
 import {
   getScanIssues,
   getScanOverview,

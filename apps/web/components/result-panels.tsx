@@ -26,7 +26,6 @@ import { buildWeakestSignalFallback } from '../lib/weakest-signal-statement'
 import { useT } from '../lib/user-prefs'
 
 export { ScoresPanel } from './scores-panel'
-export { ResultMagazineShell } from './result-magazine-shell'
 
 function msParts(value: number): { n: string; unit: string } {
   if (value >= 1000) {
