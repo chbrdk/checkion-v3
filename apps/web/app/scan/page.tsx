@@ -5,7 +5,6 @@ import {
 } from '../../lib/geo/measurement'
 import { ScanLaunchForm, type LaunchMode } from '../../components/scan-launch-form'
 import { listProjects } from '../../lib/fixtures/project-store'
-import { TopStatus } from '@msqdx/ui'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -67,34 +66,8 @@ export default async function ScanPage({
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined
 
-  const statusPrimary = fromAudion
-    ? 'AUDION handoff'
-    : defaultMode === 'geo'
-      ? 'GEO launch'
-      : defaultMode === 'seo'
-        ? 'SEO launch'
-        : 'Launch'
-  const statusSecondary = fromAudion
-    ? 'WCAG single · CHECKION'
-    : defaultMode === 'geo'
-      ? defaultMeasurements && defaultMeasurements.length > 1
-        ? 'model memory + live search'
-        : defaultMeasurements?.[0] === 'live'
-          ? 'live search'
-          : 'model memory'
-      : defaultMode === 'seo'
-        ? 'domain SEO coverage'
-        : defaultMode === 'deep'
-          ? 'WCAG deep scan'
-          : defaultMode === 'single'
-            ? 'WCAG single page'
-            : 'choose a capability'
-
   return (
-    <AppShell
-      title="Launch"
-      status={<TopStatus level="ok" primary={statusPrimary} secondary={statusSecondary} />}
-    >
+    <AppShell>
       <ScanLaunchForm
         projects={projects}
         defaultMode={defaultMode}

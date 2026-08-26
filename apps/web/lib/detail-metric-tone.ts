@@ -90,6 +90,7 @@ export function cleanerThanTone(pct: number | null | undefined): MetricTone | un
 export function scoreMetricTone(value: number | null | undefined): MetricTone | undefined {
   const tone = scoreTone(value)
   if (tone === 'pos' || tone === 'low' || tone === 'neg') return tone
+  if (tone === 'mid') return 'low'
   return undefined
 }
 

@@ -16,9 +16,9 @@ Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on 
 `seo` is a **launch mode** that starts a domain crawl — the closest first-class SEO surface already shipped (corpus `seoCoverage` + `GET /api/domain-scans/:id/seo-reading`). There is no separate SEO-only pipeline yet.
 
 ## Launch UX (central magazine)
-One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`):
+One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`) — **full stage width** (no 52rem magazine cap); hero deck may stay narrow for reading:
 
-1. **Capability picker** (primary) — large inviting tiles: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG). Cold `/scan` (no `mode=`) starts with **capability tiles only** — none pre-selected; depth and compose stay unmounted until the user chooses. No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
+1. **Capability picker** (primary) — large inviting tiles spanning the stage: **WCAG** · **GEO** · **SEO** (AUDION handoff locks to WCAG). Cold `/scan` (no `mode=`) starts with **capability tiles only** — none pre-selected; depth and compose stay unmounted until the user chooses. No visible “Capability” section label above the tiles (accessible name via `aria-label` only); no secondary hint/copy under the tiles; capability grid uses a bottom hairline only (no top rule).
 2. **Progressive disclosure** (smooth `checkion-rise` / `checkion-launch-reveal`; `prefers-reduced-motion` disables animation):
    - **WCAG** → reveal depth tiles (**Quick single scan** · **Deep scan**); after depth is chosen (or immediately if depth was already chosen this session / via deep-link) → reveal compose.
    - **GEO** → reveal **measurement tiles** (**Model memory** · **Live search**, same aesthetic as WCAG depth); after measurement is chosen (or immediately via `mode=geo` / `measurement=` deep-link) → reveal GEO compose (**URL and/or Company name**, **Project**, **queries**, **models**, CTA); skip WCAG depth. See [`geo-measurement-layers.md`](./geo-measurement-layers.md).

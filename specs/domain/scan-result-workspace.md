@@ -27,11 +27,10 @@ Faustregel: Overview → *was zählt und warum* · Issues/Detail/(Lenses) → *w
 ## Single-scan composition (SoT)
 Magazine article (`checkion-magazine--scan`):
 
-1. **Topbar** — breadcrumb + Share / Re-run / Delete (`ResultActions`)
+1. **Magazine topbar** — breadcrumb + Share / Re-run / Delete (`ResultActions`) inside the article (not the global AppShell header)
 2. **Hero** — `briefing-eyebrow`, URL headline, lede, `geo-places` facets (mode / status / score / completed)
-3. **`TopStatus`** on `AppShell` for scan status
-4. **Section tabs** — Contents links (overview / issues / detail)
-5. **Overview — editorial magazine** (rich light payload — see `single-scan-rich-overview.md`)
+3. **Section tabs** — Contents links (overview / issues / detail)
+4. **Overview — editorial magazine** (rich light payload — see `single-scan-rich-overview.md`)
    - **Cover spread** — full-bleed capture + oversized overall score, host as masthead, classification deck, thin facets, folio mark
    - **Contents** — numbered editorial nav (01 Overview / 02 Issues / 03 Detail), not app tabs
    - **Opening** — scoreline (weakest-first) + sticky weakest-signal callout (score + LLM/fallback one-liner from opening-spread context; no tone accent bar)
@@ -41,8 +40,8 @@ Magazine article (`checkion-magazine--scan`):
    - **GEO chapter** — magazine lens: large score, data-aware lede, discoverability + repurposing meters, FAQ/llms presence chips (not a full report page yet)
    - **Pull quote** — lead finding bridge into “What breaks”
    - **What breaks** — magazine teaser of **distinct rule groups** (same axe/Pa11y rule collapsed; `affectedCount` = occurrences), ranked severity → count — not eight identical hits of one rule. Full per-node list stays on Issues.
-6. **Issues (folio masthead)** — Chapter 02 dossier: **capture + issue overlays** beside lead pull-quote, severity tally, filters, accordion inspect. Click marker ↔ open finding. Heatmap / scanpath / PageIndex layers are future toggles on the same canvas — not a separate Contents chapter.
-7. **Detail (folio masthead)** — Chapter 03 compact report: category ledger + stacked light-payload bands (not magazine essay, not v2 mega-tabs)
+5. **Issues (folio masthead)** — Chapter 02 dossier: **capture + issue overlays** beside lead pull-quote, severity tally, filters, accordion inspect. Click marker ↔ open finding. Heatmap / scanpath / PageIndex layers are future toggles on the same canvas — not a separate Contents chapter.
+6. **Detail (folio masthead)** — Chapter 03 compact report: category ledger + stacked light-payload bands (not magazine essay, not v2 mega-tabs)
 
 DS primitives via `@msqdx/ui`; product layout under `checkion-cover` / `checkion-folio` / `checkion-spread-*` / `checkion-dossier` / `checkion-report` / `checkion-issues-workspace`. **No** stacked report panels as the Overview spine.
 

@@ -4,7 +4,7 @@
 Accepted (Phase 1); Central Assistant host — 2026-08-10
 
 ## Goal
-Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, `PageTitle`, settings avatar, `ChatOverlay` host for platform Assistant.
+Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, settings avatar, `ChatOverlay` host for platform Assistant. **No** global `header.topbar` / `PageTitle` chrome — page identity lives in magazine covers, launch heroes, or in-page leads.
 
 ## Brand
 - BrandCorner label: **CHECKION**
@@ -13,7 +13,7 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 ## Primary nav (MVP)
 | Id | Route | Notes |
 |----|-------|-------|
-| home | `/` | Empty/home lede |
+| home | `/` | Home magazine (recent runs) |
 | scan | `/scan` | Launch single/deep |
 | projects | `/projects` | Collection capability magazine grid |
 | results | `/results` | Scan results index |

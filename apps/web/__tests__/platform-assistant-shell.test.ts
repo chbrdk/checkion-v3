@@ -9,6 +9,7 @@ describe('checkion platform assistant shell mount', () => {
     const host = readFileSync(join(root, 'components/platform-assistant-host.tsx'), 'utf8')
     const paths = readFileSync(join(root, 'lib/paths.ts'), 'utf8')
     expect(shell).toContain('PlatformAssistantHost')
+    expect(shell).not.toContain('topbar={')
     expect(host).toContain('postPlatformAssistantTheme')
     expect(host).toContain('headerActions')
     expect(paths).toContain('envPlexonPublicUrl')

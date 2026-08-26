@@ -656,6 +656,10 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   color: var(--warn, #c9a227);
 }
 
+.checkion-project-pulse__meter[data-tone='mid'] .checkion-project-pulse__value {
+  color: var(--caution, #d4894a);
+}
+
 .checkion-project-pulse__meter[data-tone='neg'] .checkion-project-pulse__value {
   color: var(--danger, #d46a6a);
 }
@@ -707,6 +711,10 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 
 .checkion-project-run-list__score[data-tone='low'] {
   color: var(--warn, #c9a227);
+}
+
+.checkion-project-run-list__score[data-tone='mid'] {
+  color: var(--caution, #d4894a);
 }
 
 .checkion-project-run-list__score[data-tone='neg'] {
@@ -764,6 +772,166 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 .checkion-magazine--editorial {
   max-width: 72rem;
 }
+
+.checkion-magazine--home {
+  max-width: none;
+  width: 100%;
+  gap: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+
+.checkion-home-cover {
+  display: grid;
+  gap: 0.55rem;
+  padding-block: clamp(0.35rem, 1.5vw, 0.85rem) 0.15rem;
+  animation: checkion-rise 0.55s ease-out both;
+}
+
+.checkion-magazine--home .checkion-cover__kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: var(--weight-medium, 500);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent, var(--muted));
+}
+
+.checkion-home-cover__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(2.35rem, 5.5vw, 3.35rem);
+  font-weight: var(--weight-light, 300);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-home-cover__lede {
+  margin: 0.35rem 0 0;
+  max-width: 40rem;
+  font-size: var(--type-md, 1.05rem);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.checkion-home-cover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.checkion-home-pulse {
+  margin: 0;
+}
+
+.checkion-home-run-grid {
+  width: 100%;
+}
+
+.checkion-home-run-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.checkion-home-run-card-link:hover .checkion-home-run-card__score {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.checkion-home-run-card.ds-entity-card {
+  height: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0 1rem;
+}
+
+.checkion-home-run-card .ds-entity-card__face {
+  gap: 0.55rem;
+}
+
+.checkion-home-run-card__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  font-size: var(--type-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.checkion-home-run-card .ds-entity-card__title {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.checkion-home-run-card__score {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: var(--weight-light, 300);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--muted);
+}
+
+.checkion-home-run-card__score[data-tone='pos'] {
+  color: var(--ok, #7dcea0);
+}
+
+.checkion-home-run-card__score[data-tone='low'] {
+  color: var(--warn, #c9a227);
+}
+
+.checkion-home-run-card__score[data-tone='mid'] {
+  color: var(--caution, #d4894a);
+}
+
+.checkion-home-run-card__score[data-tone='neg'] {
+  color: var(--danger, #d46a6a);
+}
+
+.checkion-home-run-card__footer {
+  font-size: var(--type-xs);
+  color: var(--muted);
+}
+
+.checkion-home-run-card[data-tone='pos'] {
+  border-bottom-color: color-mix(in srgb, var(--ok, #7dcea0) 55%, var(--line));
+}
+
+.checkion-home-run-card[data-tone='low'] {
+  border-bottom-color: color-mix(in srgb, var(--warn, #c9a227) 55%, var(--line));
+}
+
+.checkion-home-run-card[data-tone='mid'] {
+  border-bottom-color: color-mix(in srgb, var(--caution, #d4894a) 55%, var(--line));
+}
+
+.checkion-home-run-card[data-tone='neg'] {
+  border-bottom-color: color-mix(in srgb, var(--danger, #d46a6a) 55%, var(--line));
+}
+
+@media (max-width: 1100px) {
+  .checkion-home-run-grid.ds-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkion-home-run-grid.ds-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
 .checkion-magazine-topbar {
   display: flex;
@@ -835,6 +1003,7 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 
 .checkion-masthead[data-tone='pos'] .checkion-cover__score-num { color: var(--ok, #7dcea0); }
 .checkion-masthead[data-tone='low'] .checkion-cover__score-num { color: var(--warn, #c9a227); }
+.checkion-masthead[data-tone='mid'] .checkion-cover__score-num { color: var(--caution, #d4894a); }
 .checkion-masthead[data-tone='neg'] .checkion-cover__score-num { color: var(--danger, #d46a6a); }
 
 .checkion-cover__score-num {
@@ -2924,7 +3093,8 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 
 /* ——— Central launch (/scan) ——— */
 .checkion-magazine--launch {
-  max-width: min(52rem, 100%);
+  max-width: none;
+  width: 100%;
   gap: clamp(1.5rem, 3vw, 2.25rem);
 }
 
@@ -2977,6 +3147,27 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 .checkion-launch-depth {
   display: grid;
   gap: 0.65rem;
+  width: 100%;
+}
+
+.checkion-launch-capability > .checkion-launch-tip-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+}
+
+.checkion-launch-capability > .checkion-launch-tip-row > *:not(:first-child) {
+  padding-left: 1.05rem;
+}
+
+.checkion-launch-depth > .checkion-launch-tip-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.checkion-launch-depth > .checkion-launch-tip-row > *:not(:first-child) {
+  padding-left: 1.05rem;
 }
 
 /* Capability / depth: magazine columns — hairlines + underline, no fills */
@@ -2984,6 +3175,7 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
+  width: 100%;
   /* Bottom rule only — no top hairline on the capability boxes */
   border-bottom: 1px solid var(--line);
 }
@@ -3077,6 +3269,7 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
+  width: 100%;
   /* Bottom rule only — no top hairline on the depth boxes */
   border-bottom: 1px solid var(--line);
 }
@@ -3697,8 +3890,15 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
 
 @media (max-width: 720px) {
   .checkion-capability-grid,
-  .checkion-depth-grid {
+  .checkion-depth-grid,
+  .checkion-launch-capability > .checkion-launch-tip-row,
+  .checkion-launch-depth > .checkion-launch-tip-row {
     grid-template-columns: 1fr;
+  }
+
+  .checkion-launch-capability > .checkion-launch-tip-row > *:not(:first-child),
+  .checkion-launch-depth > .checkion-launch-tip-row > *:not(:first-child) {
+    padding-left: 0;
   }
 
   .checkion-capability-tile,

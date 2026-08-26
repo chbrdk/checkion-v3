@@ -372,7 +372,9 @@ describe('scan display helpers', () => {
   it('maps score tones and weakest category', async () => {
     expect(scoreTone(90)).toBe('pos')
     expect(scoreTone(70)).toBe('low')
-    expect(scoreTone(40)).toBe('neg')
+    expect(scoreTone(40)).toBe('mid')
+    expect(scoreTone(39)).toBe('neg')
+    expect(scoreTone(null)).toBe('default')
     const overview = await getScanOverview('scan-single-1')
     const worst = worstScore(overview!.scores)
     expect(worst?.kind).toBe('accessibility')

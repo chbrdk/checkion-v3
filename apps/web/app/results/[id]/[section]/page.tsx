@@ -1,5 +1,4 @@
 import { notFound, redirect } from 'next/navigation'
-import { TopStatus } from '@msqdx/ui'
 import { AppShell } from '../../../../components/app-shell'
 import { ScanStatusPoller } from '../../../../components/scan-status-poller'
 import { ResultActions } from '../../../../components/result-actions'
@@ -14,7 +13,6 @@ import {
   getScanOverview,
 } from '../../../../lib/fixtures/scan-store'
 import { paths } from '../../../../lib/paths'
-import { statusTopLevel } from '../../../../lib/scan-display'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -49,17 +47,7 @@ export default async function ResultSectionPage({
   )
 
   return (
-    <AppShell
-      title={overview.scan.mode === 'single' ? 'Single scan' : 'Deep scan'}
-      status={
-        <TopStatus
-          level={statusTopLevel(overview.scan.status)}
-          primary={overview.scan.status}
-          secondary={overview.scan.mode}
-          live={overview.scan.status === 'running'}
-        />
-      }
-    >
+    <AppShell>
       <ScanStatusPoller scanId={overview.scan.id} status={overview.scan.status} />
       <ResultMagazineShell
         overview={overview}

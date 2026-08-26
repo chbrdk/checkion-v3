@@ -32,7 +32,7 @@ function compactPath(url: string): string {
 
 /** Map issue load to score-like tone (more overlap = worse). */
 function loadTone(issueCount: number): ReturnType<typeof scoreTone> {
-  if (issueCount >= 12) return scoreTone(40)
+  if (issueCount >= 12) return scoreTone(20)
   if (issueCount >= 5) return scoreTone(65)
   return scoreTone(85)
 }

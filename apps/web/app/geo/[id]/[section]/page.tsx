@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { Button, TopStatus } from '@msqdx/ui'
+import { Button } from '@msqdx/ui'
 import { AppShell } from '../../../../components/app-shell'
 import { GeoJobStatusPoller } from '../../../../components/geo-job-status-poller'
 import { GeoMagazineShell } from '../../../../components/geo-magazine-shell'
@@ -12,7 +12,6 @@ import { isGeoJobInProgress } from '../../../../lib/geo-job-display'
 import { getGeoOverview } from '../../../../lib/fixtures/geo-store'
 import { getProject } from '../../../../lib/fixtures/project-store'
 import { paths } from '../../../../lib/paths'
-import { statusTopLevel } from '../../../../lib/scan-display'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -63,17 +62,7 @@ export default async function GeoSectionPage({
   )
 
   return (
-    <AppShell
-      title="GEO result"
-      status={
-        <TopStatus
-          level={statusTopLevel(jobStatus)}
-          primary={jobStatus}
-          secondary="geo"
-          live={inProgress}
-        />
-      }
-    >
+    <AppShell>
       {inProgress ? <GeoJobStatusPoller jobId={id} status={jobStatus} /> : null}
       <GeoMagazineShell
         overview={overview}

@@ -4,6 +4,7 @@
 | Spec | Path |
 |------|------|
 | App shell | `specs/domain/app-shell.md` |
+| Home magazine | `specs/domain/home-magazine.md` |
 | Project workspace | `specs/domain/project-workspace.md` |
 | Scan modes | `specs/domain/scan-modes.md` |
 | AUDION journey → single scan (spec only) | `specs/domain/audion-journey-scan-trigger.md` |

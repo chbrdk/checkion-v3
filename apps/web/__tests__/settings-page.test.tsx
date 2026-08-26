@@ -42,6 +42,7 @@ describe('app shell settings entry', () => {
     const settings = screen.getByRole('link', { name: /Settings/i })
     expect(settings).toHaveAttribute('href', paths.routes.settings)
     expect(settings).not.toHaveAttribute('aria-disabled', 'true')
+    expect(document.querySelector('header.topbar')).toBeNull()
   })
 })
 

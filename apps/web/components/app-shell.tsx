@@ -9,7 +9,6 @@ import {
   BrandCorner,
   MsqdxLogoMark,
   NavRail,
-  PageTitle,
   shellFrameStyle,
   type RailDockEdge,
 } from '../lib/msqdx-ui-shell'
@@ -38,15 +37,16 @@ const PRIMARY_NAV = [
 
 export function AppShell({
   children,
-  title,
   description,
-  actions,
-  status,
 }: {
   children: ReactNode
-  title?: string | null
+  /** Optional in-page lead under the rail chrome (not a global topbar). */
   description?: string
+  /** @deprecated Global AppShell topbar removed — ignored. */
+  title?: string | null
+  /** @deprecated Global AppShell topbar removed — ignored. */
   actions?: ReactNode
+  /** @deprecated Global AppShell topbar removed — ignored. */
   status?: ReactNode
 }) {
   const pathname = usePathname()
@@ -113,17 +113,6 @@ export function AppShell({
             },
           ]}
         />
-      }
-      topbar={
-        <>
-          <div className="topbar-brand">
-            {title != null && title !== '' ? <PageTitle>{title}</PageTitle> : null}
-          </div>
-          <div className="topbar-right">
-            {status}
-            {actions}
-          </div>
-        </>
       }
     >
       <JobNotificationCenterPanel

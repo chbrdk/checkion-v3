@@ -4,12 +4,20 @@ import type {
   ScanStatus,
   ScoreCard,
 } from '@checkion-v3/contracts'
-import type { LedeTone, TopStatusLevel } from '@msqdx/ui'
+import type { TopStatusLevel } from '@msqdx/ui'
 
-export function scoreTone(value: number | null | undefined): LedeTone {
+/** Score color band for magazine surfaces (`data-tone`). Includes orange `mid`. */
+export type ScoreBandTone = 'default' | 'pos' | 'low' | 'mid' | 'neg'
+
+/**
+ * Map overall score → magazine tone.
+ * Green ≥80 · yellow ≥60 · orange ≥40 · red <40 · muted null.
+ */
+export function scoreTone(value: number | null | undefined): ScoreBandTone {
   if (value == null) return 'default'
   if (value >= 80) return 'pos'
   if (value >= 60) return 'low'
+  if (value >= 40) return 'mid'
   return 'neg'
 }
 
