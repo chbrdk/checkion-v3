@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getDomainOverview } from '../../../../../lib/fixtures/scan-store'
 import { resolveTrustGeoReading } from '../../../../../lib/domain-trust-reading'
+import { normalizeLocale } from '../../../../../lib/i18n'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
@@ -13,6 +14,7 @@ export async function GET(
     return NextResponse.json({ error: 'no_trust_geo' }, { status: 404 })
   }
 
-  const result = await resolveTrustGeoReading(overview)
+  const locale = normalizeLocale(new URL(request.url).searchParams.get('locale'))
+  const result = await resolveTrustGeoReading(overview, locale)
   return NextResponse.json(result)
 }

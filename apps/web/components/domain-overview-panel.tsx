@@ -24,7 +24,19 @@ import { ScoresPanel } from './scores-panel'
 import { LabelWithTip } from './help-tip'
 import { buildSeoReadingFallback } from '../lib/domain-seo-reading'
 import { buildTrustGeoReadingFallback } from '../lib/domain-trust-reading'
-import { useT } from '../lib/user-prefs'
+import { useT, useUserPrefs } from '../lib/user-prefs'
+
+
+function localizeReadabilityGrade(grade: string, t: (key: string, params?: Record<string, string | number>) => string): string {
+  const map: Record<string, string> = {
+    'Easy (6th Grade)': t('domain.gradeEasy'),
+    'Standard (High School)': t('domain.gradeStandard'),
+    'Complex (College)': t('domain.gradeComplex'),
+    'Very Complex (Academic)': t('domain.gradeVeryComplex'),
+    Unknown: t('domain.gradeUnknown'),
+  }
+  return map[grade] ?? grade
+}
 
 function msLabel(value: number): string {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} s`
@@ -135,6 +147,7 @@ export function DomainOverviewPanel({
   issuesHref?: string
 }) {
   const t = useT()
+  const { locale } = useUserPrefs()
   const sortedScores = [...overview.scores].sort((a, b) => a.value - b.value)
   const seo = overview.seoCoverage
   const perf = overview.performance
@@ -482,12 +495,14 @@ export function DomainOverviewPanel({
           <div className="checkion-domain-grid checkion-domain-grid--dist">
             {readabilityItems.length > 0 ? (
               <div className="checkion-domain-card checkion-domain-card--flush">
-                <h4>Readability</h4>
+                <h4>{t('domain.readability')}</h4>
                 {ux ? (
                   <Text role="meta">
-                    Corpus grade {ux.readabilityGrade}
+                    {t('domain.corpusGrade', {
+                      grade: localizeReadabilityGrade(ux.readabilityGrade, t),
+                    })}
                     {ux.dwellSecondsMedian != null
-                      ? ` · median dwell ${ux.dwellSecondsMedian}s`
+                      ? ` · ${t('domain.medianDwell', { seconds: ux.dwellSecondsMedian })}`
                       : ''}
                   </Text>
                 ) : null}
@@ -495,49 +510,53 @@ export function DomainOverviewPanel({
                   aria-label={t('domain.readabilityBandShare')}
                   slices={readabilityItems}
                   centerValue={ux?.readabilityScore}
-                  centerLabel="score"
+                  centerLabel={t('domain.centerScore')}
                 />
               </div>
             ) : null}
             {ecoGrades.length > 0 && eco ? (
               <div className="checkion-domain-card checkion-domain-card--flush">
-                <h4>Eco grades</h4>
+                <h4>{t('domain.ecoGrades')}</h4>
                 <Text role="meta">
-                  Dominant {eco.grade} · avg {eco.avgCo2} g CO₂
+                  {t('domain.dominantAvgCo2', { grade: eco.grade, co2: eco.avgCo2 })}
                 </Text>
                 <DistributionDonut
                   aria-label={t('domain.ecoGradeShare')}
                   slices={ecoGrades}
                   centerValue={eco.grade}
-                  centerLabel="mode"
+                  centerLabel={t('domain.centerMode')}
                 />
               </div>
             ) : null}
             {linkSlices.length > 0 && links ? (
               <div className="checkion-domain-card checkion-domain-card--flush">
-                <h4>Link mix</h4>
+                <h4>{t('domain.linkMix')}</h4>
                 <Text role="meta">
-                  {(links.total ?? links.internal + links.external).toLocaleString()} total
+                  {t('domain.totalCount', {
+                    count: (links.total ?? links.internal + links.external).toLocaleString(),
+                  })}
                 </Text>
                 <DistributionDonut
                   aria-label={t('domain.linksMixAria')}
                   slices={linkSlices}
                   centerValue={links.broken.toLocaleString()}
-                  centerLabel="broken"
+                  centerLabel={t('domain.centerBroken')}
                 />
               </div>
             ) : null}
             {wcagSlices.length > 0 ? (
               <div className="checkion-domain-card checkion-domain-card--flush">
-                <h4>WCAG findings</h4>
+                <h4>{t('domain.wcagFindings')}</h4>
                 <Text role="meta">
-                  {(issueStats?.errors ?? 0).toLocaleString()} error findings by level
+                  {t('domain.errorFindingsByLevel', {
+                    count: (issueStats?.errors ?? 0).toLocaleString(),
+                  })}
                 </Text>
                 <DistributionDonut
-                  aria-label="WCAG finding levels"
+                  aria-label={t('domain.wcagLevelsAria')}
                   slices={[...wcagSlices]}
                   centerValue="AA"
-                  centerLabel="heavy"
+                  centerLabel={t('domain.centerHeavy')}
                 />
               </div>
             ) : null}
@@ -548,14 +567,14 @@ export function DomainOverviewPanel({
       {(eeat || geo || overview.classification || overview.infra) && (
         <section className="checkion-domain-chapter" aria-labelledby="trust-heading">
           <header className="checkion-domain-chapter__head">
-            <p className="checkion-spread__eyebrow">Trust · GEO · Themes</p>
+            <p className="checkion-spread__eyebrow">{t('domain.trustGeoThemes')}</p>
             <h3 id="trust-heading" className="checkion-spread__headline">
-              How the domain presents itself
+              {t('domain.howPresents')}
             </h3>
             {eeat || geo ? (
               <DomainTrustGeoReading
                 domainId={overview.scan.id}
-                fallback={buildTrustGeoReadingFallback(overview)}
+                fallback={buildTrustGeoReadingFallback(overview, locale)}
               />
             ) : null}
           </header>
@@ -563,9 +582,9 @@ export function DomainOverviewPanel({
             {eeat ? (
               <div className="checkion-domain-card">
                 <h4>
-                  <LabelWithTip tipId="domain.eeat">E-E-A-T coverage</LabelWithTip>
+                  <LabelWithTip tipId="domain.eeat">{t('domain.eeatCoverage')}</LabelWithTip>
                 </h4>
-                <ReadoutMeterList aria-label="E-E-A-T page coverage">
+                <ReadoutMeterList aria-label={t('domain.eeatCoverageAria')}>
                   {(
                     [
                       { id: 'contact', label: t('domain.contact'), have: eeat.trust.pagesWithContact },
@@ -587,38 +606,42 @@ export function DomainOverviewPanel({
                   })}
                 </ReadoutMeterList>
                 <Text role="meta">
-                  Avg citations / page {eeat.expertise.avgCitationsPerPage.toFixed(2)}
+                  {t('domain.avgCitationsPerPage', {
+                    avg: eeat.expertise.avgCitationsPerPage.toFixed(2),
+                  })}
                 </Text>
               </div>
             ) : null}
             {geo ? (
               <div className="checkion-domain-card">
-                <h4>GEO aggregate</h4>
-                <ReadoutMeterList aria-label="GEO scores">
+                <h4>{t('domain.geoAggregate')}</h4>
+                <ReadoutMeterList aria-label={t('domain.geoScoresAria')}>
                   <ReadoutMeter
-                    label={<LabelWithTip tipId="geo.score">Score</LabelWithTip>}
+                    label={<LabelWithTip tipId="geo.score">{t('domain.score')}</LabelWithTip>}
                     pct={geo.score}
                     valueLabel={`${geo.score}`}
                   />
                   <ReadoutMeter
-                    label={<LabelWithTip tipId="geo.discoverability">Discoverability</LabelWithTip>}
+                    label={
+                      <LabelWithTip tipId="geo.discoverability">{t('domain.discoverability')}</LabelWithTip>
+                    }
                     pct={geo.discoverability}
                     valueLabel={`${geo.discoverability}`}
                   />
                   <ReadoutMeter
-                    label={<LabelWithTip tipId="geo.repurposing">Repurposing</LabelWithTip>}
+                    label={<LabelWithTip tipId="geo.repurposing">{t('domain.repurposing')}</LabelWithTip>}
                     pct={geo.repurposing}
                     valueLabel={`${geo.repurposing}`}
                   />
                 </ReadoutMeterList>
                 <dl className="checkion-domain-facts">
                   <div>
-                    <dt>llms.txt pages</dt>
+                    <dt>{t('domain.llmsTxtPages')}</dt>
                     <dd>{geo.withLlmsTxt.toLocaleString()}</dd>
                   </div>
                   {geo.withRobotsAllowingAi != null ? (
                     <div>
-                      <dt>AI-allowing robots</dt>
+                      <dt>{t('domain.aiAllowingRobots')}</dt>
                       <dd>{geo.withRobotsAllowingAi.toLocaleString()}</dd>
                     </div>
                   ) : null}
@@ -627,33 +650,33 @@ export function DomainOverviewPanel({
             ) : null}
             {overview.infra || overview.classification ? (
               <div className="checkion-domain-card">
-                <h4>Infra &amp; themes</h4>
+                <h4>{t('domain.infraThemes')}</h4>
                 {overview.infra ? (
                   <dl className="checkion-domain-facts">
                     <div>
-                      <dt>Host</dt>
+                      <dt>{t('domain.host')}</dt>
                       <dd>
                         {overview.infra.hostingServer ?? overview.infra.cdnProvider ?? '—'}
                       </dd>
                     </div>
                     <div>
-                      <dt>Location</dt>
+                      <dt>{t('domain.location')}</dt>
                       <dd>
                         {[overview.infra.city, overview.infra.country].filter(Boolean).join(', ') ||
                           '—'}
                       </dd>
                     </div>
                     <div>
-                      <dt>Platforms</dt>
+                      <dt>{t('domain.platforms')}</dt>
                       <dd>{overview.infra.platforms?.join(', ') || '—'}</dd>
                     </div>
                   </dl>
                 ) : null}
                 {overview.classification?.tags?.length ? (
                   <div className="checkion-chip-row">
-                    {overview.classification.tags.slice(0, 6).map((t) => (
-                      <Chip key={t} static size="sm">
-                        {t}
+                    {overview.classification.tags.slice(0, 6).map((tag) => (
+                      <Chip key={tag} static size="sm">
+                        {tag}
                       </Chip>
                     ))}
                   </div>
@@ -688,7 +711,9 @@ export function DomainOverviewPanel({
                 linkComponent={Link}
                 value={
                   page.score != null
-                    ? `${page.score}${page.errors != null ? ` · ${page.errors} err` : ''}`
+                    ? page.errors != null
+                      ? t('domain.errAbbrev', { score: page.score, errors: page.errors })
+                      : String(page.score)
                     : '—'
                 }
                 barPct={

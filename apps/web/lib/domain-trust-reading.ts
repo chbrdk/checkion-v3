@@ -3,6 +3,7 @@ import type {
   DomainGenerativeAggregate,
   DomainOverview,
 } from '@checkion-v3/contracts'
+import { createTranslator, normalizeLocale, type Locale, type Translator } from './i18n'
 
 export type TrustGeoReadingSource = 'llm' | 'fallback'
 
@@ -97,12 +98,11 @@ export function buildTrustGeoReadingContext(overview: DomainOverview): Record<st
   }
 }
 
-/** Deterministic magazine sentence when no LLM key / call fails. */
-export function buildTrustGeoReadingFallback(overview: DomainOverview): string {
+function buildFallbackWithT(overview: DomainOverview, t: Translator): string {
   const eeat = overview.eeat
   const geo = overview.generative
   if (!eeat && !geo) {
-    return 'Trust and GEO chapters are still empty for this crawl.'
+    return t('domain.trustReadingEmpty')
   }
 
   const parts: string[] = []
@@ -111,34 +111,56 @@ export function buildTrustGeoReadingFallback(overview: DomainOverview): string {
     const e = eeatBits(eeat)
     if (e.team <= 5 && e.weakAuthorship) {
       parts.push(
-        `E-E-A-T shows institutional trust around ${e.trustAvg}% of pages (contact ${e.contact}%, about ${e.about}%), but team and authorship barely register`,
+        t('domain.trustReadingWeakAuth', {
+          trustAvg: e.trustAvg,
+          contact: e.contact,
+          about: e.about,
+        }),
       )
     } else if (e.trustAvg >= 70) {
       parts.push(
-        `E-E-A-T coverage is comparatively broad across the crawl — contact ${e.contact}%, privacy ${e.privacy}%, about ${e.about}%`,
+        t('domain.trustReadingBroad', {
+          contact: e.contact,
+          privacy: e.privacy,
+          about: e.about,
+        }),
       )
     } else {
       parts.push(
-        `E-E-A-T is partial across the corpus — contact ${e.contact}%, impressum ${e.impressum}%, privacy only ${e.privacy}%`,
+        t('domain.trustReadingPartial', {
+          contact: e.contact,
+          impressum: e.impressum,
+          privacy: e.privacy,
+        }),
       )
     }
     if (Number(e.citations) < 0.5) {
-      parts.push(`citation density stays thin at ${e.citations} per page`)
+      parts.push(t('domain.trustReadingCitations', { citations: e.citations }))
     }
   }
 
   if (geo) {
     const g = geoBits(geo)
     const gaps: string[] = []
-    if (!g.llms) gaps.push('no llms.txt')
-    if (g.repurposing < 40) gaps.push(`repurposing at ${g.repurposing}`)
+    if (!g.llms) gaps.push(t('domain.trustReadingGapNoLlms'))
+    if (g.repurposing < 40) {
+      gaps.push(t('domain.trustReadingGapRepurposing', { repurposing: g.repurposing }))
+    }
     if (gaps.length) {
       parts.push(
-        `GEO ${g.score} leans on discoverability ${g.discoverability} while ${gaps.join(' and ')} hold answer engines back`,
+        t('domain.trustReadingGeoGaps', {
+          score: g.score,
+          discoverability: g.discoverability,
+          gaps: gaps.join(' · '),
+        }),
       )
     } else {
       parts.push(
-        `GEO ${g.score} looks balanced — discoverability ${g.discoverability}, repurposing ${g.repurposing}`,
+        t('domain.trustReadingGeoOk', {
+          score: g.score,
+          discoverability: g.discoverability,
+          repurposing: g.repurposing,
+        }),
       )
     }
   }
@@ -146,15 +168,25 @@ export function buildTrustGeoReadingFallback(overview: DomainOverview): string {
   return clampOneLine(parts.join(' — ') + '.')
 }
 
+/** Deterministic magazine sentence when no LLM key / call fails. */
+export function buildTrustGeoReadingFallback(
+  overview: DomainOverview,
+  locale: Locale | string = 'en',
+): string {
+  return buildFallbackWithT(overview, createTranslator(normalizeLocale(locale)))
+}
+
 export async function resolveTrustGeoReading(
   overview: DomainOverview,
+  locale: Locale | string = 'en',
 ): Promise<TrustGeoReadingResult> {
-  const fallback = buildTrustGeoReadingFallback(overview)
+  const normalized = normalizeLocale(locale)
+  const fallback = buildTrustGeoReadingFallback(overview, normalized)
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) return { statement: fallback, source: 'fallback' }
 
   try {
-    const statement = await callOpenAiTrustGeo(key, overview)
+    const statement = await callOpenAiTrustGeo(key, overview, normalized)
     if (!statement) return { statement: fallback, source: 'fallback' }
     return { statement: clampOneLine(statement), source: 'llm' }
   } catch {
@@ -165,10 +197,15 @@ export async function resolveTrustGeoReading(
 async function callOpenAiTrustGeo(
   apiKey: string,
   overview: DomainOverview,
+  locale: Locale,
 ): Promise<string | null> {
   const base = (process.env.OPENAI_API_BASE_URL ?? 'https://api.openai.com/v1').replace(/\/$/, '')
   const model = process.env.AI_OPENAI_MODEL ?? 'gpt-4o-mini'
   const context = buildTrustGeoReadingContext(overview)
+  const language =
+    locale === 'de'
+      ? 'Write the sentence in German (natural product German, no English filler).'
+      : 'Write the sentence in English.'
 
   const res = await fetch(`${base}/chat/completions`, {
     method: 'POST',
@@ -183,8 +220,7 @@ async function callOpenAiTrustGeo(
       messages: [
         {
           role: 'system',
-          content:
-            'You write one editorial magazine sentence (max 34 words) interpreting E-E-A-T coverage and GEO aggregate for a domain crawl. Relate the numbers to what they mean for trust and AI discoverability. Use only the provided JSON facts. No quotes, no markdown, no bullet points, no preamble.',
+          content: `You write one editorial magazine sentence (max 34 words) interpreting E-E-A-T coverage and GEO aggregate for a domain crawl. Relate the numbers to what they mean for trust and AI discoverability. Use only the provided JSON facts. No quotes, no markdown, no bullet points, no preamble. ${language}`,
         },
         {
           role: 'user',

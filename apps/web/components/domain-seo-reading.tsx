@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
 export function DomainSeoReading({
   domainId,
@@ -12,7 +13,12 @@ export function DomainSeoReading({
   fallback: string
   headingId?: string
 }) {
+  const t = useT()
   const [statement, setStatement] = useState(fallback)
+
+  useEffect(() => {
+    setStatement(fallback)
+  }, [fallback])
 
   useEffect(() => {
     let cancelled = false
@@ -42,7 +48,7 @@ export function DomainSeoReading({
 
   return (
     <div className="checkion-domain-reading checkion-domain-reading--headline">
-      <p className="checkion-spread__eyebrow">SEO coverage</p>
+      <p className="checkion-spread__eyebrow">{t('domain.seoCoverage')}</p>
       <h3 id={headingId} className="checkion-domain-reading__quote">
         {statement}
       </h3>

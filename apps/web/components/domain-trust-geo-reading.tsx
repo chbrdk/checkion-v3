@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { paths } from '../lib/paths'
+import { useT, useUserPrefs } from '../lib/user-prefs'
 
 export function DomainTrustGeoReading({
   domainId,
@@ -10,7 +11,13 @@ export function DomainTrustGeoReading({
   domainId: string
   fallback: string
 }) {
+  const t = useT()
+  const { locale } = useUserPrefs()
   const [statement, setStatement] = useState(fallback)
+
+  useEffect(() => {
+    setStatement(fallback)
+  }, [fallback])
 
   useEffect(() => {
     let cancelled = false
@@ -18,7 +25,8 @@ export function DomainTrustGeoReading({
 
     void (async () => {
       try {
-        const res = await fetch(paths.routes.apiDomainTrustReading(domainId), {
+        const url = `${paths.routes.apiDomainTrustReading(domainId)}?locale=${encodeURIComponent(locale)}`
+        const res = await fetch(url, {
           signal: ctrl.signal,
           cache: 'no-store',
         })
@@ -36,11 +44,11 @@ export function DomainTrustGeoReading({
       cancelled = true
       ctrl.abort()
     }
-  }, [domainId, fallback])
+  }, [domainId, fallback, locale])
 
   return (
-    <aside className="checkion-domain-reading" aria-label="Trust and GEO reading">
-      <p className="checkion-domain-reading__eyebrow">Reading</p>
+    <aside className="checkion-domain-reading" aria-label={t('domain.readingAria')}>
+      <p className="checkion-domain-reading__eyebrow">{t('domain.reading')}</p>
       <blockquote className="checkion-domain-reading__quote">
         <p>{statement}</p>
       </blockquote>
