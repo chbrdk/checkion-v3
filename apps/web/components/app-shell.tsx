@@ -16,7 +16,6 @@ import { Avatar } from '@msqdx/ui'
 import {
   NavIconOverview,
   NavIconProjects,
-  NavIconResults,
   NavIconScan,
 } from './nav-icons'
 import {
@@ -32,7 +31,6 @@ const PRIMARY_NAV = [
   { id: 'home', href: paths.routes.home, label: 'Home', icon: <NavIconOverview /> },
   { id: 'scan', href: paths.routes.scan, label: 'Scan', icon: <NavIconScan /> },
   { id: 'projects', href: paths.routes.projects, label: 'Projects', icon: <NavIconProjects /> },
-  { id: 'results', href: paths.routes.results, label: 'Results', icon: <NavIconResults /> },
 ]
 
 export function AppShell({

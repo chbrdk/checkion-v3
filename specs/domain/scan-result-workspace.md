@@ -19,6 +19,7 @@ Keep this split — do not blur it:
 Faustregel: Overview → *was zählt und warum* · Issues/Detail/(Lenses) → *was genau, wo, was tun*.
 
 ## Routes
+- `/results` → redirect home (no results index; discovery via Home / Projects / jobs)
 - `/results/[id]` → redirect overview
 - `/results/[id]/overview|issues|detail`
 - `/domain/[id]/overview|issues|detail` (deep / light domain)

@@ -34,6 +34,8 @@ describe('ProjectListPanel layout', () => {
     const list = screen.getByRole('list', { name: 'Projects' })
     expect(list.className).toContain('checkion-projects-list')
     expect(screen.getByRole('link', { name: 'Alpha' })).toBeTruthy()
+    expect(screen.getByLabelText('Project metrics').textContent).toMatch(/3 scans/)
+    expect(screen.getByRole('button', { name: 'Open' }).closest('.checkion-projects-list-row__trail')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Tiles' }))
     expect(screen.getByLabelText('Projects').className).toContain('checkion-collection-grid')
   })

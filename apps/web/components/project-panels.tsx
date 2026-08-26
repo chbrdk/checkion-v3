@@ -183,32 +183,35 @@ function ProjectListRow({
         >
           {project.name}
         </Link>
-        <Text role="meta" as="p" className="checkion-projects-list-row__meta">
+        <Text role="meta" as="p" className="checkion-projects-list-row__domain">
           {domain ?? 'No domain'}
-          {' · '}
-          {project.scanCount.toLocaleString()} scans
-          {' · '}
-          {formatScanShort(project.lastScanAt)}
         </Text>
+        <p className="checkion-projects-list-row__metrics" aria-label="Project metrics">
+          <span>{project.scanCount.toLocaleString()} scans</span>
+          <span aria-hidden>·</span>
+          <span>{formatScanShort(project.lastScanAt)}</span>
+        </p>
       </div>
-      <span
-        className="checkion-collection-card-badge checkion-projects-list-row__badge"
-        data-status={project.capabilityStatus}
-      >
-        {capabilityLabel(project.capabilityStatus)}
-      </span>
-      <div className="checkion-projects-list-row__actions">
-        <Link href={paths.routes.projectDetail(project.id)}>
-          <Button variant="ghost" size="sm">
-            Open
+      <div className="checkion-projects-list-row__trail">
+        <span
+          className="checkion-collection-card-badge checkion-projects-list-row__badge"
+          data-status={project.capabilityStatus}
+        >
+          {capabilityLabel(project.capabilityStatus)}
+        </span>
+        <div className="checkion-projects-list-row__actions">
+          <Link href={paths.routes.projectDetail(project.id)}>
+            <Button variant="ghost" size="sm">
+              Open
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
+            Edit
           </Button>
-        </Link>
-        <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
-          Edit
-        </Button>
-        <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
-          Delete
-        </Button>
+          <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
+            Delete
+          </Button>
+        </div>
       </div>
     </li>
   )

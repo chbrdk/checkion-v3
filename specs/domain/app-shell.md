@@ -16,9 +16,10 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 | home | `/` | Home magazine (recent runs) |
 | scan | `/scan` | Launch single/deep |
 | projects | `/projects` | Collection hub — tiles or list |
-| results | `/results` | Scan results index |
 | jobs | — | Notification center (rail footer button, not a route) |
 | settings | `/settings` | Quiet federation/auth page (footer/rail) |
+
+**Dropped:** Results index (`/results` list) — singles live via Home / Projects / job notifications → `/results/:id/overview`. Bare `/results` redirects home.
 
 The **Jobs** control lives in the NavRail footer (above Settings). It opens the global notification center panel beside the rail — not in the topbar.
 

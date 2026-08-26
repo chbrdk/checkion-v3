@@ -97,6 +97,7 @@ export const paths = {
     },
     projects: '/projects',
     projectDetail: (id: string) => `/projects/${id}`,
+    /** Index redirects home — use resultSection / resultDetail for magazines. */
     results: '/results',
     resultDetail: (id: string) => `/results/${id}`,
     resultSection: (id: string, section: 'overview' | 'issues' | 'detail') =>

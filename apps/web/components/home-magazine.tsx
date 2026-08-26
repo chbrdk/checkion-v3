@@ -201,9 +201,6 @@ export function HomeMagazine({
           <Link href={paths.routes.projects}>
             <Button variant="ghost">Projects</Button>
           </Link>
-          <Link href={paths.routes.results}>
-            <Button variant="ghost">All results</Button>
-          </Link>
         </div>
       </header>
 

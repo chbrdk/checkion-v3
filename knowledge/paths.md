@@ -97,6 +97,10 @@ Public landing: `/share/[token]` · API `/api/share`
 - Route: `/projects` (`paths.routes.projects`) — magazine collection hub (plexon-v3 Collection card composition)
 - Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists
 - Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
+
+## Results
+- Index `/results` redirects home (no rail entry / no scan ledger) — discovery via Home, Projects, job notifications
+- Magazines: `/results/:id/{overview|issues|detail}` (`paths.routes.resultSection`)
 - Spec: `specs/domain/project-workspace.md`
 
 ## Settings

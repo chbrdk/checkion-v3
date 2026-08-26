@@ -126,7 +126,7 @@ export async function ResultMagazineShell({
     >
       <div className="checkion-magazine-topbar">
         <nav className="briefing-nav signal-nav" aria-label="Breadcrumb">
-          <Link href={paths.routes.results}>Results</Link>
+          <Link href={paths.routes.home}>Home</Link>
           <span className="briefing-nav-sep" aria-hidden>
             /
           </span>

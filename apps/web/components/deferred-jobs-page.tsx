@@ -26,7 +26,7 @@ export async function DeferredJobsPage({
           <Text role="body">{specHint}</Text>
           <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <Link href={paths.routes.scan}>Core Quality scan →</Link>
-            <Link href={paths.routes.results}>Results →</Link>
+            <Link href={paths.routes.home}>Home →</Link>
           </div>
         </Panel>
 
