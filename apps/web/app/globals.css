@@ -824,111 +824,95 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   margin: 0;
 }
 
-.checkion-home-run-grid {
+.checkion-home-run-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  width: 100%;
+  align-items: start;
+}
+
+.checkion-home-run-col {
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.checkion-home-run-col__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  color: var(--ink, var(--fg));
+}
+
+.checkion-home-run-col .checkion-project-run-list {
+  margin: 0;
+}
+
+.checkion-home-run-col .checkion-project-chapter__empty {
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.checkion-home-cta-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--line);
+}
+
+a.checkion-home-cta.checkion-capability-tile {
+  text-decoration: none;
+  color: color-mix(in srgb, var(--ink, var(--fg)) 55%, var(--muted));
+}
+
+a.checkion-home-cta.checkion-capability-tile:hover {
+  color: var(--ink, var(--fg));
+}
+
+a.checkion-home-cta.checkion-capability-tile:focus-visible {
+  outline: 2px solid var(--accent, var(--ink));
+  outline-offset: 2px;
+}
+
+.checkion-home-projects {
   width: 100%;
 }
 
-.checkion-home-run-card-link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
-  min-width: 0;
+.checkion-home-project-card {
+  min-height: 14rem;
 }
 
-.checkion-home-run-card-link:hover .checkion-home-run-card__score {
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
-}
-
-.checkion-home-run-card.ds-entity-card {
-  height: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0 0 1rem;
-}
-
-.checkion-home-run-card .ds-entity-card__face {
-  gap: 0.55rem;
-}
-
-.checkion-home-run-card__meta {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.65rem;
-  font-size: var(--type-xs);
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.checkion-home-run-card .ds-entity-card__title {
-  font-family: var(--font-display, var(--font-body));
-  font-size: clamp(1.15rem, 2vw, 1.45rem);
-  font-weight: var(--weight-light, 300);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
-.checkion-home-run-card__score {
-  font-family: var(--font-display, var(--font-body));
-  font-size: clamp(1.75rem, 3vw, 2.35rem);
-  font-weight: var(--weight-light, 300);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--muted);
-}
-
-.checkion-home-run-card__score[data-tone='pos'] {
-  color: var(--ok, #7dcea0);
-}
-
-.checkion-home-run-card__score[data-tone='low'] {
-  color: var(--warn, #c9a227);
-}
-
-.checkion-home-run-card__score[data-tone='mid'] {
-  color: var(--caution, #d4894a);
-}
-
-.checkion-home-run-card__score[data-tone='neg'] {
-  color: var(--danger, #d46a6a);
-}
-
-.checkion-home-run-card__footer {
-  font-size: var(--type-xs);
-  color: var(--muted);
-}
-
-.checkion-home-run-card[data-tone='pos'] {
-  border-bottom-color: color-mix(in srgb, var(--ok, #7dcea0) 55%, var(--line));
-}
-
-.checkion-home-run-card[data-tone='low'] {
-  border-bottom-color: color-mix(in srgb, var(--warn, #c9a227) 55%, var(--line));
-}
-
-.checkion-home-run-card[data-tone='mid'] {
-  border-bottom-color: color-mix(in srgb, var(--caution, #d4894a) 55%, var(--line));
-}
-
-.checkion-home-run-card[data-tone='neg'] {
-  border-bottom-color: color-mix(in srgb, var(--danger, #d46a6a) 55%, var(--line));
+.checkion-home-project-card .checkion-collection-card-actions {
+  margin-top: auto;
 }
 
 @media (max-width: 1100px) {
-  .checkion-home-run-grid.ds-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .checkion-home-run-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-home-cta-row {
+    grid-template-columns: 1fr;
+  }
+
+  a.checkion-home-cta.checkion-capability-tile {
+    border-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  a.checkion-home-cta.checkion-capability-tile:not(:last-child) {
+    border-bottom: 1px solid var(--line);
   }
 }
 
 @media (max-width: 720px) {
-  .checkion-home-run-grid.ds-grid {
-    grid-template-columns: 1fr !important;
+  .checkion-home-projects.checkion-collection-grid {
+    grid-template-columns: 1fr;
   }
 }
 

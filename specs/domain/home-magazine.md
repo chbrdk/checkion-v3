@@ -4,16 +4,19 @@
 Accepted (Phase 1) — recent-first editorial magazine on `/`
 
 ## Goal
-Replace the Panel / demo-snapshot home with one magazine composition: brand cover, corpus pulse, and a **multi-column gallery of latest runs** with score color bands and direct links into result magazines.
+Replace the Panel / demo-snapshot home with one magazine composition: brand cover, corpus pulse, **three numbered run lists** (Singles · Deep · GEO), launch CTAs, and a short project strip.
 
 ## Composition (`HomeMagazine` / `checkion-magazine--home`)
 Full stage width (no 52rem cap). Spine — not stacked `Panel` dashboards:
 
 1. **Cover** — CHECKION as hero · short product lede · primary CTA **New scan** · ghost Projects / Results
 2. **01 · Pulse** — `LedeStrip` / `Lede` counts: Projects · Scans · Deep · GEO
-3. **02 · Latest runs** (primary) — multi-column `@msqdx/ui` `Grid` + `EntityCard` tiles for recent completed singles **and** deep domain runs (union sorted by `completedAt`, ~8–12). Each tile: mode chip · compact URL · score with `data-tone` · link to `/results/:id/overview` or `/domain/:id/overview`
-4. **03 · Deep scans** — numbered `checkion-project-run-list` for domain corpus jobs (parity with project workspace)
-5. **04 · GEO runs** — short run list when jobs exist; empty → omit chapter
+3. **02 · Runs** — three equal columns (`checkion-home-run-columns`), each a numbered `checkion-project-run-list` with score `data-tone`:
+   - **Singles** — recent completed/failed page scans (`ScanSummary`), ~6–8; link `/results/:id/overview`
+   - **Deep scans** — domain corpus jobs; link `/domain/:id/overview`
+   - **GEO runs** — always show the column; EmptyState when empty; link `/geo/:id/overview`
+4. **03 · Launch** — three CTA tiles (`checkion-capability-tile` look): **Single** · **Deep** · **GEO** → `scanLaunch({ mode })`
+5. **04 · Projects** — five most recent collections (`lastScanAt`, then name) as read-only `checkion-collection-card` tiles (Open only — no edit/delete on home)
 
 ## Score bands
 Shared helper `scoreTone` in `lib/scan-display.ts`:
@@ -31,11 +34,12 @@ Shared helper `scoreTone` in `lib/scan-display.ts`:
 - No new API fields
 
 ## UI primitives (`@msqdx/ui`)
-`EntityCard` · `Grid` · `Button` · `Chip` · `EmptyState` · `Lede` / `LedeStrip` · `Text`  
-App composition only for magazine chrome (`checkion-home-*`). Do not invent a parallel ScoreBand card in app code.
+`Button` · `EmptyState` · `Lede` / `LedeStrip` · `Text`  
+App composition for magazine chrome (`checkion-home-*`), run lists, launch tiles, and collection-card markup. Do not invent a parallel ScoreBand card in app code. Home stays a server component — do not pull client hub `ProjectCollectionCard`.
 
 ## Drop / reshape
 - Demo snapshot copy, Explore deferred link list, Sample shares as home spine
+- EntityCard / Grid “Latest runs” gallery (replaced by three list columns)
 - Shares remain reachable via share routes / results
 
 ## Related
