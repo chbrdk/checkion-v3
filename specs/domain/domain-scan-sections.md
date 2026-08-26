@@ -20,15 +20,24 @@ Deep magazine summarizes **all single-page scans in a deep scan corpus**. It is 
 - `scan: DomainScanLight` (+ optional `industry`, `tags`, `issueStats`)
 - `scores`, `lede`, `systemicIssues[{ id, title, pageCount, severity? }]`
 - Aggregate chapters: `performance` (avgs), `seoCoverage`, `ux` (+ readability bands), `eco` (+ gradeDistribution), `links`, `securityPrivacy`, `eeat`, `generative`, `infra`, `classification`
-- `pageSamples[]` — overview teaser only (not full slim-pages table); each row links to the single-page magazine (`/results/{scanId}/overview`) when `scanId` is present (virtual `dsample__` ids resolve URL + template magazine)
+- `pageSamples[]` — overview teaser; each row’s `scanId` is a **persisted** corpus page scan (`{domainId}-p{n}`) with live capture
+
+## Persisted corpus page scans
+Each deep crawl **must** persist every scanned page as a `scans` row:
+
+- `mode: 'single'`, `domainScanId: <domainId>`, stable id `{domainId}-p{index}`
+- `payload.overview` includes real `screenshotUrl` (`/api/scans/{id}/screenshot`)
+- Standalone activity metrics ignore rows with `domainScanId` (no double-count)
+
+Issue affected-page links prefer these rows (URL match). Virtual `dpage__` / `dsample__` ids remain **legacy fallback** only when no corpus page row exists (pre-persist jobs need a re-scan for captures).
 
 ## Magazine chapters
-- **Overview** — scoreline · `StatusMeterPanel` corpus signal · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList` (rows → single-page `/results/{scanId}/overview`)
-- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to single-page `/results/{scanId}`); virtual `dpage__` / `dsample__` ids resolve from the domain corpus + bundled magazine chrome **without** the fixture capture/SEO identity (no mismatched Dürr screenshot on foreign URLs)
+- **Overview** — scoreline · `StatusMeterPanel` corpus signal · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList` (rows → `/results/{scanId}/overview` with live capture)
+- **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to corpus page `/results/{scanId}`); no screenshot canvas on the domain issues shell itself
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 
 ## Deferred
 Crawl map / graph, remote full slim-pages table (beyond issue-scoped page lists), prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
 
 ## Live deep-scan wiring
-`adaptDomainResultToContracts` must populate Overview aggregate chapters from the spider corpus (`seoCoverage`, `eeat`, `generative`, plus performance / ux / eco / links / securityPrivacy when page signals exist). Silent omission of SEO/Trust·GEO chapters when aggregates are missing is a bug, not an empty state. Existing thin payloads need a re-run (or backfill) after this lands.
+`adaptDomainResultToContracts` must populate Overview aggregate chapters from the spider corpus (`seoCoverage`, `eeat`, `generative`, plus performance / ux / eco / links / securityPrivacy when page signals exist). Silent omission of SEO/Trust·GEO chapters when aggregates are missing is a bug, not an empty state. Existing thin payloads need a re-run (or backfill) after this lands. Page captures are written during the spider under the stable page-scan id and upserted into `scans` on domain complete.

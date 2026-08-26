@@ -104,7 +104,7 @@ export function isDomainPageSampleScanId(id: string): boolean {
   return parseDomainPageSampleScanId(id) != null
 }
 
-/** Attach stable virtual scan ids so overview teaser rows can deep-link. */
+/** Attach stable virtual scan ids so overview teaser rows can deep-link (legacy only). */
 export function withPageSampleScanIds(
   domainId: string,
   samples: Array<{ url: string; score: number | null; errors?: number; warnings?: number; scanId?: string }> | undefined,

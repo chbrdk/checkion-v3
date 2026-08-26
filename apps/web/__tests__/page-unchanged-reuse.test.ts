@@ -73,11 +73,11 @@ describe('domain-scan-reuse helpers', () => {
       screenshot: 'data:huge',
     } as unknown as ScanResult
 
-    const cloned = cloneScanResultForReuse(source, 'domain-1', 'https://example.com/a')
-    expect(cloned.id).not.toBe('old')
+    const cloned = cloneScanResultForReuse(source, 'domain-1', 'https://example.com/a', 'domain-1-p0')
+    expect(cloned.id).toBe('domain-1-p0')
     expect(cloned.groupId).toBe('domain-1')
     expect(cloned.reusedUnchanged).toBe(true)
-    expect((cloned as { screenshot?: unknown }).screenshot).toBeUndefined()
+    expect(cloned.screenshot).toContain('domain-1-p0')
 
     const slim = slimScanResultForCache(source)
     expect((slim as { screenshot?: unknown }).screenshot).toBeUndefined()

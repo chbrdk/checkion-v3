@@ -135,6 +135,30 @@ function memoryGetScan(id: string): ScanSummary | null {
 }
 
 function memoryGetScanOverview(id: string): ScanOverview | null {
+  const stored = overviewByScan[id]
+  if (stored) {
+    const scan = store.scans.find((s) => s.id === id) ?? null
+    if (!scan) return null
+    return {
+      ...stored,
+      scan,
+      scores: scoresByScan[id] ?? stored.scores,
+      topIssues: selectTopIssueGroups(enrichIssueInspect(issuesByScan[id] ?? stored.topIssues), 8),
+      ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
+    }
+  }
+
+  const real = store.scans.find((s) => s.id === id)
+  if (real) {
+    const rich = buildRichScanOverview(id, real, scoresByScan[id], issuesByScan[id])
+    if (!rich) return null
+    return {
+      ...rich,
+      topIssues: enrichIssueInspect(rich.topIssues),
+      ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
+    }
+  }
+
   const virtualIssue = parseDomainPageScanId(id)
   const virtualSample = parseDomainPageSampleScanId(id)
   if (virtualIssue || virtualSample) {
@@ -147,35 +171,13 @@ function memoryGetScanOverview(id: string): ScanOverview | null {
     )
   }
 
-  const stored = overviewByScan[id]
-  if (stored) {
-    const scan = memoryGetScan(id)
-    if (!scan) return null
-    return {
-      ...stored,
-      scan,
-      scores: scoresByScan[id] ?? stored.scores,
-      topIssues: selectTopIssueGroups(enrichIssueInspect(issuesByScan[id] ?? stored.topIssues), 8),
-      ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
-    }
-  }
-
-  const scan = memoryGetScan(id)
-  const rich = buildRichScanOverview(
-    id,
-    scan,
-    scoresByScan[id],
-    issuesByScan[id],
-  )
-  if (!rich) return null
-  return {
-    ...rich,
-    topIssues: enrichIssueInspect(rich.topIssues),
-    ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
-  }
+  return null
 }
 
 function memoryGetScanIssues(id: string): IssueSummary[] {
+  if (store.scans.some((s) => s.id === id)) {
+    return enrichIssueInspect(issuesByScan[id] ?? [])
+  }
   if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
     return virtualPageTemplateIssues(issuesByScan[TEMPLATE_SINGLE_SCAN_ID]).map((issue) => ({
       ...issue,
@@ -447,6 +449,13 @@ async function memoryCreateDomainScan(input: {
         issuesByScan[bundle.domain.id] = enrichIssueInspect(bundle.issues)
         scoresByScan[bundle.domain.id] = bundle.scores
         domainOverviewExtras[bundle.domain.id] = bundle.overviewExtras
+        for (const page of bundle.pageScans ?? []) {
+          const scan = page.scan
+          store.scans = [scan, ...store.scans.filter((s) => s.id !== scan.id)]
+          issuesByScan[scan.id] = enrichIssueInspect(page.issues)
+          scoresByScan[scan.id] = page.scores
+          overviewByScan[scan.id] = page.overview
+        }
         if (input.linkScanId) {
           store.scans = store.scans.map((s) =>
             s.id === input.linkScanId
@@ -469,6 +478,13 @@ async function memoryCreateDomainScan(input: {
         issuesByScan[cancelled.id] = enrichIssueInspect(bundle.issues)
         scoresByScan[cancelled.id] = bundle.scores
         domainOverviewExtras[cancelled.id] = bundle.overviewExtras
+        for (const page of bundle.pageScans ?? []) {
+          const scan = { ...page.scan, status: 'cancelled' as const }
+          store.scans = [scan, ...store.scans.filter((s) => s.id !== scan.id)]
+          issuesByScan[scan.id] = enrichIssueInspect(page.issues)
+          scoresByScan[scan.id] = page.scores
+          overviewByScan[scan.id] = page.overview
+        }
         if (input.linkScanId) {
           store.scans = store.scans.map((s) =>
             s.id === input.linkScanId
@@ -547,6 +563,11 @@ function memoryReassignProjectResources(
 export async function listScans(projectId?: string): Promise<ScanSummary[]> {
   if (isDatabaseConfigured()) return (await dbApi()).dbListScans(projectId)
   return memoryListScans(projectId)
+}
+
+export async function listDomainCorpusPageScans(domainId: string): Promise<ScanSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListDomainCorpusPageScans(domainId)
+  return store.scans.filter((s) => s.domainScanId === domainId && s.mode === 'single')
 }
 
 export async function getScan(id: string): Promise<ScanSummary | null> {

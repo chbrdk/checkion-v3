@@ -29,7 +29,6 @@ import type {
   Issue,
   ScanResult,
 } from './types'
-import { synthesizeDomainPageSampleScanId } from '../domain-issue-page-synth'
 import { normalizeUxReadability } from '../readability-cefr'
 import { apiScanScreenshot } from './constants'
 import { selectTopIssueGroups } from '../issue-groups'
@@ -679,13 +678,28 @@ export function adaptDomainResultToContracts(
   pageScans: Array<ReturnType<typeof adaptScanResultToContracts>>
 } {
   const pages = domainResult.pages
-  const pageScans = pages.map((page, idx) =>
-    adaptScanResultToContracts(page, {
-      id: `${input.id}-p${idx}`,
+  const pageScans = pages.map((page, idx) => {
+    const stableId =
+      typeof page.id === 'string' && page.id.startsWith(`${input.id}-p`)
+        ? page.id
+        : `${input.id}-p${idx}`
+    return adaptScanResultToContracts(page, {
+      id: stableId,
       projectId: input.projectId,
       mode: 'single',
-    }),
-  )
+    })
+  })
+
+  // Attach domainScanId on each corpus page summary for activity filtering / links.
+  for (const bundle of pageScans) {
+    bundle.scan = { ...bundle.scan, domainScanId: input.id }
+    if (bundle.overview?.scan) {
+      bundle.overview = {
+        ...bundle.overview,
+        scan: { ...bundle.overview.scan, domainScanId: input.id },
+      }
+    }
+  }
 
   const systemic: DomainSystemicIssue[] = (domainResult.systemicIssues ?? []).map((s) => ({
     id: s.issueId,
@@ -765,12 +779,12 @@ export function adaptDomainResultToContracts(
     scores,
     lede: `Deep scan of ${input.rootUrl} — ${domain.pageCount} pages, ${issues.length} systemic groups.`,
     systemicIssues: systemic,
-    pageSamples: pages.slice(0, 20).map((p, idx) => ({
-      url: p.url,
-      score: Math.round(p.ux?.score ?? p.score),
-      errors: p.stats.errors,
-      warnings: p.stats.warnings,
-      scanId: synthesizeDomainPageSampleScanId(input.id, idx),
+    pageSamples: pageScans.slice(0, 20).map((bundle) => ({
+      url: bundle.scan.url,
+      score: bundle.scan.overallScore,
+      errors: bundle.scan.issueStats?.errors,
+      warnings: bundle.scan.issueStats?.warnings,
+      scanId: bundle.scan.id,
     })),
     ...aggregates,
   }

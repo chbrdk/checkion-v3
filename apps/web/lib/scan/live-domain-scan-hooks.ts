@@ -1,6 +1,6 @@
 import type { DomainScanLight, IssueSummary, ScoreCard } from '@checkion-v3/contracts'
 import { eq } from 'drizzle-orm'
-import type { DomainScanPersistHooks } from './domain-scan-start'
+import type { DomainPageScanPersistBundle, DomainScanPersistHooks } from './domain-scan-start'
 import { readDomainScanControlState } from './domain-scan-control'
 import { enrichIssueInspect } from '../fixtures/scan-overview-rich'
 import { getDb } from '../db/client'
@@ -11,6 +11,53 @@ type ScanRowQueued = {
   projectId: string
   url: string
   startedAt: string
+}
+
+async function upsertDomainPageScans(
+  pageScans: DomainPageScanPersistBundle[],
+  workerSessionId: string,
+): Promise<void> {
+  if (!pageScans.length) return
+  const db = getDb()
+  const now = new Date()
+  for (const page of pageScans) {
+    const scan = page.scan
+    const payload = {
+      scan,
+      issues: enrichIssueInspect(page.issues),
+      scores: page.scores,
+      overview: page.overview,
+      runtime: { workerSessionId },
+    }
+    await db
+      .insert(scans)
+      .values({
+        id: scan.id,
+        projectId: scan.projectId,
+        mode: 'single',
+        url: scan.url,
+        status: scan.status,
+        startedAt: scan.startedAt,
+        completedAt: scan.completedAt,
+        overallScore: scan.overallScore,
+        issueCount: scan.issueCount,
+        payload,
+        updatedAt: now,
+        createdAt: now,
+      })
+      .onConflictDoUpdate({
+        target: scans.id,
+        set: {
+          status: scan.status,
+          completedAt: scan.completedAt,
+          overallScore: scan.overallScore,
+          issueCount: scan.issueCount,
+          url: scan.url,
+          payload,
+          updatedAt: now,
+        },
+      })
+  }
 }
 
 export function createLiveDomainScanHooks(input: {
@@ -27,6 +74,7 @@ export function createLiveDomainScanHooks(input: {
       issues: IssueSummary[]
       scores: ScoreCard[]
       overviewExtras: Record<string, unknown>
+      pageScans: DomainPageScanPersistBundle[]
     },
     status: DomainScanLight['status'],
   ) => {
@@ -51,6 +99,8 @@ export function createLiveDomainScanHooks(input: {
         updatedAt: new Date(),
       })
       .where(eq(domainScans.id, domainId))
+
+    await upsertDomainPageScans(bundle.pageScans ?? [], workerSessionId)
 
     if (!linkScan) return
     await db

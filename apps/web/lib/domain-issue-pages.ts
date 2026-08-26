@@ -2,14 +2,16 @@ import type {
   IssueAffectedPageItem,
   IssueAffectedPagesResult,
   IssueSummary,
+  ScanSummary,
 } from '@checkion-v3/contracts'
-import { getDomainOverview, getScanIssues } from './fixtures/scan-store'
+import { getDomainOverview, getScanIssues, listDomainCorpusPageScans } from './fixtures/scan-store'
 import {
   parseDomainPageScanId,
   synthesizeAffectedPageUrl,
   synthesizeDomainPageScanId,
   synthesizePageIssueLoad,
 } from './domain-issue-page-synth'
+import { normalizeScanUrl } from './scan/url-normalize'
 
 export {
   synthesizeAffectedPageUrl,
@@ -27,17 +29,28 @@ function buildCorpus(
   issueId: string,
   total: number,
   seeds: string[],
+  urlToScanId: Map<string, string>,
 ): IssueAffectedPageItem[] {
   const items: IssueAffectedPageItem[] = []
   for (let i = 0; i < total; i += 1) {
     const load = synthesizePageIssueLoad(i, issueId)
+    const url = synthesizeAffectedPageUrl(rootUrl, issueId, i, seeds)
+    const realId = urlToScanId.get(normalizeScanUrl(url))
     items.push({
-      url: synthesizeAffectedPageUrl(rootUrl, issueId, i, seeds),
-      scanId: synthesizeDomainPageScanId(domainId, issueId, i),
+      url,
+      scanId: realId ?? synthesizeDomainPageScanId(domainId, issueId, i),
       ...load,
     })
   }
   return items
+}
+
+function urlMapFromCorpusPages(pages: ScanSummary[]): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const page of pages) {
+    map.set(normalizeScanUrl(page.url), page.id)
+  }
+  return map
 }
 
 /** Reconstruct page URL for a virtual domain→single page scan id. */
@@ -90,8 +103,11 @@ export async function listIssueAffectedPages(
       ? issue.affectedPages
       : (overview?.pageSamples ?? []).map((p) => p.url)
 
+  const corpusPages = await listDomainCorpusPageScans(domainId)
+  const urlToScanId = urlMapFromCorpusPages(corpusPages)
+
   const rawTotal = Math.max(issue.affectedCount, seeds.length)
-  let items = buildCorpus(domainId, rootUrl, issueId, rawTotal, seeds)
+  let items = buildCorpus(domainId, rootUrl, issueId, rawTotal, seeds, urlToScanId)
 
   if (minIssues > 0 || maxIssues != null) {
     items = items.filter((row) => {

@@ -207,10 +207,9 @@ async function dbGetScanRow(id: string): Promise<ScanRow | null> {
 }
 
 export async function dbGetScan(id: string): Promise<ScanSummary | null> {
-  const virtual = await resolveVirtualDomainPageScan(id)
-  if (virtual) return virtual
   const row = await dbGetScanRow(id)
-  return row ? rowToScan(row) : null
+  if (row) return rowToScan(row)
+  return resolveVirtualDomainPageScan(id)
 }
 
 async function resolveVirtualDomainPageScan(id: string): Promise<ScanSummary | null> {
@@ -259,6 +258,8 @@ async function resolveVirtualDomainPageScan(id: string): Promise<ScanSummary | n
 }
 
 export async function dbGetScanIssues(id: string): Promise<IssueSummary[]> {
+  const row = await dbGetScanRow(id)
+  if (row) return enrichIssueInspect(row.payload?.issues ?? [])
   if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
     const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
     return virtualPageTemplateIssues(template?.payload?.issues).map((issue) => ({
@@ -266,8 +267,6 @@ export async function dbGetScanIssues(id: string): Promise<IssueSummary[]> {
       scanId: id,
     }))
   }
-  const row = await dbGetScanRow(id)
-  if (row) return enrichIssueInspect(row.payload?.issues ?? [])
   const domain = await dbGetDomainScanRow(id)
   return enrichIssueInspect(domain?.payload?.issues ?? [])
 }
@@ -275,15 +274,48 @@ export async function dbGetScanIssues(id: string): Promise<IssueSummary[]> {
 export async function dbGetScanScores(id: string): Promise<ScoreCard[]> {
   const overview = await dbGetScanOverview(id)
   if (overview?.scores.length) return overview.scores
+  const row = await dbGetScanRow(id)
+  if (row) return row.payload?.scores ?? []
   if (parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)) {
     const template = await dbGetScanRow(TEMPLATE_SINGLE_SCAN_ID)
     return virtualPageTemplateScores(template?.payload?.scores)
   }
-  const row = await dbGetScanRow(id)
-  return row?.payload?.scores ?? []
+  return []
 }
 
 export async function dbGetScanOverview(id: string): Promise<ScanOverview | null> {
+  const row = await dbGetScanRow(id)
+  if (row) {
+    const scan = rowToScan(row)
+
+    if (row.payload?.overview && typeof row.payload.overview === 'object') {
+      const stored = row.payload.overview
+      return {
+        ...stored,
+        scan,
+        scores: row.payload.scores ?? stored.scores ?? [],
+        topIssues: selectTopIssueGroups(
+          enrichIssueInspect(row.payload.issues ?? stored.topIssues ?? []),
+          8,
+        ),
+        ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
+      }
+    }
+
+    const rich = buildRichScanOverview(
+      id,
+      scan,
+      row.payload?.scores,
+      row.payload?.issues,
+    )
+    if (!rich) return null
+    return {
+      ...rich,
+      topIssues: enrichIssueInspect(rich.topIssues),
+      ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
+    }
+  }
+
   const virtual = parseDomainPageScanId(id) || parseDomainPageSampleScanId(id)
   if (virtual) {
     const scan = await resolveVirtualDomainPageScan(id)
@@ -296,36 +328,7 @@ export async function dbGetScanOverview(id: string): Promise<ScanOverview | null
     )
   }
 
-  const row = await dbGetScanRow(id)
-  if (!row) return null
-  const scan = rowToScan(row)
-
-  if (row.payload?.overview && typeof row.payload.overview === 'object') {
-    const stored = row.payload.overview
-    return {
-      ...stored,
-      scan,
-      scores: row.payload.scores ?? stored.scores ?? [],
-      topIssues: selectTopIssueGroups(
-        enrichIssueInspect(row.payload.issues ?? stored.topIssues ?? []),
-        8,
-      ),
-      ux: stored.ux ? normalizeUxReadability(stored.ux) : stored.ux,
-    }
-  }
-
-  const rich = buildRichScanOverview(
-    id,
-    scan,
-    row.payload?.scores,
-    row.payload?.issues,
-  )
-  if (!rich) return null
-  return {
-    ...rich,
-    topIssues: enrichIssueInspect(rich.topIssues),
-    ux: rich.ux ? normalizeUxReadability(rich.ux) : rich.ux,
-  }
+  return null
 }
 
 export async function dbListDomainScans(projectId?: string): Promise<DomainScanLight[]> {
@@ -346,6 +349,13 @@ async function dbGetDomainScanRow(id: string): Promise<DomainScanRow | null> {
   const db = getDb()
   const rows = await db.select().from(domainScans).where(eq(domainScans.id, id)).limit(1)
   return rows[0] ?? null
+}
+
+export async function dbListDomainCorpusPageScans(domainId: string): Promise<ScanSummary[]> {
+  const domain = await dbGetDomainScan(domainId)
+  if (!domain) return []
+  const rows = await dbListScans(domain.projectId)
+  return rows.filter((s) => s.domainScanId === domainId && s.mode === 'single')
 }
 
 export async function dbGetDomainScan(id: string): Promise<DomainScanLight | null> {

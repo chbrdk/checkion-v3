@@ -122,6 +122,7 @@ describe('stubbed live scan path', () => {
     setDomainScanRunnerForTests((async function* (url: string) {
       yield { type: 'progress', scannedCount: 1, total: 2, url, message: 'scanning' }
       const page = stubScanResult(url, 'page-1')
+      page.screenshot = '/api/scans/page-1/screenshot'
       yield {
         type: 'complete' as const,
         domainResult: {
@@ -155,6 +156,21 @@ describe('stubbed live scan path', () => {
     expect(domain.status).toBe('completed')
     expect(domain.pageCount).toBe(1)
     expect(domain.issueCount).toBeGreaterThan(0)
+
+    const { listDomainCorpusPageScans, getDomainOverview } = await import('../lib/fixtures/scan-store')
+    const corpus = await listDomainCorpusPageScans(domain.id)
+    expect(corpus).toHaveLength(1)
+    expect(corpus[0]?.domainScanId).toBe(domain.id)
+    expect(corpus[0]?.id).toBe(`${domain.id}-p0`)
+    expect(corpus[0]?.mode).toBe('single')
+
+    const pageOverview = await getScanOverview(corpus[0]!.id)
+    expect(pageOverview?.scan.url).toBe('https://domain.example/')
+    expect(pageOverview?.screenshotUrl).toMatch(/\/api\/scans\//)
+    expect(pageOverview?.screenshotUrl).toContain(corpus[0]!.id)
+
+    const domainOverview = await getDomainOverview(domain.id)
+    expect(domainOverview?.pageSamples?.[0]?.scanId).toBe(`${domain.id}-p0`)
   })
 })
 

@@ -81,6 +81,7 @@ export type PersistedDomainBundle = {
   issues: IssueSummary[]
   scores: ScoreCard[]
   overview: DomainOverview
+  pageScans: PersistedScanBundle[]
 }
 
 export async function executeSingleLiveScan(input: {
@@ -163,6 +164,7 @@ export async function executeDomainLiveScan(input: {
     issues: adapted.issues,
     scores: adapted.scores,
     overview: adapted.overview,
+    pageScans: adapted.pageScans,
     terminal,
   }
 }

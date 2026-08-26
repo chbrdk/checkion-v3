@@ -3,11 +3,24 @@
  * Supports pause / resume / cancel via DB-backed getScanControl (v2 parity).
  */
 
-import type { DomainScanLight, IssueSummary, ScoreCard } from '@checkion-v3/contracts'
+import type {
+  DomainScanLight,
+  IssueSummary,
+  ScanOverview,
+  ScanSummary,
+  ScoreCard,
+} from '@checkion-v3/contracts'
 import { executeDomainLiveScan } from './pipeline'
 import { resolveDomainScanMaxPages } from './domain-scan-max-pages'
 import { resolveSkipUnchangedPages } from './domain-scan-reuse'
 import type { DomainScanControlState } from './spider'
+
+export type DomainPageScanPersistBundle = {
+  scan: ScanSummary
+  issues: IssueSummary[]
+  scores: ScoreCard[]
+  overview: ScanOverview
+}
 
 export type DomainScanPersistHooks = {
   insertQueued: (row: {
@@ -24,12 +37,14 @@ export type DomainScanPersistHooks = {
     issues: IssueSummary[]
     scores: ScoreCard[]
     overviewExtras: Record<string, unknown>
+    pageScans: DomainPageScanPersistBundle[]
   }) => Promise<void>
   persistCancelled?: (bundle: {
     domain: DomainScanLight
     issues: IssueSummary[]
     scores: ScoreCard[]
     overviewExtras: Record<string, unknown>
+    pageScans: DomainPageScanPersistBundle[]
   }) => Promise<void>
   persistFailed: (id: string, error: string) => Promise<void>
   /** Return false to abort worker before spider starts (already cancelled). */
@@ -111,6 +126,7 @@ export async function startDomainScan(
         domain: bundle.domain,
         issues: bundle.issues,
         scores: bundle.scores,
+        pageScans: bundle.pageScans,
         overviewExtras: {
           lede,
           systemicIssues,

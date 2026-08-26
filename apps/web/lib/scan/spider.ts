@@ -230,18 +230,24 @@ export async function* runDomainScan(
         url: string;
         depth: number;
         normalizedCurrent: string;
+        pageIndex: number;
+        pageScanId: string;
     };
 
     const inFlight: InFlight[] = [];
-    let pageCompleteIndex = 0;
+    let nextPageIndex = 0;
 
-    async function tryReuseOrRunFullScan(current: { url: string; depth: number }): Promise<ScanResult> {
+    async function tryReuseOrRunFullScan(
+        current: { url: string; depth: number },
+        pageScanId: string,
+    ): Promise<ScanResult> {
         const projectId = options.projectId ?? null
         if (options.skipUnchangedPages && projectId) {
             try {
                 const { getLatestCachedPageScan } = await import('@/lib/db/page-scan-cache')
                 const { checkPageUnchangedByHeaders } = await import('@/lib/scan/page-unchanged-check')
                 const { cloneScanResultForReuse } = await import('@/lib/scan/domain-scan-reuse')
+                const { copyScreenshot, readScreenshot } = await import('@/lib/scan/screenshot-storage')
                 const prev = await getLatestCachedPageScan({
                     projectId,
                     url: current.url,
@@ -253,7 +259,18 @@ export async function* runDomainScan(
                         prev.documentCacheHints,
                     )
                     if (status === 'unchanged') {
-                        return cloneScanResultForReuse(prev.scanResult, domainId, current.url)
+                        const prevId = prev.scanResult.id
+                        const hasCapture = prevId ? Boolean(await readScreenshot(prevId)) : false
+                        if (hasCapture && prevId) {
+                            await copyScreenshot(prevId, pageScanId)
+                            return cloneScanResultForReuse(
+                                prev.scanResult,
+                                domainId,
+                                current.url,
+                                pageScanId,
+                            )
+                        }
+                        // No capture on disk — fall through to full scan (capture required).
                     }
                 }
             } catch (err) {
@@ -267,6 +284,7 @@ export async function* runDomainScan(
             standard: 'WCAG2AA',
             groupId: domainId,
             userId: options.userId,
+            id: pageScanId,
         })
 
         if (projectId && !result.reusedUnchanged) {
@@ -334,6 +352,8 @@ export async function* runDomainScan(
             }
             const current = queue.shift()!;
             const normalizedCurrent = normalizeScanUrl(current.url);
+            const pageIndex = nextPageIndex++;
+            const pageScanId = `${domainId}-p${pageIndex}`;
             yield {
                 type: 'progress',
                 url: current.url,
@@ -345,12 +365,14 @@ export async function* runDomainScan(
             if (DOMAIN_SCAN_DELAY_MS > 0) {
                 await new Promise((r) => setTimeout(r, DOMAIN_SCAN_DELAY_MS));
             }
-            const promise = tryReuseOrRunFullScan(current);
+            const promise = tryReuseOrRunFullScan(current, pageScanId);
             inFlight.push({
                 promise,
                 url: current.url,
                 depth: current.depth,
                 normalizedCurrent,
+                pageIndex,
+                pageScanId,
             });
         }
 
@@ -376,7 +398,7 @@ export async function* runDomainScan(
         }
         yield {
             type: 'page_complete',
-            pageIndex: pageCompleteIndex++,
+            pageIndex: raceResult.slot.pageIndex,
             url: raceResult.slot.url,
             normalizedUrl: raceResult.slot.normalizedCurrent,
             ok: Boolean(raceResult.result),

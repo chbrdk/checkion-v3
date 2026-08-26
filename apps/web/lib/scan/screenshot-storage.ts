@@ -35,3 +35,10 @@ export async function readScreenshot(scanId: string): Promise<Buffer | null> {
   if (!fs.existsSync(filePath)) return null
   return fs.readFileSync(filePath)
 }
+
+/** Copy an existing capture to a new scan id (reuse / remount). Returns API path or null. */
+export async function copyScreenshot(fromScanId: string, toScanId: string): Promise<string | null> {
+  const buf = await readScreenshot(fromScanId)
+  if (!buf) return null
+  return writeScreenshot(toScanId, buf)
+}
