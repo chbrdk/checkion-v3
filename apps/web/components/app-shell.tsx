@@ -92,7 +92,7 @@ export function AppShell({
     <AppFrame
       railEdge={railEdge}
       style={frameStyle}
-      brandCorner={<BrandCorner label={paths.brandLabel} borderRadius={paths.brandCornerRadiusPx} />}
+      brandCorner={<BrandCorner label={paths.brandLabel} />}
       rail={
         <NavRail
           dockable
