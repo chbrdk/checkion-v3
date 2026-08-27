@@ -4,7 +4,7 @@
 Accepted (Phase 1); Central Assistant host — 2026-08-10
 
 ## Goal
-Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, settings avatar, `ChatOverlay` host for platform Assistant. **No** global `header.topbar` / `PageTitle` chrome — page identity lives in magazine covers, launch heroes, or in-page leads.
+Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, `ShellBackButton`, settings avatar, `ChatOverlay` host for platform Assistant. **No** global `header.topbar` / `PageTitle` chrome — page identity lives in magazine covers, launch heroes, or in-page leads.
 
 ## Brand
 - BrandCorner label: **CHECKION**

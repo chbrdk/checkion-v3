@@ -2,12 +2,13 @@
 
 import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import {
   AppFrame,
   MsqdxLogoMark,
   NavRail,
+  ShellBackButton,
   shellFrameStyle,
   type RailDockEdge,
 } from '../lib/msqdx-ui-shell'
@@ -45,6 +46,7 @@ export function AppShell({
   status?: ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { displayName, t } = useUserPrefs()
   const pageLead = descriptionKey ? t(descriptionKey) : description
   const [railEdge, setRailEdge] = useState<RailDockEdge>(paths.railDockEdge)
@@ -92,6 +94,7 @@ export function AppShell({
     <AppFrame
       railEdge={railEdge}
       style={frameStyle}
+      backCorner={<ShellBackButton label={t('nav.back')} onClick={() => router.back()} />}
       brandCorner={<ShellBrandCorner />}
       rail={
         <NavRail
