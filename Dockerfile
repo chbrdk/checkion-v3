@@ -61,8 +61,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-# BrandCorner hover expand, TokenPicker/LayersPanel/BreakpointSwitcher editor chrome (Aug 2026).
-ARG MSQDX_UI_REF=ac5c94f0e3d8af7b5167c50fbb1d6becd65e409a
+# BrandCorner hover, MarkdownProse, editor chrome — aligned with audion/brandion (2026-08-27).
+ARG MSQDX_UI_REF=b5f4dfa6014a6304e7d73907a5eb7f76f085f68f
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
