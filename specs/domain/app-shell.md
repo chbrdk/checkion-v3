@@ -8,6 +8,7 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 
 ## Brand
 - BrandCorner label: **CHECKION**
+- **Product launcher:** `ShellBrandCorner` (`BrandCornerProductMenu`) — click opens federated app list; static staging URLs via `lib/platform-product-switcher.ts`; footer links Plexon `/products` when a Plexon public base is available
 - No MUI layout, no `MsqdxAppLayout`, no `@msqdx/react`
 
 ## Primary nav (MVP)

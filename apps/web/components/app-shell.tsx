@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import {
   AppFrame,
-  BrandCorner,
   MsqdxLogoMark,
   NavRail,
   shellFrameStyle,
@@ -24,6 +23,7 @@ import {
   useJobNotifications,
 } from './job-notification-center'
 import { PlatformAssistantHost } from './platform-assistant-host'
+import { ShellBrandCorner } from './shell-brand-corner'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
 
@@ -92,7 +92,7 @@ export function AppShell({
     <AppFrame
       railEdge={railEdge}
       style={frameStyle}
-      brandCorner={<BrandCorner label={paths.brandLabel} />}
+      brandCorner={<ShellBrandCorner />}
       rail={
         <NavRail
           dockable

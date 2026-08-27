@@ -30,6 +30,10 @@
     "yes": "Yes",
     "no": "No"
   },
+  "shell": {
+    "productMenu": "MSQ DX products",
+    "allProducts": "All products in PLEXON"
+  },
   "nav": {
     "home": "Home",
     "scan": "Scan",

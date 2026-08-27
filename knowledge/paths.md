@@ -9,6 +9,7 @@
 - Public: `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`)
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
 - Central Assistant flyout: AppShell `PlatformAssistantHost` → `{plexon}/assistant/embed` (+ `theme` / `assistant:theme`) · `plexon-v3/specs/domain/central-assistant-flyout.md`
+- Product launcher: BrandCorner → `ShellBrandCorner` / `lib/platform-product-switcher.ts`; staging fallbacks in `paths.ecosystemStaging*` when `NEXT_PUBLIC_*_URL` unset
 - Attach runbook: `knowledge/staging-coolify.md`
 - **Operator (after smoke):** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` so Collection dashboard / registry deep-links target v3 (do not leave prod `checkion.projects-a…`). See `plexon-v3/knowledge/coolify-v3-staging-runbook.md` §4.3 Wave B note.
 - Image: root `Dockerfile` fetches sibling `chbrdk/msqdx-ui` at pinned `MSQDX_UI_REF` (`ac5c94f0e3d8af7b5167c50fbb1d6becd65e409a` as of Aug 2026) into `/workspace/msqdx-ui` (same layout as local `GITHUB/checkion-v3` + `GITHUB/msqdx-ui`). Bump the SHA when barrels need newer primitives — floating `main` clone layers go stale on Coolify and break `lib/msqdx-ui.ts` (e.g. missing `CardActions` / `ChatOverlay`). Pin must include `ChatOverlay`; Docker strips DS `node_modules` and symlinks app `node_modules` during build (`msqdx-ui/knowledge/react-types-dedupe.md`).
@@ -18,8 +19,12 @@
 | Key | Purpose |
 |-----|---------|
 | `NEXT_PLEXON_BASE_URL` | plexon-v3 base (federation + knowledge pack + assistant embed); falls back to `PLEXON_AUTH_URL` if unset |
-| `NEXT_PUBLIC_PLEXON_URL` | Optional public plexon origin for assistant iframe (falls back to `NEXT_PLEXON_BASE_URL` / `PLEXON_AUTH_URL`) |
-| `NEXT_PUBLIC_CHECKION_URL` | Public checkion-v3 URL |
+| `NEXT_PUBLIC_PLEXON_URL` | Optional public plexon origin for assistant iframe + product launcher (falls back to `NEXT_PLEXON_BASE_URL` / `PLEXON_AUTH_URL`) |
+| `NEXT_PUBLIC_CHECKION_URL` | Public checkion-v3 URL (product launcher + deep-links) |
+| `NEXT_PUBLIC_AUDION_URL` | Optional AUDION origin for BrandCorner product launcher |
+| `NEXT_PUBLIC_BRANDION_URL` | Optional BRANDION origin for product launcher |
+| `NEXT_PUBLIC_CREATION_URL` | Optional CREATION origin for product launcher |
+| `NEXT_PUBLIC_ECHON_URL` | Optional ECHON origin for product launcher |
 | `PLEXON_AUTH_URL` | plexon-v3 auth base for validate-credentials (often same as plexon base) |
 | `PLEXON_SERVICE_SECRET` | Shared service secret for auth + federation |
 | `NEXT_PUBLIC_PLEXON_REGISTER_URL` | Optional public Plexon register page |
