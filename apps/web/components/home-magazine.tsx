@@ -195,17 +195,7 @@ export function HomeMagazine({
       data-section="home-magazine"
     >
       <header className="checkion-home-cover">
-        <p className="checkion-cover__kicker">{t('home.kicker')}</p>
-        <h1 className="checkion-home-cover__title">{t('home.title')}</h1>
-        <p className="checkion-home-cover__lede">{t('home.lede')}</p>
-        <div className="checkion-home-cover__actions">
-          <Link href={paths.routes.scan}>
-            <Button>{t('projects.newScan')}</Button>
-          </Link>
-          <Link href={paths.routes.projects}>
-            <Button variant="ghost">{t('nav.projects')}</Button>
-          </Link>
-        </div>
+        <h1 className="checkion-home-cover__title">{t('home.kicker')}</h1>
       </header>
 
       <HomeChapter

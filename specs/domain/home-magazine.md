@@ -9,7 +9,7 @@ Replace the Panel / demo-snapshot home with one magazine composition: brand cove
 ## Composition (`HomeMagazine` / `checkion-magazine--home`)
 Full stage width (no 52rem cap). Spine — not stacked `Panel` dashboards:
 
-1. **Cover** — CHECKION as hero · short product lede · primary CTA **New scan** · ghost Projects (comfortable top padding under the rail)
+1. **Cover** — large **CHECKION** wordmark only (no lede, no cover CTAs)
 2. **01 · Launch** — three CTA tiles (`checkion-capability-tile` look): **Single** · **Deep** · **GEO** → `scanLaunch({ mode })`
 3. **02 · Runs** — three equal columns (`checkion-home-run-columns`), each a numbered `checkion-project-run-list` with score `data-tone`:
    - **Singles** — recent completed/failed page scans (`ScanSummary`), ~6–8; link `/results/:id/overview`
@@ -34,7 +34,7 @@ Shared helper `scoreTone` in `lib/scan-display.ts`:
 
 ## UI primitives (`@msqdx/ui`)
 `Button` · `EmptyState` · `Text`  
-App composition for magazine chrome (`checkion-home-*`), run lists, launch tiles, and collection-card markup. Do not invent a parallel ScoreBand card in app code. Home stays a server component — do not pull client hub `ProjectCollectionCard`.
+App composition for magazine chrome (`checkion-home-*`), run lists, launch tiles, and collection-card markup. Cover is brand wordmark only. Do not invent a parallel ScoreBand card in app code. Home stays a server component — do not pull client hub `ProjectCollectionCard`.
 
 ## Drop / reshape
 - Demo snapshot copy, Explore deferred link list, Sample shares as home spine

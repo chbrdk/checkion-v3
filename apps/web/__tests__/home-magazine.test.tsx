@@ -105,7 +105,7 @@ describe('HomeMagazine', () => {
         geoJobs={[]}
       />,
     )
-    expect(screen.getByRole('heading', { level: 1, name: 'Reading the site' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 1, name: 'CHECKION' })).toBeTruthy()
     expect(screen.getByLabelText('Latest runs by mode')).toBeTruthy()
     expect(screen.getByLabelText('Single scans')).toBeTruthy()
     expect(screen.getByLabelText('Deep scans')).toBeTruthy()
