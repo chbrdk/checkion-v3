@@ -137,7 +137,7 @@ function ProjectCollectionCard({
         </span>
         <span className="checkion-collection-card-link">
           <Button variant="ghost" type="button" onClick={() => onDelete(project)}>
-            {t('common.delete')}
+            {t('projects.archiveConfirm')}
           </Button>
         </span>
       </CardActions>
@@ -215,7 +215,7 @@ function ProjectListRow({
             {t('common.edit')}
           </Button>
           <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
-            {t('common.delete')}
+            {t('projects.archiveConfirm')}
           </Button>
         </div>
       </div>
@@ -503,7 +503,7 @@ export function ProjectWorkspace({
             {t('common.edit')}
           </Button>
           <Button type="button" size="lg" variant="ghost" onClick={() => setDeleteOpen(true)}>
-            {t('common.delete')}
+            {t('projects.archiveConfirm')}
           </Button>
         </div>
       </header>

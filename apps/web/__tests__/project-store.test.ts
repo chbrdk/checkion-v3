@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { UNASSIGNED_PROJECT_ID } from '@checkion-v3/contracts'
 import {
   applyPlatformBinding,
+  archiveProject,
   createProject,
   deleteProject,
   getProject,
@@ -52,7 +53,7 @@ describe('project store CRUD', () => {
     expect(updated?.platformProjectId).toBe(created.platformProjectId)
   })
 
-  it('deletes a project and reassigns scans to unassigned', async () => {
+  it('archives a project without hard-delete or scan reassign', async () => {
     const created = await createProject({ name: 'Temp', domain: 'temp.example' })
     const scan = await createScan({
       projectId: created.id,
@@ -60,9 +61,27 @@ describe('project store CRUD', () => {
       url: 'https://temp.example/',
     })
 
-    expect((await deleteProject(created.id))).toBe(true)
-    expect((await getProject(created.id))).toBeNull()
-    expect((((await getScan(scan.id)))?.projectId)).toBe(UNASSIGNED_PROJECT_ID)
+    const archived = await archiveProject(created.id)
+    expect(archived?.status).toBe('archived')
+    expect(await getProject(created.id)).not.toBeNull()
+    expect((await listProjects()).some((p) => p.id === created.id)).toBe(false)
+    expect((await getScan(scan.id))?.projectId).toBe(created.id)
+  })
+
+  it('refuses to archive the unassigned bucket', async () => {
+    expect(await archiveProject(UNASSIGNED_PROJECT_ID)).toBeNull()
+  })
+
+  it('still supports hard-delete for ops/tests', async () => {
+    const created = await createProject({ name: 'Hard', domain: 'hard.example' })
+    const scan = await createScan({
+      projectId: created.id,
+      mode: 'single',
+      url: 'https://hard.example/',
+    })
+    expect(await deleteProject(created.id)).toBe(true)
+    expect(await getProject(created.id)).toBeNull()
+    expect((await getScan(scan.id))?.projectId).toBe(UNASSIGNED_PROJECT_ID)
   })
 
   it('refuses to delete the unassigned bucket', async () => {

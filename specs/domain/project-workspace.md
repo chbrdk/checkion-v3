@@ -18,7 +18,7 @@ Magazine collection hub (same composition as plexon-v3 Collection cards — rebu
 
 - Comfortable **top padding** under the rail (same breath as home / launch covers)
 - Hairline **collection grid** (default) **or** numbered **magazine list** — view toggle in the band (Tiles · List)
-- Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (scans · last scan) · **ghost actions** (Open · Edit · Delete)
+- Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (scans · last scan) · **ghost actions** (Open · Edit · Archive)
 - **Stats** `scanCount` / `lastScanAt` are computed on read: standalone singles + deep domain jobs + GEO jobs (deep page-scan rows are not double-counted)
 - List anatomy: numbered row · name + domain · capability badge · scans / last scan · ghost actions; create as first list control
 - Magazine band: search + capability filters (All · In sync · Pending · Error) + view toggle — not a Panel table
@@ -32,7 +32,7 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
 - Comfortable **top padding** under the rail (same breath as projects hub / home)
 
 1. **Topbar** — breadcrumb `Projects / {name}` · primary CTAs (New scan · Open GEO / Start GEO)
-2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · ghost Edit · Delete
+2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · ghost Edit · Archive
 3. **Corpus pulse** — magazine chapter band (single / deep scan / GEO counts · latest score) as hairline editorial meters — not a dense boxed dashboard
 4. **Latest runs** — three equal columns (same composition as home `checkion-home-run-columns`):
    - **Singles** → `/results/:id/overview`
@@ -41,5 +41,5 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
 
 Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub.
 
-## Delete semantics
-Project removed; scans and deep scans (domain corpus jobs) reassigned to `proj-unassigned` so results stay reachable.
+## Archive semantics
+UI **Archive** (not Delete) calls `POST /api/projects/:id/archive` → Plexon `PATCH …/provisioning/projects/:platformProjectId` `{ status: archived }` when bound, then local mirror `status: archived` (hidden from default lists). Unbound / dummy: local archive only. Scans stay on the project. Hard-delete remains Plexon global-admin / ops only.

@@ -241,6 +241,15 @@ async function memoryDeleteProject(id: string): Promise<boolean> {
   return projects().length < before
 }
 
+function memoryArchiveProject(id: string): ProjectDetail | null {
+  if (id === UNASSIGNED_PROJECT_ID) return null
+  const idx = projects().findIndex((p) => p.id === id)
+  if (idx < 0) return null
+  const next: ProjectDetail = { ...projects()[idx]!, status: 'archived' }
+  setProjects(projects().map((p, i) => (i === idx ? next : p)))
+  return { ...next, recentScanIds: [...next.recentScanIds] }
+}
+
 /** Visible capability projects (excludes the system unassigned bucket). Unfiltered — prefer {@link listProjectsForViewer}. */
 export async function listProjects(): Promise<ProjectSummary[]> {
   const base = isDatabaseConfigured()
@@ -345,6 +354,12 @@ export async function updateProject(
 ): Promise<ProjectDetail | null> {
   if (isDatabaseConfigured()) return (await dbApi()).dbUpdateProject(id, patch)
   return memoryUpdateProject(id, patch)
+}
+
+/** Soft-remove from hubs: set status archived (Collection lifecycle mirror). */
+export async function archiveProject(id: string): Promise<ProjectDetail | null> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbArchiveProject(id)
+  return memoryArchiveProject(id)
 }
 
 export async function deleteProject(id: string): Promise<boolean> {

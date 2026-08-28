@@ -241,6 +241,18 @@ export async function dbUpdateProject(
   return dbGetProject(id)
 }
 
+export async function dbArchiveProject(id: string): Promise<ProjectDetail | null> {
+  if (id === UNASSIGNED_PROJECT_ID) return null
+  const current = await dbGetProject(id)
+  if (!current) return null
+  const db = getDb()
+  await db
+    .update(projects)
+    .set({ status: 'archived', updatedAt: new Date() })
+    .where(eq(projects.id, id))
+  return dbGetProject(id)
+}
+
 export async function dbDeleteProject(id: string): Promise<boolean> {
   if (id === UNASSIGNED_PROJECT_ID) return false
   const current = await dbGetProject(id)

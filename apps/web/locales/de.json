@@ -185,6 +185,12 @@
     "attrLastActivity": "Letzte Aktivität",
     "collectionIdTitle": "Plexon Collection-ID",
     "deleting": "Wird gelöscht…",
+    "archiving": "Wird archiviert…",
+    "archiveTitle": "Projekt archivieren?",
+    "archiveBody": "Archiviert {name} in Plexon und allen Produkt-Spiegeln (Audion, Brandion, Creation, …). In den Standardlisten ausgeblendet — wiederherstellbar in Plexon. Scans bleiben am Projekt.",
+    "archiveConfirm": "Archivieren",
+    "archiveFailed": "Archivieren fehlgeschlagen ({status})",
+    "archiveFailedGeneric": "Archivieren fehlgeschlagen",
     "dialogOptional": "Optional",
     "dialogNameHint": "CHECKION-Anzeigename für diese Collection",
     "dialogDomainHint": "Primärer Hostname oder URL",
@@ -225,9 +231,9 @@
     "dialogDescriptionAria": "Projektbeschreibung",
     "dialogSave": "Speichern",
     "dialogCreate": "Erstellen",
-    "dialogDeleteTitle": "Projekt löschen",
-    "dialogDeleteBody": "Entfernt {name}. Scans bleiben unter Unassigned erreichbar.",
-    "dialogDeleteConfirm": "Löschen"
+    "dialogDeleteTitle": "Projekt archivieren?",
+    "dialogDeleteBody": "Archiviert {name} in Plexon und allen Produkt-Spiegeln. In den Standardlisten ausgeblendet — wiederherstellbar in Plexon.",
+    "dialogDeleteConfirm": "Archivieren"
   },
   "scan": {
     "heroTitle": "Lauf starten",

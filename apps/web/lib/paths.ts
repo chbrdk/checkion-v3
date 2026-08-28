@@ -64,6 +64,9 @@ export const paths = {
   envFederationMode: 'CHECKION_FEDERATION_MODE',
   /** Service: Collections the user may see (access model B). */
   plexonAccessibleCollectionsPath: '/api/platform/provisioning/accessible-collections',
+  /** Service: Collection lifecycle (archive / restore). */
+  plexonProvisioningProjectPath: (platformProjectId: string) =>
+    `/api/platform/provisioning/projects/${encodeURIComponent(platformProjectId)}`,
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
   /** Cap for POST /api/fetch-page bodyTextExcerpt (matches scanner bodyTextExcerpt). */
@@ -152,6 +155,7 @@ export const paths = {
     apiHealth: '/api/health',
     apiProjects: '/api/projects',
     apiProjectDetail: (id: string) => `/api/projects/${id}`,
+    apiProjectArchive: (id: string) => `/api/projects/${id}/archive`,
     apiScans: '/api/scans',
     /** Thin Chromium page text for AUDION research (no axe/Pa11y). */
     apiFetchPage: '/api/fetch-page',

@@ -174,7 +174,7 @@ describe('panels smoke', () => {
       '/geo/geo-x/overview',
     )
     expect(screen.getByRole('button', { name: /^Edit$/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /^Delete$/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Archive$/i })).toBeTruthy()
   })
 
   it('renders domain corpus magazine (distinct from single)', async () => {

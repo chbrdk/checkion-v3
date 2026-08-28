@@ -189,18 +189,19 @@ export function ProjectDeleteConfirm({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function confirmDelete() {
+  async function confirmArchive() {
     if (!project) return
     setBusy(true)
     setError(null)
     try {
-      const res = await fetch(paths.routes.apiProjectDetail(project.id), { method: 'DELETE' })
-      if (!res.ok) throw new Error(`Delete failed (${res.status})`)
+      const res = await fetch(paths.routes.apiProjectArchive(project.id), { method: 'POST' })
+      if (!res.ok) throw new Error(t('projects.archiveFailed', { status: res.status }))
       onClose()
       router.push(paths.routes.projects)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed')
+      setError(err instanceof Error ? err.message : t('projects.archiveFailedGeneric'))
+    } finally {
       setBusy(false)
     }
   }
@@ -211,13 +212,13 @@ export function ProjectDeleteConfirm({
         open={open}
         onClose={onClose}
         onConfirm={() => {
-          void confirmDelete()
+          void confirmArchive()
         }}
-        title={t('projects.dialogDeleteTitle')}
-        confirmLabel={busy ? t('projects.deleting') : t('projects.dialogDeleteConfirm')}
+        title={t('projects.archiveTitle')}
+        confirmLabel={busy ? t('projects.archiving') : t('projects.archiveConfirm')}
         danger
       >
-        {t('projects.dialogDeleteBody', {
+        {t('projects.archiveBody', {
           name: project?.name ?? t('projects.dialogDeleteNameFallback'),
         })}
         {error ? <Alert tone="error">{error}</Alert> : null}

@@ -185,6 +185,12 @@
     "attrLastActivity": "Last activity",
     "collectionIdTitle": "Plexon collection id",
     "deleting": "Deleting…",
+    "archiving": "Archiving…",
+    "archiveTitle": "Archive project?",
+    "archiveBody": "Archives {name} in Plexon and all product mirrors (Audion, Brandion, Creation, …). Hidden from default lists — restore in Plexon. Scans stay on this project.",
+    "archiveConfirm": "Archive",
+    "archiveFailed": "Archive failed ({status})",
+    "archiveFailedGeneric": "Archive failed",
     "dialogOptional": "Optional",
     "dialogNameHint": "CHECKION display name for this collection",
     "dialogDomainHint": "Primary hostname or URL",
@@ -225,9 +231,9 @@
     "dialogDescriptionAria": "Project description",
     "dialogSave": "Save",
     "dialogCreate": "Create",
-    "dialogDeleteTitle": "Delete project",
-    "dialogDeleteBody": "Removes {name}. Scans stay reachable under Unassigned.",
-    "dialogDeleteConfirm": "Delete"
+    "dialogDeleteTitle": "Archive project?",
+    "dialogDeleteBody": "Archives {name} in Plexon and all product mirrors. Hidden from default lists — restore in Plexon.",
+    "dialogDeleteConfirm": "Archive"
   },
   "scan": {
     "heroTitle": "Start a run",
