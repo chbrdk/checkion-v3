@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Field, Input, SectionChrome, Text } from '@msqdx/ui'
+import { Button, Field, Input, SettingsBand, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import { useT } from '../lib/user-prefs'
 import type { ApiTokenStub } from '@checkion-v3/contracts'
@@ -67,15 +67,18 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
   }
 
   return (
-    <section className="checkion-settings-section" data-testid="settings-tokens">
-      <SectionChrome quiet title={t('settings.tokensTitle')} as="h2" />
-      <Text role="body" className="checkion-settings-help">
-        {t('settings.tokensHelp')}{' '}
-        <code>Authorization: Bearer {paths.apiTokenPrefix}…</code> (
-        <code>POST /api/scans</code>, <code>POST /api/geo-jobs</code>, <code>POST /api/projects</code>
-        ).
-      </Text>
-
+    <SettingsBand
+      title={t('settings.tokensTitle')}
+      help={
+        <>
+          {t('settings.tokensHelp')}{' '}
+          <code>Authorization: Bearer {paths.apiTokenPrefix}…</code> (
+          <code>POST /api/scans</code>, <code>POST /api/geo-jobs</code>, <code>POST /api/projects</code>
+          ).
+        </>
+      }
+      data-testid="settings-tokens"
+    >
       {rawSecret ? (
         <div className="checkion-settings-token-reveal">
           <Text role="title">{t('settings.tokensCopyNow')}</Text>
@@ -149,6 +152,6 @@ export function SettingsTokens({ tokens: initialTokens }: { tokens: ApiTokenStub
           {error}
         </Text>
       ) : null}
-    </section>
+    </SettingsBand>
   )
 }

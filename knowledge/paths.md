@@ -112,14 +112,16 @@ Public landing: `/share/[token]` · API `/api/share`
 - Spec: `specs/domain/project-workspace.md`
 
 ## Settings
-- Route: `/settings` (`paths.routes.settings`) — Account, Profile, Appearance, Language, API tokens, Federation
+- Route: `/settings` (`paths.routes.settings`) — Account, Profile, Appearance, Language, API tokens, Federation via `@msqdx/ui` `SettingsShell`
 - Spec: `specs/domain/settings.md` · composition mirrors audion-v3 / plexon-v3 section bands
-- Rail footer avatar entry; prefs via `paths.displayNameStorageKey` / `themeStorageKey` / `localeStorageKey`
+- Prefs keys: `checkion.v3.displayName` · `checkion.v3.themePreference` (`light`|`dark`|`auto`) · `checkion.v3.locale`
+- Cross-app sync: `GET`/`PATCH` `/api/prefs/profile` → Plexon service profile (`locale`, `themePreference`)
 - UI locale (SET-L1): `apps/web/lib/i18n.ts` · `apps/web/locales/{en,de}.json` · `knowledge/i18n.md` — chrome via `useUserPrefs().t`
 - Help tips (bilingual en/de via locale): `apps/web/lib/help-tips.ts` · `apps/web/components/help-tip.tsx` · spec `specs/domain/help-tips.md` · DS `InfoTip` from `@msqdx/ui`
 
 ## API tokens
 Settings CRUD: `/api/tokens` · verify `/api/tokens/verify` · store `api-tokens-store` / Drizzle `api_tokens` · `knowledge/settings-api-tokens.md` · Bearer machine clients on selected APIs (`POST /api/scans`, `POST /api/geo-jobs`, `POST /api/projects`)
+Profile prefs: `GET`/`PATCH` `/api/prefs/profile` (Plexon `locale` + `themePreference`)
 
 ## Federation / Collection summary
 `GET /api/platform/provisioning/projects/{id}` — Plexon Collection dashboard BFF: `scanCount`, `domainScanCount`, `standaloneScanCount`, `geoJobCount`, recent domain/standalone/geo catalogs

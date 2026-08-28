@@ -1,17 +1,21 @@
 # Settings — CHECKION v3
 
-**Status:** Accepted — Wave 4 / Phase 4 · UI aligned to Audion/Plexon settings composition · **SET-L1 locale chrome**  
+**Status:** Accepted — Wave 4 / Phase 4 · **SET-L1** · **2026-08-28 SettingsShell + cross-app prefs**  
 **Route:** `/settings`  
 **Knowledge:** `knowledge/paths.md`, `knowledge/settings-api-tokens.md`, `knowledge/i18n.md`  
-**Reference:** audion-v3 `SettingsPage` · plexon-v3 `/settings` bands · brandion-v3 SET-L1 · `@msqdx/ui` SectionChrome / ToggleGroup / Avatar
+**Reference:** `@msqdx/ui` `SettingsShell` · Plexon profile `themePreference` / `locale`
 
 ## Goal
 
-Quiet settings page matching the shared product pattern: Account, Profile, Appearance, Language, plus CHECKION-specific API tokens and federation status. No MUI. No stacked Panel chrome.
+Shared `SettingsShell` magazine layout: Account, Profile, Appearance (`light`/`dark`/`auto`), Language, plus extras (API tokens, federation). No MUI. No stacked Panel chrome.
+
+## Cross-app prefs
+
+Hydrate/PATCH `locale` + `themePreference` via Plexon service profile when authenticated. Local cache for first paint.
 
 ## Locale (SET-L1)
 
-WHEN the author changes Language in Settings, CHECKION SHALL store `paths.localeStorageKey` (`en` | `de`) and set `document.documentElement.lang`.  
+WHEN the author changes Language in Settings, CHECKION SHALL store `paths.localeStorageKey` (`en` | `de`), set `document.documentElement.lang`, and PATCH Plexon when authenticated.  
 WHEN locale is `de` or `en`, shell chrome, page leads, settings, hubs (home / projects / scan), jobs, and magazine chrome SHALL render via `t(key)` dictionaries (`apps/web/locales/{en,de}.json`) through `useUserPrefs().t`.  
 Help tips remain bilingual via `help-tips.ts` (already locale-aware).  
 Default locale is `en`. No URL/`[locale]` routing or next-intl.
@@ -22,10 +26,10 @@ Default locale is `en`. No URL/`[locale]` routing or next-intl.
 |------|-----------|
 | Account | When authenticated: Plexon name/email (read) + Sign out. When unauthenticated: Sign in → `/login` |
 | Profile | `Avatar` + display name `Input` (localStorage via `paths.displayNameStorageKey`); may seed from session name |
-| Appearance | Theme `ToggleGroup` → `data-theme` + `paths.themeStorageKey` |
-| Language | Locale `ToggleGroup` (`en` / `de`) — drives UI chrome + help tips |
-| API tokens | Personal Bearer CRUD (`specs/domain/settings-api-tokens.md`) — create once / revoke |
-| Federation | Contract id, mode, plexon base, health probe link (read-only ops band) |
+| Appearance | `light` / `dark` / `auto` → `applyThemePreference` + Plexon |
+| Language | Locale `ToggleGroup` (`en` / `de`) — SET-L1 + Plexon |
+| API tokens | Personal Bearer CRUD — extras slot |
+| Federation | Contract id, mode, plexon base, health — extras slot |
 
 ## Shell
 

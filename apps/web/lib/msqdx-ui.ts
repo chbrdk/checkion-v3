@@ -39,3 +39,17 @@ export { Tabs } from '../../../../msqdx-ui/packages/ui/src/components/Tabs'
 export type { TabItem, TabsProps } from '../../../../msqdx-ui/packages/ui/src/components/Tabs'
 export { ToggleGroup } from '../../../../msqdx-ui/packages/ui/src/components/ToggleGroup'
 export type { ToggleGroupProps, ToggleOption } from '../../../../msqdx-ui/packages/ui/src/components/ToggleGroup'
+export { SettingsShell, SettingsBand } from '../../../../msqdx-ui/packages/ui/src/components/SettingsShell'
+export type {
+  SettingsShellProps,
+  SettingsShellLabels,
+  SettingsBandProps,
+} from '../../../../msqdx-ui/packages/ui/src/components/SettingsShell'
+export {
+  THEME_PREFERENCE_CHOICES,
+  isThemePreference,
+  migrateLegacyThemeId,
+  resolveThemeId,
+  applyThemePreference,
+} from '../../../../msqdx-ui/packages/ui/src/themePreference'
+export type { ThemePreference, ResolvedThemeId } from '../../../../msqdx-ui/packages/ui/src/themePreference'

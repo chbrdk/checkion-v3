@@ -10,7 +10,8 @@ import {
   Field,
   Hint,
   Input,
-  SectionChrome,
+  SettingsBand,
+  SettingsShell,
   Text,
   ToggleGroup,
 } from '@msqdx/ui'
@@ -37,10 +38,9 @@ export function SettingsPage({
   const [loggingOut, setLoggingOut] = useState(false)
 
   const themeLabels: Record<UiThemeId, string> = {
-    msqdx: t('settings.themeLight'),
-    'msqdx-dark': t('settings.themeDark'),
-    'msqdx-v2': t('settings.themeV2Light'),
-    'msqdx-v2-dark': t('settings.themeV2Dark'),
+    light: t('settings.themeLight'),
+    dark: t('settings.themeDark'),
+    auto: t('settings.themeAuto'),
   }
 
   const localeLabels: Record<UiLocaleId, string> = {
@@ -80,46 +80,50 @@ export function SettingsPage({
   const accountName = session?.user?.name ?? null
 
   return (
-    <div className="checkion-settings">
-      <Hint panel>{t('settings.hint')}</Hint>
-
-      {status === 'authenticated' && accountEmail ? (
-        <section className="checkion-settings-section">
-          <SectionChrome quiet title={t('settings.account')} as="h2" />
-          <Text role="body" className="checkion-settings-help">
-            {t('settings.accountSignedIn')}
-          </Text>
-          <dl className="checkion-settings-account">
-            {accountName ? (
-              <>
-                <dt>{t('settings.name')}</dt>
-                <dd>{accountName}</dd>
-              </>
-            ) : null}
-            <dt>{t('settings.email')}</dt>
-            <dd>{accountEmail}</dd>
-          </dl>
-          <Button type="button" variant="subtle" onClick={handleLogout} disabled={loggingOut}>
-            {loggingOut ? t('common.signingOut') : t('common.signOut')}
-          </Button>
-        </section>
-      ) : status !== 'loading' ? (
-        <section className="checkion-settings-section">
-          <SectionChrome quiet title={t('settings.account')} as="h2" />
-          <Text role="body" className="checkion-settings-help">
-            {t('settings.accountSignedOut')}
-          </Text>
-          <p className="checkion-settings-account-link">
-            <Link href={paths.routes.login} className="checkion-link">
-              {t('common.signIn')}
-            </Link>
-          </p>
-        </section>
-      ) : null}
-
-      <section className="checkion-settings-section">
-        <SectionChrome quiet title={t('settings.profile')} as="h2" />
-        <div className="checkion-settings-profile-row">
+    <SettingsShell
+      className="checkion-settings"
+      labels={{
+        account: t('settings.account'),
+        profile: t('settings.profile'),
+        appearance: t('settings.appearance'),
+        language: t('settings.language'),
+      }}
+      lede={<Hint panel>{t('settings.hint')}</Hint>}
+      account={
+        status === 'authenticated' && accountEmail ? (
+          <>
+            <Text role="body" className="checkion-settings-help">
+              {t('settings.accountSignedIn')}
+            </Text>
+            <dl className="ds-settings-account-dl checkion-settings-account">
+              {accountName ? (
+                <>
+                  <dt>{t('settings.name')}</dt>
+                  <dd>{accountName}</dd>
+                </>
+              ) : null}
+              <dt>{t('settings.email')}</dt>
+              <dd>{accountEmail}</dd>
+            </dl>
+            <Button type="button" variant="subtle" onClick={handleLogout} disabled={loggingOut}>
+              {loggingOut ? t('common.signingOut') : t('common.signOut')}
+            </Button>
+          </>
+        ) : status !== 'loading' ? (
+          <>
+            <Text role="body" className="checkion-settings-help">
+              {t('settings.accountSignedOut')}
+            </Text>
+            <p className="checkion-settings-account-link">
+              <Link href={paths.routes.login} className="checkion-link">
+                {t('common.signIn')}
+              </Link>
+            </p>
+          </>
+        ) : null
+      }
+      profile={
+        <div className="ds-settings-profile-row checkion-settings-profile-row">
           <Avatar name={draft.trim() || displayName} size="lg" />
           <Field label={t('settings.displayName')} size="sm">
             <Input
@@ -138,13 +142,9 @@ export function SettingsPage({
             />
           </Field>
         </div>
-      </section>
-
-      <section className="checkion-settings-section">
-        <SectionChrome quiet title={t('settings.appearance')} as="h2" />
-        <Text role="body" className="checkion-settings-help">
-          {t('settings.appearanceHelp')}
-        </Text>
+      }
+      appearanceHelp={t('settings.appearanceHelp')}
+      appearance={
         <ToggleGroup
           className="theme-toggle"
           aria-label={t('settings.theme')}
@@ -155,13 +155,9 @@ export function SettingsPage({
             label: themeLabels[id],
           }))}
         />
-      </section>
-
-      <section className="checkion-settings-section">
-        <SectionChrome quiet title={t('settings.language')} as="h2" />
-        <Text role="body" className="checkion-settings-help">
-          {t('settings.languageHelp')}
-        </Text>
+      }
+      languageHelp={t('settings.languageHelp')}
+      language={
         <ToggleGroup
           aria-label={t('settings.language')}
           value={locale}
@@ -171,30 +167,32 @@ export function SettingsPage({
             label: localeLabels[id],
           }))}
         />
-      </section>
-
-      <SettingsTokens tokens={initialTokens} />
-
-      <section className="checkion-settings-section" data-testid="settings-federation">
-        <SectionChrome quiet title={t('settings.federation')} as="h2" />
-        <Text role="body" className="checkion-settings-help">
-          {t('settings.federationHelp', { contract: paths.federationContract })}
-        </Text>
-        <dl className="checkion-settings-account">
-          <dt>{t('settings.dataSource')}</dt>
-          <dd>{dataSource}</dd>
-          <dt>{t('settings.mode')}</dt>
-          <dd>{federationMode}</dd>
-          <dt>{t('settings.plexonBase')}</dt>
-          <dd>{plexonBase}</dd>
-          <dt>{t('settings.health')}</dt>
-          <dd>
-            <Link href={paths.routes.apiFederationHealth} className="checkion-link">
-              {paths.routes.apiFederationHealth}
-            </Link>
-          </dd>
-        </dl>
-      </section>
-    </div>
+      }
+      extras={
+        <>
+          <SettingsTokens tokens={initialTokens} />
+          <SettingsBand
+            title={t('settings.federation')}
+            help={t('settings.federationHelp', { contract: paths.federationContract })}
+            data-testid="settings-federation"
+          >
+            <dl className="ds-settings-account-dl checkion-settings-account">
+              <dt>{t('settings.dataSource')}</dt>
+              <dd>{dataSource}</dd>
+              <dt>{t('settings.mode')}</dt>
+              <dd>{federationMode}</dd>
+              <dt>{t('settings.plexonBase')}</dt>
+              <dd>{plexonBase}</dd>
+              <dt>{t('settings.health')}</dt>
+              <dd>
+                <Link href={paths.routes.apiFederationHealth} className="checkion-link">
+                  {paths.routes.apiFederationHealth}
+                </Link>
+              </dd>
+            </dl>
+          </SettingsBand>
+        </>
+      }
+    />
   )
 }
