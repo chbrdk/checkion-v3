@@ -6,8 +6,9 @@ import {
   applyPlatformBinding,
   createProject,
   getProjectByPlatformId,
-  listProjects,
+  listProjectsForViewer,
 } from '../../../lib/fixtures/project-store'
+import { viewerCanAccessProject } from '../../../lib/project-access'
 import { getPlexonProfile } from '../../../lib/plexon-auth'
 import { registerCheckionProjectOnPlexon } from '../../../lib/plexon-project-origin'
 import {
@@ -20,14 +21,24 @@ import {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const platformProjectId = url.searchParams.get('platformProjectId')
+  const session = await auth()
+  const requestUser = await getRequestUser(request)
+  const viewerId = requestUser?.id || session?.user?.id || null
+
   if (platformProjectId) {
     const project = await getProjectByPlatformId(platformProjectId)
     if (!project) {
       return NextResponse.json({ error: 'not_found' }, { status: 404 })
     }
+    if (!(await viewerCanAccessProject(project, viewerId))) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
     return NextResponse.json(project)
   }
-  return NextResponse.json({ items: await listProjects() })
+  if (!viewerId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+  return NextResponse.json({ items: await listProjectsForViewer(viewerId) })
 }
 
 export async function POST(request: Request) {

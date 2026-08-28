@@ -106,6 +106,8 @@ function memoryCreateProject(input: CreateProjectInput): ProjectDetail {
     scanCount: 0,
     description: (input.description ?? '').trim(),
     recentScanIds: [],
+    ownerPlexonUserId: input.ownerPlexonUserId?.trim() || null,
+    platformCompanyId: input.platformCompanyId?.trim() || null,
   }
 
   setProjects([project, ...projects()])
@@ -239,7 +241,7 @@ async function memoryDeleteProject(id: string): Promise<boolean> {
   return projects().length < before
 }
 
-/** Visible capability projects (excludes the system unassigned bucket). */
+/** Visible capability projects (excludes the system unassigned bucket). Unfiltered — prefer {@link listProjectsForViewer}. */
 export async function listProjects(): Promise<ProjectSummary[]> {
   const base = isDatabaseConfigured()
     ? await (await dbApi()).dbListProjects()
@@ -255,6 +257,14 @@ export async function listProjects(): Promise<ProjectSummary[]> {
   ])
   const { enrichProjectSummariesWithActivity } = await import('../project-activity')
   return enrichProjectSummariesWithActivity(base, { scans, domains, geoJobs })
+}
+
+/** Access model B: creator/owner + Plexon-accessible Collections only. */
+export async function listProjectsForViewer(
+  viewerId: string | null,
+): Promise<ProjectSummary[]> {
+  const { filterProjectsForViewer } = await import('../project-access')
+  return filterProjectsForViewer(await listProjects(), viewerId)
 }
 
 export async function getProject(id: string): Promise<ProjectDetail | null> {

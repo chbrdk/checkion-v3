@@ -1,14 +1,18 @@
 import Link from 'next/link'
 import { Button, Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from './app-shell'
+import { auth } from '../auth'
 import { listGeoJobs } from '../lib/fixtures/geo-store'
-import { listProjects } from '../lib/fixtures/project-store'
+import { listProjectsForViewer } from '../lib/fixtures/project-store'
 import { paths } from '../lib/paths'
 import { geoJobMeasurement, geoMeasurementLabel } from '../lib/geo/measurement'
 
 export async function GeoIndexPage() {
   const jobs = await listGeoJobs()
-  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
+  const session = await auth()
+  const projects = Object.fromEntries(
+    ((await listProjectsForViewer(session?.user?.id ?? null))).map((p) => [p.id, p.name]),
+  )
 
   return (
     <AppShell

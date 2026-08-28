@@ -1,6 +1,7 @@
 import { AppShell } from '../../components/app-shell'
 import { ProjectListPanel } from '../../components/project-panels'
-import { getProjectByPlatformId, listProjects } from '../../lib/fixtures/project-store'
+import { auth } from '../../auth'
+import { getProjectByPlatformId, listProjectsForViewer } from '../../lib/fixtures/project-store'
 import { paths } from '../../lib/paths'
 import { redirect } from 'next/navigation'
 
@@ -14,6 +15,8 @@ export default async function ProjectsPage({
 }) {
   const { platformProjectId } = await searchParams
   let bindPlatformProjectId: string | undefined
+  const session = await auth()
+  const viewerId = session?.user?.id ?? null
 
   if (platformProjectId) {
     const bound = await getProjectByPlatformId(platformProjectId)
@@ -21,7 +24,7 @@ export default async function ProjectsPage({
     bindPlatformProjectId = platformProjectId
   }
 
-  const projects = await listProjects()
+  const projects = await listProjectsForViewer(viewerId)
   return (
     <AppShell descriptionKey="pages.projects.lead">
       <ProjectListPanel projects={projects} bindPlatformProjectId={bindPlatformProjectId} />

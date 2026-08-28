@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from './app-shell'
-import { listProjects } from '../lib/fixtures/project-store'
+import { auth } from '../auth'
+import { listProjectsForViewer } from '../lib/fixtures/project-store'
 import type { DeferredJobCard } from '../lib/fixtures/deferred-jobs'
 import { paths } from '../lib/paths'
 
@@ -16,7 +17,10 @@ export async function DeferredJobsPage({
   jobs: DeferredJobCard[]
   specHint: string
 }) {
-  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
+  const session = await auth()
+  const projects = Object.fromEntries(
+    ((await listProjectsForViewer(session?.user?.id ?? null))).map((p) => [p.id, p.name]),
+  )
 
   return (
     <AppShell title={title} description={description}>

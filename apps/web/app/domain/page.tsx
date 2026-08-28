@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from '../../components/app-shell'
-import { listProjects } from '../../lib/fixtures/project-store'
+import { auth } from '../../auth'
+import { listProjectsForViewer } from '../../lib/fixtures/project-store'
 import { listDomainScans } from '../../lib/fixtures/scan-store'
 import { paths } from '../../lib/paths'
 
@@ -9,7 +10,10 @@ import { paths } from '../../lib/paths'
 export const dynamic = 'force-dynamic'
 
 export default async function DomainIndexPage() {
-  const projects = Object.fromEntries(((await listProjects())).map((p) => [p.id, p.name]))
+  const session = await auth()
+  const projects = Object.fromEntries(
+    ((await listProjectsForViewer(session?.user?.id ?? null))).map((p) => [p.id, p.name]),
+  )
   const domains = await listDomainScans()
 
   return (

@@ -62,6 +62,8 @@ export const paths = {
   /** Local-only NextAuth fallback when AUTH_SECRET unset (never use in prod with Plexon auth). */
   authDevFallbackSecret: 'checkion-v3-local-dev-auth-secret-min-32chars',
   envFederationMode: 'CHECKION_FEDERATION_MODE',
+  /** Service: Collections the user may see (access model B). */
+  plexonAccessibleCollectionsPath: '/api/platform/provisioning/accessible-collections',
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
   /** Cap for POST /api/fetch-page bodyTextExcerpt (matches scanner bodyTextExcerpt). */

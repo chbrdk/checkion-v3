@@ -45,11 +45,14 @@ export interface ProjectSummary {
    * (excludes deep crawl page-scan rows to avoid double-counting).
    */
   scanCount: number
+  /** Creator / owner for access model B (list ACL). */
+  ownerPlexonUserId?: string | null
 }
 
 export interface ProjectDetail extends ProjectSummary {
   description: string
   recentScanIds: string[]
+  platformCompanyId?: string | null
 }
 
 /** Create a local CHECKION project (Plexon collection mirror). */

@@ -4,7 +4,8 @@ import {
   type GeoMeasurement,
 } from '../../lib/geo/measurement'
 import { ScanLaunchForm, type LaunchMode } from '../../components/scan-launch-form'
-import { listProjects } from '../../lib/fixtures/project-store'
+import { auth } from '../../auth'
+import { listProjectsForViewer } from '../../lib/fixtures/project-store'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -39,7 +40,8 @@ export default async function ScanPage({
   }>
 }) {
   const params = await searchParams
-  const projects = ((await listProjects())).map((p) => ({
+  const session = await auth()
+  const projects = ((await listProjectsForViewer(session?.user?.id ?? null))).map((p) => ({
     id: p.id,
     name: p.name,
     domain: p.domain,

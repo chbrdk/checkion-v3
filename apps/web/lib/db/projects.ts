@@ -43,6 +43,8 @@ function rowToDetail(row: ProjectRow): ProjectDetail {
     scanCount: row.scanCount,
     description: row.description,
     recentScanIds: Array.isArray(row.recentScanIds) ? [...row.recentScanIds] : [],
+    ownerPlexonUserId: row.ownerPlexonUserId ?? null,
+    platformCompanyId: row.platformCompanyId ?? null,
   }
 }
 
