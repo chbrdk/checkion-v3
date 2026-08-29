@@ -26,6 +26,7 @@ export const paths = {
   defaultDisplayName: 'CHECKION',
   displayNameStorageKey: 'checkion.v3.displayName',
   themeStorageKey: 'checkion.v3.themePreference',
+  accentStorageKey: 'checkion.v3.accentPreference',
   localeStorageKey: 'checkion.v3.locale',
   defaultTheme: 'dark' as const,
   defaultLocale: 'en' as const,

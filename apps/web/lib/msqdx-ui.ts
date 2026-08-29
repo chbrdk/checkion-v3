@@ -53,3 +53,15 @@ export {
   applyThemePreference,
 } from '../../../../msqdx-ui/packages/ui/src/themePreference'
 export type { ThemePreference, ResolvedThemeId } from '../../../../msqdx-ui/packages/ui/src/themePreference'
+export {
+  ACCENT_PREFERENCE_CHOICES,
+  ACCENT_OPTIONS,
+  ACCENT_PREFERENCE_DEFAULT,
+  isAccentPreference,
+  resolveAccentOption,
+  migrateLegacyAccent,
+  applyAccentPreference,
+} from '../../../../msqdx-ui/packages/ui/src/accentPreference'
+export type { AccentPreference, AccentOption } from '../../../../msqdx-ui/packages/ui/src/accentPreference'
+export { AccentSwatchGroup } from '../../../../msqdx-ui/packages/ui/src/components/AccentSwatchGroup'
+export type { AccentSwatchGroupProps } from '../../../../msqdx-ui/packages/ui/src/components/AccentSwatchGroup'

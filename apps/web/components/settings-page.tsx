@@ -5,14 +5,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
+  AccentSwatchGroup,
   Avatar,
   Button,
   Field,
-  Hint,
   Input,
+  resolveAccentOption,
   SettingsBand,
   SettingsShell,
-  Text,
   ToggleGroup,
 } from '@msqdx/ui'
 import { SettingsTokens } from './settings-panels'
@@ -33,7 +33,8 @@ export function SettingsPage({
 }) {
   const router = useRouter()
   const { data: session, status } = useSession()
-  const { displayName, setDisplayName, theme, setTheme, locale, setLocale, t } = useUserPrefs()
+  const { displayName, setDisplayName, theme, setTheme, accent, setAccent, locale, setLocale, t } =
+    useUserPrefs()
   const [draft, setDraft] = useState(displayName)
   const [loggingOut, setLoggingOut] = useState(false)
 
@@ -78,6 +79,8 @@ export function SettingsPage({
 
   const accountEmail = session?.user?.email ?? null
   const accountName = session?.user?.name ?? null
+  const avatarSrc = session?.user?.image ?? undefined
+  const accentOption = resolveAccentOption(accent)
 
   return (
     <SettingsShell
@@ -88,13 +91,9 @@ export function SettingsPage({
         appearance: t('settings.appearance'),
         language: t('settings.language'),
       }}
-      lede={<Hint panel>{t('settings.hint')}</Hint>}
       account={
         status === 'authenticated' && accountEmail ? (
           <>
-            <Text role="body" className="checkion-settings-help">
-              {t('settings.accountSignedIn')}
-            </Text>
             <dl className="ds-settings-account-dl checkion-settings-account">
               {accountName ? (
                 <>
@@ -110,21 +109,22 @@ export function SettingsPage({
             </Button>
           </>
         ) : status !== 'loading' ? (
-          <>
-            <Text role="body" className="checkion-settings-help">
-              {t('settings.accountSignedOut')}
-            </Text>
-            <p className="checkion-settings-account-link">
-              <Link href={paths.routes.login} className="checkion-link">
-                {t('common.signIn')}
-              </Link>
-            </p>
-          </>
+          <p className="checkion-settings-account-link">
+            <Link href={paths.routes.login} className="checkion-link">
+              {t('common.signIn')}
+            </Link>
+          </p>
         ) : null
       }
       profile={
         <div className="ds-settings-profile-row checkion-settings-profile-row">
-          <Avatar name={draft.trim() || displayName} size="lg" />
+          <Avatar
+            name={draft.trim() || displayName}
+            src={avatarSrc}
+            size="lg"
+            accent={accentOption.preview}
+            accentContrast={accentOption.textColor}
+          />
           <Field label={t('settings.displayName')} size="sm">
             <Input
               value={draft}
@@ -143,20 +143,25 @@ export function SettingsPage({
           </Field>
         </div>
       }
-      appearanceHelp={t('settings.appearanceHelp')}
       appearance={
-        <ToggleGroup
-          className="theme-toggle"
-          aria-label={t('settings.theme')}
-          value={theme}
-          onChange={(next) => setTheme(next as UiThemeId)}
-          options={paths.themeChoices.map((id) => ({
-            value: id,
-            label: themeLabels[id],
-          }))}
-        />
+        <div className="ds-settings-appearance-stack">
+          <ToggleGroup
+            className="theme-toggle"
+            aria-label={t('settings.theme')}
+            value={theme}
+            onChange={(next) => setTheme(next as UiThemeId)}
+            options={paths.themeChoices.map((id) => ({
+              value: id,
+              label: themeLabels[id],
+            }))}
+          />
+          <AccentSwatchGroup
+            value={accent}
+            onChange={setAccent}
+            aria-label={t('settings.appearance')}
+          />
+        </div>
       }
-      languageHelp={t('settings.languageHelp')}
       language={
         <ToggleGroup
           aria-label={t('settings.language')}

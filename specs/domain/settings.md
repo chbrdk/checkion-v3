@@ -1,17 +1,17 @@
 # Settings — CHECKION v3
 
-**Status:** Accepted — Wave 4 / Phase 4 · **SET-L1** · **2026-08-28 SettingsShell + cross-app prefs**  
+**Status:** Accepted — Wave 4 / Phase 4 · **SET-L1** · **2026-08-28 SettingsShell** · **2026-08-29 polish + accent**  
 **Route:** `/settings`  
 **Knowledge:** `knowledge/paths.md`, `knowledge/settings-api-tokens.md`, `knowledge/i18n.md`  
-**Reference:** `@msqdx/ui` `SettingsShell` · Plexon profile `themePreference` / `locale`
+**Reference:** `@msqdx/ui` `SettingsShell` · Plexon `themePreference` / `accentPreference` / `locale`
 
 ## Goal
 
-Shared `SettingsShell` magazine layout: Account, Profile, Appearance (`light`/`dark`/`auto`), Language, plus extras (API tokens, federation). No MUI. No stacked Panel chrome.
+Dense 2-col `SettingsShell`: Account, Profile, Appearance (theme + accent), Language, extras (API tokens, federation). No MUI. No stacked Panel chrome. Minimal help copy.
 
 ## Cross-app prefs
 
-Hydrate/PATCH `locale` + `themePreference` via Plexon service profile when authenticated. Local cache for first paint.
+Hydrate/PATCH `locale` + `themePreference` + `accentPreference` via Plexon service profile when authenticated. Local cache for first paint.
 
 ## Locale (SET-L1)
 
@@ -26,7 +26,7 @@ Default locale is `en`. No URL/`[locale]` routing or next-intl.
 |------|-----------|
 | Account | When authenticated: Plexon name/email (read) + Sign out. When unauthenticated: Sign in → `/login` |
 | Profile | `Avatar` + display name `Input` (localStorage via `paths.displayNameStorageKey`); may seed from session name |
-| Appearance | `light` / `dark` / `auto` → `applyThemePreference` + Plexon |
+| Appearance | Theme + AccentSwatchGroup → Plexon |
 | Language | Locale `ToggleGroup` (`en` / `de`) — SET-L1 + Plexon |
 | API tokens | Personal Bearer CRUD — extras slot |
 | Federation | Contract id, mode, plexon base, health — extras slot |
@@ -46,7 +46,7 @@ Login `/login` — plexon-v3 credentials when `PLEXON_AUTH_URL` + secret set; lo
 
 - Admin prompts / providers hub (AUDION-only)
 - Password change / platform profile PATCH (Plexon control-plane ownership)
-- Brand accent color selector (Plexon-only)
+- Avatar file upload
 - Translating scan/crawl payload (URLs, issue messages from axe, GEO distillate German product copy)
 
 ## Acceptance
