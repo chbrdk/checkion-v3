@@ -7,6 +7,7 @@ import { paths } from '../lib/paths'
 export const metadata: Metadata = {
   title: 'CHECKION v3',
   description: 'Spec-driven quality island on @msqdx/ui',
+  icons: { icon: '/favicon.ico' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
