@@ -173,6 +173,7 @@ export const paths = {
       `/api/projects/${projectId}/domain-scans/active`,
     apiDomainScanOverview: (id: string) => `/api/domain-scans/${id}/overview`,
     apiDomainScanIssues: (id: string) => `/api/domain-scans/${id}/issues`,
+    apiDomainScanPages: (id: string) => `/api/domain-scans/${id}/pages`,
     apiDomainIssuePages: (id: string, issueId: string) =>
       `/api/domain-scans/${id}/issues/${issueId}/pages`,
     apiDomainTrustReading: (id: string) => `/api/domain-scans/${id}/trust-reading`,

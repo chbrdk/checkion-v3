@@ -551,6 +551,42 @@ export interface DomainOverview {
   pageSamples?: DomainPageSample[]
 }
 
+/** Slim corpus page row — GET /api/domain-scans/:id/pages */
+export type DomainCorpusPageScoreKind =
+  | 'accessibility'
+  | 'seo'
+  | 'performance'
+  | 'ux'
+  | 'eco'
+  | 'generative'
+  | 'best_practices'
+
+export interface DomainCorpusPageRow {
+  url: string
+  scanId: string
+  overallScore: number | null
+  errors: number
+  warnings: number
+  scores?: Partial<Record<DomainCorpusPageScoreKind, number>>
+  classification?: PageClassificationSnapshot | null
+  /** CHECKION UI path under /results */
+  resultsPath: string
+}
+
+export type DomainCorpusPagesSort = 'score_asc' | 'score_desc' | 'url_asc' | 'issues_desc'
+
+export interface DomainCorpusPagesResult {
+  domainScanId: string
+  rootUrl: string
+  status: ScanStatus
+  pageCount: number
+  items: DomainCorpusPageRow[]
+  page: number
+  pageSize: number
+  totalPages: number
+  sort: DomainCorpusPagesSort
+}
+
 /** GEO / E-E-A-T job — separate from ScanMode ('single' | 'deep'). */
 export type GeoJobStatus = 'queued' | 'running' | 'completed' | 'failed'
 

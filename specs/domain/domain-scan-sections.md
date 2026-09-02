@@ -36,8 +36,11 @@ Issue affected-page links prefer these rows (URL match). Virtual `dpage__` / `ds
 - **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to corpus page `/results/{scanId}`); no screenshot canvas on the domain issues shell itself
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 
+## Corpus pages API (Wave 1)
+Full slim list beyond `pageSamples` teaser: `specs/api/domain-scan-pages.md` — `GET /api/domain-scans/:id/pages`.
+
 ## Deferred
-Crawl map / graph, remote full slim-pages table (beyond issue-scoped page lists), prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
+Crawl map / graph, prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
 
 ## Live deep-scan wiring
 `adaptDomainResultToContracts` must populate Overview aggregate chapters from the spider corpus (`seoCoverage`, `eeat`, `generative`, plus performance / ux / eco / links / securityPrivacy when page signals exist). Silent omission of SEO/Trust·GEO chapters when aggregates are missing is a bug, not an empty state. Existing thin payloads need a re-run (or backfill) after this lands. Page captures are written during the spider under the stable page-scan id and upserted into `scans` on domain complete.

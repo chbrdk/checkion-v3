@@ -35,10 +35,24 @@ Prefix: `checkion_v3.` (distinct from v2 `checkion.*` if both MCPs are installed
 | Health | `health` |
 | Projects | `projects_list`, `project_get`, `project_create`, `project_update`, `project_delete` |
 | Single / deep scans | `scans_list`, `scan_start`, `scan_get`, `scan_overview`, `scan_issues`, `scan_scores`, `scan_screenshot`, `scan_delete`, `scan_weakest_signal` |
-| Deep scans | `domain_scans_list`, `domain_scan_start`, `domain_scan_get`, `domain_scan_overview`, `domain_scan_issues`, `domain_scan_control`, `domain_scan_seo_reading`, `domain_scan_trust_reading`, `project_active_domain_scans` |
+| Deep scans | `domain_scans_list`, `domain_scan_start`, `domain_scan_get`, `domain_scan_overview`, `domain_scan_issues`, `domain_scan_pages_list`, `domain_scan_control`, `domain_scan_seo_reading`, `domain_scan_trust_reading`, `project_active_domain_scans` |
 | GEO | `geo_jobs_list`, `geo_job_start`, `geo_job_get`, `geo_suggest_queries`, `geo_job_reading`, `geo_job_publish_knowledge` |
 | Share | `share_create`, `share_get` |
 | Research | `fetch_page` |
+
+## Tool: `checkion_v3.domain_scan_pages_list`
+
+**API:** `GET /api/domain-scans/:domainScanId/pages` (`specs/api/domain-scan-pages.md`)
+
+| Arg | Type | Required |
+|-----|------|----------|
+| `domain_scan_id` | string | yes |
+| `page` | number | no (default 1) |
+| `page_size` | number | no (default 25, max 100) |
+| `sort` | enum | no |
+| `q` | string | no |
+
+Returns `DomainCorpusPagesResult` for Plexon persona→page relevance and future AUDION site-topics v3 port.
 
 ## Non-goals (deferred)
 

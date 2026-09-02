@@ -68,6 +68,11 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
   - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
 - Spec: `specs/domain/scan-modes.md`
 
+## Domain scan corpus pages (Wave 1)
+- API: `GET /api/domain-scans/:id/pages` — `paths.routes.apiDomainScanPages(id)` · spec `specs/api/domain-scan-pages.md`
+- Service: `apps/web/lib/domain-corpus-pages.ts` · MCP `checkion_v3.domain_scan_pages_list`
+- Response header `X-Checkion-Corpus-Mode`: `corpus` | `samples-only` (legacy jobs without persisted page rows)
+
 ## GEO routes
 - Launch: `/scan?mode=geo` (canonical create entry; index `/geo` catalogs finished jobs)
 - Magazine: `/geo/:id/overview` · `/queries` (Placement nav deferred; legacy `/placement` redirects to Queries)

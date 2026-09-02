@@ -45,6 +45,7 @@ export const CHECKION_V3_TOOL_NAMES = [
   'checkion_v3.domain_scan_get',
   'checkion_v3.domain_scan_overview',
   'checkion_v3.domain_scan_issues',
+  'checkion_v3.domain_scan_pages_list',
   'checkion_v3.domain_scan_control',
   'checkion_v3.domain_scan_seo_reading',
   'checkion_v3.domain_scan_trust_reading',
@@ -377,6 +378,40 @@ export function registerCheckionV3Tools(server: ToolServer) {
     async (args) => {
       const { id } = args as { id: string }
       return textResult(`/api/domain-scans/${encodeURIComponent(id)}/issues`)
+    },
+  )
+
+  server.registerTool(
+    'checkion_v3.domain_scan_pages_list',
+    {
+      title: 'Domain corpus pages',
+      description:
+        'GET /api/domain-scans/:id/pages — slim paginated list of crawled pages with scores and issue counts.',
+      inputSchema: z.object({
+        id: z.string(),
+        page: z.number().int().min(1).optional(),
+        pageSize: z.number().int().min(1).max(100).optional(),
+        sort: z.enum(['score_asc', 'score_desc', 'url_asc', 'issues_desc']).optional(),
+        q: z.string().optional(),
+      }),
+    },
+    async (args) => {
+      const { id, page, pageSize, sort, q } = args as {
+        id: string
+        page?: number
+        pageSize?: number
+        sort?: string
+        q?: string
+      }
+      const params = new URLSearchParams()
+      if (page != null) params.set('page', String(page))
+      if (pageSize != null) params.set('pageSize', String(pageSize))
+      if (sort) params.set('sort', sort)
+      if (q) params.set('q', q)
+      const qs = params.toString()
+      return textResult(
+        `/api/domain-scans/${encodeURIComponent(id)}/pages${qs ? `?${qs}` : ''}`,
+      )
     },
   )
 
