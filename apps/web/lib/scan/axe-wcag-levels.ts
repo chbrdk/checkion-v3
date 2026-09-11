@@ -53,6 +53,7 @@ export const AXE_RULE_WCAG_LEVEL: Record<string, WcagLevel> = {
     'marquee': 'A',
     'meta-refresh': 'A',
     'nested-interactive': 'A',
+    'no-autoplay-audio': 'A',
     'object-alt': 'A',
     'role-img-alt': 'A',
     'scrollable-region-focusable': 'A',

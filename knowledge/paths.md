@@ -57,6 +57,11 @@ API tokens (MCP/CLI): Settings → API tokens · `specs/domain/settings-api-toke
 ## Federation
 Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dummy` for fixture-only local / Staging Shell.
 
+## WCAG detectors (axe / pa11y)
+- Version pins + upgrade notes: `knowledge/wcag-detector-versions.md`
+- Axe rule docs: `paths.remediationAxeRulesBase` = `https://dequeuniversity.com/rules/axe/4.13`
+- WCAG quickref: `paths.remediationWcagQuickref` = `https://www.w3.org/WAI/WCAG21/quickref/`
+
 ## Central launch (`/scan`)
 - Route: `/scan` (`paths.routes.scan`) — capability-first magazine form (`ScanLaunchForm`): **SEO · GEO · WCAG**
 - Primary tiles: SEO · GEO · WCAG; WCAG reveals secondary **Quick single** · **Deep scan** (`ToggleGroup`)

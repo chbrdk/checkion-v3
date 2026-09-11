@@ -5,6 +5,7 @@ import type {
   ScanSummary,
   ScoreCard,
 } from '@checkion-v3/contracts'
+import { paths } from '@/lib/paths'
 import { ISSUE_FIXTURES, SCORE_FIXTURES, SCAN_FIXTURES } from './projects'
 import {
   LIVE_OVERVIEW_ENRICHMENT,
@@ -231,7 +232,7 @@ export function enrichIssueInspect(issues: IssueSummary[]): IssueSummary[] {
       wcagLevel: issue.wcagLevel ?? (issue.severity === 'critical' || issue.severity === 'serious' ? 'AA' : 'A'),
       helpUrl:
         issue.helpUrl ??
-        `https://dequeuniversity.com/rules/axe/4.8/${issue.ruleId}`,
+        `${paths.remediationAxeRulesBase}/${issue.ruleId}`,
       context:
         issue.context ??
         `<${issue.section === 'seo' ? 'meta' : 'button'} data-rule="${issue.ruleId}">…</${

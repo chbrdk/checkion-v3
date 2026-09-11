@@ -86,6 +86,13 @@ export const paths = {
   openaiWebSearchTool: 'web_search',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
   envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
+  /**
+   * Deque University axe rule docs base (must match installed axe-core major.minor).
+   * See knowledge/wcag-detector-versions.md.
+   */
+  remediationAxeRulesBase: 'https://dequeuniversity.com/rules/axe/4.13',
+  /** W3C WCAG 2.1 Quick Reference (htmlcs / criterion docs). */
+  remediationWcagQuickref: 'https://www.w3.org/WAI/WCAG21/quickref/',
   routes: {
     apiGeoJobs: '/api/geo-jobs',
     apiGeoJobDetail: (id: string) => `/api/geo-jobs/${id}`,

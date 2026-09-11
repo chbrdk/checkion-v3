@@ -3,12 +3,13 @@
  * Used for "Fix anzeigen" links in issue lists.
  */
 
+import { paths } from '@/lib/paths'
 import type { Runner } from './types';
 
-/** Deque University – axe-core rule documentation */
-export const REMEDIATION_AXE_BASE = 'https://dequeuniversity.com/rules/axe/4.10';
+/** Deque University – axe-core rule documentation (`paths.remediationAxeRulesBase`). */
+export const REMEDIATION_AXE_BASE = paths.remediationAxeRulesBase;
 /** W3C WCAG 2.1 Quick Reference */
-export const REMEDIATION_WCAG_QUICKREF = 'https://www.w3.org/WAI/WCAG21/quickref/';
+export const REMEDIATION_WCAG_QUICKREF = paths.remediationWcagQuickref;
 
 /**
  * Get documentation URL for an issue.
