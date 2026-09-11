@@ -27,6 +27,7 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
+    unzip \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -140,8 +141,10 @@ ENV SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
 EXPOSE 3007
 
 # Puppeteer OS libraries (same set as builder base) for live scans.
+# Puppeteer 25+ extracts Chrome via system `unzip` (not extract-zip).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    unzip \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \

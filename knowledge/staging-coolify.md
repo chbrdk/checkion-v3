@@ -65,6 +65,7 @@ Live GEO stage1 / accessibility scans launch Puppeteer in-process. The multi-sta
 1. **OS libs** on builder base + runner (`libnss3`, `libgbm1`, fonts, …) so headless Chrome can start.
 2. **Chrome install in the runner:** `npx puppeteer browsers install chrome` into `PUPPETEER_CACHE_DIR=/opt/puppeteer` (cache is outside `node_modules`; a fresh `FROM` never inherits the builder’s `/root/.cache/puppeteer`).
 3. Builder sets `PUPPETEER_SKIP_DOWNLOAD=true` so `npm ci` stays light; runner sets `PUPPETEER_SKIP_DOWNLOAD=false` and installs Chrome explicitly.
+4. **Puppeteer 25+** needs OS `unzip` in the slim image (Chrome zip extract). Dockerfile installs it on base + runner — without it, `browsers install chrome` fails with “no zip archiver is available”.
 
 **Coolify:** redeploy after this Dockerfile lands — no extra browser env vars required. Do **not** set `PUPPETEER_SKIP_DOWNLOAD=true` as a Coolify build/runtime env (it can block the runner install layer if injected at build). Optional override: `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium` only if you switch the image to system Chromium instead of the bundled install. Live scans need enough RAM for headless Chrome (~512MB+ spare). Local fixture mode is unchanged (`CHECKION_LIVE_SCANS=0` / no `DATABASE_URL`).
 

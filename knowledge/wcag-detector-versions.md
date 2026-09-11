@@ -23,7 +23,8 @@ Checked **2026-09-11**. Scanner stack: Pa11y + direct `axe-core` injection for p
 1. Bump `axe-core`, then set `paths.remediationAxeRulesBase` to the matching Deque `major.minor`.
 2. Prefer upgrading `pa11y` in the same change so nested axe stays aligned (avoids dual axe versions for issues vs passes).
 3. Pa11y 10+ needs even Node **22.13+** (Docker: `node:22-bookworm-slim` is fine).
-4. Re-run `apps/web/__tests__/remediation-urls.test.ts` and a live WCAG smoke scan after bumps.
+4. Puppeteer 25+ needs OS **`unzip`** in the Docker runner (see root `Dockerfile`) or Chrome install fails.
+5. Re-run `apps/web/__tests__/remediation-urls.test.ts` and a live WCAG smoke scan after bumps.
 
 ## History
 
