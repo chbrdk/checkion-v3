@@ -8,6 +8,7 @@ import { getProject } from './fixtures/project-store'
 import { hostFromUrl } from './geo-query-suggest'
 import {
   fetchCollectionKnowledgePack,
+  markKnowledgeFacetFreshness,
   publishCompetitiveMergeToPack,
   publishGeoContextToPack,
 } from './plexon-knowledge-pack'
@@ -111,14 +112,21 @@ export async function publishGeoJobKnowledge(opts: {
 
   const pack = await fetchCollectionKnowledgePack(platformProjectId)
   if (!pack) {
-    return soft
-      ? { ok: false, status: 502, error: 'pack_unavailable', skipped: true }
-      : {
-          ok: false,
-          status: 502,
-          error: 'pack_unavailable',
-          detail: 'Could not load Collection knowledge pack',
-        }
+    if (soft) {
+      void markKnowledgeFacetFreshness({
+        platformProjectId,
+        facetId: 'geo_context',
+        freshness: 'publish_failed',
+        note: 'checkion soft-skip:pack_unavailable',
+      })
+      return { ok: false, status: 502, error: 'pack_unavailable', skipped: true }
+    }
+    return {
+      ok: false,
+      status: 502,
+      error: 'pack_unavailable',
+      detail: 'Could not load Collection knowledge pack',
+    }
   }
 
   const distilled = distillFromOverview(overview)
@@ -133,6 +141,14 @@ export async function publishGeoJobKnowledge(opts: {
     notes: distilled.notes,
   })
   if (!geoPub.ok) {
+    if (soft) {
+      void markKnowledgeFacetFreshness({
+        platformProjectId,
+        facetId: 'geo_context',
+        freshness: 'publish_failed',
+        note: `checkion soft-skip:publish_geo_failed:${geoPub.error}`,
+      })
+    }
     return {
       ok: false,
       status: geoPub.status >= 400 ? geoPub.status : 502,
@@ -149,6 +165,14 @@ export async function publishGeoJobKnowledge(opts: {
     hosts: distilled.knownCompetitors,
   })
   if (!competitivePub.ok) {
+    if (soft) {
+      void markKnowledgeFacetFreshness({
+        platformProjectId,
+        facetId: 'competitive',
+        freshness: 'publish_failed',
+        note: `checkion soft-skip:publish_competitive_failed:${competitivePub.error}`,
+      })
+    }
     return {
       ok: false,
       status: competitivePub.status >= 400 ? competitivePub.status : 502,

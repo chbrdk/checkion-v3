@@ -63,6 +63,38 @@ function facetPublishPath(platformProjectId: string, facetId: string): string {
   return `${knowledgePath(platformProjectId)}/facets/${encodeURIComponent(facetId)}/publish`
 }
 
+function facetFreshnessPath(platformProjectId: string, facetId: string): string {
+  return `${knowledgePath(platformProjectId)}/facets/${encodeURIComponent(facetId)}/freshness`
+}
+
+/** Soft-skip visibility — mark facet without changing distillate body. */
+export async function markKnowledgeFacetFreshness(opts: {
+  platformProjectId: string
+  facetId: 'research_brief' | 'geo_context' | 'competitive' | 'brand' | 'profile'
+  freshness: 'publish_pending' | 'publish_failed' | 'stale' | 'fresh'
+  note?: string
+}): Promise<boolean> {
+  const id = opts.platformProjectId.trim()
+  if (!id || getFederationMode() !== 'live' || !isPlexonFederationConfigured()) return false
+  const secret = getPlexonServiceSecret()
+  try {
+    const res = await fetch(facetFreshnessPath(id, opts.facetId), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getPlexonContractHeaders(secret),
+      },
+      body: JSON.stringify({
+        freshness: opts.freshness,
+        note: opts.note ?? `checkion soft-skip:${opts.freshness}`,
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((v): v is string => typeof v === 'string').map((s) => s.trim()).filter(Boolean)
