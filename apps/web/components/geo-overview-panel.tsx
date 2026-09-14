@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Hint, StatusMeterPanel } from '@msqdx/ui'
+import { Hint, LabTile, StatusMeterPanel } from '@msqdx/ui'
 import type { GeoOverview } from '@checkion-v3/contracts'
 import {
   geoOverviewReadyForMagazine,
@@ -11,6 +11,7 @@ import {
 import { geoJobMeasurement, geoMeasurementLabel, geoMeasurementLayerKicker } from '../lib/geo/measurement'
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
+import { toLabTileTone } from '../lib/lab-tile-tone'
 import { buildGeoReadingFallback } from '../lib/geo-readings'
 import { GeoPublishKnowledgeCta } from './geo-publish-knowledge-cta'
 import { GeoReading } from './geo-reading'
@@ -155,38 +156,30 @@ export function GeoOverviewPanel({
           <p className="checkion-spread__prose">{overview.lede}</p>
         </div>
         <aside className="checkion-geo-snapshot" aria-label="GEO snapshot">
-          <div className="checkion-lab-tile">
-            <span className="checkion-lab-tile__k">
+          <LabTile
+            label={
               <LabelWithTip tipId={measurement === 'live' ? 'launch.geo.live' : 'launch.geo.recall'}>
                 Measurement
               </LabelWithTip>
-            </span>
-            <span className="checkion-lab-tile__v">{measurementDisplay}</span>
-          </div>
-          <div className="checkion-lab-tile" data-tone={tone}>
-            <span className="checkion-lab-tile__k">
-              <LabelWithTip tipId="geo.cited_share">Cited share</LabelWithTip>
-            </span>
-            <span className="checkion-lab-tile__v">{job.citedShare}%</span>
-          </div>
+            }
+            value={measurementDisplay}
+          />
+          <LabTile
+            label={<LabelWithTip tipId="geo.cited_share">Cited share</LabelWithTip>}
+            value={`${job.citedShare}%`}
+            tone={toLabTileTone(tone)}
+          />
           {measurement === 'live' && presence.solo.mentionedShare != null ? (
-            <div className="checkion-lab-tile">
-              <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="geo.mentioned_share">Mentioned in answer</LabelWithTip>
-              </span>
-              <span className="checkion-lab-tile__v">{presence.solo.mentionedShare}%</span>
-            </div>
+            <LabTile
+              label={<LabelWithTip tipId="geo.mentioned_share">Mentioned in answer</LabelWithTip>}
+              value={`${presence.solo.mentionedShare}%`}
+            />
           ) : null}
-          <div className="checkion-lab-tile">
-            <span className="checkion-lab-tile__k">Queries</span>
-            <span className="checkion-lab-tile__v">{job.queryCount}</span>
-          </div>
-          <div className="checkion-lab-tile">
-            <span className="checkion-lab-tile__k">Avg position</span>
-            <span className="checkion-lab-tile__v">
-              {avgPos != null ? `#${avgPos.toFixed(1)}` : '—'}
-            </span>
-          </div>
+          <LabTile label="Queries" value={job.queryCount} />
+          <LabTile
+            label="Avg position"
+            value={avgPos != null ? `#${avgPos.toFixed(1)}` : '—'}
+          />
         </aside>
       </section>
 

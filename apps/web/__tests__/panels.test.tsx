@@ -12,6 +12,7 @@ import { ResultOverviewPanel } from '../components/result-panels'
 import { getDomainOverview, getScanIssues, getScanOverview } from '../lib/fixtures/scan-store'
 import type { ProjectSummary } from '@checkion-v3/contracts'
 import { scoreTone, worstScore } from '../lib/scan-display'
+import { UserPrefsProvider } from '../lib/user-prefs'
 
 vi.mock('../lib/fixtures/project-store', () => ({
   getProject: async () => ({ id: 'proj-demo-1', name: 'Demo Project' }),
@@ -180,7 +181,16 @@ describe('panels smoke', () => {
   it('renders domain corpus magazine (distinct from single)', async () => {
     const overview = await getDomainOverview('domain-1')
     expect(overview).toBeTruthy()
-    render(await DomainMagazineShell({ overview: overview!, children: (<><DomainOverviewPanel overview={overview!} /></>) }))
+    render(
+      await DomainMagazineShell({
+        overview: overview!,
+        children: (
+          <UserPrefsProvider>
+            <DomainOverviewPanel overview={overview!} />
+          </UserPrefsProvider>
+        ),
+      }),
+    )
     expect(screen.getByText('durr.com')).toBeTruthy()
     expect(screen.getByText(/pages scanned/i)).toBeTruthy()
     expect(screen.getByLabelText(/Domain score 43/i)).toBeTruthy()

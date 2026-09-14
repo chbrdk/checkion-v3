@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 import {
   Chip,
   Hint,
+  LabTile,
+  LabTileStrip,
   RankedList,
   RankedRow,
   StatusMeterPanel,
@@ -385,46 +387,43 @@ export function DomainOverviewPanel({
             {notesTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="notes">
                 <p className="checkion-metrics-spread__kicker">{t('domain.alsoNoted')}</p>
-                <div
-                  className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
-                  style={{ ['--notes-cols' as string]: String(Math.min(notesTileCount, 3)) }}
+                <LabTileStrip
+                  columns={Math.min(notesTileCount, 3)}
+                  className="checkion-metrics-spread__tiles"
                 >
                   {notesTiles.map((tile) => (
-                    <div key={tile.key} className="checkion-lab-tile" data-tone={tile.tone}>
-                      <strong className="checkion-lab-tile__v">
-                        {tile.value}
-                        {tile.unit ? <span className="checkion-lab-tile__unit">{tile.unit}</span> : null}
-                      </strong>
-                      <span className="checkion-lab-tile__k">{tile.label}</span>
-                      <span className="checkion-lab-tile__m">{tile.meta}</span>
-                    </div>
+                    <LabTile
+                      key={tile.key}
+                      label={tile.label}
+                      value={tile.value}
+                      unit={tile.unit}
+                      meta={tile.meta}
+                      tone={tile.tone}
+                    />
                   ))}
-                </div>
+                </LabTileStrip>
               </div>
             ) : null}
 
             {vitalsTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="vitals">
                 <p className="checkion-metrics-spread__kicker">{t('domain.avgLabTimings')}</p>
-                <div
-                  className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
-                  style={{ ['--notes-cols' as string]: String(Math.min(vitalsTileCount, 3)) }}
+                <LabTileStrip
+                  columns={Math.min(vitalsTileCount, 3)}
+                  className="checkion-metrics-spread__tiles"
                 >
                   {vitalTiles.map((tile) =>
                     tile ? (
-                      <div key={tile.key} className="checkion-lab-tile">
-                        <strong className="checkion-lab-tile__v">
-                          {tile.value}
-                          {tile.unit ? (
-                            <span className="checkion-lab-tile__unit">{tile.unit}</span>
-                          ) : null}
-                        </strong>
-                        <span className="checkion-lab-tile__k">{tile.key}</span>
-                        <span className="checkion-lab-tile__m">{tile.meta}</span>
-                      </div>
+                      <LabTile
+                        key={tile.key}
+                        label={tile.key}
+                        value={tile.value}
+                        unit={tile.unit}
+                        meta={tile.meta}
+                      />
                     ) : null,
                   )}
-                </div>
+                </LabTileStrip>
               </div>
             ) : null}
           </div>

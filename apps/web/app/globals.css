@@ -1823,7 +1823,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   margin-top: 0.25rem;
 }
 
-.checkion-lab-tile {
+.ds-lab-tile {
   display: grid;
   gap: 0.35rem;
   padding: 1rem 1.05rem 1.15rem;
@@ -1833,7 +1833,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   background: color-mix(in oklab, var(--surface-2, var(--surface, #151515)) 92%, transparent);
 }
 
-.checkion-lab-tile__k {
+.ds-lab-tile__k {
   font-size: var(--type-xs);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1859,7 +1859,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   letter-spacing: 0.01em;
 }
 
-.checkion-lab-tile__v {
+.ds-lab-tile__v {
   font-family: var(--font-display, var(--font-body));
   font-size: clamp(1.75rem, 3vw, 2.35rem);
   font-weight: var(--weight-light, 300);
@@ -1869,34 +1869,34 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   color: var(--ink, var(--fg));
 }
 
-.checkion-lab-tile[data-tone='pos'] .checkion-lab-tile__v {
+.ds-lab-tile[data-tone='pos'] .ds-lab-tile__v {
   text-decoration: underline;
   text-decoration-color: var(--ok, #7dcea0);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.18em;
 }
 
-.checkion-lab-tile[data-tone='low'] .checkion-lab-tile__v {
+.ds-lab-tile[data-tone='low'] .ds-lab-tile__v {
   text-decoration: underline;
   text-decoration-color: var(--warn, #c9a227);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.18em;
 }
 
-.checkion-lab-tile[data-tone='neg'] .checkion-lab-tile__v {
+.ds-lab-tile[data-tone='neg'] .ds-lab-tile__v {
   text-decoration: underline;
   text-decoration-color: var(--danger, #d46a6a);
   text-decoration-thickness: 2px;
   text-underline-offset: 0.18em;
 }
 
-.checkion-lab-tile__m {
+.ds-lab-tile__m {
   font-size: var(--type-xs);
   color: var(--muted);
   line-height: 1.35;
 }
 
-.checkion-lab-tile__unit {
+.ds-lab-tile__unit {
   margin-left: 0.05em;
   font-size: 0.45em;
   letter-spacing: 0.02em;
@@ -1913,7 +1913,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   padding-block: 0;
 }
 
-.checkion-spread__lab--notes .checkion-lab-tile {
+.checkion-spread__lab--notes .ds-lab-tile {
   grid-template-areas:
     'value'
     'key'
@@ -1922,22 +1922,22 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   padding: 1rem 1.05rem 1.15rem;
 }
 
-.checkion-spread__lab--notes .checkion-lab-tile__v {
+.checkion-spread__lab--notes .ds-lab-tile__v {
   grid-area: value;
   font-size: clamp(1.75rem, 3vw, 2.35rem);
 }
 
-.checkion-spread__lab--notes .checkion-lab-tile__k {
+.checkion-spread__lab--notes .ds-lab-tile__k {
   grid-area: key;
   color: var(--muted);
   letter-spacing: 0.1em;
 }
 
-.checkion-spread__lab--notes .checkion-lab-tile__m {
+.checkion-spread__lab--notes .ds-lab-tile__m {
   grid-area: meta;
 }
 
-.checkion-spread__lab--notes .checkion-lab-tile[data-active='true'] {
+.checkion-spread__lab--notes .ds-lab-tile[data-active='true'] {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
@@ -2015,23 +2015,12 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   display: contents;
 }
 
-.checkion-metrics-spread__tiles .checkion-lab-tile {
-  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
-  border-right: 1px solid var(--line);
+.checkion-metrics-spread__tiles .ds-lab-tile {
   min-height: 100%;
   align-content: start;
 }
 
-.checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 3) {
-  border-top: 0;
-}
-
-.checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(3n),
-.checkion-metrics-spread__tiles .checkion-lab-tile:last-child {
-  border-right: 0;
-}
-
-.checkion-metrics-spread__tiles .checkion-lab-tile__m {
+.checkion-metrics-spread__tiles .ds-lab-tile__m {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -4184,14 +4173,6 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
     align-items: start;
   }
 
-  .checkion-lab-tile:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .checkion-lab-tile:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--line);
-  }
-
   .checkion-spread__callout {
     position: static;
   }
@@ -4206,23 +4187,6 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 3) {
-    border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
-  }
-
-  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(-n + 2) {
-    border-top: 0;
-  }
-
-  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(3n) {
-    border-right: 1px solid var(--line);
-  }
-
-  .checkion-metrics-spread__tiles .checkion-lab-tile:nth-child(2n),
-  .checkion-metrics-spread__tiles .checkion-lab-tile:last-child {
-    border-right: 0;
-  }
-
   .checkion-spread__lab {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4232,12 +4196,12 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
     row-gap: 0.15rem;
   }
 
-  .checkion-lab-tile {
+  .ds-lab-tile {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
-  .checkion-lab-tile:last-child {
+  .ds-lab-tile:last-child {
     border-bottom: 0;
   }
 
@@ -5660,22 +5624,13 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 
 .checkion-geo-snapshot {
   display: grid;
-  gap: 0;
+  gap: 0.75rem;
   border-left: 1px solid var(--line);
   align-self: stretch;
+  padding-left: 0.85rem;
 }
 
-.checkion-geo-snapshot .checkion-lab-tile {
-  border-right: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
-  padding-inline: 1rem 0.25rem;
-}
-
-.checkion-geo-snapshot .checkion-lab-tile:last-child {
-  border-bottom: 0;
-}
-
-.checkion-lab-tile__v--text {
+.ds-lab-tile__v--text {
   font-size: clamp(0.95rem, 1.4vw, 1.15rem);
   font-weight: var(--weight-regular, 400);
   letter-spacing: -0.01em;
@@ -6397,16 +6352,6 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
     border-right: 0;
     border-top: 1px solid var(--line);
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .checkion-geo-snapshot .checkion-lab-tile {
-    border-bottom: 0;
-    border-right: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
-    padding-inline: 0.75rem;
-  }
-
-  .checkion-geo-snapshot .checkion-lab-tile:last-child {
-    border-right: 0;
   }
 
   .checkion-geo-spread-layout .checkion-spread__open[data-layout='aside-first'] > .checkion-spread__callout {

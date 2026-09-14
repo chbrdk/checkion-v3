@@ -4,6 +4,8 @@ import Link from 'next/link'
 import {
   Chip,
   EmptyState,
+  LabTile,
+  LabTileStrip,
   RankedList,
   RankedRow,
   StatusMeterPanel,
@@ -18,6 +20,7 @@ import type {
 } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
 import { scoreTone, severityRank } from '../lib/scan-display'
+import { toLabTileTone } from '../lib/lab-tile-tone'
 import { IssuesWorkspace } from './issues-workspace'
 import { LabelWithTip } from './help-tip'
 import { ScoresPanel } from './scores-panel'
@@ -160,91 +163,74 @@ export function ResultOverviewPanel({
             {notesTileCount > 0 ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="notes">
                 <p className="checkion-metrics-spread__kicker">{t('results.alsoNoted')}</p>
-                <div
-                  className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
-                  style={{ ['--notes-cols' as string]: String(Math.min(notesTileCount, 3)) }}
+                <LabTileStrip
+                  columns={Math.min(notesTileCount, 3)}
+                  className="checkion-metrics-spread__tiles"
                 >
                   {overview.freshness ? (
-                    <div className="checkion-lab-tile">
-                      <strong className="checkion-lab-tile__v">
-                        {overview.freshness.ageDays ?? '—'}
-                        <span className="checkion-lab-tile__unit">d</span>
-                      </strong>
-                      <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.freshness">{t('results.freshness')}</LabelWithTip>
-                      </span>
-                      <span className="checkion-lab-tile__m">
-                        {t('results.confidenceMeta', { confidence: overview.freshness.confidence })}
-                        {overview.freshness.source
-                          ? ` · ${overview.freshness.source.replace(/_/g, ' ')}`
-                          : ''}
-                      </span>
-                    </div>
+                    <LabTile
+                      label={<LabelWithTip tipId="lab.freshness">{t('results.freshness')}</LabelWithTip>}
+                      value={overview.freshness.ageDays ?? '—'}
+                      unit="d"
+                      meta={
+                        <>
+                          {t('results.confidenceMeta', { confidence: overview.freshness.confidence })}
+                          {overview.freshness.source
+                            ? ` · ${overview.freshness.source.replace(/_/g, ' ')}`
+                            : ''}
+                        </>
+                      }
+                    />
                   ) : null}
                   {shield ? (
-                    <div
-                      className="checkion-lab-tile"
-                      data-tone={
+                    <LabTile
+                      label={<LabelWithTip tipId="lab.shield">{t('results.shield')}</LabelWithTip>}
+                      value={shield.ok}
+                      unit={`/${shield.total}`}
+                      tone={
                         shield.gaps.length === 0
                           ? 'pos'
                           : shield.gaps.length === 1
                             ? 'low'
                             : 'neg'
                       }
-                    >
-                      <strong className="checkion-lab-tile__v">
-                        {shield.ok}
-                        <span className="checkion-lab-tile__unit">/{shield.total}</span>
-                      </strong>
-                      <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.shield">{t('results.shield')}</LabelWithTip>
-                      </span>
-                      <span className="checkion-lab-tile__m">
-                        {shield.gaps.length === 0
+                      meta={
+                        shield.gaps.length === 0
                           ? t('results.allClear')
-                          : t('results.missingGaps', { gaps: shield.gaps.join(' · ') })}
-                      </span>
-                    </div>
+                          : t('results.missingGaps', { gaps: shield.gaps.join(' · ') })
+                      }
+                    />
                   ) : null}
                   {clearedCount != null ? (
-                    <div className="checkion-lab-tile" data-tone="pos">
-                      <strong className="checkion-lab-tile__v">{clearedCount}</strong>
-                      <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="lab.cleared">{t('results.cleared')}</LabelWithTip>
-                      </span>
-                      <span className="checkion-lab-tile__m">
-                        {overview.passedChecks?.[0]?.description ?? t('results.checksClean')}
-                      </span>
-                    </div>
+                    <LabTile
+                      label={<LabelWithTip tipId="lab.cleared">{t('results.cleared')}</LabelWithTip>}
+                      value={clearedCount}
+                      tone="pos"
+                      meta={overview.passedChecks?.[0]?.description ?? t('results.checksClean')}
+                    />
                   ) : null}
                   {overview.deviceSiblings?.map((sib) => (
-                    <div
+                    <LabTile
                       key={sib.id}
-                      className="checkion-lab-tile"
-                      data-tone={scoreTone(sib.overallScore)}
-                      data-active={sib.id === overview.scan.id ? 'true' : undefined}
-                    >
-                      <strong className="checkion-lab-tile__v">{sib.overallScore ?? '—'}</strong>
-                      <span className="checkion-lab-tile__k">{sib.device}</span>
-                      <span className="checkion-lab-tile__m">
-                        {sib.id === overview.scan.id ? t('results.thisScan') : t('results.siblingDevice')}
-                      </span>
-                    </div>
+                      label={sib.device}
+                      value={sib.overallScore ?? '—'}
+                      tone={toLabTileTone(scoreTone(sib.overallScore))}
+                      active={sib.id === overview.scan.id}
+                      meta={
+                        sib.id === overview.scan.id ? t('results.thisScan') : t('results.siblingDevice')
+                      }
+                    />
                   ))}
-                </div>
+                </LabTileStrip>
               </div>
             ) : null}
 
             {perf ? (
               <div className="checkion-metrics-spread__chapter" data-chapter="vitals">
                 <p className="checkion-metrics-spread__kicker">{t('results.whatSlows')}</p>
-                <div
-                  className="checkion-spread__lab checkion-spread__lab--notes checkion-metrics-spread__tiles"
-                  style={{
-                    ['--notes-cols' as string]: String(
-                      Math.min(perf.scriptTransferKb != null ? 6 : 5, 3),
-                    ),
-                  }}
+                <LabTileStrip
+                  columns={Math.min(perf.scriptTransferKb != null ? 6 : 5, 3)}
+                  className="checkion-metrics-spread__tiles"
                 >
                   {(
                     [
@@ -287,40 +273,32 @@ export function ResultOverviewPanel({
                   ).map((vital) => {
                     const parts = msParts(vital.value)
                     return (
-                      <div key={vital.key} className="checkion-lab-tile" data-tone={vital.tone}>
-                        <strong className="checkion-lab-tile__v">
-                          {parts.n}
-                          <span className="checkion-lab-tile__unit">{parts.unit}</span>
-                        </strong>
-                        <span className="checkion-lab-tile__k">
-                          <LabelWithTip tipId={vital.tipId}>{vital.key}</LabelWithTip>
-                        </span>
-                        <span className="checkion-lab-tile__m">{vital.meta}</span>
-                      </div>
+                      <LabTile
+                        key={vital.key}
+                        label={<LabelWithTip tipId={vital.tipId}>{vital.key}</LabelWithTip>}
+                        value={parts.n}
+                        unit={parts.unit}
+                        meta={vital.meta}
+                        tone={vital.tone}
+                      />
                     )
                   })}
                   {perf.scriptTransferKb != null ? (
-                    <div
-                      className="checkion-lab-tile"
-                      data-tone={
+                    <LabTile
+                      label={<LabelWithTip tipId="vital.scripts">{t('results.scripts')}</LabelWithTip>}
+                      value={perf.scriptTransferKb}
+                      unit="kb"
+                      tone={
                         perf.scriptTransferKb < 300
                           ? 'pos'
                           : perf.scriptTransferKb < 500
                             ? 'low'
                             : 'neg'
                       }
-                    >
-                      <strong className="checkion-lab-tile__v">
-                        {perf.scriptTransferKb}
-                        <span className="checkion-lab-tile__unit">kb</span>
-                      </strong>
-                      <span className="checkion-lab-tile__k">
-                        <LabelWithTip tipId="vital.scripts">{t('results.scripts')}</LabelWithTip>
-                      </span>
-                      <span className="checkion-lab-tile__m">{t('results.transferWeight')}</span>
-                    </div>
+                      meta={t('results.transferWeight')}
+                    />
                   ) : null}
-                </div>
+                </LabTileStrip>
               </div>
             ) : null}
           </div>
@@ -524,60 +502,57 @@ export function ResultOverviewPanel({
 
       {/* Lab strip — UX / Eco / Links teasers (GEO has its own chapter) */}
       {(ux || eco || links) && (
-        <section className="checkion-spread__lab" aria-label={t('results.labAria')}>
-          {ux ? (
-            <div className="checkion-lab-tile" data-tone={scoreTone(ux.score)}>
-              <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.ux">{t('results.uxLab')}</LabelWithTip>
-              </span>
-              <strong className="checkion-lab-tile__v">{ux.score}</strong>
-              <span className="checkion-lab-tile__m">
-                {[
+        <section aria-label={t('results.labAria')}>
+          <LabTileStrip columns={3} className="checkion-spread__lab">
+            {ux ? (
+              <LabTile
+                label={<LabelWithTip tipId="lab.ux">{t('results.uxLab')}</LabelWithTip>}
+                value={ux.score}
+                tone={toLabTileTone(scoreTone(ux.score))}
+                meta={[
                   `CLS ${ux.cls}`,
                   ux.mobileFriendly ? t('results.mobile') : t('results.notMobile'),
                   t('results.tapsMeta', { n: ux.tapTargetIssueCount }),
                 ].join(' · ')}
-              </span>
-            </div>
-          ) : null}
-          {eco ? (
-            <div
-              className="checkion-lab-tile"
-              data-tone={
-                eco.grade === 'A+' || eco.grade === 'A' ? 'pos' : eco.grade === 'B' ? 'low' : 'neg'
-              }
-            >
-              <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.eco">{t('results.ecoGrade', { grade: eco.grade })}</LabelWithTip>
-              </span>
-              <strong className="checkion-lab-tile__v">{eco.co2.toFixed(2)}g</strong>
-              <span className="checkion-lab-tile__m">
-                {eco.pageWeightKb} KB
-                {eco.greenWebHosted === true
-                  ? t('results.greenHost')
-                  : eco.greenWebHosted === false
-                    ? t('results.notGreen')
-                    : ''}
-              </span>
-            </div>
-          ) : null}
-          {links ? (
-            <div
-              className="checkion-lab-tile"
-              data-tone={links.broken > 0 || links.missingNoopener > 0 ? 'neg' : 'pos'}
-            >
-              <span className="checkion-lab-tile__k">
-                <LabelWithTip tipId="lab.links">{t('results.links')}</LabelWithTip>
-              </span>
-              <strong className="checkion-lab-tile__v">{links.broken}</strong>
-              <span className="checkion-lab-tile__m">
-                {t('results.linksMeta', { internal: links.internal, external: links.external })}
-                {links.missingNoopener > 0
-                  ? t('results.noopenerMeta', { n: links.missingNoopener })
-                  : ''}
-              </span>
-            </div>
-          ) : null}
+              />
+            ) : null}
+            {eco ? (
+              <LabTile
+                label={
+                  <LabelWithTip tipId="lab.eco">{t('results.ecoGrade', { grade: eco.grade })}</LabelWithTip>
+                }
+                value={`${eco.co2.toFixed(2)}g`}
+                tone={
+                  eco.grade === 'A+' || eco.grade === 'A' ? 'pos' : eco.grade === 'B' ? 'low' : 'neg'
+                }
+                meta={
+                  <>
+                    {eco.pageWeightKb} KB
+                    {eco.greenWebHosted === true
+                      ? t('results.greenHost')
+                      : eco.greenWebHosted === false
+                        ? t('results.notGreen')
+                        : ''}
+                  </>
+                }
+              />
+            ) : null}
+            {links ? (
+              <LabTile
+                label={<LabelWithTip tipId="lab.links">{t('results.links')}</LabelWithTip>}
+                value={links.broken}
+                tone={links.broken > 0 || links.missingNoopener > 0 ? 'neg' : 'pos'}
+                meta={
+                  <>
+                    {t('results.linksMeta', { internal: links.internal, external: links.external })}
+                    {links.missingNoopener > 0
+                      ? t('results.noopenerMeta', { n: links.missingNoopener })
+                      : ''}
+                  </>
+                }
+              />
+            ) : null}
+          </LabTileStrip>
         </section>
       )}
 
