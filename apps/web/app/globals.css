@@ -383,9 +383,8 @@ a { color: inherit; text-decoration: none; }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
-  gap: 0;
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
+  gap: 0.75rem;
+  border: 0;
 }
 
 .checkion-collection-card {
@@ -396,11 +395,9 @@ a { color: inherit; text-decoration: none; }
   min-height: 16rem;
   margin: 0;
   padding: 1.75rem 1.6rem 1.65rem;
-  border: 0;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: transparent;
+  border: 1px solid color-mix(in oklab, var(--line, var(--border, #444)) 70%, transparent);
+  border-radius: var(--radius-tile, 0.85rem);
+  background: color-mix(in oklab, var(--surface-2, var(--surface, #151515)) 92%, transparent);
   color: inherit;
   box-shadow: none;
   transition: border-color 0.15s ease;
@@ -416,8 +413,7 @@ button.checkion-collection-card--create {
   cursor: pointer;
   font: inherit;
   appearance: none;
-  border-right-style: dashed;
-  border-bottom-style: dashed;
+  border-style: dashed;
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   color: inherit;
@@ -425,8 +421,7 @@ button.checkion-collection-card--create {
 
 button.checkion-collection-card--create:hover,
 button.checkion-collection-card--create:focus-visible {
-  border-right-style: solid;
-  border-bottom-style: solid;
+  border-style: solid;
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   outline: none;
@@ -1681,7 +1676,8 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 .checkion-spread__lab {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   animation: checkion-rise 0.55s 0.18s ease-out both;
@@ -1829,14 +1825,12 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 
 .checkion-lab-tile {
   display: grid;
-  gap: 0.2rem;
-  padding: 1.1rem 1rem 1.2rem;
-  border-right: 1px solid var(--line);
+  gap: 0.35rem;
+  padding: 1rem 1.05rem 1.15rem;
   min-width: 0;
-}
-
-.checkion-lab-tile:last-child {
-  border-right: 0;
+  border: 1px solid color-mix(in oklab, var(--line, var(--border, #444)) 70%, transparent);
+  border-radius: var(--radius-tile, 0.85rem);
+  background: color-mix(in oklab, var(--surface-2, var(--surface, #151515)) 92%, transparent);
 }
 
 .checkion-lab-tile__k {
@@ -1910,11 +1904,13 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   vertical-align: 0.35em;
 }
 
-/* Notes/vitals tiles: number first, property under */
+/* Notes/vitals tiles: number first, property under — soft LabTile language */
 .checkion-spread__lab--notes {
   grid-template-columns: repeat(var(--notes-cols, 3), minmax(0, 1fr));
+  gap: 0.75rem;
   animation: none;
   border: 0;
+  padding-block: 0;
 }
 
 .checkion-spread__lab--notes .checkion-lab-tile {
@@ -1923,18 +1919,18 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
     'key'
     'meta';
   gap: 0.35rem;
-  padding: 1.15rem 0.85rem 1.25rem;
+  padding: 1rem 1.05rem 1.15rem;
 }
 
 .checkion-spread__lab--notes .checkion-lab-tile__v {
   grid-area: value;
-  font-size: clamp(1.85rem, 3.2vw, 2.55rem);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
 }
 
 .checkion-spread__lab--notes .checkion-lab-tile__k {
   grid-area: key;
-  color: var(--ink, var(--fg));
-  letter-spacing: 0.12em;
+  color: var(--muted);
+  letter-spacing: 0.1em;
 }
 
 .checkion-spread__lab--notes .checkion-lab-tile__m {
