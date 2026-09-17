@@ -149,6 +149,9 @@ describe('platform provisioning projects', () => {
     expect(Array.isArray(body.latestCompletedScan?.topIssues)).toBe(true)
     expect(body.standaloneScans[0]?.status).toBe('completed')
     expect(typeof body.standaloneScans[0]?.issueCount).toBe('number')
+    expect(Array.isArray(body.scoreHistory)).toBe(true)
+    expect(body.scoreHistory[0]?.id).toBe(scan.id)
+    expect(typeof body.scoreHistory[0]?.overallScore).toBe('number')
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {

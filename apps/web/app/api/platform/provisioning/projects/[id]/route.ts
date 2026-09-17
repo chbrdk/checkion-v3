@@ -12,6 +12,7 @@ import { listDomainScans, listScans, getScanIssues, getScanScores } from '../../
 import { listGeoJobs } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
+const SCORE_HISTORY_LIMIT = 12
 const PLEXON_USER_HEADER = 'X-Plexon-User-Id'
 
 /** Dashboard BFF: scan + GEO summary for a platform project mirror. */
@@ -47,15 +48,16 @@ export async function GET(
   const geoCatalog = geoJobs.slice(0, CATALOG_LIMIT)
   const activitySingles = scans.filter((s) => !s.domainScanId).length
 
+  const completedStandalone = scans
+    .filter((s) => !s.domainScanId && s.status === 'completed')
+    .sort((a, b) => {
+      const ta = Date.parse(a.completedAt ?? a.startedAt ?? '') || 0
+      const tb = Date.parse(b.completedAt ?? b.startedAt ?? '') || 0
+      return tb - ta
+    })
+
   /** Newest completed single scan — scores + issue rollup for METRON suite export. */
-  const latestCompleted =
-    scans
-      .filter((s) => !s.domainScanId && s.status === 'completed')
-      .sort((a, b) => {
-        const ta = Date.parse(a.completedAt ?? a.startedAt ?? '') || 0
-        const tb = Date.parse(b.completedAt ?? b.startedAt ?? '') || 0
-        return tb - ta
-      })[0] ?? null
+  const latestCompleted = completedStandalone[0] ?? null
 
   let latestCompletedScan: {
     id: string
@@ -109,6 +111,15 @@ export async function GET(
     }
   }
 
+  /** Wave B — overall score trend for METRON (no per-kind fan-out; keeps payload small). */
+  const scoreHistory = completedStandalone.slice(0, SCORE_HISTORY_LIMIT).map((s) => ({
+    id: s.id,
+    url: s.url,
+    overallScore: s.overallScore,
+    issueCount: s.issueCount,
+    completedAt: s.completedAt,
+  }))
+
   return jsonWithContract({
     externalProjectId: project.id,
     platformProjectId,
@@ -121,6 +132,7 @@ export async function GET(
       domain: d.rootUrl,
       status: d.status,
       score: d.overallScore ?? 0,
+      issueCount: d.issueCount ?? 0,
       timestamp: d.completedAt ?? d.startedAt,
       totalPages: d.pageCount,
     })),
@@ -140,7 +152,10 @@ export async function GET(
       score: j.overallScore ?? 0,
       timestamp: j.completedAt,
       citedShare: j.citedShare,
+      queryCount: j.queryCount,
+      modelCount: j.modelCount,
     })),
+    scoreHistory,
     latestCompletedScan,
   })
 }
