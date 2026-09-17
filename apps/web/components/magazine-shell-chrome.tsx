@@ -6,6 +6,7 @@ import { Chip, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import { decodeVirtualCorpusLede } from '../lib/virtual-domain-page-scan'
 import { useT } from '../lib/user-prefs'
+import { GeoTitleEditor } from './geo-title-editor'
 
 function localizeDeck(
   deck: string | null | undefined,
@@ -308,9 +309,7 @@ export function GeoMagazineChrome({
           <div className="checkion-cover__copy">
             <p className="checkion-cover__kicker">{t('geo.kicker')}</p>
             <p className="checkion-cover__host">{host}</p>
-            <h2 className="checkion-cover__title">
-              {variant === 'cover' ? t('geo.coverTitle') : title}
-            </h2>
+            <GeoTitleEditor jobId={jobId} title={title} variant={variant} />
             {variant === 'cover' ? (
               <>
                 {lede ? <p className="checkion-cover__deck">{lede}</p> : null}
@@ -323,7 +322,7 @@ export function GeoMagazineChrome({
                 </div>
               </>
             ) : (
-              <p className="checkion-cover__deck checkion-cover__deck--folio">{title}</p>
+              <p className="checkion-cover__deck checkion-cover__deck--folio">{host}</p>
             )}
           </div>
         </div>

@@ -7,6 +7,9 @@ import { shouldRunLiveGeo } from '../geo-eeat/live-geo-gate'
 import { buildQueuedGeoOverview } from '../geo-eeat/finalize-overview'
 import { executeLiveGeoPipeline, newGeoJobId } from '../geo-eeat/pipeline'
 import { synthesizeFixtureGeoOverview } from '../geo-eeat/synthesize-fixture'
+import { normalizeGeoJobTitle } from '../geo-job-title'
+
+export { GEO_JOB_TITLE_MAX, normalizeGeoJobTitle } from '../geo-job-title'
 
 function triggerGeoAutosync(jobId: string): void {
   void import('../knowledge-pack-autosync').then(({ scheduleGeoKnowledgeAutosync }) => {
@@ -150,6 +153,30 @@ export async function createGeoJob(input: {
 }): Promise<GeoJobSummary> {
   if (isDatabaseConfigured()) return (await dbApi()).dbCreateGeoJob(input)
   return memoryCreateGeoJob(input)
+}
+
+/** Rename a GEO job; returns updated overview or null if missing / invalid title. */
+export async function updateGeoJobTitle(
+  id: string,
+  rawTitle: unknown,
+): Promise<GeoOverview | null> {
+  const title = normalizeGeoJobTitle(rawTitle)
+  if (!title) return null
+  if (isDatabaseConfigured()) return (await dbApi()).dbUpdateGeoJobTitle(id, title)
+
+  const idx = memoryOverviews.findIndex((o) => o.job.id === id)
+  if (idx < 0) return null
+  const current = memoryOverviews[idx]!
+  const next: GeoOverview = {
+    ...structuredClone(current),
+    job: { ...current.job, title },
+  }
+  memoryOverviews = [
+    ...memoryOverviews.slice(0, idx),
+    next,
+    ...memoryOverviews.slice(idx + 1),
+  ]
+  return structuredClone(next)
 }
 
 /** Test helper — reset memory corpus to seeded fixtures. */

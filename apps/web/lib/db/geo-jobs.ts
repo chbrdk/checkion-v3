@@ -174,3 +174,17 @@ export async function dbCreateGeoJob(input: {
   void run()
   return queued.job
 }
+
+export async function dbUpdateGeoJobTitle(
+  id: string,
+  title: string,
+): Promise<GeoOverview | null> {
+  const overview = await dbGetGeoOverview(id)
+  if (!overview) return null
+  const next: GeoOverview = {
+    ...overview,
+    job: { ...overview.job, title },
+  }
+  await dbUpsertGeoOverview(next)
+  return dbGetGeoOverview(id)
+}

@@ -26,6 +26,7 @@
 | GEO on-page E-E-A-T (appendix) | `specs/domain/geo-eeat.md` |
 | GEO ↔ Collection Knowledge Pack | `specs/domain/geo-knowledge-consume.md` |
 | GEO CSV export | `specs/domain/geo-csv-export.md` |
+| GEO job rename | `specs/domain/geo-job-rename.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |
 | Project reports (deferred) | `specs/domain/project-reports.md` |
 
@@ -41,6 +42,7 @@
 | API tokens | `specs/api/tokens.md` |
 | GEO suggest queries | `specs/api/geo-suggest-queries.md` |
 | GEO job CSV export | `specs/api/geo-job-export-csv.md` |
+| GEO job title (rename) | `specs/api/geo-job-title.md` |
 
 ## Knowledge
 | Doc | Path |

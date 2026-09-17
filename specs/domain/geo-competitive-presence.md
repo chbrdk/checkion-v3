@@ -34,6 +34,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 | Result | `/geo/:id/overview` · `/queries` (legacy `/placement` → redirect to Queries) |
 | Reading API | `GET /api/geo-jobs/:id/reading?kind=verdict\|eeat\|placement\|queries\|query` |
 | CSV export | `GET /api/geo-jobs/:id/export` — full query×model dump (`geo-csv-export.md`) |
+| Rename | `PATCH /api/geo-jobs/:id` `{ title }` — masthead Rename (`geo-job-rename.md`) |
 | Create API | `POST /api/geo-jobs` |
 
 ### Launch defaults
@@ -49,6 +50,9 @@ Completed or failed jobs expose **Re-run** in magazine topbar actions (`GeoResul
 
 ### CSV export from result
 Completed or failed jobs expose **Export CSV** beside Re-run. Downloads `GET /api/geo-jobs/:id/export` (one row per `queryRun` + repeated job/presence/EEAT columns). In-progress jobs disable the CTA. See [`geo-csv-export.md`](./geo-csv-export.md).
+
+### Rename from result
+Magazine masthead shows `job.title` with **Rename** (`GeoTitleEditor` → `PATCH /api/geo-jobs/:id`). Same title appears on the project GEO runs list. See [`geo-job-rename.md`](./geo-job-rename.md).
 
 ### Result readiness (live vs fixture)
 | Path | Create response | Overview behaviour |
