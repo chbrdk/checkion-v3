@@ -206,6 +206,7 @@ describe('platform provisioning projects', () => {
     expect(
       body.latestDomainHealth?.eco == null || typeof body.latestDomainHealth.eco.avgCo2 === 'number',
     ).toBe(true)
+    expect(Array.isArray(body.latestDomainHealth?.corpusPages)).toBe(true)
   })
 
   it('GET includes latestGeoDepth when a completed GEO job exists', async () => {
@@ -251,6 +252,8 @@ describe('platform provisioning projects', () => {
         typeof body.latestGeoDepth.presence.missRate === 'number',
     ).toBe(true)
     expect(Array.isArray(body.latestGeoDepth?.insights?.promptDuels ?? [])).toBe(true)
+    expect(Array.isArray(body.latestGeoDepth?.queryRuns)).toBe(true)
+    expect(Array.isArray(body.latestGeoDepth?.positionCells)).toBe(true)
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {

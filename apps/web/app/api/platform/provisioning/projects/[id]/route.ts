@@ -15,10 +15,13 @@ import {
   getScanScores,
   getDomainOverview,
 } from '../../../../../../lib/fixtures/scan-store'
+import { listDomainCorpusPages } from '../../../../../../lib/domain-corpus-pages'
 import { listGeoJobs, getGeoOverview } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
 const SCORE_HISTORY_LIMIT = 12
+const CORPUS_PAGES_LIMIT = 50
+const GEO_QUERY_RUNS_LIMIT = 80
 const PLEXON_USER_HEADER = 'X-Plexon-User-Id'
 
 type DistillateScan = {
@@ -291,11 +294,24 @@ export async function GET(
       hostingServer: string
       hostingPoweredBy: string
     } | null
+    corpusPages: Array<{
+      url: string
+      scanId: string
+      overallScore: number | null
+      errors: number
+      warnings: number
+      resultsPath: string
+    }>
   } | null = null
 
   if (latestDomain) {
     const overview = await getDomainOverview(latestDomain.id)
     if (overview) {
+      const corpus = await listDomainCorpusPages(latestDomain.id, {
+        page: 1,
+        pageSize: CORPUS_PAGES_LIMIT,
+        sort: 'score_asc',
+      })
       latestDomainHealth = {
         id: overview.scan.id,
         url: overview.scan.rootUrl,
@@ -426,6 +442,14 @@ export async function GET(
               hostingPoweredBy: overview.infra.hostingPoweredBy ?? '',
             }
           : null,
+        corpusPages: (corpus?.items ?? []).slice(0, CORPUS_PAGES_LIMIT).map((p) => ({
+          url: p.url,
+          scanId: p.scanId,
+          overallScore: p.overallScore,
+          errors: p.errors,
+          warnings: p.warnings,
+          resultsPath: p.resultsPath,
+        })),
       }
     }
   }
@@ -482,6 +506,12 @@ export async function GET(
         hitCount: number
         hitRate: number
       }>
+      byQuery: Array<{
+        query: string
+        cellCount: number
+        hitCount: number
+        hitRate: number
+      }>
     } | null
     insights: {
       missVsRival: Array<{
@@ -499,7 +529,26 @@ export async function GET(
         leaderDomain: string | null
         intent: string
       }>
+      intents: Array<{
+        query: string
+        intent: string
+        source: string
+      }>
     } | null
+    queryRuns: Array<{
+      queryId: string
+      query: string
+      modelId: string
+      ourPosition: number | null
+      citationCount: number
+    }>
+    positionCells: Array<{
+      queryIndex: number
+      queryLabel: string
+      queryText: string
+      modelId: string
+      position: number
+    }>
   } | null = null
 
   if (latestGeo) {
@@ -507,6 +556,24 @@ export async function GET(
     if (overview) {
       const solo = overview.presence?.solo
       const field = overview.presence?.field ?? null
+      const positionCells: Array<{
+        queryIndex: number
+        queryLabel: string
+        queryText: string
+        modelId: string
+        position: number
+      }> = []
+      for (const row of overview.positionMatrix ?? []) {
+        for (const [modelId, position] of Object.entries(row.positions ?? {})) {
+          positionCells.push({
+            queryIndex: row.queryIndex,
+            queryLabel: row.queryLabel,
+            queryText: row.queryText,
+            modelId,
+            position,
+          })
+        }
+      }
       latestGeoDepth = {
         id: overview.job.id,
         title: overview.job.title,
@@ -556,6 +623,12 @@ export async function GET(
                 hitCount: m.hitCount,
                 hitRate: m.hitRate,
               })),
+              byQuery: (solo.byQuery ?? []).slice(0, 40).map((q) => ({
+                query: q.query,
+                cellCount: q.cellCount,
+                hitCount: q.hitCount,
+                hitRate: q.hitRate,
+              })),
             }
           : null,
         insights: overview.insights
@@ -575,8 +648,21 @@ export async function GET(
                 leaderDomain: d.leaderDomain,
                 intent: d.intent,
               })),
+              intents: (overview.insights.intents ?? []).slice(0, 40).map((i) => ({
+                query: i.query,
+                intent: i.intent,
+                source: i.source,
+              })),
             }
           : null,
+        queryRuns: (overview.queryRuns ?? []).slice(0, GEO_QUERY_RUNS_LIMIT).map((r) => ({
+          queryId: r.queryId,
+          query: r.query,
+          modelId: r.modelId,
+          ourPosition: r.ourPosition,
+          citationCount: r.citations?.length ?? 0,
+        })),
+        positionCells: positionCells.slice(0, 200),
       }
     }
   }
