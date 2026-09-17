@@ -20,6 +20,10 @@ import {
 import { addOpenAIChatUsage, emptyUsageTotals, type LlmUsageTotals } from '../llm/usage-totals'
 import { geminiGenerateContentUrl, paths } from '../paths'
 import { resolveSearchMarket, searchUserLocation, type GeoSearchMarket } from '../geo/search-market'
+import {
+  buildAnthropicLiveSearchToolExtras,
+  buildOpenAiLiveSearchRequestExtras,
+} from '../geo/live-search-limits'
 import { normalizeGeoHost } from '../geo-presence'
 import {
   COMPETITIVE_RESPONSE_JSON_SCHEMA,
@@ -258,16 +262,10 @@ async function completeOpenAIGrounded(args: {
     throw new Error('OPENAI_API_KEY is not set')
   }
   const openai = new OpenAI({ apiKey: getOpenAIKey() })
+  const searchExtras = buildOpenAiLiveSearchRequestExtras(args.market)
   const res = await openai.responses.create({
     model: args.modelId,
-    tools: [
-      {
-        type: paths.openaiWebSearchTool,
-        user_location: searchUserLocation(args.market),
-        search_context_size: 'high',
-      },
-    ],
-    tool_choice: 'required',
+    ...searchExtras,
     input: [
       { role: 'system', content: args.systemPrompt },
       { role: 'user', content: args.userPrompt },
@@ -302,6 +300,7 @@ async function completeAnthropicGrounded(args: {
         type: paths.anthropicWebSearchTool,
         name: 'web_search',
         user_location: searchUserLocation(args.market),
+        ...buildAnthropicLiveSearchToolExtras(),
       } as unknown as Anthropic.Messages.Tool,
     ],
     messages: [{ role: 'user', content: args.userPrompt }],

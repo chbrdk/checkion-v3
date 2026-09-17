@@ -32,7 +32,9 @@ A job is one layer. `citedShare` is never an average of both. ChatGPT-the-app is
 | Search must run | **On** (OpenAI `tool_choice` required; Claude/Gemini search tools) | Avoid silent parametric fallback |
 | Citations from tool annotations | **On** | Not model-invented host lists |
 | Search market (`user_location`) | **On** (OpenAI + Anthropic; Gemini prompt hint) | Avoid silent US default on OpenAI `web_search` |
-| OpenAI `search_context_size` | **high** | More search context in grounded answers |
+| OpenAI `search_context_size` | **medium** (was `high`) | Balanced context; override `CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE` |
+| OpenAI `max_tool_calls` | **3** | Cap runaway `web_search` loops per cell; override `CHECKION_GEO_OPENAI_MAX_TOOL_CALLS` |
+| Anthropic `max_uses` | **3** | Cap Claude searches per cell; override `CHECKION_GEO_ANTHROPIC_MAX_USES` |
 | Prose mention KPI | **Secondary** (`mentionedShare`) | Visible on live jobs; never mixed into `citedShare` |
 | Tool search queries captured | **On** when provider returns them | Audit trail in Queries dossier |
 
@@ -49,5 +51,6 @@ From `/geo/:id/*` magazine topbar: **Re-run** → new job with cloned inputs inc
 - Prompt + match: `apps/web/lib/geo-eeat/competitive-response.ts`
 - Layer 2 extract: `apps/web/lib/geo-eeat/grounded-citations.ts`
 - Runner: `apps/web/lib/geo-eeat/run-query-runs.ts`
+- Live search caps: `apps/web/lib/geo/live-search-limits.ts` (`paths.openaiGeo*` / `paths.anthropicGeo*`)
 - Presence hit fallback: `apps/web/lib/geo-presence.ts`
 - Re-run UI: `components/geo-result-actions.tsx`

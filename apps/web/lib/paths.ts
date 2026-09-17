@@ -84,6 +84,26 @@ export const paths = {
   anthropicWebSearchTool: 'web_search_20260318',
   /** OpenAI Responses hosted search tool type (Layer 2 GEO). */
   openaiWebSearchTool: 'web_search',
+  /**
+   * Layer 2 cost dial — OpenAI search context per call (`low`|`medium`|`high`).
+   * Override: `CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE`.
+   */
+  openaiGeoSearchContextSizeDefault: 'medium' as const,
+  envOpenAiGeoSearchContextSize: 'CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE',
+  /**
+   * Layer 2 cost dial — max built-in tool calls (incl. web_search) per OpenAI cell.
+   * Override: `CHECKION_GEO_OPENAI_MAX_TOOL_CALLS`.
+   */
+  openaiGeoMaxToolCallsDefault: 3,
+  openaiGeoMaxToolCallsHardCap: 16,
+  envOpenAiGeoMaxToolCalls: 'CHECKION_GEO_OPENAI_MAX_TOOL_CALLS',
+  /**
+   * Layer 2 cost dial — Anthropic web_search `max_uses` per cell.
+   * Override: `CHECKION_GEO_ANTHROPIC_MAX_USES`.
+   */
+  anthropicGeoMaxUsesDefault: 3,
+  anthropicGeoMaxUsesHardCap: 16,
+  envAnthropicGeoMaxUses: 'CHECKION_GEO_ANTHROPIC_MAX_USES',
   envPlexonDemoOwner: 'PLEXON_DEMO_OWNER_USER_ID',
   envPlexonDemoCompany: 'PLEXON_DEMO_COMPANY_ID',
   /**

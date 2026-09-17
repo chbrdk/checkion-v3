@@ -47,9 +47,20 @@ Natural-language answer (same language as the query). **Do not** force a 20-host
 
 | Provider | Call | Citations |
 |----------|------|-----------|
-| OpenAI | Responses API + `{ type: "web_search", user_location: { type: "approximate", country }, search_context_size: "high" }`, `tool_choice` required | `url_citation` annotations |
-| Anthropic | Messages + hosted `web_search` with same `user_location` | text-block `citations[].url` |
+| OpenAI | Responses API + `{ type: "web_search", user_location: { type: "approximate", country }, search_context_size }` (default **`medium`**), `tool_choice` required, **`max_tool_calls`** (default **3**) | `url_citation` annotations |
+| Anthropic | Messages + hosted `web_search` with same `user_location` + **`max_uses`** (default **3**) | text-block `citations[].url` |
 | Google | `generateContent` + `google_search` grounding; market sentence in system prompt only (no lat/lng v1.1) | `groundingMetadata.groundingChunks[].web.uri` |
+
+### Layer 2 search cost dial (v1.2)
+Unbounded web-search loops (especially OpenAI flagship models) inflate cost without improving GEO honesty. Caps are **server defaults**, overridable via env (no launch UI in v1.2):
+
+| Knob | Default | Env | Effect |
+|------|---------|-----|--------|
+| OpenAI `search_context_size` | `medium` | `CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE` (`low`\|`medium`\|`high`) | Context depth per search — not call count |
+| OpenAI `max_tool_calls` | `3` | `CHECKION_GEO_OPENAI_MAX_TOOL_CALLS` (1–16) | Hard cap on built-in tool calls (incl. `web_search`) per query×model cell |
+| Anthropic `max_uses` | `3` | `CHECKION_GEO_ANTHROPIC_MAX_USES` (1–16) | Cap searches per Messages request |
+
+Canonical constants: `paths.openaiGeo*` / `paths.anthropicGeo*` · resolver `lib/geo/live-search-limits.ts`. Still force at least one OpenAI search (`tool_choice: required`).
 
 Then: hostname normalize → registrable-host filter → ordered unique panel (cap `GEO_COMPETITIVE_CITATION_TARGET`) → same `ourPosition` / presence / insights helpers as Layer 1.
 
@@ -73,6 +84,7 @@ Label the job (overview meter, index chip, notification title) as **Model memory
 ## Tests
 - `apps/web/__tests__/geo-measurement.test.ts` — parse, labels, default
 - `apps/web/__tests__/search-market.test.ts` — TLD → country resolution
+- `apps/web/__tests__/live-search-limits.test.ts` — OpenAI/Anthropic cost dial defaults + env overrides
 - `apps/web/__tests__/grounded-citations.test.ts` — OpenAI / Anthropic / Gemini payload extract + searchQueries
 - `apps/web/__tests__/run-query-runs-multi-provider.test.ts` — live path uses grounded prompt, market, OpenAI tool config, no host leak
 - `apps/web/__tests__/geo-presence.test.ts` — `mentionedShare` vs `citedShare` separation

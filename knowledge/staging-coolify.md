@@ -51,6 +51,10 @@ OPENAI_API_KEY=sk-…              # OpenAI GEO stages + OpenAI queryRuns
 ANTHROPIC_API_KEY=sk-ant-…       # Claude queryRuns (e.g. claude-sonnet-5)
 GEMINI_API_KEY=…                 # Gemini queryRuns (or GOOGLE_API_KEY)
 OPENAI_MODEL=gpt-5.6-luna        # optional single-model fallback
+# Optional Layer 2 search cost dial (defaults: medium / 3 / 3) — see knowledge/geo-measurement-honesty.md
+# CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE=medium
+# CHECKION_GEO_OPENAI_MAX_TOOL_CALLS=3
+# CHECKION_GEO_ANTHROPIC_MAX_USES=3
 CHECKION_FEDERATION_MODE=live
 PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
 PLEXON_DEMO_COMPANY_ID=…

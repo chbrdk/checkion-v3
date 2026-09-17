@@ -91,6 +91,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Collection Knowledge Pack: `apps/web/lib/plexon-knowledge-pack.ts` · `specs/domain/geo-knowledge-consume.md` · Soft-skip marks facet freshness via Plexon `…/facets/:facetId/freshness` · Plexon SoT `plexon-v3/specs/domain/collection-knowledge-pack.md`
 - Model catalog (launch picker): `apps/web/lib/geo/model-catalog.ts` — OpenAI / Anthropic / Google; UI = selected chips + Add dialog (`GeoModelPicker`); Anthropic catalog ids are live (`ANTHROPIC_API_KEY`); `modelsForLaunch` still drops remaining Soon (Gemini extras) (`specs/domain/geo-model-catalog.md`)
 - Live GEO: `CHECKION_LIVE_GEO` + provider keys (see `knowledge/dummy-data-mode.md`). `POST /api/geo-jobs` `measurement`: `recall` (default, ungrounded) or `live` (Responses / Claude / Gemini web search). Launch tiles are multi-select — both = two jobs. Same switch on Plexon Quick Scan. `specs/domain/geo-measurement-layers.md`
+- Layer 2 search cost dial (defaults; Coolify runtime env optional): `CHECKION_GEO_OPENAI_SEARCH_CONTEXT_SIZE` (`medium`) · `CHECKION_GEO_OPENAI_MAX_TOOL_CALLS` (`3`) · `CHECKION_GEO_ANTHROPIC_MAX_USES` (`3`) — `lib/geo/live-search-limits.ts` · `paths.openaiGeo*` / `paths.anthropicGeo*`
 - Gemini generateContent base: `paths.geminiApiBase` (`https://generativelanguage.googleapis.com/v1beta`) — never inline in runners
 - Anthropic hosted search tool type: `paths.anthropicWebSearchTool`
 
