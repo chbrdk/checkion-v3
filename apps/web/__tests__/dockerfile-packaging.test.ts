@@ -22,6 +22,7 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('CardActions.tsx')
     expect(df).toContain('InfoTip.tsx')
     expect(df).toContain('ChatOverlay.tsx')
+    expect(df).toContain('LabTile.tsx')
     expect(df).toContain('docker-entrypoint.sh')
     expect(df).toMatch(/find \. -type d -name node_modules/)
     expect(df).toMatch(
