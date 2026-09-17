@@ -144,6 +144,7 @@ describe('platform provisioning projects', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.latestCompletedScan?.id).toBe(scan.id)
+    expect(body.latestCompletedScan?.source).toBe('standalone')
     expect(body.latestCompletedScan?.scores?.length).toBeGreaterThan(0)
     expect(body.latestCompletedScan?.issueRollup).toBeDefined()
     expect(Array.isArray(body.latestCompletedScan?.topIssues)).toBe(true)
@@ -152,6 +153,50 @@ describe('platform provisioning projects', () => {
     expect(Array.isArray(body.scoreHistory)).toBe(true)
     expect(body.scoreHistory[0]?.id).toBe(scan.id)
     expect(typeof body.scoreHistory[0]?.overallScore).toBe('number')
+    expect(body.latestCompletedScan?.source).toBe('standalone')
+    expect(body.scoreHistory[0]?.source).toBe('standalone')
+  })
+
+  it('GET falls back to domain crawl distillate when no standalone singles', async () => {
+    const { PUT, GET } = await import('../app/api/platform/provisioning/projects/[id]/route')
+    const { createDomainScan } = await import('../lib/fixtures/scan-store')
+    await PUT(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-domain-only', {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          contractVersion: PLEXON_FEDERATION_CONTRACT_VERSION,
+          name: 'Domain only',
+          domain: 'domain-only.example',
+          platformCompanyId: 'comp-1',
+          ownerUserId: 'user-1',
+        }),
+      }),
+      { params: Promise.resolve({ id: 'pp-domain-only' }) },
+    )
+
+    const project = await getProjectByPlatformId('pp-domain-only')
+    expect(project).toBeTruthy()
+    const domain = await createDomainScan({
+      projectId: project!.id,
+      url: 'https://domain-only.example/',
+    })
+    expect(domain.status).toBe('completed')
+
+    const res = await GET(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-domain-only', {
+        headers: authHeaders({ 'X-Plexon-User-Id': 'user-1' }),
+      }),
+      { params: Promise.resolve({ id: 'pp-domain-only' }) },
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.standaloneScanCount).toBe(0)
+    expect(body.domainScanCount).toBeGreaterThanOrEqual(1)
+    expect(body.latestCompletedScan?.id).toBe(domain.id)
+    expect(body.latestCompletedScan?.source).toBe('domain')
+    expect(body.latestCompletedScan?.scores?.length).toBeGreaterThan(0)
+    expect(body.scoreHistory.some((h: { id: string }) => h.id === domain.id)).toBe(true)
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {

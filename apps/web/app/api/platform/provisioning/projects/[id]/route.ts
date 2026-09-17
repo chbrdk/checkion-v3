@@ -8,12 +8,82 @@ import {
   getProjectByPlatformId,
   upsertByPlatformProjectId,
 } from '../../../../../../lib/fixtures/project-store'
-import { listDomainScans, listScans, getScanIssues, getScanScores } from '../../../../../../lib/fixtures/scan-store'
+import {
+  listDomainScans,
+  listScans,
+  getScanIssues,
+  getScanScores,
+} from '../../../../../../lib/fixtures/scan-store'
 import { listGeoJobs } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
 const SCORE_HISTORY_LIMIT = 12
 const PLEXON_USER_HEADER = 'X-Plexon-User-Id'
+
+type DistillateScan = {
+  id: string
+  url: string
+  overallScore: number | null
+  issueCount: number
+  completedAt: string | null
+  source: 'standalone' | 'domain'
+  scores: Array<{ kind: string; label: string; value: number; max: number }>
+  issueRollup: Array<{ severity: string; section: string; count: number }>
+  topIssues: Array<{
+    id: string
+    severity: string
+    section: string
+    title: string
+    ruleId: string
+    affectedCount: number
+  }>
+}
+
+function activityTime(iso: string | null | undefined): number {
+  return Date.parse(iso ?? '') || 0
+}
+
+async function distillateFromScanId(input: {
+  id: string
+  url: string
+  overallScore: number | null
+  issueCount: number
+  completedAt: string | null
+  source: 'standalone' | 'domain'
+}): Promise<DistillateScan> {
+  const scores = await getScanScores(input.id)
+  const issues = await getScanIssues(input.id)
+  const rollupMap = new Map<string, { severity: string; section: string; count: number }>()
+  for (const issue of issues) {
+    const key = `${issue.severity}::${issue.section}`
+    const prev = rollupMap.get(key)
+    if (prev) prev.count += 1
+    else rollupMap.set(key, { severity: issue.severity, section: issue.section, count: 1 })
+  }
+  return {
+    id: input.id,
+    url: input.url,
+    overallScore: input.overallScore,
+    issueCount: input.issueCount,
+    completedAt: input.completedAt,
+    source: input.source,
+    scores: scores.map((s) => ({
+      kind: s.kind,
+      label: s.label,
+      value: s.value,
+      max: s.max,
+    })),
+    issueRollup: [...rollupMap.values()].sort((a, b) => b.count - a.count),
+    topIssues: issues.slice(0, 50).map((i) => ({
+      id: i.id,
+      severity: i.severity,
+      section: i.section,
+      title: i.title,
+      ruleId: i.ruleId,
+      affectedCount: i.affectedCount,
+    })),
+  }
+}
 
 /** Dashboard BFF: scan + GEO summary for a platform project mirror. */
 export async function GET(
@@ -49,76 +119,68 @@ export async function GET(
   const activitySingles = scans.filter((s) => !s.domainScanId).length
 
   const completedStandalone = scans
-    .filter((s) => !s.domainScanId && s.status === 'completed')
-    .sort((a, b) => {
-      const ta = Date.parse(a.completedAt ?? a.startedAt ?? '') || 0
-      const tb = Date.parse(b.completedAt ?? b.startedAt ?? '') || 0
-      return tb - ta
+    .filter((s) => s.mode === 'single' && !s.domainScanId && s.status === 'completed')
+    .sort(
+      (a, b) =>
+        activityTime(b.completedAt ?? b.startedAt) - activityTime(a.completedAt ?? a.startedAt),
+    )
+
+  const completedDomains = domains
+    .filter((d) => d.status === 'completed')
+    .sort(
+      (a, b) =>
+        activityTime(b.completedAt ?? b.startedAt) - activityTime(a.completedAt ?? a.startedAt),
+    )
+
+  /** Prefer newest standalone single; fall back to newest deep domain crawl. */
+  let latestCompletedScan: DistillateScan | null = null
+  const latestStandalone = completedStandalone[0] ?? null
+  const latestDomain = completedDomains[0] ?? null
+
+  if (latestStandalone) {
+    latestCompletedScan = await distillateFromScanId({
+      id: latestStandalone.id,
+      url: latestStandalone.url,
+      overallScore: latestStandalone.overallScore,
+      issueCount: latestStandalone.issueCount,
+      completedAt: latestStandalone.completedAt,
+      source: 'standalone',
     })
-
-  /** Newest completed single scan — scores + issue rollup for METRON suite export. */
-  const latestCompleted = completedStandalone[0] ?? null
-
-  let latestCompletedScan: {
-    id: string
-    url: string
-    overallScore: number | null
-    issueCount: number
-    completedAt: string | null
-    scores: Array<{ kind: string; label: string; value: number; max: number }>
-    issueRollup: Array<{ severity: string; section: string; count: number }>
-    topIssues: Array<{
-      id: string
-      severity: string
-      section: string
-      title: string
-      ruleId: string
-      affectedCount: number
-    }>
-  } | null = null
-
-  if (latestCompleted) {
-    const scores = await getScanScores(latestCompleted.id)
-    const issues = await getScanIssues(latestCompleted.id)
-    const rollupMap = new Map<string, { severity: string; section: string; count: number }>()
-    for (const issue of issues) {
-      const key = `${issue.severity}::${issue.section}`
-      const prev = rollupMap.get(key)
-      if (prev) prev.count += 1
-      else rollupMap.set(key, { severity: issue.severity, section: issue.section, count: 1 })
-    }
-    latestCompletedScan = {
-      id: latestCompleted.id,
-      url: latestCompleted.url,
-      overallScore: latestCompleted.overallScore,
-      issueCount: latestCompleted.issueCount,
-      completedAt: latestCompleted.completedAt,
-      scores: scores.map((s) => ({
-        kind: s.kind,
-        label: s.label,
-        value: s.value,
-        max: s.max,
-      })),
-      issueRollup: [...rollupMap.values()].sort((a, b) => b.count - a.count),
-      topIssues: issues.slice(0, 50).map((i) => ({
-        id: i.id,
-        severity: i.severity,
-        section: i.section,
-        title: i.title,
-        ruleId: i.ruleId,
-        affectedCount: i.affectedCount,
-      })),
-    }
+  } else if (latestDomain) {
+    latestCompletedScan = await distillateFromScanId({
+      id: latestDomain.id,
+      url: latestDomain.rootUrl,
+      overallScore: latestDomain.overallScore,
+      issueCount: latestDomain.issueCount,
+      completedAt: latestDomain.completedAt,
+      source: 'domain',
+    })
   }
 
-  /** Wave B — overall score trend for METRON (no per-kind fan-out; keeps payload small). */
-  const scoreHistory = completedStandalone.slice(0, SCORE_HISTORY_LIMIT).map((s) => ({
-    id: s.id,
-    url: s.url,
-    overallScore: s.overallScore,
-    issueCount: s.issueCount,
-    completedAt: s.completedAt,
-  }))
+  /** Wave B — overall score trend: standalone + domain (cap). */
+  const scoreHistory = [
+    ...completedStandalone.map((s) => ({
+      id: s.id,
+      url: s.url,
+      overallScore: s.overallScore,
+      issueCount: s.issueCount,
+      completedAt: s.completedAt,
+      source: 'standalone' as const,
+      at: activityTime(s.completedAt ?? s.startedAt),
+    })),
+    ...completedDomains.map((d) => ({
+      id: d.id,
+      url: d.rootUrl,
+      overallScore: d.overallScore,
+      issueCount: d.issueCount,
+      completedAt: d.completedAt,
+      source: 'domain' as const,
+      at: activityTime(d.completedAt ?? d.startedAt),
+    })),
+  ]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, SCORE_HISTORY_LIMIT)
+    .map(({ at: _at, ...row }) => row)
 
   return jsonWithContract({
     externalProjectId: project.id,
