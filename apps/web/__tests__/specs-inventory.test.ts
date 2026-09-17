@@ -27,6 +27,7 @@ const requiredSpecs = [
   'specs/domain/geo-model-catalog.md',
   'specs/domain/geo-answer-insights.md',
   'specs/domain/geo-knowledge-consume.md',
+  'specs/domain/geo-csv-export.md',
   'specs/domain/journey-ui.md',
   'specs/domain/project-reports.md',
   'specs/api/projects.md',
@@ -37,6 +38,7 @@ const requiredSpecs = [
   'specs/api/share.md',
   'specs/api/tokens.md',
   'specs/api/geo-suggest-queries.md',
+  'specs/api/geo-job-export-csv.md',
   'knowledge/specs-index.md',
   'knowledge/paths.md',
   'knowledge/settings-api-tokens.md',
@@ -93,6 +95,8 @@ describe('specs inventory', () => {
     expect(paths.routes.apiGeoJobPublishKnowledge('geo-1')).toBe(
       '/api/geo-jobs/geo-1/publish-knowledge',
     )
+    expect(paths.routes.apiGeoJobExportCsv('geo-1')).toBe('/api/geo-jobs/geo-1/export')
+    expect(paths.routes.apiGeoJobExportCsv('a/b')).toBe('/api/geo-jobs/a%2Fb/export')
     expect(paths.routes.journey).toBe('/journey')
     expect(paths.routes.reports).toBe('/reports')
     expect(paths.federationContract).toBe('2026-05-plexon-federation-v3')

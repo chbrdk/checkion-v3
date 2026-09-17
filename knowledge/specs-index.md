@@ -25,6 +25,7 @@
 | GEO answer insights | `specs/domain/geo-answer-insights.md` |
 | GEO on-page E-E-A-T (appendix) | `specs/domain/geo-eeat.md` |
 | GEO ↔ Collection Knowledge Pack | `specs/domain/geo-knowledge-consume.md` |
+| GEO CSV export | `specs/domain/geo-csv-export.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |
 | Project reports (deferred) | `specs/domain/project-reports.md` |
 
@@ -39,6 +40,7 @@
 | Share | `specs/api/share.md` |
 | API tokens | `specs/api/tokens.md` |
 | GEO suggest queries | `specs/api/geo-suggest-queries.md` |
+| GEO job CSV export | `specs/api/geo-job-export-csv.md` |
 
 ## Knowledge
 | Doc | Path |
@@ -55,4 +57,5 @@
 | DS gaps (product view) | `knowledge/ds-component-gaps.md` |
 | Dummy data mode | `knowledge/dummy-data-mode.md` |
 | GEO measurement honesty | `knowledge/geo-measurement-honesty.md` |
+| GEO CSV export | `knowledge/geo-csv-export.md` |
 | Collection Knowledge Pack (Plexon) | `plexon-v3/specs/domain/collection-knowledge-pack.md` · consume/publish `specs/domain/geo-knowledge-consume.md` |

@@ -65,8 +65,32 @@ export function GeoResultActions({ overview }: { overview: GeoOverview }) {
     }
   }
 
+  function downloadCsv() {
+    const a = document.createElement('a')
+    a.href = paths.routes.apiGeoJobExportCsv(overview.job.id)
+    a.download = `checkion-geo-${overview.job.id}.csv`
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
   return (
     <div className="checkion-result-actions">
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={inProgress || busy}
+        onClick={downloadCsv}
+        title={
+          inProgress
+            ? 'Wait for the current GEO run to finish'
+            : 'Download every query × model answer as CSV'
+        }
+      >
+        Export CSV
+      </Button>
       <Button
         type="button"
         size="sm"

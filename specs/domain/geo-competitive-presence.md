@@ -33,6 +33,7 @@ GEO is a **separate job type**, not a `ScanMode` (`single` | `deep`).
 | Index | `/geo` (catalog; create CTA deep-links to launch) |
 | Result | `/geo/:id/overview` · `/queries` (legacy `/placement` → redirect to Queries) |
 | Reading API | `GET /api/geo-jobs/:id/reading?kind=verdict\|eeat\|placement\|queries\|query` |
+| CSV export | `GET /api/geo-jobs/:id/export` — full query×model dump (`geo-csv-export.md`) |
 | Create API | `POST /api/geo-jobs` |
 
 ### Launch defaults
@@ -45,6 +46,9 @@ After create, navigate to `/geo/:id/overview` (or stay on launch / prior result 
 
 ### Re-run from result
 Completed or failed jobs expose **Re-run** in magazine topbar actions (`GeoResultActions`). Creates a **new** geo job via `POST /api/geo-jobs` cloning `url`, `queries`, `models`, `competitors`, `projectId`, `title`, and `measurement` from the current overview. Does not mutate the old job. In-progress jobs disable the CTA.
+
+### CSV export from result
+Completed or failed jobs expose **Export CSV** beside Re-run. Downloads `GET /api/geo-jobs/:id/export` (one row per `queryRun` + repeated job/presence/EEAT columns). In-progress jobs disable the CTA. See [`geo-csv-export.md`](./geo-csv-export.md).
 
 ### Result readiness (live vs fixture)
 | Path | Create response | Overview behaviour |

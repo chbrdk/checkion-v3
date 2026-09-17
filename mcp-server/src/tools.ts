@@ -56,6 +56,7 @@ export const CHECKION_V3_TOOL_NAMES = [
   'checkion_v3.geo_suggest_queries',
   'checkion_v3.geo_job_reading',
   'checkion_v3.geo_job_publish_knowledge',
+  'checkion_v3.geo_job_export_csv',
   'checkion_v3.share_create',
   'checkion_v3.share_get',
   'checkion_v3.fetch_page',
@@ -582,6 +583,20 @@ export function registerCheckionV3Tools(server: ToolServer) {
         method: 'POST',
         body: JSON.stringify({}),
       })
+    },
+  )
+
+  server.registerTool(
+    'checkion_v3.geo_job_export_csv',
+    {
+      title: 'Export GEO job CSV',
+      description:
+        'GET /api/geo-jobs/:id/export — RFC 4180 CSV of every query×model answer, citations, and presence columns.',
+      inputSchema: z.object({ id: z.string() }),
+    },
+    async (args) => {
+      const { id } = args as { id: string }
+      return textResult(`/api/geo-jobs/${encodeURIComponent(id)}/export`)
     },
   )
 

@@ -19,6 +19,7 @@ describe('checkion-v3 MCP tool inventory', () => {
       'checkion_v3.domain_scan_start',
       'checkion_v3.domain_scan_control',
       'checkion_v3.geo_job_start',
+      'checkion_v3.geo_job_export_csv',
     ] as const) {
       assert.ok(CHECKION_V3_TOOL_NAMES.includes(required), required)
     }
