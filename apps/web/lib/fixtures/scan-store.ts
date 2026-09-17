@@ -218,8 +218,10 @@ function systemicFromIssues(issues: IssueSummary[]): DomainSystemicIssue[] {
 
 function memoryGetDomainOverview(id: string): DomainOverview | null {
   if (id === 'domain-1') {
+    const domain = memoryGetDomainScan(id)
     return {
       ...LIVE_DOMAIN_OVERVIEW,
+      scan: domain ? { ...LIVE_DOMAIN_OVERVIEW.scan, ...domain } : LIVE_DOMAIN_OVERVIEW.scan,
       scores: scoresByScan[id] ?? LIVE_DOMAIN_OVERVIEW.scores,
       pageSamples: withPageSampleScanIds(id, LIVE_DOMAIN_OVERVIEW.pageSamples),
     }
@@ -694,4 +696,46 @@ export async function controlDomainScan(
 export async function listActiveDomainScans(projectId: string): Promise<DomainScanLight[]> {
   if (isDatabaseConfigured()) return (await dbApi()).dbListActiveDomainScans(projectId)
   return memoryListDomainScans(projectId).filter((row) => isActiveDomainScanStatus(row.status))
+}
+
+/** Rename a single-page scan; returns updated summary or null if missing / invalid. */
+export async function updateScanTitle(
+  id: string,
+  rawTitle: unknown,
+): Promise<ScanSummary | null> {
+  const { normalizeJobTitle } = await import('../job-title')
+  const title = normalizeJobTitle(rawTitle)
+  if (!title) return null
+  if (isDatabaseConfigured()) return (await dbApi()).dbUpdateScanTitle(id, title)
+
+  const idx = store.scans.findIndex((s) => s.id === id)
+  if (idx < 0) return null
+  const next = { ...store.scans[idx]!, title }
+  store.scans = [...store.scans.slice(0, idx), next, ...store.scans.slice(idx + 1)]
+  const overview = overviewByScan[id]
+  if (overview) {
+    overviewByScan[id] = { ...overview, scan: next }
+  }
+  return { ...next }
+}
+
+/** Rename a domain crawl; returns updated light row or null if missing / invalid. */
+export async function updateDomainScanTitle(
+  id: string,
+  rawTitle: unknown,
+): Promise<DomainScanLight | null> {
+  const { normalizeJobTitle } = await import('../job-title')
+  const title = normalizeJobTitle(rawTitle)
+  if (!title) return null
+  if (isDatabaseConfigured()) return (await dbApi()).dbUpdateDomainScanTitle(id, title)
+
+  const idx = store.domainScans.findIndex((d) => d.id === id)
+  if (idx < 0) return null
+  const next = { ...store.domainScans[idx]!, title }
+  store.domainScans = [
+    ...store.domainScans.slice(0, idx),
+    next,
+    ...store.domainScans.slice(idx + 1),
+  ]
+  return { ...next }
 }

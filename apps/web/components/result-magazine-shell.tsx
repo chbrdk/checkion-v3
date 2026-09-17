@@ -44,6 +44,9 @@ export async function ResultMagazineShell({
   const { scan } = overview
   const host = hostFromUrl(scan.url)
   const path = pathFromUrl(scan.url)
+  const customTitle = typeof scan.title === 'string' ? scan.title.trim() : ''
+  const fallbackTitle = overview.seo?.h1 ?? path
+  const title = customTitle || fallbackTitle
   const deck = overview.classification?.shortSummary ?? overview.lede
   const tone = scoreTone(scan.overallScore)
 
@@ -62,8 +65,8 @@ export async function ResultMagazineShell({
         issueStats={scan.issueStats ?? null}
         scoreFallback={overview.scores}
         host={host}
-        title={overview.seo?.h1 ?? path}
-        titleIsHome={!overview.seo?.h1 && path === '/'}
+        title={title}
+        titleIsHome={!customTitle && !overview.seo?.h1 && path === '/'}
         deck={deck}
         tags={overview.classification?.tags}
         variant={variant}

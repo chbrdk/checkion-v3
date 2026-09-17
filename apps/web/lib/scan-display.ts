@@ -68,3 +68,24 @@ export function formatScanShort(iso: string | null): string {
     return iso.slice(0, 10)
   }
 }
+
+/** Compact host+path for run list labels (shared by project panels). */
+export function compactScanUrl(url: string, max = 52): string {
+  try {
+    const u = new URL(url)
+    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '')
+    const full = `${u.hostname}${path}`
+    return full.length > max ? `${full.slice(0, max - 3)}…` : full
+  } catch {
+    return url.length > max ? `${url.slice(0, max - 3)}…` : url
+  }
+}
+
+/** Operator title when set; else compact URL fallback. */
+export function displayRunTitle(
+  title: string | null | undefined,
+  url: string,
+): string {
+  const custom = typeof title === 'string' ? title.trim() : ''
+  return custom || compactScanUrl(url)
+}

@@ -9,6 +9,7 @@ Accepted (Phase 1) · Correlation fields implemented with AUDION ↔ CHECKION si
 | GET | `/api/scans?projectId=` | List |
 | POST | `/api/scans` | `{ projectId, mode, url, … }` → `ScanSummary` 201 |
 | GET | `/api/scans/:id` | Summary |
+| PATCH | `/api/scans/:id` | Rename — `{ title }` (1–120) → `ScanSummary` — see `scan-run-title.md` |
 | GET | `/api/scans/:id/overview` | Light overview payload |
 | GET | `/api/scans/:id/issues` | `{ items: IssueSummary[] }` |
 | GET | `/api/scans/:id/scores` | `{ items: ScoreCard[] }` |

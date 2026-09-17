@@ -30,6 +30,8 @@ export async function DomainMagazineShell({
   const project = await getProject(overview.scan.projectId)
   const { scan } = overview
   const host = hostFromUrl(scan.rootUrl)
+  const customTitle = typeof scan.title === 'string' ? scan.title.trim() : ''
+  const title = customTitle || host
   const deck = overview.classification?.shortSummary ?? overview.lede
   const tone = scoreTone(scan.overallScore)
   const stats = scan.issueStats
@@ -49,6 +51,7 @@ export async function DomainMagazineShell({
         issueCount={scan.issueCount}
         errors={stats?.errors ?? null}
         host={host}
+        title={title}
         deck={deck}
         tags={overview.classification?.tags}
         variant={variant}

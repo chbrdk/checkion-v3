@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Chip, Text } from '@msqdx/ui'
+import { Chip } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import { decodeVirtualCorpusLede } from '../lib/virtual-domain-page-scan'
 import { useT } from '../lib/user-prefs'
 import { GeoTitleEditor } from './geo-title-editor'
+import { JobTitleEditor } from './job-title-editor'
 
 function localizeDeck(
   deck: string | null | undefined,
@@ -120,9 +121,15 @@ export function ResultMagazineChrome({
 
           <div className="checkion-cover__copy">
             <p className="checkion-cover__host">{host}</p>
-            <Text role="headline" as="h2" className="checkion-cover__title">
-              {displayTitle}
-            </Text>
+            <JobTitleEditor
+              title={displayTitle}
+              endpoint={paths.routes.apiScanDetail(scanId)}
+              dialogTitle="Rename scan"
+              renameAriaLabel="Rename WCAG scan"
+              renameTitle="Rename this scan"
+              fieldAriaLabel="Scan name"
+              variant={variant}
+            />
             {variant === 'cover' ? (
               <>
                 {displayDeck ? <p className="checkion-cover__deck">{displayDeck}</p> : null}
@@ -155,6 +162,7 @@ export function DomainMagazineChrome({
   issueCount,
   errors,
   host,
+  title,
   deck,
   tags,
   variant,
@@ -169,6 +177,8 @@ export function DomainMagazineChrome({
   issueCount: number
   errors?: number | null
   host: string
+  /** Operator title or host fallback */
+  title: string
   deck: string | null | undefined
   tags?: string[]
   variant: 'cover' | 'folio'
@@ -226,9 +236,15 @@ export function DomainMagazineChrome({
           <div className="checkion-cover__copy">
             <p className="checkion-cover__kicker">{t('domain.kicker')}</p>
             <p className="checkion-cover__host">{host}</p>
-            <Text role="headline" as="h2" className="checkion-cover__title">
-              {t('domain.titlePages', { count: pageCount.toLocaleString() })}
-            </Text>
+            <JobTitleEditor
+              title={title}
+              endpoint={paths.routes.apiDomainScanDetail(scanId)}
+              dialogTitle="Rename deep scan"
+              renameAriaLabel="Rename domain scan"
+              renameTitle="Rename this deep scan"
+              fieldAriaLabel="Domain scan name"
+              variant={variant}
+            />
             {variant === 'cover' ? (
               <>
                 {displayDeck ? <p className="checkion-cover__deck">{displayDeck}</p> : null}

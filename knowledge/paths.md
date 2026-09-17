@@ -122,6 +122,9 @@ Public landing: `/share/[token]` · API `/api/share`
 ## Results
 - Index `/results` redirects home (no rail entry / no scan ledger) — discovery via Home, Projects, job notifications
 - Magazines: `/results/:id/{overview|issues|detail}` (`paths.routes.resultSection`)
+- Rename WCAG run: `PATCH /api/scans/:id` `{ title }` (`paths.routes.apiScanDetail`) — masthead **Rename** · `specs/api/scan-run-title.md` · project Runs list uses same title
+- Domain magazines: `/domain/:id/{overview|issues|detail}` (`paths.routes.domainSection`)
+- Rename deep crawl: `PATCH /api/domain-scans/:id` `{ title }` (`paths.routes.apiDomainScanDetail`) — same title rules as WCAG / GEO
 - Spec: `specs/domain/project-workspace.md`
 
 ## Settings

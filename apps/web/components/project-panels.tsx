@@ -14,7 +14,7 @@ import type {
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { paths } from '../lib/paths'
-import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
+import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
@@ -35,17 +35,6 @@ function capabilityHint(status: CapabilitySyncStatus, t: Translator): string | n
   if (status === 'pending') return t('projects.capabilityHintPending')
   if (status === 'error') return t('projects.capabilityHintError')
   return null
-}
-
-function compactUrl(url: string): string {
-  try {
-    const u = new URL(url)
-    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '')
-    const full = `${u.hostname}${path}`
-    return full.length > 52 ? `${full.slice(0, 49)}…` : full
-  } catch {
-    return url.length > 52 ? `${url.slice(0, 49)}…` : url
-  }
 }
 
 type CapFilter = 'all' | CapabilitySyncStatus
@@ -564,7 +553,7 @@ export function ProjectWorkspace({
                         className="checkion-project-run-list__title"
                         title={scan.url}
                       >
-                        {compactUrl(scan.url)}
+                        {displayRunTitle(scan.title, scan.url)}
                       </Link>
                       <Text role="meta" as="p" className="checkion-project-run-list__meta">
                         {scan.status}
@@ -608,7 +597,7 @@ export function ProjectWorkspace({
                         className="checkion-project-run-list__title"
                         title={d.rootUrl}
                       >
-                        {compactUrl(d.rootUrl)}
+                        {displayRunTitle(d.title, d.rootUrl)}
                       </Link>
                       <Text role="meta" as="p" className="checkion-project-run-list__meta">
                         {t('projects.pagesIssues', {

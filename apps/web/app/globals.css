@@ -3528,18 +3528,21 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   color: var(--msqdx-color-text-muted, color-mix(in srgb, currentColor 62%, transparent));
 }
 
-.checkion-geo-title-editor {
+.checkion-geo-title-editor,
+.checkion-job-title-editor {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 0.75rem;
 }
 
-.checkion-geo-title-editor .checkion-cover__title {
+.checkion-geo-title-editor .checkion-cover__title,
+.checkion-job-title-editor .checkion-cover__title {
   margin: 0;
 }
 
-.checkion-geo-title-editor__rename.ds-btn {
+.checkion-geo-title-editor__rename.ds-btn,
+.checkion-job-title-editor__rename.ds-btn {
   flex-shrink: 0;
 }
 

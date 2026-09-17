@@ -376,10 +376,12 @@ function systemicFromIssues(issues: IssueSummary[]): DomainSystemicIssue[] {
 export async function dbGetDomainOverview(id: string): Promise<DomainOverview | null> {
   if (id === 'domain-1') {
     const row = await dbGetDomainScanRow(id)
+    const live = LIVE_DOMAIN_OVERVIEW
     return {
-      ...LIVE_DOMAIN_OVERVIEW,
-      scores: row?.payload?.scores ?? LIVE_DOMAIN_OVERVIEW.scores,
-      pageSamples: withPageSampleScanIds(id, LIVE_DOMAIN_OVERVIEW.pageSamples),
+      ...live,
+      scan: row ? { ...live.scan, ...rowToDomain(row) } : live.scan,
+      scores: row?.payload?.scores ?? live.scores,
+      pageSamples: withPageSampleScanIds(id, live.pageSamples),
     }
   }
 
@@ -756,4 +758,52 @@ export async function dbControlDomainScan(
 export async function dbListActiveDomainScans(projectId: string): Promise<DomainScanLight[]> {
   const rows = await dbListDomainScans(projectId)
   return rows.filter((row) => isActiveDomainScanStatus(row.status))
+}
+
+/** Rename a single-page scan — stores `title` on payload.scan. */
+export async function dbUpdateScanTitle(
+  id: string,
+  title: string,
+): Promise<ScanSummary | null> {
+  const row = await dbGetScanRow(id)
+  if (!row) return null
+  const db = getDb()
+  await db
+    .update(scans)
+    .set({
+      payload: {
+        ...(row.payload ?? {}),
+        scan: {
+          ...(row.payload?.scan ?? {}),
+          title,
+        },
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(scans.id, id))
+  return dbGetScan(id)
+}
+
+/** Rename a domain crawl — stores `title` on payload.domain. */
+export async function dbUpdateDomainScanTitle(
+  id: string,
+  title: string,
+): Promise<DomainScanLight | null> {
+  const row = await dbGetDomainScanRow(id)
+  if (!row) return null
+  const db = getDb()
+  await db
+    .update(domainScans)
+    .set({
+      payload: {
+        ...(row.payload ?? {}),
+        domain: {
+          ...(row.payload?.domain ?? {}),
+          title,
+        },
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(domainScans.id, id))
+  return dbGetDomainScan(id)
 }

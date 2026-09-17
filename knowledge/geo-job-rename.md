@@ -11,6 +11,9 @@
 ## Code
 | Piece | Path |
 |-------|------|
-| Normalize | `apps/web/lib/geo-job-title.ts` |
+| Normalize | `apps/web/lib/job-title.ts` (via `geo-job-title.ts` re-export) |
 | Store | `updateGeoJobTitle` in `geo-store` / `dbUpdateGeoJobTitle` |
-| UI | `GeoTitleEditor` in masthead |
+| UI | `GeoTitleEditor` → shared `JobTitleEditor` |
+
+## Related
+WCAG / Domain rename: `knowledge/scan-run-rename.md`

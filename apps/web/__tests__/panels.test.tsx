@@ -191,8 +191,9 @@ describe('panels smoke', () => {
         ),
       }),
     )
-    expect(screen.getByText('durr.com')).toBeTruthy()
-    expect(screen.getByText(/pages scanned/i)).toBeTruthy()
+    expect(screen.getAllByText('durr.com').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('heading', { name: 'durr.com' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Rename domain scan/i })).toBeTruthy()
     expect(screen.getByLabelText(/Domain score 43/i)).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Seven lenses on the corpus/i })).toBeTruthy()
     expect(screen.getByText(/Corpus signal/i)).toBeTruthy()

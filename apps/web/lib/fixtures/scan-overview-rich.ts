@@ -65,7 +65,7 @@ export function buildRichScanOverview(
     return {
       ...base,
       ...LIVE_OVERVIEW_ENRICHMENT,
-      scan: LIVE_SCAN_SUMMARY,
+      scan: { ...LIVE_SCAN_SUMMARY, ...scan },
       scores: enrichScores(scores),
       topIssues: selectTopIssueGroups(issues, 5),
       passedChecks: LIVE_PASSED_CHECKS.length ? LIVE_PASSED_CHECKS : PASSED_SAMPLE,

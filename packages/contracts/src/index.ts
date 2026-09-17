@@ -100,6 +100,11 @@ export interface ScanSummary {
   overallScore: number | null
   issueCount: number
   error?: string
+  /**
+   * Optional operator name for the run (masthead + project Runs list).
+   * When unset, UI falls back to page H1 / path / compact URL.
+   */
+  title?: string | null
   /** Multi-device session id (desktop/tablet/mobile) */
   groupId?: string | null
   device?: ScanDevice
@@ -411,6 +416,11 @@ export interface DomainScanLight {
   startedAt: string
   completedAt: string | null
   error?: string
+  /**
+   * Optional operator name for the deep crawl (masthead + project Runs list).
+   * When unset, UI falls back to host / compact root URL.
+   */
+  title?: string | null
   progress?: {
     scanned: number
     total: number
