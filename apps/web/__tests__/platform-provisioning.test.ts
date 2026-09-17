@@ -197,6 +197,49 @@ describe('platform provisioning projects', () => {
     expect(body.latestCompletedScan?.source).toBe('domain')
     expect(body.latestCompletedScan?.scores?.length).toBeGreaterThan(0)
     expect(body.scoreHistory.some((h: { id: string }) => h.id === domain.id)).toBe(true)
+    expect(body.latestDomainHealth?.id).toBe(domain.id)
+    expect(Array.isArray(body.latestDomainHealth?.systemicIssues)).toBe(true)
+    expect(body.latestDomainHealth?.performance == null || typeof body.latestDomainHealth.performance.avgLcp === 'number').toBe(true)
+  })
+
+  it('GET includes latestGeoDepth when a completed GEO job exists', async () => {
+    const { PUT, GET } = await import('../app/api/platform/provisioning/projects/[id]/route')
+    await PUT(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-geo-depth', {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          contractVersion: PLEXON_FEDERATION_CONTRACT_VERSION,
+          name: 'GEO depth',
+          domain: 'geo-depth.example',
+          platformCompanyId: 'comp-1',
+          ownerUserId: 'user-1',
+        }),
+      }),
+      { params: Promise.resolve({ id: 'pp-geo-depth' }) },
+    )
+
+    const project = await getProjectByPlatformId('pp-geo-depth')
+    expect(project).toBeTruthy()
+    const job = await createGeoJob({
+      projectId: project!.id,
+      url: 'https://geo-depth.example/',
+      queries: ['best widgets'],
+      title: 'GEO depth job',
+    })
+    expect(job.status).toBe('completed')
+
+    const res = await GET(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-geo-depth', {
+        headers: authHeaders({ 'X-Plexon-User-Id': 'user-1' }),
+      }),
+      { params: Promise.resolve({ id: 'pp-geo-depth' }) },
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.latestGeoDepth?.id).toBe(job.id)
+    expect(Array.isArray(body.latestGeoDepth?.recommendations)).toBe(true)
+    expect(Array.isArray(body.latestGeoDepth?.shareOfVoice)).toBe(true)
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {

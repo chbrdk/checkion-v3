@@ -13,8 +13,9 @@ import {
   listScans,
   getScanIssues,
   getScanScores,
+  getDomainOverview,
 } from '../../../../../../lib/fixtures/scan-store'
-import { listGeoJobs } from '../../../../../../lib/fixtures/geo-store'
+import { listGeoJobs, getGeoOverview } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
 const SCORE_HISTORY_LIMIT = 12
@@ -182,6 +183,172 @@ export async function GET(
     .slice(0, SCORE_HISTORY_LIMIT)
     .map(({ at: _at, ...row }) => row)
 
+  /** Wave C — latest completed domain overview (systemic / perf / SEO / samples). */
+  let latestDomainHealth: {
+    id: string
+    url: string
+    overallScore: number | null
+    issueCount: number
+    completedAt: string | null
+    scores: Array<{ kind: string; label: string; value: number; max: number }>
+    systemicIssues: Array<{
+      id: string
+      title: string
+      pageCount: number
+      severity: string
+      ruleId: string
+    }>
+    performance: {
+      avgTtfb: number
+      avgFcp: number
+      avgLcp: number
+      avgDomLoad: number
+      pageCount: number
+    } | null
+    seoCoverage: {
+      totalPages: number
+      withTitle: number
+      withH1: number
+      withMetaDescription: number
+      withCanonical: number
+      canonicalMismatchCount: number
+      duplicateTitleGroupCount: number
+    } | null
+    pageSamples: Array<{
+      url: string
+      score: number | null
+      errors: number
+      warnings: number
+      scanId: string
+    }>
+  } | null = null
+
+  if (latestDomain) {
+    const overview = await getDomainOverview(latestDomain.id)
+    if (overview) {
+      latestDomainHealth = {
+        id: overview.scan.id,
+        url: overview.scan.rootUrl,
+        overallScore: overview.scan.overallScore,
+        issueCount: overview.scan.issueCount,
+        completedAt: overview.scan.completedAt,
+        scores: (overview.scores ?? []).map((s) => ({
+          kind: s.kind,
+          label: s.label,
+          value: s.value,
+          max: s.max,
+        })),
+        systemicIssues: (overview.systemicIssues ?? []).slice(0, 40).map((i) => ({
+          id: i.id,
+          title: i.title,
+          pageCount: i.pageCount,
+          severity: i.severity ?? '',
+          ruleId: i.ruleId ?? '',
+        })),
+        performance: overview.performance
+          ? {
+              avgTtfb: overview.performance.avgTtfb,
+              avgFcp: overview.performance.avgFcp,
+              avgLcp: overview.performance.avgLcp,
+              avgDomLoad: overview.performance.avgDomLoad,
+              pageCount: overview.performance.pageCount,
+            }
+          : null,
+        seoCoverage: overview.seoCoverage
+          ? {
+              totalPages: overview.seoCoverage.totalPages,
+              withTitle: overview.seoCoverage.withTitle,
+              withH1: overview.seoCoverage.withH1,
+              withMetaDescription: overview.seoCoverage.withMetaDescription,
+              withCanonical: overview.seoCoverage.withCanonical,
+              canonicalMismatchCount: overview.seoCoverage.canonicalMismatchCount,
+              duplicateTitleGroupCount: overview.seoCoverage.duplicateTitleGroupCount,
+            }
+          : null,
+        pageSamples: (overview.pageSamples ?? []).slice(0, 25).map((p) => ({
+          url: p.url,
+          score: p.score,
+          errors: p.errors ?? 0,
+          warnings: p.warnings ?? 0,
+          scanId: p.scanId ?? '',
+        })),
+      }
+    }
+  }
+
+  /** Wave C — latest completed GEO overview (EEAT / SoV / recommendations). */
+  const completedGeo = geoJobs
+    .filter((j) => j.status === 'completed')
+    .sort((a, b) => activityTime(b.completedAt) - activityTime(a.completedAt))
+  const latestGeo = completedGeo[0] ?? null
+
+  let latestGeoDepth: {
+    id: string
+    title: string
+    url: string
+    score: number | null
+    citedShare: number
+    completedAt: string | null
+    measurement: string
+    eeat: {
+      experience: number
+      expertise: number
+      authoritativeness: number
+      trustworthiness: number
+      geoFitness: number
+    } | null
+    shareOfVoice: Array<{
+      domain: string
+      shareOfVoice: number
+      avgPosition: number
+      mentionCount: number
+      isTarget: boolean
+    }>
+    recommendations: Array<{
+      id: string
+      title: string
+      severity: string
+      source: string
+    }>
+  } | null = null
+
+  if (latestGeo) {
+    const overview = await getGeoOverview(latestGeo.id)
+    if (overview) {
+      latestGeoDepth = {
+        id: overview.job.id,
+        title: overview.job.title,
+        url: overview.job.url,
+        score: overview.job.overallScore,
+        citedShare: overview.job.citedShare,
+        completedAt: overview.job.completedAt,
+        measurement: overview.job.measurement ?? 'recall',
+        eeat: overview.eeat
+          ? {
+              experience: overview.eeat.experience,
+              expertise: overview.eeat.expertise,
+              authoritativeness: overview.eeat.authoritativeness,
+              trustworthiness: overview.eeat.trustworthiness,
+              geoFitness: overview.eeat.geoFitness,
+            }
+          : null,
+        shareOfVoice: (overview.shareOfVoice ?? []).slice(0, 20).map((r) => ({
+          domain: r.domain,
+          shareOfVoice: r.shareOfVoice,
+          avgPosition: r.avgPosition,
+          mentionCount: r.mentionCount,
+          isTarget: Boolean(r.isTarget),
+        })),
+        recommendations: (overview.recommendations ?? []).slice(0, 20).map((r) => ({
+          id: r.id,
+          title: r.title,
+          severity: r.severity,
+          source: r.source ?? '',
+        })),
+      }
+    }
+  }
+
   return jsonWithContract({
     externalProjectId: project.id,
     platformProjectId,
@@ -219,6 +386,8 @@ export async function GET(
     })),
     scoreHistory,
     latestCompletedScan,
+    latestDomainHealth,
+    latestGeoDepth,
   })
 }
 
