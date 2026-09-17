@@ -3516,6 +3516,18 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   gap: 0.35rem;
 }
 
+.checkion-geo-query-list__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.checkion-geo-query-list__paste-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--msqdx-color-text-muted, color-mix(in srgb, currentColor 62%, transparent));
+}
+
 .checkion-geo-query-list .section-chrome {
   align-items: center;
 }

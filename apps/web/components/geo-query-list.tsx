@@ -5,9 +5,10 @@
  * (numbered rows, inline edit, add/remove) + Suggest dialog. Primitives from @msqdx/ui.
  */
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ClipboardEvent } from 'react'
 import { Button, EmptyState, SectionChrome } from '@msqdx/ui'
 import { Dialog } from '../lib/msqdx-ui-client'
+import { applyPastedGeoQueries } from '../lib/geo-query-paste'
 import {
   mergeQuerySuggestions,
   type GeoQuerySuggestion,
@@ -45,6 +46,7 @@ export function GeoQueryList({
   const [suggestions, setSuggestions] = useState<GeoQuerySuggestion[]>([])
   const [suggestSource, setSuggestSource] = useState<'fixture' | 'openai' | null>(null)
   const [usedCollectionKnowledge, setUsedCollectionKnowledge] = useState(false)
+  const [pasteHint, setPasteHint] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const skipBlurSave = useRef(false)
   const valueRef = useRef(value)
@@ -187,6 +189,58 @@ export function GeoQueryList({
     setAccepting(null)
   }
 
+  function applyClipboardText(raw: string): boolean {
+    const { next, added, isList } = applyPastedGeoQueries(valueRef.current, raw)
+    if (!isList && added === 0) return false
+    if (isList || added > 0) {
+      onChange(next)
+      valueRef.current = next
+      setEditingIndex(null)
+      setDraft('')
+      setPasteHint(
+        added > 0
+          ? `Added ${added} quer${added === 1 ? 'y' : 'ies'} from paste`
+          : 'Queries already on the list',
+      )
+      window.setTimeout(() => setPasteHint(null), 2800)
+      return true
+    }
+    return false
+  }
+
+  function onListPaste(event: ClipboardEvent) {
+    if (disabled) return
+    const raw = event.clipboardData.getData('text/plain')
+    if (!raw.trim()) return
+    const parsed = applyPastedGeoQueries([], raw).next
+    if (parsed.length < 2) return
+    event.preventDefault()
+    applyClipboardText(raw)
+  }
+
+  function onInputPaste(event: ClipboardEvent<HTMLInputElement>) {
+    if (disabled) return
+    const raw = event.clipboardData.getData('text/plain')
+    const parsed = applyPastedGeoQueries([], raw).next
+    if (parsed.length < 2) return
+    event.preventDefault()
+    applyClipboardText(raw)
+  }
+
+  async function pasteFromClipboard() {
+    if (disabled || editingIndex != null) return
+    try {
+      const raw = await navigator.clipboard.readText()
+      if (!applyClipboardText(raw)) {
+        setPasteHint('Clipboard has no query list')
+        window.setTimeout(() => setPasteHint(null), 2800)
+      }
+    } catch {
+      setPasteHint('Paste into the list (⌘V / Ctrl+V)')
+      window.setTimeout(() => setPasteHint(null), 3200)
+    }
+  }
+
   const filledCount = value.filter((q) => q.trim()).length
   const nextNum = String(value.length + 1).padStart(2, '0')
   const sourceHint =
@@ -198,25 +252,48 @@ export function GeoQueryList({
   const knowledgeHint = usedCollectionKnowledge ? 'Using Collection knowledge' : null
 
   return (
-    <div className="checkion-geo-query-list" role="group" aria-label="GEO queries">
+    <div
+      className="checkion-geo-query-list"
+      role="group"
+      aria-label="GEO queries"
+      onPaste={onListPaste}
+    >
       <SectionChrome
         quiet
         title="Queries"
         meta={`${filledCount}`}
         as="h3"
         action={
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={disabled || editingIndex != null}
-            onClick={openSuggest}
-            aria-label="AI suggest GEO queries"
-          >
-            Suggest
-          </Button>
+          <div className="checkion-geo-query-list__actions">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={disabled || editingIndex != null}
+              onClick={() => void pasteFromClipboard()}
+              aria-label="Paste GEO queries from clipboard"
+              title="Paste a numbered or line-broken list of prompts"
+            >
+              Paste
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={disabled || editingIndex != null}
+              onClick={openSuggest}
+              aria-label="AI suggest GEO queries"
+            >
+              Suggest
+            </Button>
+          </div>
         }
       />
+      {pasteHint ? (
+        <p className="checkion-geo-query-list__paste-hint" role="status">
+          {pasteHint}
+        </p>
+      ) : null}
 
       {value.length ? (
         <ol className="checkion-magazine-list checkion-geo-query-list__items">
@@ -238,6 +315,7 @@ export function GeoQueryList({
                       disabled={disabled}
                       aria-label={`Edit GEO query ${index + 1}`}
                       onChange={(e) => setDraft(e.target.value)}
+                      onPaste={onInputPaste}
                       onBlur={() => {
                         if (skipBlurSave.current) {
                           skipBlurSave.current = false
@@ -265,7 +343,9 @@ export function GeoQueryList({
                       {query.trim() ? (
                         query
                       ) : (
-                        <span className="checkion-geo-query-list__placeholder">Add prompt…</span>
+                        <span className="checkion-geo-query-list__placeholder">
+                          Add prompt… or paste a list
+                        </span>
                       )}
                     </button>
                   )}
@@ -289,10 +369,11 @@ export function GeoQueryList({
         </ol>
       ) : (
         <EmptyState>
-          No queries yet.{' '}
+          No queries yet. Paste a list or{' '}
           <button type="button" className="checkion-link" onClick={onAdd} disabled={disabled}>
-            Add one
+            add one
           </button>
+          .
         </EmptyState>
       )}
 

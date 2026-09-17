@@ -30,7 +30,7 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`) — 
 5. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
    - **URL** — hero input (page or host) — WCAG / SEO required; GEO optional when Company name is set
    - **GEO Company name** — hero input beside URL; optional when URL is set. At least one of URL **or** Company name is required to start
-   - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
+   - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Paste** (smart list paste) · **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO / GEO (same 60/40 hero sizing; GEO row may be URL · Company · Project). Destination status stays quiet
 
 ### GEO compose validation (visible URL / company / project)
@@ -76,6 +76,7 @@ Primitives: `Panel` (transparent stage shell) · `Field` / `Input` / `Select` / 
 ### GEO query list + Suggest
 - Default rows: brand-derived prompts (`defaultGeoQueries(url, { companyName })`). Changing URL / company refreshes defaults only when the list still matches the previous brand defaults.
 - **Suggest** → `POST /api/geo/suggest-queries` `{ url?, companyName?, project?: { name, domain }, existing?, max? }` → dialog to Add / Add all. At least one of `url` / `companyName` required.
+- **Paste (smart list)** → clipboard with ≥2 prompts (newlines, `1.` / `01` / bullets, or multi-`?` on one line) maps into rows via `lib/geo-query-paste.ts` (strip markers, dedupe, cap 24). Empty list replaced; filled list merged. **Paste** CTA or ⌘V/Ctrl+V on the list / while editing. Single-line paste stays native.
 - **Fixture behavior** (no `OPENAI_API_KEY`, CI / local dummy): returns host/brand-derived pool beyond the three launch defaults; response `source: "fixture"`, `stubbed: true`.
 - **Live Suggest** (`OPENAI_API_KEY` set): OpenAI prompt suggestions (`source: "openai"`); falls back to fixture pool on failure.
 - Submit still posts `queries: string[]` to `POST /api/geo-jobs` (empty list falls back to brand defaults client-side).
