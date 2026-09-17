@@ -8,7 +8,7 @@ import {
   getProjectByPlatformId,
   upsertByPlatformProjectId,
 } from '../../../../../../lib/fixtures/project-store'
-import { listDomainScans, listScans } from '../../../../../../lib/fixtures/scan-store'
+import { listDomainScans, listScans, getScanIssues, getScanScores } from '../../../../../../lib/fixtures/scan-store'
 import { listGeoJobs } from '../../../../../../lib/fixtures/geo-store'
 
 const CATALOG_LIMIT = 25
@@ -47,6 +47,68 @@ export async function GET(
   const geoCatalog = geoJobs.slice(0, CATALOG_LIMIT)
   const activitySingles = scans.filter((s) => !s.domainScanId).length
 
+  /** Newest completed single scan — scores + issue rollup for METRON suite export. */
+  const latestCompleted =
+    scans
+      .filter((s) => !s.domainScanId && s.status === 'completed')
+      .sort((a, b) => {
+        const ta = Date.parse(a.completedAt ?? a.startedAt ?? '') || 0
+        const tb = Date.parse(b.completedAt ?? b.startedAt ?? '') || 0
+        return tb - ta
+      })[0] ?? null
+
+  let latestCompletedScan: {
+    id: string
+    url: string
+    overallScore: number | null
+    issueCount: number
+    completedAt: string | null
+    scores: Array<{ kind: string; label: string; value: number; max: number }>
+    issueRollup: Array<{ severity: string; section: string; count: number }>
+    topIssues: Array<{
+      id: string
+      severity: string
+      section: string
+      title: string
+      ruleId: string
+      affectedCount: number
+    }>
+  } | null = null
+
+  if (latestCompleted) {
+    const scores = await getScanScores(latestCompleted.id)
+    const issues = await getScanIssues(latestCompleted.id)
+    const rollupMap = new Map<string, { severity: string; section: string; count: number }>()
+    for (const issue of issues) {
+      const key = `${issue.severity}::${issue.section}`
+      const prev = rollupMap.get(key)
+      if (prev) prev.count += 1
+      else rollupMap.set(key, { severity: issue.severity, section: issue.section, count: 1 })
+    }
+    latestCompletedScan = {
+      id: latestCompleted.id,
+      url: latestCompleted.url,
+      overallScore: latestCompleted.overallScore,
+      issueCount: latestCompleted.issueCount,
+      completedAt: latestCompleted.completedAt,
+      scores: scores.map((s) => ({
+        kind: s.kind,
+        label: s.label,
+        value: s.value,
+        max: s.max,
+      })),
+      issueRollup: [...rollupMap.values()].sort((a, b) => b.count - a.count),
+      topIssues: issues.slice(0, 50).map((i) => ({
+        id: i.id,
+        severity: i.severity,
+        section: i.section,
+        title: i.title,
+        ruleId: i.ruleId,
+        affectedCount: i.affectedCount,
+      })),
+    }
+  }
+
   return jsonWithContract({
     externalProjectId: project.id,
     platformProjectId,
@@ -67,6 +129,8 @@ export async function GET(
       url: s.url,
       score: s.overallScore ?? 0,
       timestamp: s.completedAt ?? s.startedAt,
+      status: s.status,
+      issueCount: s.issueCount,
     })),
     geoJobs: geoCatalog.map((j) => ({
       id: j.id,
@@ -77,6 +141,7 @@ export async function GET(
       timestamp: j.completedAt,
       citedShare: j.citedShare,
     })),
+    latestCompletedScan,
   })
 }
 

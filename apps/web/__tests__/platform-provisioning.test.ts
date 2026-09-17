@@ -106,6 +106,49 @@ describe('platform provisioning projects', () => {
     expect(body.geoJobCount).toBe(0)
     expect(body.standaloneScans).toEqual([])
     expect(body.geoJobs).toEqual([])
+    expect(body.latestCompletedScan).toBeNull()
+  })
+
+  it('GET includes latestCompletedScan distillate after a completed scan', async () => {
+    const { PUT, GET } = await import('../app/api/platform/provisioning/projects/[id]/route')
+    await PUT(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-distill', {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          contractVersion: PLEXON_FEDERATION_CONTRACT_VERSION,
+          name: 'Distillate',
+          domain: 'distill.example',
+          platformCompanyId: 'comp-1',
+          ownerUserId: 'user-1',
+        }),
+      }),
+      { params: Promise.resolve({ id: 'pp-distill' }) },
+    )
+
+    const project = await getProjectByPlatformId('pp-distill')
+    expect(project).toBeTruthy()
+    const scan = await createScan({
+      projectId: project!.id,
+      mode: 'single',
+      url: 'https://distill.example/page',
+    })
+    expect(scan.status).toBe('completed')
+
+    const res = await GET(
+      new Request('http://localhost/api/platform/provisioning/projects/pp-distill', {
+        headers: authHeaders({ 'X-Plexon-User-Id': 'user-1' }),
+      }),
+      { params: Promise.resolve({ id: 'pp-distill' }) },
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.latestCompletedScan?.id).toBe(scan.id)
+    expect(body.latestCompletedScan?.scores?.length).toBeGreaterThan(0)
+    expect(body.latestCompletedScan?.issueRollup).toBeDefined()
+    expect(Array.isArray(body.latestCompletedScan?.topIssues)).toBe(true)
+    expect(body.standaloneScans[0]?.status).toBe('completed')
+    expect(typeof body.standaloneScans[0]?.issueCount).toBe('number')
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {
