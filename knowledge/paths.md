@@ -140,7 +140,7 @@ Settings CRUD: `/api/tokens` · verify `/api/tokens/verify` · store `api-tokens
 Profile prefs: `GET`/`PATCH` `/api/prefs/profile` (Plexon `locale` + `themePreference`)
 
 ## Federation / Collection summary
-`GET /api/platform/provisioning/projects/{id}` — Plexon / METRON Collection dashboard BFF: catalogs + `latestCompletedScan` + `scoreHistory` + Wave C `latestDomainHealth` / `latestGeoDepth` for METRON suite sync.
+`GET /api/platform/provisioning/projects/{id}` — Plexon / METRON Collection dashboard BFF: catalogs + `latestCompletedScan` + `scoreHistory` + `latestDomainHealth` / `latestGeoDepth` (Wave C/D lenses, presence, insights) for METRON suite sync.
 
 ## DS
 Sibling `file:../../../msqdx-ui/packages/{ui,ui-tokens}` + barrels `lib/msqdx-ui*.ts` (deep `src/` re-exports, not package `dist`). Docker build pins the same sibling tree via `MSQDX_UI_REF` (see `Dockerfile`).

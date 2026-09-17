@@ -200,6 +200,12 @@ describe('platform provisioning projects', () => {
     expect(body.latestDomainHealth?.id).toBe(domain.id)
     expect(Array.isArray(body.latestDomainHealth?.systemicIssues)).toBe(true)
     expect(body.latestDomainHealth?.performance == null || typeof body.latestDomainHealth.performance.avgLcp === 'number').toBe(true)
+    expect(
+      body.latestDomainHealth?.ux == null || typeof body.latestDomainHealth.ux.score === 'number',
+    ).toBe(true)
+    expect(
+      body.latestDomainHealth?.eco == null || typeof body.latestDomainHealth.eco.avgCo2 === 'number',
+    ).toBe(true)
   })
 
   it('GET includes latestGeoDepth when a completed GEO job exists', async () => {
@@ -240,6 +246,11 @@ describe('platform provisioning projects', () => {
     expect(body.latestGeoDepth?.id).toBe(job.id)
     expect(Array.isArray(body.latestGeoDepth?.recommendations)).toBe(true)
     expect(Array.isArray(body.latestGeoDepth?.shareOfVoice)).toBe(true)
+    expect(
+      body.latestGeoDepth?.presence == null ||
+        typeof body.latestGeoDepth.presence.missRate === 'number',
+    ).toBe(true)
+    expect(Array.isArray(body.latestGeoDepth?.insights?.promptDuels ?? [])).toBe(true)
   })
 
   it('GET returns real store counts after scans and GEO jobs', async () => {

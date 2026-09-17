@@ -183,7 +183,7 @@ export async function GET(
     .slice(0, SCORE_HISTORY_LIMIT)
     .map(({ at: _at, ...row }) => row)
 
-  /** Wave C — latest completed domain overview (systemic / perf / SEO / samples). */
+  /** Wave C/D — latest completed domain overview (health + lenses). */
   let latestDomainHealth: {
     id: string
     url: string
@@ -221,6 +221,76 @@ export async function GET(
       warnings: number
       scanId: string
     }>
+    ux: {
+      score: number
+      cls: number
+      readabilityGrade: string
+      readabilityScore: number
+      brokenLinkCount: number
+      tapTargetIssueCount: number
+      pagesWithMultipleH1: number
+      pagesWithSkippedLevels: number
+      pageCount: number
+    } | null
+    eco: {
+      avgCo2: number
+      grade: string
+      avgPageWeightKb: number
+      pageCount: number
+    } | null
+    links: {
+      internal: number
+      external: number
+      broken: number
+      missingNoopener: number
+      total: number
+    } | null
+    securityPrivacy: {
+      https: boolean
+      hsts: boolean
+      csp: boolean
+      hasPrivacyPolicy: boolean
+      hasCookieBanner: boolean
+      mixedContent: boolean
+      xFrameOptions: boolean
+      xContentTypeOptions: boolean
+      referrerPolicy: boolean
+      permissionsPolicy: boolean
+      mixedContentCount: number
+    } | null
+    eeat: {
+      totalPages: number
+      pagesWithContact: number
+      pagesWithPrivacy: number
+      pagesWithImpressum: number
+      pagesWithAuthorBio: number
+      pagesWithArticleAuthor: number
+      avgCitationsPerPage: number
+      pagesWithTeam: number
+      pagesWithAbout: number
+      pagesWithCaseStudyMention: number
+    } | null
+    generative: {
+      score: number
+      discoverability: number
+      repurposing: number
+      withLlmsTxt: number
+      withRobotsAllowingAi: number
+      pageCount: number
+      citationDensity: number
+    } | null
+    infra: {
+      serverIp: string
+      city: string
+      country: string
+      cdnProvider: string
+      htmlLang: string
+      hreflangCount: number
+      platforms: string
+      tracking: string
+      hostingServer: string
+      hostingPoweredBy: string
+    } | null
   } | null = null
 
   if (latestDomain) {
@@ -272,11 +342,95 @@ export async function GET(
           warnings: p.warnings ?? 0,
           scanId: p.scanId ?? '',
         })),
+        ux: overview.ux
+          ? {
+              score: overview.ux.score,
+              cls: overview.ux.cls,
+              readabilityGrade: overview.ux.readabilityGrade,
+              readabilityScore: overview.ux.readabilityScore,
+              brokenLinkCount: overview.ux.brokenLinkCount,
+              tapTargetIssueCount: overview.ux.tapTargetIssueCount,
+              pagesWithMultipleH1: overview.ux.pagesWithMultipleH1,
+              pagesWithSkippedLevels: overview.ux.pagesWithSkippedLevels,
+              pageCount: overview.ux.pageCount,
+            }
+          : null,
+        eco: overview.eco
+          ? {
+              avgCo2: overview.eco.avgCo2,
+              grade: overview.eco.grade,
+              avgPageWeightKb: overview.eco.avgPageWeightKb,
+              pageCount: overview.eco.pageCount,
+            }
+          : null,
+        links: overview.links
+          ? {
+              internal: overview.links.internal,
+              external: overview.links.external,
+              broken: overview.links.broken,
+              missingNoopener: overview.links.missingNoopener,
+              total: overview.links.total ?? overview.links.internal + overview.links.external,
+            }
+          : null,
+        securityPrivacy: overview.securityPrivacy
+          ? {
+              https: overview.securityPrivacy.https,
+              hsts: overview.securityPrivacy.hsts,
+              csp: overview.securityPrivacy.csp,
+              hasPrivacyPolicy: overview.securityPrivacy.hasPrivacyPolicy,
+              hasCookieBanner: overview.securityPrivacy.hasCookieBanner,
+              mixedContent: overview.securityPrivacy.mixedContent,
+              xFrameOptions: Boolean(overview.securityPrivacy.xFrameOptions),
+              xContentTypeOptions: Boolean(overview.securityPrivacy.xContentTypeOptions),
+              referrerPolicy: Boolean(overview.securityPrivacy.referrerPolicy),
+              permissionsPolicy: Boolean(overview.securityPrivacy.permissionsPolicy),
+              mixedContentCount: overview.securityPrivacy.mixedContentCount ?? 0,
+            }
+          : null,
+        eeat: overview.eeat
+          ? {
+              totalPages: overview.eeat.totalPages,
+              pagesWithContact: overview.eeat.trust.pagesWithContact,
+              pagesWithPrivacy: overview.eeat.trust.pagesWithPrivacy,
+              pagesWithImpressum: overview.eeat.trust.pagesWithImpressum,
+              pagesWithAuthorBio: overview.eeat.expertise.pagesWithAuthorBio,
+              pagesWithArticleAuthor: overview.eeat.expertise.pagesWithArticleAuthor,
+              avgCitationsPerPage: overview.eeat.expertise.avgCitationsPerPage,
+              pagesWithTeam: overview.eeat.experience.pagesWithTeam,
+              pagesWithAbout: overview.eeat.experience.pagesWithAbout,
+              pagesWithCaseStudyMention: overview.eeat.experience.pagesWithCaseStudyMention,
+            }
+          : null,
+        generative: overview.generative
+          ? {
+              score: overview.generative.score,
+              discoverability: overview.generative.discoverability,
+              repurposing: overview.generative.repurposing,
+              withLlmsTxt: overview.generative.withLlmsTxt,
+              withRobotsAllowingAi: overview.generative.withRobotsAllowingAi ?? 0,
+              pageCount: overview.generative.pageCount,
+              citationDensity: overview.generative.citationDensity ?? 0,
+            }
+          : null,
+        infra: overview.infra
+          ? {
+              serverIp: overview.infra.serverIp ?? '',
+              city: overview.infra.city ?? '',
+              country: overview.infra.country ?? '',
+              cdnProvider: overview.infra.cdnProvider ?? '',
+              htmlLang: overview.infra.htmlLang ?? '',
+              hreflangCount: overview.infra.hreflangCount ?? 0,
+              platforms: (overview.infra.platforms ?? []).join('|'),
+              tracking: (overview.infra.tracking ?? []).join('|'),
+              hostingServer: overview.infra.hostingServer ?? '',
+              hostingPoweredBy: overview.infra.hostingPoweredBy ?? '',
+            }
+          : null,
       }
     }
   }
 
-  /** Wave C — latest completed GEO overview (EEAT / SoV / recommendations). */
+  /** Wave C/D — latest completed GEO overview (EEAT / SoV / presence / insights). */
   const completedGeo = geoJobs
     .filter((j) => j.status === 'completed')
     .sort((a, b) => activityTime(b.completedAt) - activityTime(a.completedAt))
@@ -310,11 +464,49 @@ export async function GET(
       severity: string
       source: string
     }>
+    presence: {
+      cellCount: number
+      hitCount: number
+      citedShare: number
+      missRate: number
+      avgPosition: number | null
+      firstCiteRate: number | null
+      mentionedShare: number | null
+      rivalCount: number
+      rivalSource: string
+      leaderDomain: string | null
+      gapToLead: number | null
+      byModel: Array<{
+        modelId: string
+        cellCount: number
+        hitCount: number
+        hitRate: number
+      }>
+    } | null
+    insights: {
+      missVsRival: Array<{
+        query: string
+        modelId: string
+        rivalDomain: string
+        rivalPosition: number
+        otherRivals: string
+      }>
+      promptDuels: Array<{
+        query: string
+        outcome: string
+        targetHitRate: number
+        targetAvgPosition: number | null
+        leaderDomain: string | null
+        intent: string
+      }>
+    } | null
   } | null = null
 
   if (latestGeo) {
     const overview = await getGeoOverview(latestGeo.id)
     if (overview) {
+      const solo = overview.presence?.solo
+      const field = overview.presence?.field ?? null
       latestGeoDepth = {
         id: overview.job.id,
         title: overview.job.title,
@@ -345,6 +537,46 @@ export async function GET(
           severity: r.severity,
           source: r.source ?? '',
         })),
+        presence: solo
+          ? {
+              cellCount: solo.cellCount,
+              hitCount: solo.hitCount,
+              citedShare: solo.citedShare,
+              missRate: solo.missRate,
+              avgPosition: solo.avgPosition,
+              firstCiteRate: solo.firstCiteRate,
+              mentionedShare: solo.mentionedShare ?? null,
+              rivalCount: overview.presence?.rivals?.length ?? 0,
+              rivalSource: overview.presence?.rivalSource ?? 'none',
+              leaderDomain: field?.leaderDomain ?? null,
+              gapToLead: field?.gapToLead ?? null,
+              byModel: (solo.byModel ?? []).slice(0, 20).map((m) => ({
+                modelId: m.modelId,
+                cellCount: m.cellCount,
+                hitCount: m.hitCount,
+                hitRate: m.hitRate,
+              })),
+            }
+          : null,
+        insights: overview.insights
+          ? {
+              missVsRival: (overview.insights.missVsRival ?? []).slice(0, 8).map((m) => ({
+                query: m.query,
+                modelId: m.modelId,
+                rivalDomain: m.rivalDomain,
+                rivalPosition: m.rivalPosition,
+                otherRivals: (m.otherRivals ?? []).join('|'),
+              })),
+              promptDuels: (overview.insights.promptDuels ?? []).slice(0, 20).map((d) => ({
+                query: d.query,
+                outcome: d.outcome,
+                targetHitRate: d.targetHitRate,
+                targetAvgPosition: d.targetAvgPosition,
+                leaderDomain: d.leaderDomain,
+                intent: d.intent,
+              })),
+            }
+          : null,
       }
     }
   }

@@ -9,7 +9,7 @@
 ## Directions
 | Direction | Endpoint | Notes |
 |-----------|----------|-------|
-| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Upsert / Collection dashboard summary (scans, domain, GEO) via stores. GET returns `latestCompletedScan` (standalone preferred, else domain) + `scoreHistory` + Wave C `latestDomainHealth` / `latestGeoDepth` for METRON suite sync. `status: archived` hides from default project lists. |
+| Plexon → CHECKION | `PUT/GET /api/platform/provisioning/projects/{id}` | Upsert / Collection dashboard summary (scans, domain, GEO) via stores. GET returns `latestCompletedScan` (standalone preferred, else domain) + `scoreHistory` + `latestDomainHealth` / `latestGeoDepth` (Wave C/D lenses, presence, insights) for METRON suite sync. `status: archived` hides from default project lists. |
 | CHECKION → Plexon | `POST …/checkion-project-origin` via `registerCheckionProjectOnPlexon` | Called from `POST /api/projects` when live + owner/company available |
 
 ## Mode
