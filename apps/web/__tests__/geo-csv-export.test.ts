@@ -5,8 +5,10 @@ import {
   buildGeoCsv,
   buildGeoCsvRows,
   escapeCsvField,
+  flattenCsvText,
   geoCsvFilename,
   GEO_CSV_COLUMNS,
+  GEO_CSV_DELIMITER,
   sanitizeCsvCell,
 } from '../lib/geo-csv-export'
 
@@ -53,32 +55,36 @@ function sampleOverview(overrides?: {
 }
 
 describe('geo-csv-export', () => {
-  it('sanitizes formula-like cells and escapes RFC 4180 fields', () => {
+  it('sanitizes formula-like cells and escapes semicolon fields', () => {
     expect(sanitizeCsvCell('=SUM(A1)')).toBe("'=SUM(A1)")
-    expect(escapeCsvField('a,b')).toBe('"a,b"')
+    expect(escapeCsvField('a;b')).toBe('"a;b"')
     expect(escapeCsvField('say "hi"')).toBe('"say ""hi"""')
-    expect(escapeCsvField('line\nbreak')).toBe('"line\nbreak"')
+    expect(flattenCsvText('line\nbreak')).toBe('line break')
+    expect(escapeCsvField('line\nbreak')).toBe('line break')
   })
 
-  it('builds one row per queryRun with job + answer columns', () => {
+  it('builds one analysis-first row per queryRun', () => {
     const overview = sampleOverview()
     const rows = buildGeoCsvRows(overview)
     expect(rows).toHaveLength(1)
     const row = rows[0]!
-    expect(row.job_id).toBe('geo-csv-1')
+    expect(row.query_index).toBe(1)
     expect(row.query).toBe('Best paint systems')
     expect(row.model_id).toBe('gpt-5.4-nano')
+    expect(row.hit).toBe('yes')
     expect(row.answer_text).toContain('Example leads')
-    expect(row.citations).toBe('example.com@1; abb.com@2')
+    expect(row.citations).toBe('example.com@1 | abb.com@2')
     expect(row.citation_urls).toBe('https://www.example.com/a')
     expect(row.search_queries).toBe('paint systems OEM')
     expect(row.our_position).toBe(1)
-    expect(row.co_cited).toBe('true')
-    expect(row.competitors).toBe('abb.com')
+    expect(row.co_cited).toBe('yes')
+    expect(row.job_id).toBe('geo-csv-1')
     expect(row.measurement).toBe('recall')
+    expect(GEO_CSV_COLUMNS[0]).toBe('query_index')
+    expect(GEO_CSV_COLUMNS.indexOf('answer_text')).toBeLessThan(GEO_CSV_COLUMNS.indexOf('job_id'))
   })
 
-  it('includes EEAT columns when present', () => {
+  it('includes EEAT score columns when present', () => {
     const rows = buildGeoCsvRows(
       sampleOverview({
         eeat: {
@@ -92,21 +98,49 @@ describe('geo-csv-export', () => {
       }),
     )
     expect(rows[0]!.eeat_geo_fitness).toBe(50)
-    expect(rows[0]!.eeat_missing_elements).toBe('FAQs; llms.txt')
   })
 
-  it('emits header-only CSV when queryRuns are empty', () => {
+  it('emits Excel sep hint + header-only when queryRuns are empty', () => {
     const csv = buildGeoCsv(sampleOverview({ queryRuns: [] }))
     expect(csv.startsWith('\uFEFF')).toBe(true)
     const lines = csv.replace(/^\uFEFF/, '').trimEnd().split('\r\n')
-    expect(lines).toHaveLength(1)
-    expect(lines[0]).toBe(GEO_CSV_COLUMNS.join(','))
+    expect(lines[0]).toBe('sep=;')
+    expect(lines[1]).toBe(GEO_CSV_COLUMNS.join(GEO_CSV_DELIMITER))
+    expect(lines).toHaveLength(2)
   })
 
-  it('round-trips commas and newlines inside answer_text', () => {
+  it('keeps one physical row per answer even with multiline text', () => {
     const csv = buildGeoCsv(sampleOverview())
-    expect(csv).toContain('"Lede with, comma and ""quotes""."')
-    expect(csv).toContain('"Example leads; ABB is second.\nLine two."')
+    const lines = csv.replace(/^\uFEFF/, '').trimEnd().split('\r\n')
+    // sep + header + 1 data row
+    expect(lines).toHaveLength(3)
+    expect(lines[2]).toContain('Example leads; ABB is second. Line two.')
+    expect(lines[2]?.includes('\n')).toBe(false)
+  })
+
+  it('sorts rows by query then model', () => {
+    const overview = sampleOverview({
+      queryRuns: [
+        {
+          queryId: 'q-2',
+          query: 'Best paint systems',
+          modelId: 'z-model',
+          answerText: 'z',
+          ourPosition: null,
+          citations: [],
+        },
+        {
+          queryId: 'q-1',
+          query: 'Best paint systems',
+          modelId: 'a-model',
+          answerText: 'a',
+          ourPosition: 1,
+          citations: [{ domain: 'example.com', position: 1 }],
+        },
+      ],
+    })
+    const rows = buildGeoCsvRows(overview)
+    expect(rows.map((r) => r.model_id)).toEqual(['a-model', 'z-model'])
   })
 
   it('builds a safe download filename', () => {

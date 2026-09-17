@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GET } from '../app/api/geo-jobs/[id]/export/route'
-import { GEO_CSV_COLUMNS } from '../lib/geo-csv-export'
+import { GEO_CSV_COLUMNS, GEO_CSV_DELIMITER } from '../lib/geo-csv-export'
 
 describe('GET /api/geo-jobs/:id/export', () => {
   it('returns CSV attachment for a fixture geo job', async () => {
@@ -16,10 +16,12 @@ describe('GET /api/geo-jobs/:id/export', () => {
     // UTF-8 BOM is present on the wire (Excel); Response.text() strips U+FEFF.
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
     const text = new TextDecoder().decode(bytes)
-    const header = text.split('\r\n')[0]
-    expect(header).toBe(GEO_CSV_COLUMNS.join(','))
+    const lines = text.split('\r\n')
+    expect(lines[0]).toBe('sep=;')
+    expect(lines[1]).toBe(GEO_CSV_COLUMNS.join(GEO_CSV_DELIMITER))
     expect(text).toContain('geo-1')
     expect(text).toContain('answer_text')
+    expect(text).toContain('query_index')
   })
 
   it('returns 404 for unknown jobs', async () => {

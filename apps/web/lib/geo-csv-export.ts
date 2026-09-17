@@ -1,60 +1,55 @@
 import type { GeoOverview, GeoQueryRun } from '@checkion-v3/contracts'
 
-/** Stable CSV header order — see `specs/api/geo-job-export-csv.md`. */
+/**
+ * Spreadsheet-first GEO export — German Excel friendly.
+ * See `specs/api/geo-job-export-csv.md`.
+ *
+ * - `;` field separator (Excel DE)
+ * - One physical row per query×model (newlines flattened)
+ * - Analysis columns first; thin job context last
+ */
 export const GEO_CSV_COLUMNS = [
+  'query_index',
+  'query',
+  'model_id',
+  'hit',
+  'our_position',
+  'first_domain',
+  'stolen_by',
+  'co_cited',
+  'target_mentioned',
+  'prompt_intent',
+  'prompt_duel_outcome',
+  'prompt_hit_rate',
+  'citations',
+  'citation_urls',
+  'search_queries',
+  'answer_text',
   'job_id',
   'job_title',
-  'project_id',
-  'url',
   'target_host',
-  'status',
+  'url',
   'measurement',
   'search_market',
   'completed_at',
-  'overall_score',
+  'status',
   'cited_share',
-  'query_count',
-  'model_count',
-  'competitors',
-  'models',
-  'lede',
-  'solo_cited_share',
-  'solo_miss_rate',
-  'solo_avg_position',
-  'solo_first_cite_rate',
-  'solo_mentioned_share',
-  'field_leader_domain',
-  'field_gap_to_lead',
-  'rival_source',
+  'overall_score',
   'rivals',
   'eeat_experience',
   'eeat_expertise',
   'eeat_authoritativeness',
   'eeat_trustworthiness',
   'eeat_geo_fitness',
-  'eeat_missing_elements',
-  'query_id',
-  'query',
-  'model_id',
-  'answer_text',
-  'our_position',
-  'citations',
-  'citation_urls',
-  'citation_contexts',
-  'search_queries',
-  'first_domain',
-  'rival_domains_in_answer',
-  'co_cited',
-  'stolen_by',
-  'target_mentioned_in_answer',
-  'prompt_intent',
-  'prompt_duel_outcome',
-  'prompt_target_hit_rate',
 ] as const
 
 export type GeoCsvColumn = (typeof GEO_CSV_COLUMNS)[number]
 
-const LIST_SEP = '; '
+/** Field separator — `;` so Excel DE does not dump the sheet into one column. */
+export const GEO_CSV_DELIMITER = ';'
+
+/** Inside list cells — must not collide with the field delimiter. */
+const LIST_SEP = ' | '
 
 /** Neutralize spreadsheet formula injection (Excel / Sheets). */
 export function sanitizeCsvCell(raw: string): string {
@@ -62,17 +57,27 @@ export function sanitizeCsvCell(raw: string): string {
   return raw
 }
 
-/** RFC 4180 field escape. */
+/** Collapse whitespace so each query×model stays one spreadsheet row. */
+export function flattenCsvText(value: unknown): string {
+  return String(value ?? '')
+    .replace(/\r\n|\r|\n/g, ' ')
+    .replace(/\t/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim()
+}
+
+/** Escape one field for `;`-separated CSV. */
 export function escapeCsvField(value: unknown): string {
-  const str = sanitizeCsvCell(value == null ? '' : String(value))
-  if (/[",\r\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`
+  const str = sanitizeCsvCell(flattenCsvText(value))
+  if (/[;"\r\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`
   return str
 }
 
 export function joinCsvList(values: Array<string | number | null | undefined>): string {
   return values
     .filter((v): v is string | number => v != null && String(v).length > 0)
-    .map(String)
+    .map((v) => flattenCsvText(v))
+    .filter(Boolean)
     .join(LIST_SEP)
 }
 
@@ -99,85 +104,82 @@ function promptDuel(overview: GeoOverview, query: string) {
   return overview.insights.promptDuels.find((d) => d.query === query)
 }
 
-function jobColumns(overview: GeoOverview): Record<string, string | number> {
+function queryIndex(overview: GeoOverview, query: string): number {
+  const idx = overview.queries.indexOf(query)
+  return idx >= 0 ? idx + 1 : 0
+}
+
+function jobContext(overview: GeoOverview): Record<string, string | number> {
   const { job, presence, eeat } = overview
   return {
     job_id: job.id,
     job_title: job.title,
-    project_id: job.projectId,
-    url: job.url,
     target_host: overview.targetHost,
-    status: job.status,
+    url: job.url,
     measurement: job.measurement ?? 'recall',
     search_market: overview.searchMarket ?? job.searchMarket ?? '',
     completed_at: job.completedAt ?? '',
-    overall_score: job.overallScore ?? '',
+    status: job.status,
     cited_share: job.citedShare ?? '',
-    query_count: job.queryCount,
-    model_count: job.modelCount,
-    competitors: joinCsvList(overview.competitors),
-    models: joinCsvList(overview.models),
-    lede: overview.lede,
-    solo_cited_share: presence.solo.citedShare,
-    solo_miss_rate: presence.solo.missRate,
-    solo_avg_position: presence.solo.avgPosition ?? '',
-    solo_first_cite_rate: presence.solo.firstCiteRate ?? '',
-    solo_mentioned_share: presence.solo.mentionedShare ?? '',
-    field_leader_domain: presence.field?.leaderDomain ?? '',
-    field_gap_to_lead: presence.field?.gapToLead ?? '',
-    rival_source: presence.rivalSource,
+    overall_score: job.overallScore ?? '',
     rivals: joinCsvList(presence.rivals),
     eeat_experience: eeat?.experience ?? '',
     eeat_expertise: eeat?.expertise ?? '',
     eeat_authoritativeness: eeat?.authoritativeness ?? '',
     eeat_trustworthiness: eeat?.trustworthiness ?? '',
     eeat_geo_fitness: eeat?.geoFitness ?? '',
-    eeat_missing_elements: joinCsvList(eeat?.missingElements ?? []),
   }
 }
 
 function runColumns(overview: GeoOverview, run: GeoQueryRun): Record<string, string | number> {
   const insight = cellInsight(overview, run)
   const duel = promptDuel(overview, run.query)
+  const hit = run.ourPosition != null
   return {
-    query_id: run.queryId,
+    query_index: queryIndex(overview, run.query),
     query: run.query,
     model_id: run.modelId,
-    answer_text: run.answerText,
+    hit: hit ? 'yes' : 'no',
     our_position: run.ourPosition ?? '',
-    citations: joinCsvList(run.citations.map((c) => `${c.domain}@${c.position}`)),
-    citation_urls: joinCsvList(run.citations.map((c) => c.url).filter(Boolean)),
-    citation_contexts: joinCsvList(run.citations.map((c) => c.context).filter(Boolean)),
-    search_queries: joinCsvList(run.searchQueries ?? []),
     first_domain: insight?.firstDomain ?? '',
-    rival_domains_in_answer: joinCsvList(insight?.rivalDomains ?? []),
-    co_cited: insight ? (insight.coCited ? 'true' : 'false') : '',
     stolen_by: insight?.stolenBy ?? '',
-    target_mentioned_in_answer: insight
-      ? insight.targetMentionedInAnswer
-        ? 'true'
-        : 'false'
-      : '',
+    co_cited: insight ? (insight.coCited ? 'yes' : 'no') : '',
+    target_mentioned: insight ? (insight.targetMentionedInAnswer ? 'yes' : 'no') : '',
     prompt_intent: promptIntent(overview, run.query),
     prompt_duel_outcome: duel?.outcome ?? '',
-    prompt_target_hit_rate: duel?.targetHitRate ?? '',
+    prompt_hit_rate: duel?.targetHitRate ?? '',
+    citations: joinCsvList(run.citations.map((c) => `${c.domain}@${c.position}`)),
+    citation_urls: joinCsvList(run.citations.map((c) => c.url).filter(Boolean)),
+    search_queries: joinCsvList(run.searchQueries ?? []),
+    answer_text: run.answerText,
   }
 }
 
 export function buildGeoCsvRows(overview: GeoOverview): Array<Record<GeoCsvColumn, string | number>> {
-  const base = jobColumns(overview)
-  return overview.queryRuns.map((run) => {
+  const base = jobContext(overview)
+  const sorted = [...overview.queryRuns].sort((a, b) => {
+    const qi = queryIndex(overview, a.query) - queryIndex(overview, b.query)
+    if (qi !== 0) return qi
+    return a.modelId.localeCompare(b.modelId)
+  })
+  return sorted.map((run) => {
     const row = { ...base, ...runColumns(overview, run) } as Record<GeoCsvColumn, string | number>
     return row
   })
 }
 
-/** Full CSV document including UTF-8 BOM and CRLF line endings. */
+/**
+ * Full CSV document:
+ * - UTF-8 BOM
+ * - `sep=;` Excel hint line
+ * - CRLF rows
+ * - `;` delimiter
+ */
 export function buildGeoCsv(overview: GeoOverview): string {
-  const header = GEO_CSV_COLUMNS.join(',')
+  const header = GEO_CSV_COLUMNS.join(GEO_CSV_DELIMITER)
   const rows = buildGeoCsvRows(overview).map((row) =>
-    GEO_CSV_COLUMNS.map((col) => escapeCsvField(row[col])).join(','),
+    GEO_CSV_COLUMNS.map((col) => escapeCsvField(row[col])).join(GEO_CSV_DELIMITER),
   )
-  const body = [header, ...rows].join('\r\n')
-  return `\uFEFF${body}${rows.length || header ? '\r\n' : ''}`
+  const body = ['sep=;', header, ...rows].join('\r\n')
+  return `\uFEFF${body}\r\n`
 }

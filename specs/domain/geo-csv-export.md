@@ -4,7 +4,7 @@
 Accepted.
 
 ## Purpose
-Let operators download the full GEO job corpus for spreadsheet analysis: every scanned **query × model** cell with answer text, citations, placement, and job-level presence / optional E-E-A-T columns.
+Let operators download the GEO job corpus as a **spreadsheet-ready** table: one row per scanned **query × model** cell, with placement, citations, and answer text.
 
 ## Surfaces
 
@@ -14,11 +14,12 @@ Let operators download the full GEO job corpus for spreadsheet analysis: every s
 | API | `GET /api/geo-jobs/:id/export` — see [`../api/geo-job-export-csv.md`](../api/geo-job-export-csv.md) |
 
 ## Shape
-One **flat CSV** (RFC 4180, UTF-8 with BOM for Excel):
+One flat CSV tuned for Excel (DE):
 
-- **One data row per `queryRuns[]` entry** (query × model cell).
-- Job metadata, solo/field presence summary, and optional `eeat` scores are **repeated** on each row so a single sheet is self-contained.
-- When `queryRuns` is empty (queued / failed shell), the file still has a **header row only**.
+- **`;` delimiter** + leading `sep=;` hint (comma dumps into one column in German Excel).
+- **One physical row per `queryRuns[]` entry** — newlines in answers are flattened to spaces.
+- **Analysis columns first** (query / model / hit / position / citations / answer); thin job + EEAT context last.
+- When `queryRuns` is empty, file has `sep=;` + header only.
 
 Does **not** invent a second project export or replace the Queries magazine dossier.
 
