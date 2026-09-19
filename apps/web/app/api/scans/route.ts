@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     projectId?: string
     mode?: 'single' | 'deep'
     url?: string
+    maxPages?: number
     waitForCompletion?: boolean
     platformProjectId?: string
     audionRunId?: string
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
     projectId: body.projectId,
     mode: body.mode,
     url: body.url,
+    maxPages: body.mode === 'deep' ? body.maxPages : undefined,
     waitForCompletion: body.waitForCompletion === true,
     correlation: parseScanCorrelation(body),
   })

@@ -30,6 +30,7 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`) — 
 5. **Compose band** — editorial form unit below the pickers (mounted only when disclosure allows):
    - **URL** — hero input (page or host) — WCAG / SEO required; GEO optional when Company name is set
    - **GEO Company name** — hero input beside URL; optional when URL is set. At least one of URL **or** Company name is required to start
+   - **Max pages** — when WCAG **Deep** or **SEO**: Select presets `50 · 100 · 250 · 500 · 1000 · All (10000)` via `buildDomainScanMaxPagesSelectOptions` / `DOMAIN_SCAN_DEFAULT_MAX_PAGES` (1000). Posted as `maxPages` on `POST /api/scans` (deep) and `POST /api/domain-scans` (SEO).
    - **GEO extras** (when capability = GEO) — **Queries** as magazine editable list (`GeoQueryList`, Audion `PersonaEditableList` composition): one prompt per numbered row, inline edit, add, remove, **Paste** (smart list paste) · **Suggest** (AI / fixture) · **Models** as compact selected chips + **Add model** dialog with provider toggle + search (`GeoModelPicker` / `lib/geo/model-catalog.ts`) — see `geo-model-catalog.md` — never a full-catalog chip wall
    - **Project** + **CTA** — Collection select beside launch action for WCAG / SEO / GEO (same 60/40 hero sizing; GEO row may be URL · Company · Project). Destination status stays quiet
 

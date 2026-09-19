@@ -424,6 +424,7 @@ export async function dbCreateScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  maxPages?: number
   /** Await live crawl before returning (tests). */
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
@@ -501,6 +502,7 @@ async function dbCreateLiveScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
@@ -547,6 +549,7 @@ async function dbCreateLiveScan(input: {
       {
         projectId: input.projectId,
         url: input.url,
+        maxPages: input.maxPages,
         waitForCompletion: input.waitForCompletion,
       },
       createLiveDomainScanHooks({

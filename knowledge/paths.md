@@ -72,7 +72,8 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
   - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
   - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; optional `measurement=recall|live|both` — both starts two jobs; Project defaults empty — select / create, or auto-create on submit when omitted; optional `companyName` on GEO body — see `scan-modes.md` · `geo-measurement-layers.md`)
   - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
-  - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload) → `/results/:id/overview`
+  - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload, optional `maxPages`) → `/results/:id/overview`
+  - Deep / SEO page cap: `lib/scan/domain-scan-max-pages.ts` (presets 50–1000 + All 10000; default 1000) — Select on compose when Deep or SEO
 - Spec: `specs/domain/scan-modes.md`
 
 ## Domain scan corpus pages (Wave 1)

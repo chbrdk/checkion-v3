@@ -3495,7 +3495,8 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 
 .checkion-launch-compose__url,
 .checkion-launch-compose__company,
-.checkion-launch-compose__project {
+.checkion-launch-compose__project,
+.checkion-launch-compose__pages {
   display: flex;
   flex-direction: column;
   align-items: stretch; /* override .ds-field align-items: flex-start */
@@ -3507,7 +3508,8 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 /* Hero URL + Company + Project — larger than Field md; transparent, type + rule only */
 .checkion-launch-compose__url .ds-input,
 .checkion-launch-compose__company .ds-input,
-.checkion-launch-compose__project .ds-select-trigger {
+.checkion-launch-compose__project .ds-select-trigger,
+.checkion-launch-compose__pages .ds-select-trigger {
   width: 100%;
   min-height: 3.65rem;
   padding: 0.95rem 1.05rem;
@@ -3519,18 +3521,21 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 }
 
 /* Beat @msqdx/ui Select caps (max-width 14rem / inline-flex) so trigger fills 40% column */
-.checkion-launch-compose__project .ds-select {
+.checkion-launch-compose__project .ds-select,
+.checkion-launch-compose__pages .ds-select {
   display: flex;
   width: 100%;
   max-width: none;
 }
 
-.checkion-launch-compose__project .ds-select-trigger {
+.checkion-launch-compose__project .ds-select-trigger,
+.checkion-launch-compose__pages .ds-select-trigger {
   width: 100%;
   max-width: none;
 }
 
-.checkion-launch-compose__project .ds-select-menu {
+.checkion-launch-compose__project .ds-select-menu,
+.checkion-launch-compose__pages .ds-select-menu {
   max-width: none;
   width: 100%;
 }
@@ -4061,6 +4066,11 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   /* GEO: URL · Company · Project — Project keeps ~40% like WCAG */
   .checkion-launch-compose__row--geo {
     grid-template-columns: minmax(0, 0.35fr) minmax(0, 0.25fr) minmax(0, 0.4fr);
+  }
+
+  /* Deep / SEO: URL · Max pages · Project */
+  .checkion-launch-compose__row--deep {
+    grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.25fr) minmax(0, 0.3fr);
   }
 
   /* AUDION lock: URL alone spans full row */

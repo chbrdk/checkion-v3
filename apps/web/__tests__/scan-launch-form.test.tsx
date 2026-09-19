@@ -730,13 +730,15 @@ describe('ScanLaunchForm', () => {
       'aria-checked',
       'true',
     )
+    expect(screen.getByLabelText(/Maximum pages for deep scan/i)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /Launch deep scan/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     const call = (fetchMock as unknown as { mock: { calls: Array<[unknown, RequestInit?]> } }).mock
       .calls[0]
-    const body = JSON.parse(String(call?.[1]?.body)) as { mode: string }
+    const body = JSON.parse(String(call?.[1]?.body)) as { mode: string; maxPages: number }
     expect(body.mode).toBe('deep')
+    expect(body.maxPages).toBe(1000)
   })
 })
 

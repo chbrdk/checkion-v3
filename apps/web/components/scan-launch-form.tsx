@@ -31,6 +31,10 @@ import {
   urlFromCompanyName,
 } from '../lib/geo-query-suggest'
 import { paths } from '../lib/paths'
+import {
+  buildDomainScanMaxPagesSelectOptions,
+  DOMAIN_SCAN_DEFAULT_MAX_PAGES,
+} from '../lib/scan/domain-scan-max-pages'
 import { GeoModelPicker } from './geo-model-picker'
 import { LabelWithTip } from './help-tip'
 import { useJobNotifications } from './job-notification-center'
@@ -248,6 +252,11 @@ export function ScanLaunchForm({
   const [geoQueries, setGeoQueries] = useState(() =>
     defaultGeoQueries(initialUrl, { companyName: undefined }),
   )
+  const [maxPages, setMaxPages] = useState(String(DOMAIN_SCAN_DEFAULT_MAX_PAGES))
+  const maxPagesOptions = useMemo(
+    () => buildDomainScanMaxPagesSelectOptions(t('scan.maxPagesAll')),
+    [t],
+  )
   const [geoModels, setGeoModels] = useState<string[]>(() => defaultGeoModelIds())
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -261,6 +270,9 @@ export function ScanLaunchForm({
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
   const activeGeoMeasurements = fromAudion ? [] : geoMeasurements
+  const showMaxPages =
+    !fromAudion &&
+    (activeCapability === 'seo' || (activeCapability === 'wcag' && activeWcagDepth === 'deep'))
   const geoBothLayers = activeGeoMeasurements.length > 1
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
   const geoSuggestUrl =
@@ -404,6 +416,9 @@ export function ScanLaunchForm({
 
   async function launchWcagScan(launchMode: WcagDepth) {
     const body: Record<string, unknown> = { projectId, mode: launchMode, url }
+    if (launchMode === 'deep') {
+      body.maxPages = Number(maxPages) || DOMAIN_SCAN_DEFAULT_MAX_PAGES
+    }
     if (correlation?.platformProjectId) {
       body.platformProjectId = correlation.platformProjectId
     }
@@ -439,7 +454,11 @@ export function ScanLaunchForm({
     const res = await fetch(paths.routes.apiDomainScans, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ projectId, url }),
+      body: JSON.stringify({
+        projectId,
+        url,
+        maxPages: Number(maxPages) || DOMAIN_SCAN_DEFAULT_MAX_PAGES,
+      }),
     })
     if (!res.ok) {
       let detail = `SEO launch failed (${res.status})`
@@ -829,7 +848,13 @@ export function ScanLaunchForm({
                     </Field>
                   </div>
                 ) : (
-                  <div className="checkion-launch-compose__row">
+                  <div
+                    className={
+                      showMaxPages
+                        ? 'checkion-launch-compose__row checkion-launch-compose__row--deep'
+                        : 'checkion-launch-compose__row'
+                    }
+                  >
                     <Field
                       className="checkion-launch-compose__url"
                       label={t('scan.url')}
@@ -847,6 +872,23 @@ export function ScanLaunchForm({
                         placeholder={t('scan.urlPlaceholder')}
                       />
                     </Field>
+
+                    {showMaxPages ? (
+                      <Field
+                        className="checkion-launch-compose__pages"
+                        label={t('scan.maxPages')}
+                        size="md"
+                        hint={t('scan.maxPagesHint')}
+                      >
+                        <Select
+                          value={maxPages}
+                          onChange={setMaxPages}
+                          size="md"
+                          options={maxPagesOptions}
+                          aria-label={t('scan.maxPagesAria')}
+                        />
+                      </Field>
+                    ) : null}
 
                     {!fromAudion ? (
                       <Field

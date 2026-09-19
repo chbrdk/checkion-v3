@@ -22,6 +22,7 @@ See also `specs/api/domain-scan-payload.md`.
 | `projectId` | yes | CHECKION project id |
 | `mode` | yes | `single` \| `deep` — AUDION journey handoff **must** use `single` |
 | `url` | yes | Page to scan |
+| `maxPages` | no | Deep only — corpus page cap (presets 50–1000 or up to 10000). Resolved via `resolveDomainScanMaxPages`. Ignored for `single`. |
 | `waitForCompletion` | no | Boolean; existing |
 | `platformProjectId` | no | Plexon Collection id (correlation) |
 | `audionRunId` | no | AUDION Chat/Studies run id (correlation) |

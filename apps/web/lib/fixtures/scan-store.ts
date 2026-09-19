@@ -297,6 +297,7 @@ async function memoryCreateLiveScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
@@ -324,6 +325,7 @@ async function memoryCreateLiveScan(input: {
     const domain = await memoryCreateDomainScan({
       projectId: input.projectId,
       url: input.url,
+      maxPages: input.maxPages,
       waitForCompletion: input.waitForCompletion,
       linkScanId: id,
     })
@@ -611,6 +613,7 @@ export async function createScan(input: {
   projectId: string
   mode: 'single' | 'deep'
   url: string
+  maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
 }): Promise<ScanSummary> {
