@@ -1,9 +1,13 @@
 /**
- * CHECKION v3 MCP tools — proxy to checkion-v3 BFF with Bearer token.
- * Spec: specs/domain/mcp-server.md
+ * CHECKION v3 MCP tools — proxy to checkion-v3 BFF.
+ * Spec: specs/domain/mcp-server.md · plexon assistant-actor-identity.md
  */
 import { z } from 'zod'
-import { checkionFetch, isCheckionError } from './checkion-client.js'
+import {
+  checkionActorStore,
+  checkionFetch,
+  isCheckionError,
+} from './checkion-client.js'
 
 function toTextContent(value: unknown): string {
   if (value === null || value === undefined) return ''
@@ -22,6 +26,33 @@ type ToolServer = {
 async function textResult(path: string, options?: RequestInit) {
   const res = await checkionFetch(path, options)
   return { content: [{ type: 'text' as const, text: toTextContent(res) }] }
+}
+
+function registerToolWithActor(
+  server: ToolServer,
+  name: string,
+  config: { title?: string; description?: string; inputSchema?: z.ZodTypeAny },
+  cb: (args: unknown) => Promise<{ content: Array<{ type: 'text'; text: string }> }>,
+) {
+  const base =
+    config.inputSchema && config.inputSchema instanceof z.ZodObject
+      ? config.inputSchema
+      : z.object({})
+  const inputSchema = base.extend({
+    actorUserId: z
+      .string()
+      .optional()
+      .describe('Plexon user id — injected by assistant; Access Model B actor'),
+  })
+  server.registerTool(name, { ...config, inputSchema }, async (args) => {
+    const actor =
+      args &&
+      typeof args === 'object' &&
+      typeof (args as { actorUserId?: unknown }).actorUserId === 'string'
+        ? String((args as { actorUserId: string }).actorUserId).trim()
+        : ''
+    return checkionActorStore.run(actor, () => cb(args))
+  })
 }
 
 export const CHECKION_V3_TOOL_NAMES = [
@@ -63,8 +94,14 @@ export const CHECKION_V3_TOOL_NAMES = [
 ] as const
 
 export function registerCheckionV3Tools(server: ToolServer) {
+  const registerTool = (
+    name: string,
+    config: { title?: string; description?: string; inputSchema?: z.ZodTypeAny },
+    cb: (args: unknown) => Promise<{ content: Array<{ type: 'text'; text: string }> }>,
+  ) => registerToolWithActor(server, name, config, cb)
+
   // --- health ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.health',
     {
       title: 'Health',
@@ -75,7 +112,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- projects ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.projects_list',
     {
       title: 'List projects',
@@ -93,7 +130,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.project_get',
     {
       title: 'Get project',
@@ -106,7 +143,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.project_create',
     {
       title: 'Create project',
@@ -125,7 +162,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.project_update',
     {
       title: 'Update project',
@@ -151,7 +188,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.project_delete',
     {
       title: 'Delete project',
@@ -165,7 +202,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- scans ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.scans_list',
     {
       title: 'List scans',
@@ -181,7 +218,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_start',
     {
       title: 'Start scan',
@@ -204,7 +241,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_get',
     {
       title: 'Get scan',
@@ -217,7 +254,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_overview',
     {
       title: 'Scan overview',
@@ -230,7 +267,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_issues',
     {
       title: 'Scan issues',
@@ -243,7 +280,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_scores',
     {
       title: 'Scan scores',
@@ -256,7 +293,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_screenshot',
     {
       title: 'Scan screenshot URL',
@@ -280,7 +317,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_delete',
     {
       title: 'Delete scan',
@@ -293,7 +330,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.scan_weakest_signal',
     {
       title: 'Weakest signal',
@@ -307,7 +344,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- domain ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scans_list',
     {
       title: 'List domain scans',
@@ -323,7 +360,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_start',
     {
       title: 'Start deep scan',
@@ -343,7 +380,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_get',
     {
       title: 'Get domain scan',
@@ -356,7 +393,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_overview',
     {
       title: 'Domain overview',
@@ -369,7 +406,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_issues',
     {
       title: 'Domain issues',
@@ -382,7 +419,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_pages_list',
     {
       title: 'Domain corpus pages',
@@ -416,7 +453,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_control',
     {
       title: 'Control deep scan',
@@ -435,7 +472,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_seo_reading',
     {
       title: 'Domain SEO reading',
@@ -448,7 +485,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.domain_scan_trust_reading',
     {
       title: 'Domain trust reading',
@@ -461,7 +498,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.project_active_domain_scans',
     {
       title: 'Active domain scans for project',
@@ -475,7 +512,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- GEO ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_jobs_list',
     {
       title: 'List GEO jobs',
@@ -485,7 +522,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     async () => textResult('/api/geo-jobs'),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_job_start',
     {
       title: 'Start GEO job',
@@ -511,7 +548,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_job_get',
     {
       title: 'Get GEO job',
@@ -524,7 +561,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_suggest_queries',
     {
       title: 'Suggest GEO queries',
@@ -545,7 +582,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_job_reading',
     {
       title: 'GEO magazine reading',
@@ -570,7 +607,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_job_publish_knowledge',
     {
       title: 'Publish GEO to Knowledge Pack',
@@ -586,7 +623,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
     },
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.geo_job_export_csv',
     {
       title: 'Export GEO job CSV',
@@ -601,7 +638,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- share ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.share_create',
     {
       title: 'Create share link',
@@ -618,7 +655,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
       }),
   )
 
-  server.registerTool(
+  registerTool(
     'checkion_v3.share_get',
     {
       title: 'Get share by resource',
@@ -640,7 +677,7 @@ export function registerCheckionV3Tools(server: ToolServer) {
   )
 
   // --- research ---
-  server.registerTool(
+  registerTool(
     'checkion_v3.fetch_page',
     {
       title: 'Fetch page text',

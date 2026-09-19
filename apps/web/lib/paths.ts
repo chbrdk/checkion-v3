@@ -44,6 +44,8 @@ export const paths = {
   /** Personal Bearer token prefix (`checkion_` + 64 hex). */
   apiTokenPrefix: 'checkion_',
   apiTokenBytes: 32,
+  /** Coolify / MCP machine Bearer (Settings token stored as env — not viewer identity). */
+  envCheckionApiToken: 'CHECKION_API_TOKEN',
   /** Owner when session absent (local / fixture mode). */
   apiTokenFixtureOwnerId: 'local-admin',
   federationContract: '2026-05-plexon-federation-v3' as const,

@@ -3,7 +3,17 @@
 **Status:** Accepted — 2026-08-05  
 **Implements:** `mcp-server/` (Streamable HTTP + stdio)  
 **Knowledge:** `knowledge/mcp-server.md` · `knowledge/paths.md`  
-**Auth:** Bearer API token from Settings (`specs/domain/settings-api-tokens.md`)
+## Auth
+
+| Mode | Viewer |
+|------|--------|
+| Personal Settings Bearer (`checkion_` + hex, not Coolify env) | Token owner |
+| Coolify `CHECKION_API_TOKEN` (machine) + `X-Plexon-User-Id` | Actor header (fail closed without actor) |
+| `PLEXON_SERVICE_SECRET` + contract + `X-Plexon-User-Id` | Actor header (fail closed without actor) |
+
+Plexon assistant injects `actorUserId` into MCP tools (`specs/domain/assistant-actor-identity.md` on plexon-v3).
+
+**Auth (legacy one-liner):** Bearer API token from Settings (`specs/domain/settings-api-tokens.md`)
 
 ## Purpose
 
