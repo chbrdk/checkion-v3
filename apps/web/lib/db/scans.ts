@@ -169,9 +169,21 @@ function rowToScan(row: ScanRow): ScanSummary {
   }
 }
 
+function scoresByKindFromCards(scores: ScoreCard[] | undefined): DomainScanLight['scoresByKind'] {
+  if (!scores?.length) return undefined
+  const out: NonNullable<DomainScanLight['scoresByKind']> = {}
+  for (const card of scores) {
+    out[card.kind] = card.value
+  }
+  return out
+}
+
 function rowToDomain(row: DomainScanRow): DomainScanLight {
+  const fromPayload = row.payload?.domain ?? {}
+  const scoresByKind =
+    fromPayload.scoresByKind ?? scoresByKindFromCards(row.payload?.scores)
   return {
-    ...(row.payload?.domain ?? {}),
+    ...fromPayload,
     id: row.id,
     projectId: row.projectId,
     rootUrl: row.rootUrl,
@@ -183,6 +195,7 @@ function rowToDomain(row: DomainScanRow): DomainScanLight {
     completedAt: row.completedAt,
     error: row.payload?.error,
     progress: row.payload?.progress,
+    ...(scoresByKind ? { scoresByKind } : {}),
   }
 }
 

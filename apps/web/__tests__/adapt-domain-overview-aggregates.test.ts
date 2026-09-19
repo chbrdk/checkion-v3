@@ -201,5 +201,10 @@ describe('domain overview aggregates', () => {
     expect(adapted.pageScans[0]?.scan.domainScanId).toBe('domain-test')
     expect(adapted.pageScans[0]?.scan.id).toBe('domain-test-p0')
     expect(adapted.overview.pageSamples?.[0]?.scanId).toBe('domain-test-p0')
+    expect(adapted.domain.scoresByKind).toBeTruthy()
+    expect(adapted.domain.scoresByKind?.generative ?? adapted.overview.scores.find((s) => s.kind === 'generative')?.value).toBeTruthy()
+    for (const card of adapted.overview.scores) {
+      expect(adapted.domain.scoresByKind?.[card.kind]).toBe(card.value)
+    }
   })
 })

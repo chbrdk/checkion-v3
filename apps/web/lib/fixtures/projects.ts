@@ -148,6 +148,12 @@ export const DOMAIN_SCAN_FIXTURES: DomainScanLight[] = [
     issueCount: 22,
     startedAt: '2026-07-18T09:00:00.000Z',
     completedAt: '2026-07-18T10:45:00.000Z',
+    scoresByKind: {
+      accessibility: 54,
+      seo: 68,
+      best_practices: 66,
+      performance: 49,
+    },
   },
 ]
 

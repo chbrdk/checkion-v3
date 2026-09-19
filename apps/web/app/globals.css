@@ -4483,7 +4483,30 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 }
 
 .checkion-domain-overview .checkion-spread__open {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 15rem);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.checkion-domain-score-snapshot {
+  display: grid;
+  gap: 0.75rem;
+  border-left: 1px solid var(--line);
+  align-self: stretch;
+  padding-left: 0.85rem;
+}
+
+@media (max-width: 899px) {
+  .checkion-domain-overview .checkion-spread__open {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-domain-score-snapshot {
+    border-left: none;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-top: 0.85rem;
+  }
 }
 
 .checkion-domain-rank-label {

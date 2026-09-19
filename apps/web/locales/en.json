@@ -712,6 +712,8 @@
     "titlePages": "{count} pages scanned",
     "scorelineEyebrow": "Scoreline",
     "scorelineHeadline": "Seven lenses on the corpus",
+    "scoreSnapshotAria": "Corpus score snapshot",
+    "overallScore": "Overall",
     "corpusSignal": "Corpus signal",
     "systemicEyebrow": "Systemic",
     "systemicHeadline": "Findings that repeat across pages",

@@ -18,6 +18,7 @@ import { GeoHistoryChapter } from './geo-history-chapter'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
+import { formatDomainScoresByKindMeta } from '../lib/domain-scores-by-kind-meta'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
@@ -601,7 +602,9 @@ export function ProjectWorkspace({
               </EmptyState>
             ) : (
               <ol className="checkion-magazine-list checkion-project-run-list">
-                {domains.map((d, index) => (
+                {domains.map((d, index) => {
+                  const kindMeta = formatDomainScoresByKindMeta(d.scoresByKind)
+                  return (
                   <li key={d.id} data-tone={scoreTone(d.overallScore)}>
                     <span className="checkion-magazine-list-num" aria-hidden>
                       {String(index + 1).padStart(2, '0')}
@@ -619,6 +622,7 @@ export function ProjectWorkspace({
                           pages: d.pageCount.toLocaleString(),
                           issues: d.issueCount.toLocaleString(),
                         })}
+                        {kindMeta ? ` · ${kindMeta}` : ''}
                         {' · '}
                         {formatScanInstant(d.completedAt)}
                       </Text>
@@ -630,7 +634,8 @@ export function ProjectWorkspace({
                       {d.overallScore != null ? d.overallScore : '—'}
                     </span>
                   </li>
-                ))}
+                  )
+                })}
               </ol>
             )}
           </div>

@@ -751,6 +751,11 @@ export function adaptDomainResultToContracts(
       return { ...card, value: avg }
     }) ?? [score('accessibility', 'Accessibility', avgScore)]
 
+  const scoresByKind: Partial<Record<(typeof scores)[number]['kind'], number>> = {}
+  for (const card of scores) {
+    scoresByKind[card.kind] = card.value
+  }
+
   const completedAt = new Date().toISOString()
   const terminalStatus = input.status ?? 'completed'
   const domain: DomainScanLight = {
@@ -763,6 +768,7 @@ export function adaptDomainResultToContracts(
     issueCount: issues.length,
     startedAt: input.startedAt,
     completedAt,
+    scoresByKind,
     issueStats: {
       errors: pages.reduce((a, p) => a + p.stats.errors, 0),
       warnings: pages.reduce((a, p) => a + p.stats.warnings, 0),

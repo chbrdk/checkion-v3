@@ -712,6 +712,8 @@
     "titlePages": "{count} Seiten gescannt",
     "scorelineEyebrow": "Scoreline",
     "scorelineHeadline": "Sieben Linsen auf den Corpus",
+    "scoreSnapshotAria": "Corpus-Score-Snapshot",
+    "overallScore": "Gesamt",
     "corpusSignal": "Corpus-Signal",
     "systemicEyebrow": "Systemisch",
     "systemicHeadline": "Findings, die über Seiten wiederkehren",

@@ -131,6 +131,11 @@ describe('panels smoke', () => {
             issueCount: 40,
             startedAt: '2026-07-30T12:00:00.000Z',
             completedAt: '2026-07-31T00:00:00.000Z',
+            scoresByKind: {
+              accessibility: 72,
+              generative: 61,
+              seo: 80,
+            },
           },
         ]}
         geoJobs={[
@@ -207,6 +212,7 @@ describe('panels smoke', () => {
       'href',
       '/results/scan-1/overview',
     )
+    expect(screen.getByText(/geo 61 · a11y 72 · seo 80/i)).toBeTruthy()
     expect(
       screen.getByRole('link', { name: /^example\.com$/i }),
     ).toHaveAttribute('href', '/domain/domain-x/overview')
@@ -236,6 +242,7 @@ describe('panels smoke', () => {
     expect(screen.getByRole('button', { name: /Rename domain scan/i })).toBeTruthy()
     expect(screen.getByLabelText(/Domain score 43/i)).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Seven lenses on the corpus/i })).toBeTruthy()
+    expect(screen.getByLabelText(/Corpus score snapshot/i)).toBeTruthy()
     expect(screen.getByText(/Corpus signal/i)).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Findings that repeat across pages/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Margins & pace/i })).toBeTruthy()

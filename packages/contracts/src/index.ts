@@ -429,6 +429,11 @@ export interface DomainScanLight {
   industry?: string | null
   tags?: string[]
   issueStats?: IssueStats
+  /**
+   * Corpus mean ScoreCard values by kind (0–100). Populated on complete deep scans
+   * for list/hub/catalog without loading full DomainOverview.
+   */
+  scoresByKind?: Partial<Record<ScoreKind, number>>
 }
 
 /** Systemic finding across many pages in a deep crawl. */

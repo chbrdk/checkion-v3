@@ -50,7 +50,16 @@ export const LIVE_DOMAIN_SCAN: DomainScanLight = {
       AA: 267170,
       AAA: 0
     }
-  }
+  },
+  scoresByKind: {
+    accessibility: 0,
+    seo: 89,
+    best_practices: 88,
+    performance: 100,
+    ux: 43,
+    eco: 90,
+    generative: 51,
+  },
 }
 
 export const LIVE_DOMAIN_SCORES: ScoreCard[] = [

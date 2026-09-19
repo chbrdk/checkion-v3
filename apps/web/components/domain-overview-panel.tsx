@@ -26,6 +26,7 @@ import { ScoresPanel } from './scores-panel'
 import { LabelWithTip } from './help-tip'
 import { buildSeoReadingFallback } from '../lib/domain-seo-reading'
 import { buildTrustGeoReadingFallback } from '../lib/domain-trust-reading'
+import { toLabTileTone } from '../lib/lab-tile-tone'
 import { useT, useUserPrefs } from '../lib/user-prefs'
 
 
@@ -306,7 +307,11 @@ export function DomainOverviewPanel({
 
   return (
     <div className="checkion-magazine-body checkion-spread checkion-domain-overview">
-      <section className="checkion-spread__open" aria-labelledby="domain-scoreline-heading">
+      <section
+        className="checkion-spread__open"
+        data-layout="main-first"
+        aria-labelledby="domain-scoreline-heading"
+      >
         <div className="checkion-spread__open-main">
           <p className="checkion-spread__eyebrow">{t('domain.scorelineEyebrow')}</p>
           <h3 id="domain-scoreline-heading" className="checkion-spread__headline">
@@ -314,6 +319,21 @@ export function DomainOverviewPanel({
           </h3>
           <ScoresPanel scores={sortedScores as ScoreCard[]} />
         </div>
+        <aside className="checkion-domain-score-snapshot" aria-label={t('domain.scoreSnapshotAria')}>
+          <LabTile
+            label={t('domain.overallScore')}
+            value={overview.scan.overallScore ?? '—'}
+            tone={toLabTileTone(scoreTone(overview.scan.overallScore))}
+          />
+          {sortedScores.slice(0, 4).map((card) => (
+            <LabTile
+              key={card.kind}
+              label={card.label}
+              value={card.value}
+              tone={toLabTileTone(scoreTone(card.value))}
+            />
+          ))}
+        </aside>
       </section>
 
       <StatusMeterPanel
