@@ -38,6 +38,7 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
    - **Singles** → `/results/:id/overview`
    - **Deep scans** → `/domain/:id/overview`
    - **GEO runs** — always show the column; EmptyState when empty → `/geo/:id/overview`
+5. **GEO History** — per-query position timelines across completed GEO jobs (soft match by measurement + normalized query text). Model filter + `SeriesChart` cards. Deep-link `?chapter=geo-history`. Spec: [`geo-position-history.md`](./geo-position-history.md).
 
 Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub.
 

@@ -148,6 +148,9 @@ export const paths = {
     },
     projects: '/projects',
     projectDetail: (id: string) => `/projects/${id}`,
+    /** Project workspace GEO History chapter deep-link. */
+    projectGeoHistory: (id: string) =>
+      `/projects/${encodeURIComponent(id)}?chapter=geo-history`,
     /** Index redirects home — use resultSection / resultDetail for magazines. */
     results: '/results',
     resultDetail: (id: string) => `/results/${id}`,
@@ -185,6 +188,7 @@ export const paths = {
     apiHealth: '/api/health',
     apiProjects: '/api/projects',
     apiProjectDetail: (id: string) => `/api/projects/${id}`,
+    apiProjectGeoHistory: (id: string) => `/api/projects/${encodeURIComponent(id)}/geo-history`,
     apiProjectArchive: (id: string) => `/api/projects/${id}/archive`,
     apiScans: '/api/scans',
     /** Thin Chromium page text for AUDION research (no axe/Pa11y). */

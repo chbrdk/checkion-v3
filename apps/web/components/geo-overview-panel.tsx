@@ -18,14 +18,17 @@ import { GeoReading } from './geo-reading'
 import { GeoPresenceStage } from './geo-share-of-voice'
 import { GeoInsightsPanel } from './geo-insights-panel'
 import { GeoMovesGallery } from './geo-moves-gallery'
+import { GeoHistoryTeaser } from './geo-history-teaser'
 import { LabelWithTip } from './help-tip'
 
 export function GeoOverviewPanel({
   overview,
   canPublishKnowledge = false,
+  historyTeaser,
 }: {
   overview: GeoOverview
   canPublishKnowledge?: boolean
+  historyTeaser?: { seriesCount: number; sampleQuery?: string } | null
 }) {
   const { eeat, recommendations, job, presence } = overview
   const measurement = geoJobMeasurement(job)
@@ -184,6 +187,15 @@ export function GeoOverviewPanel({
       </section>
 
       <GeoPresenceStage overview={overview} />
+
+      {historyTeaser && historyTeaser.seriesCount >= 1 ? (
+        <GeoHistoryTeaser
+          projectId={job.projectId}
+          measurement={measurement}
+          seriesCount={historyTeaser.seriesCount}
+          sampleQuery={historyTeaser.sampleQuery}
+        />
+      ) : null}
 
       <GeoInsightsPanel overview={overview} />
 

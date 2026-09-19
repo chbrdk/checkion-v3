@@ -637,6 +637,99 @@ const GEO_DRAFTS: GeoOverviewDraft[] = [
   },
 ]
 
+/** Prior Dürr run — same queries as geo-1, worse ranks, earlier date (history fixtures). */
+const GEO1_PRIOR: GeoOverviewDraft = {
+  job: {
+    id: 'geo-1-prior',
+    title: 'Competitive GEO — Dürr (prior run)',
+    projectId: 'proj-demo-1',
+    url: 'https://www.durr.com',
+    status: 'completed',
+    overallScore: 44,
+    completedAt: '2026-06-15T12:00:00.000Z',
+    queryCount: 4,
+    modelCount: 3,
+    citedShare: 42,
+    measurement: 'recall',
+  },
+  lede: 'Earlier competitive probe — positions were weaker on comparison and how-to prompts.',
+  targetHost: 'durr.com',
+  models: ['gpt-5.4', 'claude-sonnet', 'gemini-2.5'],
+  queries: [
+    'Best paint application systems for automotive OEMs',
+    'Who leads in robotic painting booth technology?',
+    'Dürr vs ABB vs Eisenmann for final assembly painting',
+    'How to reduce overspray in automotive paint shops',
+  ],
+  competitors: ['abb.com', 'eisenmann.com', 'fanuc.com'],
+  positionMatrix: [
+    {
+      queryIndex: 1,
+      queryLabel: 'Q1',
+      queryText: 'Best paint application systems for automotive OEMs',
+      positions: { 'gpt-5.4': 3, 'claude-sonnet': 2, 'gemini-2.5': 4 },
+    },
+    {
+      queryIndex: 2,
+      queryLabel: 'Q2',
+      queryText: 'Who leads in robotic painting booth technology?',
+      positions: { 'gpt-5.4': 2, 'claude-sonnet': 3, 'gemini-2.5': 0 },
+    },
+    {
+      queryIndex: 3,
+      queryLabel: 'Q3',
+      queryText: 'Dürr vs ABB vs Eisenmann for final assembly painting',
+      positions: { 'gpt-5.4': 4, 'claude-sonnet': 0, 'gemini-2.5': 3 },
+    },
+    {
+      queryIndex: 4,
+      queryLabel: 'Q4',
+      queryText: 'How to reduce overspray in automotive paint shops',
+      positions: { 'gpt-5.4': 3, 'claude-sonnet': 2, 'gemini-2.5': 2 },
+    },
+  ],
+  queryRuns: [
+    {
+      queryId: 'prior-q1',
+      query: 'Best paint application systems for automotive OEMs',
+      modelId: 'gpt-5.4',
+      answerText: 'Prior run — Dürr cited later in the panel.',
+      ourPosition: 3,
+      citations: [
+        { domain: 'abb.com', position: 1 },
+        { domain: 'eisenmann.com', position: 2 },
+        { domain: 'durr.com', position: 3 },
+      ],
+    },
+    {
+      queryId: 'prior-q1b',
+      query: 'Best paint application systems for automotive OEMs',
+      modelId: 'claude-sonnet',
+      answerText: 'Prior Claude run — Dürr at #2.',
+      ourPosition: 2,
+      citations: [
+        { domain: 'abb.com', position: 1 },
+        { domain: 'durr.com', position: 2 },
+      ],
+    },
+    {
+      queryId: 'prior-q1c',
+      query: 'Best paint application systems for automotive OEMs',
+      modelId: 'gemini-2.5',
+      answerText: 'Prior Gemini run — Dürr at #4.',
+      ourPosition: 4,
+      citations: [
+        { domain: 'abb.com', position: 1 },
+        { domain: 'fanuc.com', position: 2 },
+        { domain: 'eisenmann.com', position: 3 },
+        { domain: 'durr.com', position: 4 },
+      ],
+    },
+  ],
+}
+
+GEO_DRAFTS.push(GEO1_PRIOR)
+
 export const GEO_OVERVIEWS: GeoOverview[] = GEO_DRAFTS.map((draft, index) =>
   finalize(index === 0 ? stressExpandGeo1(draft) : draft),
 )

@@ -13,6 +13,12 @@ export type {
 export { InfoTip } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export type { InfoTipProps } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export { Select } from '../../../../msqdx-ui/packages/ui/src/components/Select'
+export { SeriesChart } from '../../../../msqdx-ui/packages/ui/src/components/SeriesChart'
+export type {
+  SeriesChartProps,
+  SeriesChartPoint,
+  SeriesChartSeries,
+} from '../../../../msqdx-ui/packages/ui/src/components/SeriesChart'
 export { ToastProvider, useToast } from '../../../../msqdx-ui/packages/ui/src/components/Toast'
 export type { ToastItem, ToastProps, ToastPushInput, ToastTone } from '../../../../msqdx-ui/packages/ui/src/components/Toast'
 export { Tooltip } from '../../../../msqdx-ui/packages/ui/src/components/Tooltip'

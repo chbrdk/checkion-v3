@@ -7,11 +7,13 @@ import type {
   CapabilitySyncStatus,
   DomainScanLight,
   GeoJobSummary,
+  GeoPositionHistoryResult,
   ProjectDetail,
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
+import { GeoHistoryChapter } from './geo-history-chapter'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
@@ -400,11 +402,13 @@ export function ProjectWorkspace({
   recentScans,
   domains,
   geoJobs = [],
+  geoHistory = null,
 }: {
   project: ProjectDetail
   recentScans: ScanSummary[]
   domains: DomainScanLight[]
   geoJobs?: GeoJobSummary[]
+  geoHistory?: GeoPositionHistoryResult | null
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -676,6 +680,14 @@ export function ProjectWorkspace({
           </div>
         </div>
       </WorkspaceChapter>
+
+      {geoHistory ? (
+        <GeoHistoryChapter
+          projectId={project.id}
+          history={geoHistory}
+          measurement={geoHistory.measurement}
+        />
+      ) : null}
 
       <ProjectFormDialog
         open={editOpen}

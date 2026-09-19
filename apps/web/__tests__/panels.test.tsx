@@ -18,6 +18,16 @@ vi.mock('../lib/fixtures/project-store', () => ({
   getProject: async () => ({ id: 'proj-demo-1', name: 'Demo Project' }),
 }))
 
+vi.mock('../lib/msqdx-ui-client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/msqdx-ui-client')>()
+  return {
+    ...actual,
+    SeriesChart: ({ title }: { title?: string }) => (
+      <div data-testid="series-chart" data-title={title ?? ''} />
+    ),
+  }
+})
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -137,20 +147,50 @@ describe('panels smoke', () => {
             citedShare: 40,
           },
         ]}
+        geoHistory={{
+          projectId: 'p1',
+          measurement: 'recall',
+          targetHost: 'example.com',
+          modelIds: ['gpt-5.4-nano'],
+          items: [
+            {
+              queryText: 'best widgets',
+              queryKey: 'best widgets',
+              points: [
+                {
+                  recordedAt: '2026-07-01T00:00:00.000Z',
+                  jobId: 'geo-old',
+                  positionsByModel: { 'gpt-5.4-nano': 3 },
+                  avgPosition: 3,
+                },
+                {
+                  recordedAt: '2026-07-30T18:00:00.000Z',
+                  jobId: 'geo-x',
+                  positionsByModel: { 'gpt-5.4-nano': 2 },
+                  avgPosition: 2,
+                },
+              ],
+              latestPosition: 2,
+              trend: 'improving',
+            },
+          ],
+        }}
       />,
     )
     expect(document.querySelector('.checkion-project-workspace')).toBeTruthy()
-    expect(document.querySelector('.ds-panel')).toBeNull()
+    expect(document.querySelector('.checkion-project-workspace > .ds-panel')).toBeNull()
     expect(screen.getByRole('heading', { name: /Demo Workspace/i })).toBeTruthy()
     expect(screen.getByText(/Workspace lede/i)).toBeTruthy()
     expect(document.querySelector('.checkion-project-cover__host')?.textContent).toBe('example.com')
-    expect(screen.getByText(/In sync/i)).toBeTruthy()
+    expect(screen.getByText(/In sync/i )).toBeTruthy()
     expect(screen.getByTitle('Plexon collection id')).toHaveTextContent('plx-1')
     expect(screen.getByRole('heading', { name: /Corpus pulse/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Latest runs/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /^Singles$/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Deep scans/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /GEO runs/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Citation position over time/i })).toBeTruthy()
+    expect(screen.getByLabelText(/GEO citation position history/i)).toBeTruthy()
     expect(screen.getByLabelText('Latest runs by mode')).toBeTruthy()
     expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
       'href',

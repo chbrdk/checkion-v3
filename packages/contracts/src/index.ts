@@ -886,6 +886,34 @@ export interface GeoOverview {
   queryRuns: GeoQueryRun[]
 }
 
+/** Soft-match GEO citation position over time — specs/domain/geo-position-history.md */
+export type GeoHistoryTrend = 'improving' | 'declining' | 'stable' | 'unknown'
+
+export interface GeoHistoryPoint {
+  recordedAt: string
+  jobId: string
+  /** modelId → 1-based position; null = not cited */
+  positionsByModel: Record<string, number | null>
+  avgPosition: number | null
+}
+
+export interface GeoQuestionHistorySeries {
+  queryText: string
+  /** Normalized soft-match key */
+  queryKey: string
+  points: GeoHistoryPoint[]
+  latestPosition: number | null
+  trend: GeoHistoryTrend
+}
+
+export interface GeoPositionHistoryResult {
+  projectId: string
+  measurement: GeoMeasurement
+  targetHost: string
+  modelIds: string[]
+  items: GeoQuestionHistorySeries[]
+}
+
 export interface FederationHealth {
   contract: '2026-05-plexon-federation-v3'
   plexonReachable: boolean

@@ -9,7 +9,15 @@ import { GeoQueriesPanel } from '../../../../components/geo-queries-panel'
 import { GeoResultActions } from '../../../../components/geo-result-actions'
 import type { GeoSectionId } from '../../../../components/geo-section-nav'
 import { isGeoJobInProgress } from '../../../../lib/geo-job-display'
-import { getGeoOverview } from '../../../../lib/fixtures/geo-store'
+import { geoJobMeasurement } from '../../../../lib/geo/measurement'
+import {
+  buildGeoPositionHistory,
+  geoHistoryTeaserSeries,
+} from '../../../../lib/geo/position-history'
+import {
+  getGeoOverview,
+  listGeoOverviewsForProject,
+} from '../../../../lib/fixtures/geo-store'
 import { getProject } from '../../../../lib/fixtures/project-store'
 import { paths } from '../../../../lib/paths'
 
@@ -33,6 +41,27 @@ export default async function GeoSectionPage({
     project?.platformProjectId &&
       !project.platformProjectId.startsWith('plx-local-'),
   )
+
+  const measurement = geoJobMeasurement(overview.job)
+  const projectOverviews = await listGeoOverviewsForProject(overview.job.projectId)
+  const history = buildGeoPositionHistory({
+    projectId: overview.job.projectId,
+    measurement,
+    overviews: projectOverviews,
+  })
+  const teaserSeries = geoHistoryTeaserSeries(
+    history,
+    overview.queryRuns.map((r) => r.query).length
+      ? Array.from(new Set(overview.queryRuns.map((r) => r.query)))
+      : overview.positionMatrix.map((r) => r.queryText),
+  )
+  const historyTeaser =
+    teaserSeries.length > 0
+      ? {
+          seriesCount: teaserSeries.length,
+          sampleQuery: teaserSeries[0]?.queryText,
+        }
+      : null
 
   // Placement nav deferred — keep old links alive via Queries redirect.
   if (rawSection === 'placement') {
@@ -71,7 +100,11 @@ export default async function GeoSectionPage({
         activeSection={section}
       >
         {section === 'overview' ? (
-          <GeoOverviewPanel overview={overview} canPublishKnowledge={canPublishKnowledge} />
+          <GeoOverviewPanel
+            overview={overview}
+            canPublishKnowledge={canPublishKnowledge}
+            historyTeaser={historyTeaser}
+          />
         ) : null}
         {section === 'queries' ? (
           <GeoQueriesPanel overview={overview} initialQuery={q} initialModel={model} />

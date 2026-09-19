@@ -115,9 +115,10 @@ Public landing: `/share/[token]` · API `/api/share`
 
 ## Projects
 - Route: `/projects` (`paths.routes.projects`) — magazine collection hub (plexon-v3 Collection card composition)
-- Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists
+- Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists · **GEO History** (`paths.routes.projectGeoHistory` → `?chapter=geo-history`)
 - Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
 - API: `GET/POST /api/projects` · `GET/PATCH /api/projects/:id` · `POST /api/projects/:id/archive` (global Collection archive; `DELETE` = archive alias)
+- GEO history: `GET /api/projects/:id/geo-history` (`paths.routes.apiProjectGeoHistory`) — soft-match position series · `specs/api/geo-position-history.md` · `knowledge/geo-position-history.md`
 - Plexon lifecycle: `PATCH {NEXT_PLEXON_BASE_URL}/api/platform/provisioning/projects/:platformProjectId` `{ status: archived }` (`paths.plexonProvisioningProjectPath`)
 
 ## Results

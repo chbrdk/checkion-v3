@@ -3546,6 +3546,32 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   flex-shrink: 0;
 }
 
+.checkion-geo-history-chapter {
+  margin-top: 2.5rem;
+}
+
+.checkion-geo-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.checkion-geo-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.checkion-geo-history-card__meta {
+  margin: 0 0 0.5rem;
+}
+
+.checkion-geo-history-teaser {
+  margin: 1.25rem 0;
+}
+
 
 .checkion-geo-query-list__paste-hint {
   margin: 0;

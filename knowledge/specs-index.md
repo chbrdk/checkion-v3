@@ -28,6 +28,7 @@
 | GEO CSV export | `specs/domain/geo-csv-export.md` |
 | GEO job rename | `specs/domain/geo-job-rename.md` |
 | Scan / domain run rename | `specs/domain/scan-run-rename.md` |
+| GEO position history | `specs/domain/geo-position-history.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |
 | Project reports (deferred) | `specs/domain/project-reports.md` |
 
@@ -45,6 +46,7 @@
 | GEO job CSV export | `specs/api/geo-job-export-csv.md` |
 | GEO job title (rename) | `specs/api/geo-job-title.md` |
 | Scan / domain run title (rename) | `specs/api/scan-run-title.md` |
+| GEO position history | `specs/api/geo-position-history.md` |
 
 ## Knowledge
 | Doc | Path |

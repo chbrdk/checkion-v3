@@ -30,6 +30,23 @@ export async function listGeoJobs(): Promise<GeoJobSummary[]> {
   return memoryOverviews.map((o) => ({ ...o.job }))
 }
 
+/** Completed + in-progress overviews for a project (memory / DB). */
+export async function listGeoOverviewsForProject(projectId: string): Promise<GeoOverview[]> {
+  if (isDatabaseConfigured()) {
+    const jobs = await (await dbApi()).dbListGeoJobs()
+    const forProject = jobs.filter((j) => j.projectId === projectId)
+    const out: GeoOverview[] = []
+    for (const job of forProject) {
+      const overview = await (await dbApi()).dbGetGeoOverview(job.id)
+      if (overview) out.push(overview)
+    }
+    return out
+  }
+  return memoryOverviews
+    .filter((o) => o.job.projectId === projectId)
+    .map((o) => structuredClone(o))
+}
+
 export async function getGeoOverview(id: string): Promise<GeoOverview | null> {
   if (isDatabaseConfigured()) return (await dbApi()).dbGetGeoOverview(id)
   const found = memoryOverviews.find((o) => o.job.id === id)

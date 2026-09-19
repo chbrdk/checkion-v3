@@ -170,8 +170,11 @@ See `knowledge/geo-measurement-honesty.md`.
 - Editable meters / sliders for scores
 - Live Plexon federation (deferred)
 - Per-answer live LLM (prompt-level reading only)
-- **Multi-provider competitive cron** (Claude + Gemini + history reruns) — deferred; Phase 3 uses OpenAI query×model runs only. See `knowledge/dummy-data-mode.md` (“Live GEO pipeline”).
+- **Multi-provider competitive cron** (scheduled re-runs) — deferred. **Interactive position history** across manual re-runs is Phase 1 — see [`geo-position-history.md`](./geo-position-history.md).
 - ChatGPT consumer-UI clone / Deep Research (Layer 2 v1 is Responses `web_search` + Claude/Gemini grounding only — [`geo-measurement-layers.md`](./geo-measurement-layers.md))
+
+## Related
+[`geo-position-history.md`](./geo-position-history.md) — project hub + magazine teaser for citation position over time.
 
 ## Contracts
 `GeoPresenceSolo`, `GeoPresenceField`, `GeoRivalSource`, `GeoPresence` in `@checkion-v3/contracts`; `GeoOverview.presence`.  
