@@ -20,6 +20,7 @@ CHECKION closed the scan/domain/GEO list+detail leak; sibling apps were checked 
 ## Closed
 
 - AUDION persona detail direct-URL gate — `requirePersonaAccess` + list filter (`specs/domain/access-model-b-visibility.md`, 2026-09-19)
+- AUDION journey detail + TG SSR gates — `requireJourneyAccess` / TG `notFound` (2026-09-19)
 
 ## Paths
 
