@@ -196,6 +196,7 @@
     "teamEmpty": "Noch keine Collection-Mitglieder.",
     "teamNeedsCollection": "Projekt mit einer Plexon-Collection verbinden, um Teamzugriff zu verwalten.",
     "teamAddLabel": "Per E-Mail hinzufügen",
+    "teamAddPlaceholder": "name@firma.com",
     "teamAdd": "Mitglied hinzufügen",
     "teamInviteLink": "Einladungslink",
     "teamInviteCopied": "Einladungslink kopiert",

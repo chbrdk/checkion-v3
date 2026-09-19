@@ -1,7 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Button, EmptyState, Field, Input, Panel, SectionChrome, Text } from '@msqdx/ui'
+/**
+ * Project team — Audion CompactEditableList parity:
+ * numbered magazine rows, inline draft email (no fat Field), Invite link aside.
+ */
+
+import { useEffect, useId, useRef, useState } from 'react'
+import { Button, EmptyState, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { paths } from '../lib/paths'
 import { isRealPlatformProjectId } from '../lib/plexon-platform-id'
 import { useT } from '../lib/user-prefs'
@@ -13,6 +18,8 @@ type TeamRow = {
   status: string
 }
 
+const DRAFT_ID = '__draft__'
+
 export function ProjectTeamPanel({
   projectId,
   platformProjectId,
@@ -21,13 +28,17 @@ export function ProjectTeamPanel({
   platformProjectId?: string | null
 }) {
   const t = useT()
+  const baseId = useId()
   const bound = isRealPlatformProjectId(platformProjectId)
   const [items, setItems] = useState<TeamRow[]>([])
-  const [email, setEmail] = useState('')
+  const [draftOpen, setDraftOpen] = useState(false)
+  const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const skipBlurSave = useRef(false)
 
   async function reload() {
     if (!bound) return
@@ -49,10 +60,34 @@ export function ProjectTeamPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, platformProjectId])
 
-  async function onAdd(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = email.trim()
-    if (!trimmed || busy) return
+  useEffect(() => {
+    if (!draftOpen) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [draftOpen])
+
+  function beginDraft() {
+    if (busy || draftOpen) return
+    setDraftOpen(true)
+    setDraft('')
+    setError(null)
+    setStatus(null)
+  }
+
+  function cancelDraft() {
+    skipBlurSave.current = true
+    setDraftOpen(false)
+    setDraft('')
+  }
+
+  async function commitDraft() {
+    const trimmed = draft.trim()
+    if (!trimmed) {
+      setDraftOpen(false)
+      setDraft('')
+      return
+    }
+    if (busy) return
     setBusy(true)
     setError(null)
     setStatus(null)
@@ -69,7 +104,8 @@ export function ProjectTeamPanel({
         }
         throw new Error(body.error || `Add failed (${res.status})`)
       }
-      setEmail('')
+      setDraftOpen(false)
+      setDraft('')
       setStatus(t('projects.teamAdded'))
       await reload()
     } catch (err) {
@@ -108,6 +144,7 @@ export function ProjectTeamPanel({
   }
 
   async function onRemove(userId: string) {
+    if (busy || draftOpen) return
     setBusy(true)
     setError(null)
     try {
@@ -129,76 +166,124 @@ export function ProjectTeamPanel({
   if (!bound) {
     return (
       <Panel className="checkion-project-team">
-        <SectionChrome title={t('projects.teamTitle')} meta="—" as="h3" />
+        <SectionChrome quiet title={t('projects.teamTitle')} meta="—" as="h3" />
         <EmptyState>{t('projects.teamNeedsCollection')}</EmptyState>
       </Panel>
     )
   }
 
+  const nextNum = String(items.length + (draftOpen ? 1 : 0) + 1).padStart(2, '0')
+  const showList = items.length > 0 || draftOpen
+
   return (
-    <Panel className="checkion-project-team">
-      <SectionChrome title={t('projects.teamTitle')} meta={`${items.length}`} as="h3" />
-      {items.length === 0 ? (
-        <EmptyState>{t('projects.teamEmpty')}</EmptyState>
-      ) : (
-        <ul className="checkion-issue-list">
-          {items.map((m) => (
-            <li key={m.id} className="checkion-index-card">
-              <div className="checkion-index-card__meta">
-                <Text role="meta">{m.role}</Text>
-                <Text role="meta">{m.status}</Text>
+    <Panel className="checkion-project-team checkion-geo-query-list">
+      <SectionChrome quiet title={t('projects.teamTitle')} meta={`${items.length}`} as="h3" />
+
+      {showList ? (
+        <ol className="checkion-magazine-list checkion-geo-query-list__items">
+          {items.map((m, index) => (
+            <li key={m.id} className="checkion-geo-query-list__row">
+              <span className="checkion-magazine-list-num" aria-hidden>
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <div className="checkion-geo-query-list__main checkion-project-team__main">
+                <span className="checkion-project-team__email">{m.email}</span>
+                <span className="checkion-project-team__meta">
+                  {m.role} · {m.status}
+                </span>
               </div>
-              <strong>{m.email}</strong>
               {m.status !== 'owner' ? (
                 <Button
                   type="button"
-                  size="sm"
                   variant="ghost"
+                  size="sm"
+                  className="checkion-geo-query-list__delete"
+                  aria-label={t('projects.teamRemove')}
                   disabled={busy}
                   onClick={() => void onRemove(m.id)}
                 >
-                  {t('projects.teamRemove')}
+                  ×
                 </Button>
-              ) : null}
+              ) : (
+                <span aria-hidden />
+              )}
             </li>
           ))}
-        </ul>
+          {draftOpen ? (
+            <li className="checkion-geo-query-list__row">
+              <span className="checkion-magazine-list-num" aria-hidden>
+                {String(items.length + 1).padStart(2, '0')}
+              </span>
+              <div className="checkion-geo-query-list__main">
+                <input
+                  ref={inputRef}
+                  id={`${baseId}-${DRAFT_ID}`}
+                  className="checkion-geo-query-list__input"
+                  type="email"
+                  value={draft}
+                  disabled={busy}
+                  placeholder={t('projects.teamAddPlaceholder')}
+                  aria-label={t('projects.teamAdd')}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={() => {
+                    if (skipBlurSave.current) {
+                      skipBlurSave.current = false
+                      return
+                    }
+                    void commitDraft()
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      void commitDraft()
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      cancelDraft()
+                    }
+                  }}
+                />
+              </div>
+            </li>
+          ) : null}
+        </ol>
+      ) : (
+        <EmptyState>{t('projects.teamEmpty')}</EmptyState>
       )}
 
-      <form className="checkion-project-team__add" onSubmit={(e) => void onAdd(e)}>
-        <Field label={t('projects.teamAddLabel')}>
-          <Input
-            type="email"
-            value={email}
-            onChange={(ev) => setEmail(ev.target.value)}
-            placeholder="name@company.com"
-            disabled={busy}
-          />
-        </Field>
-        <div className="checkion-scan-form__actions">
-          <Button type="submit" size="sm" variant="primary" disabled={busy || !email.trim()}>
-            {t('projects.teamAdd')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={busy}
-            onClick={() => void onInviteLink()}
-          >
-            {t('projects.teamInviteLink')}
-          </Button>
-        </div>
-      </form>
+      <div className="checkion-project-team__foot">
+        <button
+          type="button"
+          className="checkion-geo-query-list__add"
+          aria-label={t('projects.teamAdd')}
+          disabled={busy || draftOpen}
+          onClick={beginDraft}
+        >
+          <span className="checkion-magazine-list-num" aria-hidden>
+            {nextNum}
+          </span>
+          <span className="checkion-geo-query-list__add-label">{t('projects.teamAdd')}</span>
+        </button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="checkion-project-team__invite"
+          disabled={busy}
+          onClick={() => void onInviteLink()}
+        >
+          {t('projects.teamInviteLink')}
+        </Button>
+      </div>
+
       {error ? (
         <Text role="meta" as="p">
           {error}
         </Text>
       ) : null}
       {status ? (
-        <Text role="meta" as="p">
+        <p className="checkion-geo-query-list__paste-hint" role="status">
           {status}
-        </Text>
+        </p>
       ) : null}
       {inviteUrl ? (
         <Text role="meta" as="p">

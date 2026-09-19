@@ -700,10 +700,36 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   max-width: 32rem;
 }
 
-.checkion-project-team__add {
+/* Team aside — same magazine editable-list language as GEO queries / Audion */
+.checkion-project-team__main {
   display: grid;
-  gap: var(--msqdx-space-3, 0.75rem);
-  margin-top: var(--msqdx-space-4, 1rem);
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.checkion-project-team__email {
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.checkion-project-team__meta {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.checkion-project-team__foot {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.checkion-project-team__invite.ds-btn {
+  justify-self: start;
+  margin-left: 2.25rem;
 }
 
 @media (max-width: 900px) {

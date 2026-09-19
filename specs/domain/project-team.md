@@ -16,6 +16,7 @@ SSOT is Plexon — not a local CHECKION members table.
 ## UI
 
 - Project workspace intro: pulse left, Team aside right (`ProjectTeamPanel`).
+- Composition matches Audion `CompactEditableList` / Checkion GEO query list: numbered magazine rows, **inline draft email** on “Add member” (no always-visible Field), Invite link as secondary foot action.
 - Unbound / `plx-local-*`: empty state “sync Collection”.
 
 ## BFF
