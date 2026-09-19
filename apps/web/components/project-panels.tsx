@@ -502,9 +502,6 @@ export function ProjectWorkspace({
         </div>
       </header>
 
-        </div>
-      </header>
-
       <div className="checkion-project-intro">
         <div className="checkion-project-intro__copy">
           <WorkspaceChapter
