@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getRequestUser } from '../../../lib/auth-api-token'
-import { createScan, listScans } from '../../../lib/fixtures/scan-store'
+import { createScan } from '../../../lib/fixtures/scan-store'
+import { viewerCanAccessProjectId } from '../../../lib/resource-access'
+import { resolveApiViewerId } from '../../../lib/resource-access-http'
+import { listScansForViewer } from '../../../lib/resource-access'
 import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
 import { parseScanCorrelation } from '../../../lib/scan-correlation'
 
@@ -8,9 +11,13 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 export async function GET(request: Request) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const url = new URL(request.url)
   const projectId = url.searchParams.get('projectId') ?? undefined
-  return NextResponse.json({ items: await listScans(projectId) })
+  return NextResponse.json({
+    items: await listScansForViewer(viewer.viewerId, projectId),
+  })
 }
 
 export async function POST(request: Request) {
@@ -36,6 +43,13 @@ export async function POST(request: Request) {
   if (body.mode !== 'single' && body.mode !== 'deep') {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
   }
+
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+  if (!(await viewerCanAccessProjectId(body.projectId, viewer.viewerId))) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
   const scan = await createScan({
     projectId: body.projectId,
     mode: body.mode,

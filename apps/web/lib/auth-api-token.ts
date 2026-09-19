@@ -3,7 +3,6 @@
  * Spec: specs/domain/settings-api-tokens.md
  */
 
-import { auth } from '../auth'
 import { resolveApiTokenOwner } from './fixtures/api-tokens-store'
 
 /**
@@ -24,6 +23,7 @@ export async function getUserFromBearerToken(
 export async function getRequestUser(request: Request): Promise<{ id: string } | null> {
   const bearer = await getUserFromBearerToken(request)
   if (bearer) return bearer
+  const { auth } = await import('../auth')
   const session = await auth()
   return session?.user?.id ? { id: session.user.id } : null
 }

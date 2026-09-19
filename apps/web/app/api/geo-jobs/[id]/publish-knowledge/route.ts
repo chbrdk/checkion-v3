@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getRequestUser } from '../../../../../lib/auth-api-token'
 import { publishGeoJobKnowledge } from '../../../../../lib/knowledge-pack-autosync'
+import { viewerCanAccessGeoJob } from '../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../lib/resource-access-http'
 import { isPlexonAuthConfigured } from '../../../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
@@ -21,11 +26,15 @@ export async function POST(
     }
   }
 
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+
   const { id } = await ctx.params
   const jobId = id?.trim()
   if (!jobId) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 })
   }
+  if (!(await viewerCanAccessGeoJob(jobId, viewer.viewerId))) return forbiddenResponse()
 
   const published = await publishGeoJobKnowledge({ jobId })
   if (!published.ok) {

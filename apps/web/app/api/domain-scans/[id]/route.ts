@@ -2,17 +2,25 @@ import { NextResponse } from 'next/server'
 import { getRequestUser } from '../../../../lib/auth-api-token'
 import { getDomainScan, updateDomainScanTitle } from '../../../../lib/fixtures/scan-store'
 import { normalizeJobTitle } from '../../../../lib/job-title'
+import { viewerCanAccessDomainScan } from '../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../lib/resource-access-http'
 import { isPlexonAuthConfigured } from '../../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
   const scan = await getDomainScan(id)
   if (!scan) return NextResponse.json({ error: 'not_found' }, { status: 404 })
+  if (!(await viewerCanAccessDomainScan(id, viewer.viewerId))) return forbiddenResponse()
   return NextResponse.json(scan)
 }
 
@@ -31,11 +39,15 @@ export async function PATCH(
     }
   }
 
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+
   const { id } = await context.params
   const scanId = id?.trim()
   if (!scanId) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })
   }
+  if (!(await viewerCanAccessDomainScan(scanId, viewer.viewerId))) return forbiddenResponse()
 
   let body: { title?: unknown }
   try {

@@ -6,11 +6,13 @@ import { DomainIssuesPanel } from '../../../../components/domain-issues-panel'
 import { DomainMagazineShell } from '../../../../components/domain-magazine-shell'
 import { DomainOverviewPanel } from '../../../../components/domain-overview-panel'
 import { ResultActions } from '../../../../components/result-actions'
+import { auth } from '../../../../auth'
 import {
   getDomainOverview,
   getScanIssues,
 } from '../../../../lib/fixtures/scan-store'
 import { paths } from '../../../../lib/paths'
+import { viewerCanAccessDomainScan } from '../../../../lib/resource-access'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -21,6 +23,8 @@ export default async function DomainSectionPage({
   params: Promise<{ id: string; section: string }>
 }) {
   const { id, section: rawSection } = await params
+  const session = await auth()
+  if (!(await viewerCanAccessDomainScan(id, session?.user?.id ?? null))) notFound()
   const overview = await getDomainOverview(id)
   if (!overview) notFound()
 

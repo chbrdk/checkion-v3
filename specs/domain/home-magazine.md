@@ -29,7 +29,8 @@ Shared helper `scoreTone` in `lib/scan-display.ts`:
 | Muted | null | `default` | muted |
 
 ## Data
-- `listProjects` · `listScans` · `listDomainScans` · `listGeoJobs` (existing fixture/DB stores)
+- Viewer-scoped: `listProjectsForViewer` · `listScansForViewer` · `listDomainScansForViewer` · `listGeoJobsForViewer` (Access Model B — `specs/domain/access-model-b-visibility.md`)
+- Never load unfiltered `listScans` / `listDomainScans` / `listGeoJobs` on home
 - No new API fields
 
 ## UI primitives (`@msqdx/ui`)

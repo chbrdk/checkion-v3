@@ -5,11 +5,13 @@ import { ResultActions } from '../../../../components/result-actions'
 import { ResultDetailPanel } from '../../../../components/result-detail-panel'
 import { ResultMagazineShell } from '../../../../components/result-magazine-shell'
 import { ResultIssuesPanel, ResultOverviewPanel } from '../../../../components/result-panels'
+import { auth } from '../../../../auth'
 import {
   getScanIssues,
   getScanOverview,
 } from '../../../../lib/fixtures/scan-store'
 import { paths } from '../../../../lib/paths'
+import { viewerCanAccessScan } from '../../../../lib/resource-access'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -20,6 +22,8 @@ export default async function ResultSectionPage({
   params: Promise<{ id: string; section: string }>
 }) {
   const { id, section: rawSection } = await params
+  const session = await auth()
+  if (!(await viewerCanAccessScan(id, session?.user?.id ?? null))) notFound()
   const overview = await getScanOverview(id)
   if (!overview) notFound()
 

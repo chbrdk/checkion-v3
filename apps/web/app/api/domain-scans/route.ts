@@ -1,16 +1,31 @@
 import { NextResponse } from 'next/server'
-import { createDomainScan, listDomainScans } from '../../../lib/fixtures/scan-store'
+import { createDomainScan } from '../../../lib/fixtures/scan-store'
+import {
+  listDomainScansForViewer,
+  viewerCanAccessProjectId,
+} from '../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../lib/resource-access-http'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
 export async function GET(request: Request) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const url = new URL(request.url)
   const projectId = url.searchParams.get('projectId') ?? undefined
-  return NextResponse.json({ items: await listDomainScans(projectId) })
+  return NextResponse.json({
+    items: await listDomainScansForViewer(viewer.viewerId, projectId),
+  })
 }
 
 export async function POST(request: Request) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+
   const body = (await request.json()) as {
     projectId?: string
     url?: string
@@ -21,6 +36,9 @@ export async function POST(request: Request) {
   }
   if (!body.projectId || !body.url) {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
+  }
+  if (!(await viewerCanAccessProjectId(body.projectId, viewer.viewerId))) {
+    return forbiddenResponse()
   }
   const domain = await createDomainScan({
     projectId: body.projectId,

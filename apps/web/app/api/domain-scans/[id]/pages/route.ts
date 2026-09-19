@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { DomainCorpusPagesSort } from '@checkion-v3/contracts'
 import { listDomainCorpusPages } from '../../../../../lib/domain-corpus-pages'
+import { viewerCanAccessDomainScan } from '../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../lib/resource-access-http'
 
 const SORT_VALUES: DomainCorpusPagesSort[] = [
   'score_asc',
@@ -20,7 +25,11 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
+  if (!(await viewerCanAccessDomainScan(id, viewer.viewerId))) return forbiddenResponse()
+
   const url = new URL(request.url)
   const page = Number(url.searchParams.get('page') ?? '1')
   const pageSize = Number(url.searchParams.get('pageSize') ?? '25')

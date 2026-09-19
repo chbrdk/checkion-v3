@@ -4,6 +4,11 @@ import {
   resolveGeoReading,
   type GeoReadingKind,
 } from '../../../../../lib/geo-readings'
+import { viewerCanAccessGeoJob } from '../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../lib/resource-access-http'
 
 const KINDS = new Set<GeoReadingKind>(['verdict', 'eeat', 'placement', 'queries', 'query'])
 
@@ -11,7 +16,11 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
+  if (!(await viewerCanAccessGeoJob(id, viewer.viewerId))) return forbiddenResponse()
+
   const overview = await getGeoOverview(id)
   if (!overview) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 

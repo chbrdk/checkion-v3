@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getRequestUser } from '../../../lib/auth-api-token'
-import { createGeoJob, listGeoJobs } from '../../../lib/fixtures/geo-store'
+import { createGeoJob } from '../../../lib/fixtures/geo-store'
 import { resolveGeoLaunchProjectId } from '../../../lib/geo-launch-project'
 import {
   normalizeGeoUrl,
@@ -14,13 +14,27 @@ import {
   resolveKnowledgeEnrichment,
 } from '../../../lib/plexon-knowledge-pack'
 import { parseGeoMeasurement } from '../../../lib/geo/measurement'
+import {
+  listGeoJobsForViewer,
+  viewerCanAccessProjectId,
+} from '../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../lib/resource-access-http'
 import { isPlexonAuthConfigured } from '../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-export async function GET() {
-  return NextResponse.json({ items: await listGeoJobs() })
+export async function GET(request: Request) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+  const url = new URL(request.url)
+  const projectId = url.searchParams.get('projectId') ?? undefined
+  return NextResponse.json({
+    items: await listGeoJobsForViewer(viewer.viewerId, projectId),
+  })
 }
 
 export async function POST(request: Request) {
@@ -30,6 +44,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
     }
   }
+
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
 
   const body = (await request.json()) as {
     projectId?: string
@@ -107,6 +124,9 @@ export async function POST(request: Request) {
       { error: resolved.error, detail: resolved.detail },
       { status: 400 },
     )
+  }
+  if (!(await viewerCanAccessProjectId(resolved.projectId, viewer.viewerId))) {
+    return forbiddenResponse()
   }
 
   const title =

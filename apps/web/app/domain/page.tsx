@@ -3,7 +3,7 @@ import { Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { AppShell } from '../../components/app-shell'
 import { auth } from '../../auth'
 import { listProjectsForViewer } from '../../lib/fixtures/project-store'
-import { listDomainScans } from '../../lib/fixtures/scan-store'
+import { listDomainScansForViewer } from '../../lib/resource-access'
 import { paths } from '../../lib/paths'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
@@ -11,10 +11,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function DomainIndexPage() {
   const session = await auth()
+  const viewerId = session?.user?.id ?? null
   const projects = Object.fromEntries(
-    ((await listProjectsForViewer(session?.user?.id ?? null))).map((p) => [p.id, p.name]),
+    ((await listProjectsForViewer(viewerId))).map((p) => [p.id, p.name]),
   )
-  const domains = await listDomainScans()
+  const domains = await listDomainScansForViewer(viewerId)
 
   return (
     <AppShell

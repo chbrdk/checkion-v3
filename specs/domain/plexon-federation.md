@@ -28,6 +28,12 @@
 - Spec: `plexon-v3/specs/domain/central-assistant-flyout.md` · `plexon-v3/specs/api/assistant-embed.md`
 - Public Plexon origin for iframe: same base as federation (`NEXT_PLEXON_BASE_URL` / `PLEXON_AUTH_URL` / `NEXT_PUBLIC_PLEXON_URL` when set) — document in `knowledge/paths.md`
 
+## Access Model B (visibility)
+
+- Collection / capability visibility: creator or explicit assignment — **not** company-wide. Spec: `access-model-b-visibility.md` · Plexon `collection-projects.md` invariant 5.
+- Product lists call `GET …/accessible-collections` (service + `X-Plexon-User-Id`) and page `nextCursor`.
+- Scans, domain scans, and GEO jobs inherit access from their parent capability project.
+
 ## Auth (NextAuth + Plexon)
 - NextAuth credentials provider validates against plexon `POST /api/auth/validate-credentials`
 - Env: `PLEXON_AUTH_URL`, `PLEXON_SERVICE_SECRET`, `AUTH_SECRET` (≥32), optional `NEXT_PUBLIC_PLEXON_REGISTER_URL`

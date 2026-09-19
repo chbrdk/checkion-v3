@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getScan, getScanOverview } from '../../../../../lib/fixtures/scan-store'
+import { viewerCanAccessScan } from '../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../lib/resource-access-http'
 import { readScreenshot } from '../../../../../lib/scan/screenshot-storage'
 
 export const runtime = 'nodejs'
@@ -25,10 +30,13 @@ function fileKeyFromScreenshotUrl(url: string | null | undefined): string | null
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
+  if (!(await viewerCanAccessScan(id, viewer.viewerId))) return forbiddenResponse()
 
   // Prefer on-disk JPEG even when in-memory/DB scan lookup fails (Next.js module isolation).
   const disk = await readScreenshot(id)

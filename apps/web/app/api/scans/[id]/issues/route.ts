@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { getScanIssues } from '../../../../../lib/fixtures/scan-store'
+import { viewerCanAccessScan } from '../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../lib/resource-access-http'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
+  if (!(await viewerCanAccessScan(id, viewer.viewerId))) return forbiddenResponse()
   return NextResponse.json({ items: await getScanIssues(id) })
 }

@@ -6,15 +6,24 @@ import {
   updateGeoJobTitle,
 } from '../../../../lib/fixtures/geo-store'
 import { normalizeGeoJobTitle } from '../../../../lib/geo-job-title'
+import { viewerCanAccessGeoJob } from '../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../lib/resource-access-http'
 import { isPlexonAuthConfigured } from '../../../../lib/runtime-config'
 
 export const runtime = 'nodejs'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id } = await context.params
+  if (!(await viewerCanAccessGeoJob(id, viewer.viewerId))) return forbiddenResponse()
+
   const overview = await getGeoOverview(id)
   if (overview) return NextResponse.json(overview)
 
@@ -38,11 +47,15 @@ export async function PATCH(
     }
   }
 
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
+
   const { id } = await context.params
   const jobId = id?.trim()
   if (!jobId) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })
   }
+  if (!(await viewerCanAccessGeoJob(jobId, viewer.viewerId))) return forbiddenResponse()
 
   let body: { title?: unknown }
   try {

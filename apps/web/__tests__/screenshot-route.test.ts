@@ -2,9 +2,26 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GET } from '../app/api/scans/[id]/screenshot/route'
 import { writeScreenshot, readScreenshot } from '../lib/scan/screenshot-storage'
 import { apiScanScreenshot } from '../lib/scan/constants'
+
+vi.mock('../auth', () => ({
+  auth: vi.fn(async () => null),
+}))
+
+vi.mock('../lib/auth-api-token', () => ({
+  getRequestUser: async () => null,
+}))
+
+vi.mock('../lib/runtime-config', async () => {
+  const actual = await vi.importActual<typeof import('../lib/runtime-config')>(
+    '../lib/runtime-config',
+  )
+  return {
+    ...actual,
+    isPlexonAuthConfigured: () => false,
+  }
+})
 
 describe('screenshot storage + route', () => {
   let tmpDir: string
@@ -28,6 +45,7 @@ describe('screenshot storage + route', () => {
   })
 
   it('serves stored jpeg for an existing scan', async () => {
+    const { GET } = await import('../app/api/scans/[id]/screenshot/route')
     const { createScan, getScanOverview } = await import('../lib/fixtures/scan-store')
     vi.stubEnv('DATABASE_URL', '')
     vi.stubEnv('CHECKION_LIVE_SCANS', '')
@@ -40,7 +58,6 @@ describe('screenshot storage + route', () => {
     const buf = Buffer.from([0xff, 0xd8, 0xff, 0xaa, 0xd9])
     await writeScreenshot(scan.id, buf)
 
-    // Point overview screenshotUrl at the API path (live adapt does this).
     const overview = await getScanOverview(scan.id)
     expect(overview).toBeTruthy()
 
@@ -54,6 +71,7 @@ describe('screenshot storage + route', () => {
   })
 
   it('returns svg placeholder when file is missing', async () => {
+    const { GET } = await import('../app/api/scans/[id]/screenshot/route')
     vi.stubEnv('DATABASE_URL', '')
     vi.stubEnv('CHECKION_LIVE_SCANS', '')
     const { createScan } = await import('../lib/fixtures/scan-store')

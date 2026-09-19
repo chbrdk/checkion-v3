@@ -4,21 +4,28 @@ vi.mock('../auth', () => ({
   auth: vi.fn(async () => null),
 }))
 
-vi.mock('../runtime-config', () => ({
+vi.mock('../lib/runtime-config', () => ({
   getFederationMode: vi.fn(() => 'dummy'),
   isPlexonFederationConfigured: vi.fn(() => false),
+  isPlexonAuthConfigured: vi.fn(() => false),
   getPlexonServiceSecret: vi.fn(() => ''),
   plexonBaseUrl: vi.fn(() => 'http://localhost:3000'),
 }))
 
-import { filterProjectsForViewer, projectVisibleToOwner } from '../lib/project-access'
+import {
+  filterProjectsForViewer,
+  projectVisibleToOwner,
+} from '../lib/project-access'
+import { isPlexonAuthConfigured } from '../lib/runtime-config'
 
 describe('project-access (model B)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(isPlexonAuthConfigured).mockReturnValue(false)
   })
 
-  it('hides all projects when viewer is null', async () => {
+  it('hides all projects when viewer is null and auth is configured', async () => {
+    vi.mocked(isPlexonAuthConfigured).mockReturnValue(true)
     const items = await filterProjectsForViewer(
       [{ platformProjectId: 'pp-1', ownerPlexonUserId: 'u1' }],
       null,
@@ -26,7 +33,20 @@ describe('project-access (model B)', () => {
     expect(items).toEqual([])
   })
 
-  it('keeps projects owned by the viewer when federation is off', async () => {
+  it('keeps all projects in open mode without auth', async () => {
+    vi.mocked(isPlexonAuthConfigured).mockReturnValue(false)
+    const items = await filterProjectsForViewer(
+      [
+        { id: 'a', platformProjectId: 'pp-1', ownerPlexonUserId: 'u1' },
+        { id: 'b', platformProjectId: 'pp-2', ownerPlexonUserId: 'u2' },
+      ],
+      null,
+    )
+    expect(items.map((p) => p.id)).toEqual(['a', 'b'])
+  })
+
+  it('keeps projects owned by the viewer when federation is off but auth is on', async () => {
+    vi.mocked(isPlexonAuthConfigured).mockReturnValue(true)
     const items = await filterProjectsForViewer(
       [
         { id: 'a', platformProjectId: 'pp-1', ownerPlexonUserId: 'u1' },

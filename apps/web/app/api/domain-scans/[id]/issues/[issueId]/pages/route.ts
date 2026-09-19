@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server'
 import { listIssueAffectedPages } from '../../../../../../../lib/domain-issue-pages'
+import { viewerCanAccessDomainScan } from '../../../../../../../lib/resource-access'
+import {
+  forbiddenResponse,
+  resolveApiViewerId,
+} from '../../../../../../../lib/resource-access-http'
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string; issueId: string }> },
 ) {
+  const viewer = await resolveApiViewerId(request)
+  if (!viewer.ok) return viewer.response
   const { id, issueId } = await context.params
+  if (!(await viewerCanAccessDomainScan(id, viewer.viewerId))) return forbiddenResponse()
+
   const url = new URL(request.url)
   const page = Number(url.searchParams.get('page') ?? '1')
   const pageSize = Number(url.searchParams.get('pageSize') ?? '25')

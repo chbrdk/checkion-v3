@@ -20,6 +20,8 @@ import {
 } from '../../../../lib/fixtures/geo-store'
 import { getProject } from '../../../../lib/fixtures/project-store'
 import { paths } from '../../../../lib/paths'
+import { viewerCanAccessGeoJob } from '../../../../lib/resource-access'
+import { auth } from '../../../../auth'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -33,6 +35,8 @@ export default async function GeoSectionPage({
 }) {
   const { id, section: rawSection } = await params
   const { q, model } = await searchParams
+  const session = await auth()
+  if (!(await viewerCanAccessGeoJob(id, session?.user?.id ?? null))) notFound()
   const overview = await getGeoOverview(id)
   if (!overview) notFound()
 
