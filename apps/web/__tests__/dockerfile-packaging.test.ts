@@ -50,6 +50,8 @@ describe('Dockerfile Coolify packaging', () => {
     const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
     const match = df.match(/ARG MSQDX_UI_REF=([0-9a-f]{40})/)
     expect(match?.[1]).toMatch(/^[0-9a-f]{40}$/)
+    expect(df).toContain('SeriesChart.tsx')
+    expect(df).toContain('export { SeriesChart, collectSeriesLabels }')
   })
 
   it('re-exports CardActions from the curated @msqdx/ui barrel', () => {
@@ -106,6 +108,7 @@ describe('Dockerfile Coolify packaging', () => {
     expect(client).toContain('Tooltip')
     expect(client).toContain('InfoTip')
     expect(client).toContain('ChatOverlay')
+    expect(client).toContain('SeriesChart')
   })
 
   it('keeps health path for Traefik probes', () => {

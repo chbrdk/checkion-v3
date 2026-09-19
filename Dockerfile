@@ -62,8 +62,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-# LabTile (+ active) for Checks/GEO magazine metrics — msqdx-ui main @ 2026-09-17.
-ARG MSQDX_UI_REF=0249eb5270d645e70397731061d39df7ceabf7a3
+# SeriesChart for GEO position history — msqdx-ui main @ af801ee (2026-09-19).
+ARG MSQDX_UI_REF=af801ee72b2cfd763d0c50d8256de3b360889998
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
@@ -102,11 +102,13 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/BrandCornerProductMenu.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/MarkdownProse.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/LabTile.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/SeriesChart.tsx \
     && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { ChatOverlay }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { BrandCornerProductMenu }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { LabTile, LabTileStrip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "export { SeriesChart, collectSeriesLabels }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && rm -rf /workspace/msqdx-ui/node_modules \
     && ln -s /workspace/checkion-v3/node_modules /workspace/msqdx-ui/node_modules \
     && test -d /workspace/msqdx-ui/node_modules/@types/react
