@@ -32,6 +32,7 @@ import type {
 import { normalizeUxReadability } from '../readability-cefr'
 import { apiScanScreenshot } from './constants'
 import { selectTopIssueGroups } from '../issue-groups'
+import { meanDomainOverallScore } from './domain-overall-score'
 
 function mapSeverity(type: Issue['type']): IssueSeverity {
   if (type === 'error') return 'critical'
@@ -737,10 +738,7 @@ export function adaptDomainResultToContracts(
     }
   }
 
-  const avgScore =
-    pages.length > 0
-      ? Math.round(pages.reduce((acc, p) => acc + (p.ux?.score ?? p.score), 0) / pages.length)
-      : domainResult.score
+  const avgScore = meanDomainOverallScore(pages, domainResult.score)
 
   const scores: ScoreCard[] =
     pageScans[0]?.scores.map((card) => {

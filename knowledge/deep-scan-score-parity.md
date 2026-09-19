@@ -12,11 +12,16 @@ Corpus means per ScoreKind (`accessibility`, `seo`, `performance`, `best_practic
 | Plexon `buildDomainCatalogBundle` | `scores` object (same as single-scan catalog) |
 | Plexon flow / EQC / domain executor | `fetchCheckionDomainScanScores` (detail map, else overview `scores`) |
 
+## Overall vs kind means
+
+`overallScore` / spider `score` = **unweighted** mean of page overalls (`meanDomainOverallScore`). Legacy home depth 1.5× weight removed so spider finalize matches adapt / magazine.
+
 ## Paths
 
 - Checkion adapt: `apps/web/lib/scan/adapt-scan-result.ts`
+- Overall helper: `apps/web/lib/scan/domain-overall-score.ts`
 - Checkion hub helper: `apps/web/lib/domain-scores-by-kind-meta.ts`
 - Plexon fetch: `lib/integrations/checkion-domain-scans-v3-client.ts` → `fetchCheckionDomainScanScores`
 - Specs: `specs/domain/domain-scan-sections.md`, `specs/domain/scoring.md`
 
-Out of scope: spider `calculateDomainScore` weighting vs simple mean; answer-engine GEO on Deep.
+Out of scope: answer-engine GEO (`citedShare`) on Deep crawls.

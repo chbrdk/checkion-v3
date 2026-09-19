@@ -8,6 +8,7 @@ import {
     DOMAIN_SCAN_MAX_PAGES_CAP,
     resolveDomainScanMaxPages,
 } from '@/lib/scan/domain-scan-max-pages';
+import { meanDomainOverallScore } from '@/lib/scan/domain-overall-score';
 
 export { DOMAIN_SCAN_DEFAULT_MAX_PAGES, DOMAIN_SCAN_MAX_PAGES_CAP, resolveDomainScanMaxPages };
 
@@ -93,24 +94,11 @@ function pathDepth(url: string): number {
 }
 
 /**
- * Calculates the Domain Health Score
- * Formula: Weighted Average based on depth.
- * Depth 0 (Home) = 1.5x weight
- * Depth 1+ = 1.0x weight
+ * Domain overall score — unweighted mean of page overalls.
+ * @see specs/domain/scoring.md · `meanDomainOverallScore`
  */
 function calculateDomainScore(pages: Array<{ result: ScanResult; depth: number }>): number {
-    if (pages.length === 0) return 0;
-
-    let totalWeightedScore = 0;
-    let totalWeight = 0;
-
-    pages.forEach((p) => {
-        const weight = p.depth === 0 ? 1.5 : 1.0;
-        totalWeightedScore += (p.result.ux?.score || p.result.score) * weight;
-        totalWeight += weight;
-    });
-
-    return Math.round(totalWeightedScore / totalWeight);
+    return meanDomainOverallScore(pages.map((p) => p.result));
 }
 
 /**

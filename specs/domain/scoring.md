@@ -9,6 +9,8 @@ Accepted (Phase 1)
 ## Deep scan aggregation
 Corpus means per kind live on `DomainOverview.scores` and on `DomainScanLight.scoresByKind` (list/hub/catalog without full Overview). Same numbers; no separate formula.
 
+**Overall (`DomainScanLight.overallScore` / spider `DomainScanResult.score`):** unweighted arithmetic mean of each page’s overall (`ux.score` if present, else page `score`), rounded 0–100. Home/depth weights **MUST NOT** apply — same formula in spider finalize and `adaptDomainResultToContracts` via `meanDomainOverallScore`.
+
 ## Display mapping
 | Contract | DS |
 |----------|-----|
