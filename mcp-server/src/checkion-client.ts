@@ -53,10 +53,10 @@ export async function checkionFetch<T = unknown>(
   const actor =
     checkion?.actorUserId?.trim() || checkionActorStore.getStore()?.trim() || ''
 
-  if (SERVICE_SECRET && !actor && !TOKEN) {
+  if ((SERVICE_SECRET || TOKEN) && !actor) {
     return {
       error: true,
-      message: 'actorUserId required when using PLEXON_SERVICE_SECRET',
+      message: 'actorUserId required for machine auth (Access Model B)',
     }
   }
 
@@ -72,11 +72,10 @@ export async function checkionFetch<T = unknown>(
   if (SERVICE_SECRET) {
     headers[PLEXON_SERVICE_SECRET_HEADER] = SERVICE_SECRET
     headers[PLEXON_CONTRACT_VERSION_HEADER] = CONTRACT
-    if (actor) headers[PLEXON_USER_ID_HEADER] = actor
-  }
-  if (TOKEN) {
+    headers[PLEXON_USER_ID_HEADER] = actor
+  } else if (TOKEN) {
     headers.Authorization = `Bearer ${TOKEN}`
-    if (actor) headers[PLEXON_USER_ID_HEADER] = actor
+    headers[PLEXON_USER_ID_HEADER] = actor
   }
 
   try {
