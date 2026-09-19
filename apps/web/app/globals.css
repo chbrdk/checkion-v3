@@ -688,6 +688,30 @@ button.checkion-collection-card--create:hover .checkion-collection-card-title {
   white-space: nowrap;
 }
 
+.checkion-project-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
+  gap: var(--msqdx-space-6, 1.5rem);
+  align-items: start;
+  margin-block: var(--msqdx-space-6, 1.5rem);
+}
+
+.checkion-project-intro__team {
+  max-width: 32rem;
+}
+
+.checkion-project-team__add {
+  display: grid;
+  gap: var(--msqdx-space-3, 0.75rem);
+  margin-top: var(--msqdx-space-4, 1rem);
+}
+
+@media (max-width: 900px) {
+  .checkion-project-intro {
+    grid-template-columns: 1fr;
+  }
+}
+
 .checkion-project-chapter {
   display: grid;
   gap: 1rem;

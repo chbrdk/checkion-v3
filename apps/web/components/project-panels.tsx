@@ -12,6 +12,7 @@ import type {
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
+import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
@@ -501,32 +502,45 @@ export function ProjectWorkspace({
         </div>
       </header>
 
-      <WorkspaceChapter
-        eyebrow={t('projects.pulseEyebrow')}
-        title={t('projects.pulseTitle')}
-        deck={t('projects.pulseDeck')}
-      >
-        <div className="checkion-project-pulse" aria-label={t('projects.pulseAria')}>
-          <div className="checkion-project-pulse__meter">
-            <p className="checkion-project-pulse__value">{singleScans.length}</p>
-            <p className="checkion-project-pulse__label">{t('projects.pulseSingles')}</p>
-          </div>
-          <div className="checkion-project-pulse__meter">
-            <p className="checkion-project-pulse__value">{domainCount}</p>
-            <p className="checkion-project-pulse__label">{t('projects.pulseDeep')}</p>
-          </div>
-          <div className="checkion-project-pulse__meter">
-            <p className="checkion-project-pulse__value">{geoJobs.length}</p>
-            <p className="checkion-project-pulse__label">{t('projects.pulseGeo')}</p>
-          </div>
-          <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
-            <p className="checkion-project-pulse__value">
-              {latestScore != null ? latestScore : '—'}
-            </p>
-            <p className="checkion-project-pulse__label">{t('projects.pulseLatestScore')}</p>
-          </div>
         </div>
-      </WorkspaceChapter>
+      </header>
+
+      <div className="checkion-project-intro">
+        <div className="checkion-project-intro__copy">
+          <WorkspaceChapter
+            eyebrow={t('projects.pulseEyebrow')}
+            title={t('projects.pulseTitle')}
+            deck={t('projects.pulseDeck')}
+          >
+            <div className="checkion-project-pulse" aria-label={t('projects.pulseAria')}>
+              <div className="checkion-project-pulse__meter">
+                <p className="checkion-project-pulse__value">{singleScans.length}</p>
+                <p className="checkion-project-pulse__label">{t('projects.pulseSingles')}</p>
+              </div>
+              <div className="checkion-project-pulse__meter">
+                <p className="checkion-project-pulse__value">{domainCount}</p>
+                <p className="checkion-project-pulse__label">{t('projects.pulseDeep')}</p>
+              </div>
+              <div className="checkion-project-pulse__meter">
+                <p className="checkion-project-pulse__value">{geoJobs.length}</p>
+                <p className="checkion-project-pulse__label">{t('projects.pulseGeo')}</p>
+              </div>
+              <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
+                <p className="checkion-project-pulse__value">
+                  {latestScore != null ? latestScore : '—'}
+                </p>
+                <p className="checkion-project-pulse__label">{t('projects.pulseLatestScore')}</p>
+              </div>
+            </div>
+          </WorkspaceChapter>
+        </div>
+        <aside className="checkion-project-intro__team">
+          <ProjectTeamPanel
+            projectId={project.id}
+            platformProjectId={project.platformProjectId}
+          />
+        </aside>
+      </div>
 
       <WorkspaceChapter
         eyebrow={t('projects.runsEyebrow')}

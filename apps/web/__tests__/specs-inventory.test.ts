@@ -8,6 +8,7 @@ const requiredSpecs = [
   'specs/domain/app-shell.md',
   'specs/domain/home-magazine.md',
   'specs/domain/access-model-b-visibility.md',
+  'specs/domain/project-team.md',
   'specs/domain/project-workspace.md',
   'specs/domain/scan-modes.md',
   'specs/domain/scan-result-workspace.md',

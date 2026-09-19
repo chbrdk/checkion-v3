@@ -68,6 +68,12 @@ export const paths = {
   /** Service: Collection lifecycle (archive / restore). */
   plexonProvisioningProjectPath: (platformProjectId: string) =>
     `/api/platform/provisioning/projects/${encodeURIComponent(platformProjectId)}`,
+  plexonProvisioningCollectionMembersPath: (platformProjectId: string) =>
+    `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/members`,
+  plexonProvisioningCollectionMemberPath: (platformProjectId: string, userId: string) =>
+    `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/members/${encodeURIComponent(userId)}`,
+  plexonProvisioningCollectionInvitesPath: (platformProjectId: string) =>
+    `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/invites`,
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
   /** Cap for POST /api/fetch-page bodyTextExcerpt (matches scanner bodyTextExcerpt). */
@@ -188,6 +194,10 @@ export const paths = {
     apiHealth: '/api/health',
     apiProjects: '/api/projects',
     apiProjectDetail: (id: string) => `/api/projects/${id}`,
+    apiProjectMembers: (id: string) => `/api/projects/${encodeURIComponent(id)}/members`,
+    apiProjectMember: (id: string, userId: string) =>
+      `/api/projects/${encodeURIComponent(id)}/members/${encodeURIComponent(userId)}`,
+    apiProjectInvites: (id: string) => `/api/projects/${encodeURIComponent(id)}/invites`,
     apiProjectGeoHistory: (id: string) => `/api/projects/${encodeURIComponent(id)}/geo-history`,
     apiProjectArchive: (id: string) => `/api/projects/${id}/archive`,
     apiScans: '/api/scans',
