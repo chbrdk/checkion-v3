@@ -6,11 +6,15 @@
 | Item | Value |
 |------|--------|
 | App | `checkion-v3:scan-worker` |
+| Coolify UUID | `abkibn5gtbcmwvwvwidmwigk` |
+| FQDN | `https://abkibn5gtbcmwvwvwidmwigk.projects-a.plygrnd.tech` |
 | Dockerfile | `/services/scan-worker/Dockerfile` (build context = repo root) |
 | Port | **3011** |
 | Health | `GET /health` → `{ "ok": true, "service": "checkion-scan-worker" }` |
 | Server | projects-01 |
 | Sibling | `checkion-v3:main-app` uuid `valb5m9m099d9k7i2d1xkv6p` · project `u10pr32wp2hw3u7vp7i5nsew` · env `kn2s2et64j2zqmacijuiuiku` |
+
+**Note:** Worker runs via `tsx`. Install `installPuppeteerEsbuildNamePatch` in `scripts/run-scan-worker.ts` so `page.evaluate` survives esbuild `keepNames` (`__name`).
 
 ## Create (Coolify REST)
 

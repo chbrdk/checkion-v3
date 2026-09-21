@@ -4,11 +4,16 @@
  */
 
 import http from 'node:http'
+import { Page } from 'puppeteer'
 import { paths } from '../lib/paths'
+import { installPuppeteerEsbuildNamePatch } from '../lib/scan/puppeteer-esbuild-name'
 import {
   runScanWorkerLoop,
   scanWorkerHealthPayload,
 } from '../lib/scan/scan-worker-loop'
+
+// tsx/esbuild keepNames → page.evaluate ReferenceError: __name is not defined
+installPuppeteerEsbuildNamePatch(Page)
 
 const port = Number(process.env.PORT?.trim() || paths.scanWorkerPort) || paths.scanWorkerPort
 

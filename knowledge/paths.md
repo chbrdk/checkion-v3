@@ -7,7 +7,7 @@
 
 ## Staging (Coolify)
 - Public: `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`)
-- Scan worker: Coolify app `checkion-v3:scan-worker` · Dockerfile `/services/scan-worker/Dockerfile` · port **3011** · ops `knowledge/staging-coolify-scan-worker.md` · spec `specs/domain/scan-worker.md`
+- Scan worker: Coolify app `checkion-v3:scan-worker` uuid `abkibn5gtbcmwvwvwidmwigk` · FQDN `https://abkibn5gtbcmwvwvwidmwigk.projects-a.plygrnd.tech` · Dockerfile `/services/scan-worker/Dockerfile` · port **3011** · ops `knowledge/staging-coolify-scan-worker.md` · spec `specs/domain/scan-worker.md`
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
 - Central Assistant flyout: AppShell `PlatformAssistantHost` → `{plexon}/assistant/embed` (+ `theme` / `assistant:theme`) · `plexon-v3/specs/domain/central-assistant-flyout.md`
 - Product launcher: BrandCorner → `ShellBrandCorner` / `lib/platform-product-switcher.ts`; staging fallbacks in `paths.ecosystemStaging*` when `NEXT_PUBLIC_*_URL` unset
