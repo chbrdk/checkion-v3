@@ -22,7 +22,7 @@
 | `NEXT_PUBLIC_PLEXON_URL` | Optional public plexon origin for assistant iframe + product launcher (falls back to `NEXT_PLEXON_BASE_URL` / `PLEXON_AUTH_URL`) |
 | Service path | `GET /api/platform/provisioning/accessible-collections` — Collections the user may see (access model B); used by product project + run lists (`specs/domain/access-model-b-visibility.md`) |
 | Access Model B | Spec `specs/domain/access-model-b-visibility.md` · ops `knowledge/access-model-b-visibility.md` · sibling audit `knowledge/access-model-b-sibling-audit.md` |
-| Project team | Spec `specs/domain/project-team.md` · BFF `/api/projects/:id/members` · `/invites` · Plexon SSOT |
+| Project team | Spec `specs/domain/project-team.md` · BFF `/api/projects/:id/members` · `/invites` · Plexon SSOT · outbound mail = Plexon only (`plexon-v3/specs/domain/transactional-email.md`) |
 | `NEXT_PUBLIC_CHECKION_URL` | Public checkion-v3 URL (product launcher + deep-links) |
 | `NEXT_PUBLIC_AUDION_URL` | Optional AUDION origin for BrandCorner product launcher |
 | `NEXT_PUBLIC_BRANDION_URL` | Optional BRANDION origin for product launcher |
