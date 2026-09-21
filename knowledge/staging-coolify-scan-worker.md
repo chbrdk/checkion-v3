@@ -6,10 +6,23 @@
 | Item | Value |
 |------|--------|
 | App | `checkion-v3:scan-worker` |
-| Dockerfile | `/services/scan-worker/Dockerfile` |
+| Dockerfile | `/services/scan-worker/Dockerfile` (build context = repo root) |
 | Port | **3011** |
 | Health | `GET /health` → `{ "ok": true, "service": "checkion-scan-worker" }` |
 | Server | projects-01 |
+| Sibling | `checkion-v3:main-app` uuid `valb5m9m099d9k7i2d1xkv6p` · project `u10pr32wp2hw3u7vp7i5nsew` · env `kn2s2et64j2zqmacijuiuiku` |
+
+## Create (Coolify REST)
+
+Same pattern as VIDEON stem-worker (`POST /applications/private-github-app` with team Bearer):
+
+- Name: `checkion-v3:scan-worker`
+- Git: `chbrdk/checkion-v3` branch `main`
+- Dockerfile location: `/services/scan-worker/Dockerfile`
+- Ports exposes: `3011`
+- Always-on (no scale-to-zero)
+
+After create: copy `DATABASE_URL` from main-app, set screenshot volume to the **same** path as main-app, then force-deploy.
 
 ## Env (worker)
 
@@ -30,19 +43,19 @@ Mount the **same** persistent volume as main-app for `SCAN_SCREENSHOTS_PATH`.
 
 ## Wire main-app
 
-On `checkion-v3:main-app`:
+On `checkion-v3:main-app` (`valb5m9m099d9k7i2d1xkv6p`) — **only after worker is healthy**:
 
 ```
 CHECKION_SCAN_WORKER_MODE=external
 ```
 
-Redeploy web after setting. Local/dev keeps default `inline` (omit env).
+Via Coolify REST: `PATCH /applications/{uuid}/envs/bulk` then redeploy main. Local/dev keeps default `inline` (omit env).
 
 ## Verify
 
 ```
 curl -s https://<scan-worker-fqdn>/health
-# {"ok":true,"service":"checkion-scan-worker"}
+# {"ok":true,"service":"checkion-scan-worker",...}
 ```
 
 Enqueue a single or domain scan from Plexon / Checkion UI; worker logs should show claim + crawl; web UI stays responsive.
