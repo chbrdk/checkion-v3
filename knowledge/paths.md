@@ -39,7 +39,10 @@
 | `CHECKION_SCAN_WORKER_MODE` | `inline` (default, web executes crawls) or `external` (DB claim by scan-worker). Spec: `specs/domain/scan-worker.md` |
 | `CHECKION_SCAN_WORKER_STALE_MS` | Worker-only stale reclaim grace (default 120000) |
 | `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` | Fail foreign/stale 0-page jobs after this age (default 600000) |
-| `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` | Domain job wall-clock in worker (default 1200000) |
+| `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` | Domain job wall-clock in worker (or scaled `ceil(maxPages/3)*90s`) |
+| `PUPPETEER_PROTOCOL_TIMEOUT_MS` | Chromium CDP protocol timeout (default 120000) |
+| `DOMAIN_PAGE_SCAN_TIMEOUT_MS` | Per-page wall-clock in domain spider (default 150000) |
+| `DOMAIN_SCAN_CONCURRENCY` | Spider parallelism (worker Dockerfile default **3**) |
 | `PUPPETEER_CACHE_DIR` | Docker runner: `/opt/puppeteer` (Chrome installed at image build). Optional local override |
 | `PUPPETEER_EXECUTABLE_PATH` | Optional; only if using system Chromium instead of Puppeteer-bundled Chrome |
 | `PUPPETEER_SKIP_DOWNLOAD` | Image builder skips npm Chrome download; runner installs via `npx puppeteer browsers install chrome`. Do not set `true` in Coolify for the Docker build |

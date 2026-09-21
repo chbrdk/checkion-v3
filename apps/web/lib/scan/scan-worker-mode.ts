@@ -42,13 +42,20 @@ export function resolveScanWorkerAbandonNoProgressMs(
   return 600_000
 }
 
-/** Hard wall-clock for one domain job in the worker. Default 20m. */
+/** Hard wall-clock for one domain job in the worker. Scales with maxPages when env unset. */
 export function resolveScanWorkerJobTimeoutMs(
+  maxPages?: number,
   raw: string | undefined = typeof process !== 'undefined'
     ? process.env[paths.envScanWorkerJobTimeoutMs]
     : undefined,
 ): number {
   const n = raw != null && raw !== '' ? Number(raw) : NaN
   if (Number.isFinite(n) && n >= 120_000) return Math.floor(n)
-  return 1_200_000
+  const pages =
+    typeof maxPages === 'number' && Number.isFinite(maxPages) && maxPages > 0
+      ? Math.min(10_000, Math.floor(maxPages))
+      : 50
+  // Assume concurrency ≈3 (worker Dockerfile default); 90s per wave.
+  const waves = Math.ceil(pages / 3)
+  return Math.min(2_700_000, Math.max(900_000, waves * 90_000))
 }

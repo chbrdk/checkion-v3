@@ -43,9 +43,10 @@ describe('scan-worker-mode', () => {
     expect(resolveScanWorkerAbandonNoProgressMs(undefined)).toBe(600_000)
     expect(resolveScanWorkerAbandonNoProgressMs('30000')).toBe(600_000)
     expect(resolveScanWorkerAbandonNoProgressMs('900000')).toBe(900_000)
-    expect(resolveScanWorkerJobTimeoutMs(undefined)).toBe(1_200_000)
-    expect(resolveScanWorkerJobTimeoutMs('60000')).toBe(1_200_000)
-    expect(resolveScanWorkerJobTimeoutMs('900000')).toBe(900_000)
+    // 50 pages / 3 concurrency → 17 waves × 90s = 1_530_000
+    expect(resolveScanWorkerJobTimeoutMs(50)).toBe(1_530_000)
+    expect(resolveScanWorkerJobTimeoutMs(undefined, '60000')).toBe(1_530_000)
+    expect(resolveScanWorkerJobTimeoutMs(50, '900000')).toBe(900_000)
   })
 })
 

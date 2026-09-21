@@ -59,6 +59,9 @@ ENV PUPPETEER_SKIP_DOWNLOAD=false
 ENV PUPPETEER_CACHE_DIR=/opt/puppeteer
 ENV SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
 ENV CHECKION_LIVE_SCANS=1
+# Worker is isolated from Next.js — allow parallel pages on one Chromium.
+ENV DOMAIN_SCAN_CONCURRENCY=3
+ENV DOMAIN_SCAN_DELAY_MS=200
 EXPOSE 3011
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

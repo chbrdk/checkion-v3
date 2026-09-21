@@ -28,7 +28,9 @@ Web in `external` mode: insert queued rows only — never call `startDomainScan`
 4. Reclaim (worker only):
    - **Foreign session** (dead worker after restart/crash): mark `failed` (`scan_worker_abandoned`) immediately — do **not** resume a large crawl ahead of newer queued jobs (Plexon EQC poll ~765s for 50 pages).
    - **Stale heartbeat** (`updatedAt` older than `CHECKION_SCAN_WORKER_STALE_MS`, default **120000**): requeue, unless `pageCount=0` and age ≥ `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` (default **600000**) → `failed`.
-5. Domain wall-clock: `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` (default **1200000**) → cancel signal + fail so one hung crawl cannot block the queue forever.
+5. Domain wall-clock: `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` or scaled default (`ceil(maxPages/3)*90s`, min 15m, max 45m) → cancel signal + fail.
+6. Per-page: `DOMAIN_PAGE_SCAN_TIMEOUT_MS` (default **150000**) + `PUPPETEER_PROTOCOL_TIMEOUT_MS` (default **120000**) so one hung CDP call cannot burn 10 minutes.
+7. Worker image sets `DOMAIN_SCAN_CONCURRENCY=3` (isolated from Next.js).
 
 Web **must not** mark foreign sessions failed when mode=`external`.
 

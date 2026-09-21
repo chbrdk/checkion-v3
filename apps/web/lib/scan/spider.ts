@@ -1,4 +1,5 @@
 import { launchStandaloneScanBrowser, runScan } from './scanner';
+import { DOMAIN_PAGE_SCAN_TIMEOUT_MS } from '@/lib/scan/constants';
 import { discoverSitemapPageUrls } from './sitemap';
 import type { ScanResult, DomainScanResult, DomainScanResultWithFullPages, EeatDomainAggregate } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -272,14 +273,28 @@ export async function* runDomainScan(
             }
         }
 
-        const result = await runScan({
-            url: current.url,
-            device: 'desktop',
-            standard: 'WCAG2AA',
-            groupId: domainId,
-            userId: options.userId,
-            id: pageScanId,
-            sharedBrowser,
+        let pageTimeout: ReturnType<typeof setTimeout> | undefined
+        const result = await Promise.race([
+            runScan({
+                url: current.url,
+                device: 'desktop',
+                standard: 'WCAG2AA',
+                groupId: domainId,
+                userId: options.userId,
+                id: pageScanId,
+                sharedBrowser,
+            }),
+            new Promise<never>((_, reject) => {
+                pageTimeout = setTimeout(() => {
+                    reject(
+                        new Error(
+                            `domain_page_scan_timeout after ${DOMAIN_PAGE_SCAN_TIMEOUT_MS}ms (${current.url})`,
+                        ),
+                    )
+                }, DOMAIN_PAGE_SCAN_TIMEOUT_MS)
+            }),
+        ]).finally(() => {
+            if (pageTimeout) clearTimeout(pageTimeout)
         })
 
         if (projectId && !result.reusedUnchanged) {

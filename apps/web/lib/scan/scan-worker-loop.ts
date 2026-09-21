@@ -312,7 +312,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
   const skipUnchangedPages = resolveSkipUnchangedPages(job.skipUnchangedPages)
   const linkScanId = job.linkScanId?.trim() || undefined
   const stopHb = startHeartbeat('domain', row.id)
-  const jobTimeoutMs = resolveScanWorkerJobTimeoutMs()
+  const jobTimeoutMs = resolveScanWorkerJobTimeoutMs(maxPages)
 
   const linkScan = linkScanId
     ? {
@@ -358,6 +358,8 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
         await db.update(domainScans).set({ updatedAt: new Date() }).where(eq(domainScans.id, row.id))
         if (scanned === 1 || scanned % 5 === 0 || scanned === total) {
           console.info('[checkion-scan-worker] domain progress', row.id, `${scanned}/${total}`, currentUrl)
+        } else {
+          console.info('[checkion-scan-worker] domain page', row.id, `${scanned}/${total}`, currentUrl)
         }
       },
     })

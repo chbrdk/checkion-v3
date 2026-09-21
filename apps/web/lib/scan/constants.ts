@@ -6,8 +6,17 @@
 export const PUPPETEER_PROTOCOL_TIMEOUT_MS = (() => {
   const raw = typeof process !== 'undefined' ? process.env?.PUPPETEER_PROTOCOL_TIMEOUT_MS : undefined
   const n = raw != null && raw !== '' ? Number(raw) : NaN
-  if (Number.isFinite(n) && n >= 60_000) return Math.floor(n)
-  return 600_000
+  // Default 120s — 600s let a single hung CDP call stall a whole domain crawl.
+  if (Number.isFinite(n) && n >= 30_000) return Math.floor(n)
+  return 120_000
+})()
+
+/** Hard wall-clock per page inside the domain spider (fail page, continue crawl). */
+export const DOMAIN_PAGE_SCAN_TIMEOUT_MS = (() => {
+  const raw = typeof process !== 'undefined' ? process.env?.DOMAIN_PAGE_SCAN_TIMEOUT_MS : undefined
+  const n = raw != null && raw !== '' ? Number(raw) : NaN
+  if (Number.isFinite(n) && n >= 30_000) return Math.floor(n)
+  return 150_000
 })()
 
 export const SCAN_NAVIGATION_TIMEOUT_MS = (() => {
