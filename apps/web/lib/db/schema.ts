@@ -90,6 +90,13 @@ export type DomainScanPayload = {
   progress?: { scanned: number; total: number; currentUrl?: string }
   runtime?: { workerSessionId?: string }
   error?: string
+  /** External scan-worker enqueue options (`CHECKION_SCAN_WORKER_MODE=external`). */
+  job?: {
+    maxPages: number
+    useSitemap?: boolean
+    skipUnchangedPages?: boolean
+    linkScanId?: string
+  }
 }
 
 export const domainScans = pgTable('domain_scans', {

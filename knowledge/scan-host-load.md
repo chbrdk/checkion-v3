@@ -8,20 +8,16 @@ Triggering a domain / deep scan from Plexon (or Checkion UI) makes **checkion-v3
 
 ## Cause
 
-Live scans run **in-process** inside the Next.js container (`apps/web/lib/scan/spider.ts` → `runScan` → Puppeteer).
+Live scans historically ran **in-process** inside the Next.js container (`apps/web/lib/scan/spider.ts` → `runScan` → Puppeteer). Parallel Chromium + Puppeteer 25 starved CPU/RAM on the shared host.
 
-Previously the spider could open **up to 3 Chromium processes in parallel** (`DOMAIN_SCAN_CONCURRENCY` default `3`), each via its own `puppeteer.launch()`. That starved CPU/RAM on the shared `projects-01` host, so HTTP/UI latency spiked. Puppeteer 25 Chrome made this worse than older stacks.
+## Mitigations
 
-## Fix
-
-1. **One Chromium per domain crawl** — spider launches `launchStandaloneScanBrowser()` once and passes `sharedBrowser` into every page `runScan` (same pattern as multi-device single scans).
-2. **Default concurrency = 1** — `resolveDomainScanConcurrency()` in `lib/scan/domain-scan-concurrency.ts`. Raise only when the container has spare capacity:
+1. **One Chromium per domain crawl** + default `DOMAIN_SCAN_CONCURRENCY=1` — see `lib/scan/domain-scan-concurrency.ts`.
+2. **Dedicated scan-worker container** (preferred for staging): `CHECKION_SCAN_WORKER_MODE=external` on web; crawls run in `checkion-v3:scan-worker`. Spec: `specs/domain/scan-worker.md` · ops: `knowledge/staging-coolify-scan-worker.md`.
 
 ```
 DOMAIN_SCAN_CONCURRENCY=2
 DOMAIN_SCAN_DELAY_MS=500
 ```
 
-3. Ops: prefer mounting screenshot volume + enough spare RAM (~512MB+ per Chrome) — see `knowledge/staging-coolify.md` § Chromium.
-
-Tests: `apps/web/__tests__/domain-scan-concurrency.test.ts`
+Tests: `apps/web/__tests__/domain-scan-concurrency.test.ts`, `apps/web/__tests__/scan-worker-mode.test.ts`

@@ -7,6 +7,7 @@
 
 ## Staging (Coolify)
 - Public: `https://checkion-v3.projects-a.plygrnd.tech` (`URL_CHECKION_V3`)
+- Scan worker: Coolify app `checkion-v3:scan-worker` · Dockerfile `/services/scan-worker/Dockerfile` · port **3011** · ops `knowledge/staging-coolify-scan-worker.md` · spec `specs/domain/scan-worker.md`
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
 - Central Assistant flyout: AppShell `PlatformAssistantHost` → `{plexon}/assistant/embed` (+ `theme` / `assistant:theme`) · `plexon-v3/specs/domain/central-assistant-flyout.md`
 - Product launcher: BrandCorner → `ShellBrandCorner` / `lib/platform-product-switcher.ts`; staging fallbacks in `paths.ecosystemStaging*` when `NEXT_PUBLIC_*_URL` unset
@@ -35,6 +36,8 @@
 | `DATABASE_URL` | Product Postgres; when unset, stores use in-memory fixtures. Also enables live scans / live GEO unless the matching `CHECKION_LIVE_*=0` flag is set |
 | `CHECKION_LIVE_SCANS` | `1` force live Puppeteer pipeline; `0` force fixture synthesize |
 | `CHECKION_LIVE_GEO` | `1` force live GEO LLM pipeline; `0` force fixture synthesize |
+| `CHECKION_SCAN_WORKER_MODE` | `inline` (default, web executes crawls) or `external` (DB claim by scan-worker). Spec: `specs/domain/scan-worker.md` |
+| `CHECKION_SCAN_WORKER_STALE_MS` | Worker-only stale reclaim grace (default 120000) |
 | `PUPPETEER_CACHE_DIR` | Docker runner: `/opt/puppeteer` (Chrome installed at image build). Optional local override |
 | `PUPPETEER_EXECUTABLE_PATH` | Optional; only if using system Chromium instead of Puppeteer-bundled Chrome |
 | `PUPPETEER_SKIP_DOWNLOAD` | Image builder skips npm Chrome download; runner installs via `npx puppeteer browsers install chrome`. Do not set `true` in Coolify for the Docker build |

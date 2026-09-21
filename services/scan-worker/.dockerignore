@@ -1,0 +1,7 @@
+# Scan-worker image — keep context lean (no Next .next / Storybook).
+**/node_modules
+**/.next
+**/coverage
+**/.git
+**/tmp
+**/.tmp

@@ -114,4 +114,16 @@ describe('Dockerfile Coolify packaging', () => {
   it('keeps health path for Traefik probes', () => {
     expect(paths.routes.apiHealth).toBe('/api/health')
   })
+
+  it('ships scan-worker Dockerfile with Chrome + health port 3011', () => {
+    const dfPath = resolve(repoRoot, 'services/scan-worker/Dockerfile')
+    expect(existsSync(dfPath)).toBe(true)
+    const df = readFileSync(dfPath, 'utf8')
+    expect(df).toContain('EXPOSE 3011')
+    expect(df).toContain('puppeteer browsers install chrome')
+    expect(df).toMatch(/CMD \["npm", "run", "scan-worker"\]/)
+    expect(df).toContain('PUPPETEER_CACHE_DIR')
+    expect(existsSync(resolve(repoRoot, 'apps/web/scripts/run-scan-worker.ts'))).toBe(true)
+    expect(existsSync(resolve(repoRoot, 'specs/domain/scan-worker.md'))).toBe(true)
+  })
 })

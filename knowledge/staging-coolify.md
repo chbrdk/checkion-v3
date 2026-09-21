@@ -73,11 +73,12 @@ Live GEO stage1 / accessibility scans launch Puppeteer in-process. The multi-sta
 
 **Coolify:** redeploy after this Dockerfile lands — no extra browser env vars required. Do **not** set `PUPPETEER_SKIP_DOWNLOAD=true` as a Coolify build/runtime env (it can block the runner install layer if injected at build). Optional override: `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium` only if you switch the image to system Chromium instead of the bundled install. Live scans need enough RAM for headless Chrome (~512MB+ spare). Local fixture mode is unchanged (`CHECKION_LIVE_SCANS=0` / no `DATABASE_URL`).
 
-**UI lag during crawls:** domain spider shares **one** Chromium and defaults `DOMAIN_SCAN_CONCURRENCY=1` — see `knowledge/scan-host-load.md`. Optional:
+**UI lag during crawls:** prefer `CHECKION_SCAN_WORKER_MODE=external` + `checkion-v3:scan-worker` (`knowledge/staging-coolify-scan-worker.md`). Domain spider also shares one Chromium and defaults `DOMAIN_SCAN_CONCURRENCY=1` — see `knowledge/scan-host-load.md`. Optional:
 
 ```
 DOMAIN_SCAN_CONCURRENCY=2   # more tabs in the same Chrome; only if host has spare CPU
 DOMAIN_SCAN_DELAY_MS=500
+CHECKION_SCAN_WORKER_MODE=external   # on main-app when worker is deployed
 ```
 
 ### Scan screenshots (persistent volume)

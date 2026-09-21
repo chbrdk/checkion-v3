@@ -34,8 +34,12 @@ import { withScanCorrelation } from '../scan-correlation'
 import { selectTopIssueGroups } from '../issue-groups'
 import { applyDomainScanControlAction, isActiveDomainScanStatus } from '../scan/domain-scan-control'
 import { createLiveDomainScanHooks } from '../scan/live-domain-scan-hooks'
+import { isExternalScanWorkerMode } from '../scan/scan-worker-mode'
+import { resolveDomainScanMaxPages } from '../scan/domain-scan-max-pages'
+import { resolveSkipUnchangedPages } from '../scan/domain-scan-reuse'
 
 const TEMPLATE_SINGLE_SCAN_ID = 'scan-single-1'
+/** Inline web session id — unused for execute when mode=external. */
 const WORKER_SESSION_ID = crypto.randomUUID()
 const STALE_JOB_GRACE_MS = 45_000
 let lastRecoverySweepAt = 0
@@ -46,6 +50,40 @@ function isActiveSingleScanStatus(status: string | null | undefined): status is 
 
 function isStaleSweepDomainStatus(status: string | null | undefined): boolean {
   return status === 'queued' || status === 'running' || status === 'cancelling'
+}
+
+async function waitUntilScanTerminal(
+  scanId: string,
+  opts?: { maxMs?: number; intervalMs?: number },
+): Promise<ScanSummary | null> {
+  const maxMs = opts?.maxMs ?? 3_600_000
+  const intervalMs = opts?.intervalMs ?? 2_000
+  const started = Date.now()
+  while (Date.now() - started < maxMs) {
+    const row = await dbGetScanRow(scanId)
+    if (!row) return null
+    const status = String(row.status ?? '').toLowerCase()
+    if (!isActiveSingleScanStatus(status)) return rowToScan(row)
+    await new Promise((r) => setTimeout(r, intervalMs))
+  }
+  return dbGetScan(scanId)
+}
+
+async function waitUntilDomainTerminal(
+  domainId: string,
+  opts?: { maxMs?: number; intervalMs?: number },
+): Promise<DomainScanLight | null> {
+  const maxMs = opts?.maxMs ?? 3_600_000
+  const intervalMs = opts?.intervalMs ?? 2_000
+  const started = Date.now()
+  while (Date.now() - started < maxMs) {
+    const row = await dbGetDomainScanRow(domainId)
+    if (!row) return null
+    if (!isActiveDomainScanStatus(row.status)) return rowToDomain(row)
+    await new Promise((r) => setTimeout(r, intervalMs))
+  }
+  const row = await dbGetDomainScanRow(domainId)
+  return row ? rowToDomain(row) : null
 }
 
 function isStaleForCurrentWorker(
@@ -64,6 +102,8 @@ function isStaleForCurrentWorker(
 }
 
 async function recoverStaleBackgroundScans(): Promise<void> {
+  /** External mode: only the scan-worker reclaims / fails jobs. */
+  if (isExternalScanWorkerMode()) return
   const now = Date.now()
   if (now - lastRecoverySweepAt < 15_000) return
   lastRecoverySweepAt = now
@@ -538,13 +578,39 @@ async function dbCreateLiveScan(input: {
     issueCount: 0,
     payload: {
       scan: queued,
-      runtime: { workerSessionId: WORKER_SESSION_ID },
+      ...(isExternalScanWorkerMode()
+        ? {}
+        : { runtime: { workerSessionId: WORKER_SESSION_ID } }),
     },
     updatedAt: now,
     createdAt: now,
   })
 
   if (input.mode === 'deep') {
+    if (isExternalScanWorkerMode()) {
+      const domain = await enqueueQueuedDomainScan({
+        projectId: input.projectId,
+        url: input.url,
+        maxPages: input.maxPages,
+        linkScanId: id,
+      })
+      const queuedWithDomain = { ...queued, domainScanId: domain.id }
+      await db
+        .update(scans)
+        .set({
+          payload: {
+            scan: queuedWithDomain,
+          },
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, id))
+      if (input.waitForCompletion) {
+        const done = await waitUntilScanTerminal(id)
+        return done ?? queuedWithDomain
+      }
+      return queuedWithDomain
+    }
+
     const { domain } = await startDomainScan(
       {
         projectId: input.projectId,
@@ -575,6 +641,14 @@ async function dbCreateLiveScan(input: {
       })
       .where(eq(scans.id, id))
     return queuedWithDomain
+  }
+
+  if (isExternalScanWorkerMode()) {
+    if (input.waitForCompletion) {
+      const done = await waitUntilScanTerminal(id)
+      return done ?? queued
+    }
+    return queued
   }
 
   const runSingle = async () => {
@@ -644,6 +718,56 @@ async function dbCreateLiveScan(input: {
   return queued
 }
 
+/** Insert domain_scans queued row for external worker (no in-process crawl). */
+export async function enqueueQueuedDomainScan(input: {
+  projectId: string
+  url: string
+  maxPages?: number
+  useSitemap?: boolean
+  skipUnchangedPages?: boolean
+  linkScanId?: string
+}): Promise<DomainScanLight> {
+  const id = `domain-${Date.now()}`
+  const startedAt = new Date().toISOString()
+  const maxPages = resolveDomainScanMaxPages(input.maxPages)
+  const skipUnchangedPages = resolveSkipUnchangedPages(input.skipUnchangedPages)
+  const queued: DomainScanLight = {
+    id,
+    projectId: input.projectId,
+    rootUrl: input.url,
+    status: 'queued',
+    pageCount: 0,
+    overallScore: null,
+    issueCount: 0,
+    startedAt,
+    completedAt: null,
+  }
+  const db = getDb()
+  await db.insert(domainScans).values({
+    id,
+    projectId: input.projectId,
+    rootUrl: input.url,
+    status: 'queued',
+    pageCount: 0,
+    overallScore: null,
+    issueCount: 0,
+    startedAt,
+    completedAt: null,
+    payload: {
+      progress: { scanned: 0, total: maxPages },
+      job: {
+        maxPages,
+        ...(input.useSitemap === false ? { useSitemap: false } : {}),
+        skipUnchangedPages,
+        ...(input.linkScanId ? { linkScanId: input.linkScanId } : {}),
+      },
+    },
+    updatedAt: new Date(),
+    createdAt: new Date(),
+  })
+  return { ...queued, progress: { scanned: 0, total: maxPages } }
+}
+
 export async function dbCreateDomainScan(input: {
   projectId: string
   url: string
@@ -664,6 +788,20 @@ export async function dbCreateDomainScan(input: {
       rows.find((d) => d.rootUrl === input.url && d.startedAt === synthesized.startedAt) ??
       rows[0]!
     )
+  }
+
+  if (isExternalScanWorkerMode()) {
+    const domain = await enqueueQueuedDomainScan({
+      projectId: input.projectId,
+      url: input.url,
+      maxPages: input.maxPages,
+      useSitemap: input.useSitemap,
+      skipUnchangedPages: input.skipUnchangedPages,
+    })
+    if (input.waitForCompletion) {
+      return (await waitUntilDomainTerminal(domain.id)) ?? domain
+    }
+    return domain
   }
 
   const { domain } = await startDomainScan(

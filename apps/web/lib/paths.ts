@@ -78,6 +78,13 @@ export const paths = {
     `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/invites`,
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
+  /** `inline` (web executes) or `external` (scan-worker claims DB jobs). */
+  envScanWorkerMode: 'CHECKION_SCAN_WORKER_MODE',
+  /** Worker stale reclaim grace ms (default 120000). */
+  envScanWorkerStaleMs: 'CHECKION_SCAN_WORKER_STALE_MS',
+  /** Coolify scan-worker health port. */
+  scanWorkerPort: 3011,
+  scanWorkerServiceName: 'checkion-scan-worker',
   /** Cap for POST /api/fetch-page bodyTextExcerpt (matches scanner bodyTextExcerpt). */
   fetchPageMaxChars: 6000,
   envOpenAiApiKey: 'OPENAI_API_KEY',

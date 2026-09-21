@@ -45,6 +45,9 @@ export function getFederationMode(): FederationRuntimeMode {
   return paths.federationMode
 }
 
+export { resolveScanWorkerMode, isExternalScanWorkerMode } from './scan/scan-worker-mode'
+export type { ScanWorkerMode } from './scan/scan-worker-mode'
+
 export function isPlexonFederationConfigured(): boolean {
   return Boolean(plexonBaseUrl() && getPlexonServiceSecret())
 }
