@@ -45,7 +45,17 @@ DOMAIN_SCAN_CONCURRENCY=1              # optional
 # OPENAI_API_KEY=…
 ```
 
-Mount the **same** persistent volume as main-app for `SCAN_SCREENSHOTS_PATH`.
+Mount the **same** Coolify **directory** file-storage on main-app and scan-worker:
+
+| Field | Value |
+|-------|--------|
+| `fs_path` (host) | `/data/coolify/shared/checkion-v3-screenshots` |
+| `mount_path` (container) | `/workspace/checkion-v3/data/screenshots` |
+| Env | `SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots` |
+
+Separate `persistent` volumes per app do **not** share files — screenshots written by the worker would be invisible to `GET /api/scans/:id/screenshot` on main-app.
+
+After attaching storage: redeploy **both** apps, then re-run a scan (captures from before the shared mount stay on the old ephemeral disk).
 
 ## Wire main-app
 

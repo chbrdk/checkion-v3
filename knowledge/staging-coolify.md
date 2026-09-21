@@ -83,7 +83,7 @@ CHECKION_SCAN_WORKER_MODE=external   # on main-app when worker is deployed
 
 ### Scan screenshots (persistent volume)
 
-Live WCAG captures write JPEGs under `SCAN_SCREENSHOTS_PATH` (image default: `/workspace/checkion-v3/data/screenshots`). **Mount a Coolify persistent volume** at that path so redeploys do not drop Issues-canvas screenshots.
+Live WCAG captures write JPEGs under `SCAN_SCREENSHOTS_PATH` (image default: `/workspace/checkion-v3/data/screenshots`). With `CHECKION_SCAN_WORKER_MODE=external`, main-app and `checkion-v3:scan-worker` MUST mount the **same host directory** (Coolify file-storage `is_directory`, shared `fs_path` e.g. `/data/coolify/shared/checkion-v3-screenshots`) — see `knowledge/staging-coolify-scan-worker.md`. Per-app persistent volumes do not share captures.
 
 ```
 SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
