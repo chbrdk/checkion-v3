@@ -50,8 +50,8 @@ export function parseWorkerStartedAtMs(startedAt: Date | string | null | undefin
 
 /**
  * Decide reclaim outcome for a running worker job.
- * - foreign session → reclaim (or abandon if no progress past grace)
- * - stale heartbeat → reclaim (or abandon)
+ * - foreign session (dead worker) → abandon (do not resume a large crawl ahead of newer queued jobs)
+ * - stale heartbeat → requeue, or abandon if no progress past grace
  * - same session + fresh heartbeat → keep running
  */
 export function resolveWorkerReclaimAction(input: {
@@ -68,6 +68,9 @@ export function resolveWorkerReclaimAction(input: {
     !input.workerSessionId || input.workerSessionId !== input.currentSessionId
   const stale = isStaleWorkerTimestamp(input.updatedAt, input.nowMs, input.staleMs)
   if (!foreign && !stale) return 'keep'
+
+  // Restart / crash: fail in-flight work so the claim queue can take newer jobs (e.g. EQC 50-page).
+  if (foreign) return 'abandon'
 
   const startedMs = parseWorkerStartedAtMs(input.startedAt)
   const ageMs = Number.isFinite(startedMs) ? input.nowMs - startedMs : Number.POSITIVE_INFINITY

@@ -26,10 +26,9 @@ Web in `external` mode: insert queued rows only — never call `startDomainScan`
 2. Atomic claim → `running` + `payload.runtime.workerSessionId` + bump `updatedAt`.
 3. Heartbeat: refresh `updatedAt` while crawling (≈15s).
 4. Reclaim (worker only):
-   - **Foreign session** (dead worker after restart): requeue immediately — do not wait for heartbeat grace.
-   - **Stale heartbeat** (`updatedAt` older than `CHECKION_SCAN_WORKER_STALE_MS`, default **120000**): requeue.
-   - **No progress abandon**: foreign/stale + `pageCount=0` + age ≥ `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` (default **600000**) → `failed` (`scan_worker_abandoned_no_progress`), not requeue.
-5. Domain wall-clock: `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` (default **1200000**) → cancel signal + fail so one hung crawl cannot block the queue (Plexon EQC poll budget is ~765s for 50 pages).
+   - **Foreign session** (dead worker after restart/crash): mark `failed` (`scan_worker_abandoned`) immediately — do **not** resume a large crawl ahead of newer queued jobs (Plexon EQC poll ~765s for 50 pages).
+   - **Stale heartbeat** (`updatedAt` older than `CHECKION_SCAN_WORKER_STALE_MS`, default **120000**): requeue, unless `pageCount=0` and age ≥ `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` (default **600000**) → `failed`.
+5. Domain wall-clock: `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` (default **1200000**) → cancel signal + fail so one hung crawl cannot block the queue forever.
 
 Web **must not** mark foreign sessions failed when mode=`external`.
 

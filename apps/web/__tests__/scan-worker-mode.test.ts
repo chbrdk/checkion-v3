@@ -81,7 +81,7 @@ describe('scan-worker-claim helpers', () => {
         staleMs: 120_000,
         abandonNoProgressMs: 600_000,
       }),
-    ).toBe('requeue')
+    ).toBe('abandon')
 
     expect(
       resolveWorkerReclaimAction({
@@ -89,7 +89,7 @@ describe('scan-worker-claim helpers', () => {
         currentSessionId: 'me',
         updatedAt: new Date(now - 1_000),
         startedAt: new Date(now - 700_000),
-        pageCount: 0,
+        pageCount: 12,
         nowMs: now,
         staleMs: 120_000,
         abandonNoProgressMs: 600_000,
@@ -111,15 +111,28 @@ describe('scan-worker-claim helpers', () => {
 
     expect(
       resolveWorkerReclaimAction({
-        workerSessionId: 'other',
+        workerSessionId: 'me',
         currentSessionId: 'me',
-        updatedAt: new Date(now - 1_000),
-        startedAt: new Date(now - 700_000),
+        updatedAt: new Date(now - 200_000),
+        startedAt: new Date(now - 30_000),
         pageCount: 3,
         nowMs: now,
         staleMs: 120_000,
         abandonNoProgressMs: 600_000,
       }),
     ).toBe('requeue')
+
+    expect(
+      resolveWorkerReclaimAction({
+        workerSessionId: 'me',
+        currentSessionId: 'me',
+        updatedAt: new Date(now - 200_000),
+        startedAt: new Date(now - 700_000),
+        pageCount: 0,
+        nowMs: now,
+        staleMs: 120_000,
+        abandonNoProgressMs: 600_000,
+      }),
+    ).toBe('abandon')
   })
 })

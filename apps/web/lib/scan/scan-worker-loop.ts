@@ -90,13 +90,13 @@ async function reclaimStaleJobs(): Promise<number> {
           completedAt: failedAt,
           payload: {
             ...(row.payload ?? {}),
-            error: 'scan_worker_abandoned_no_progress',
+            error: 'scan_worker_abandoned',
             runtime: {},
           },
           updatedAt: new Date(),
         })
         .where(eq(domainScans.id, row.id))
-      console.warn('[checkion-scan-worker] abandoned domain (no progress)', row.id)
+      console.warn('[checkion-scan-worker] abandoned domain (session lost or no progress)', row.id)
       n += 1
       continue
     }
@@ -143,13 +143,13 @@ async function reclaimStaleJobs(): Promise<number> {
           completedAt: failedAt,
           payload: {
             ...(row.payload ?? {}),
-            error: 'scan_worker_abandoned_no_progress',
+            error: 'scan_worker_abandoned',
             runtime: {},
           },
           updatedAt: new Date(),
         })
         .where(eq(scans.id, row.id))
-      console.warn('[checkion-scan-worker] abandoned single (no progress)', row.id)
+      console.warn('[checkion-scan-worker] abandoned single (session lost or no progress)', row.id)
       n += 1
       continue
     }
