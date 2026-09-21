@@ -1,4 +1,4 @@
-import { runScan } from './scanner';
+import { launchStandaloneScanBrowser, runScan } from './scanner';
 import { discoverSitemapPageUrls } from './sitemap';
 import type { ScanResult, DomainScanResult, DomainScanResultWithFullPages, EeatDomainAggregate } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,20 +8,22 @@ import {
     DOMAIN_SCAN_MAX_PAGES_CAP,
     resolveDomainScanMaxPages,
 } from '@/lib/scan/domain-scan-max-pages';
+import {
+    resolveDomainScanConcurrency,
+    resolveDomainScanDelayMs,
+} from '@/lib/scan/domain-scan-concurrency';
 import { meanDomainOverallScore } from '@/lib/scan/domain-overall-score';
 
 export { DOMAIN_SCAN_DEFAULT_MAX_PAGES, DOMAIN_SCAN_MAX_PAGES_CAP, resolveDomainScanMaxPages };
+export { resolveDomainScanConcurrency, resolveDomainScanDelayMs };
 
 const MAX_DEPTH = 3; // Home + 3 levels; max pages will likely hit first
 
-/** How many pages to scan in parallel during domain scan (env: DOMAIN_SCAN_CONCURRENCY). */
-const DOMAIN_SCAN_CONCURRENCY = Math.min(
-    12,
-    Math.max(1, parseInt(process.env.DOMAIN_SCAN_CONCURRENCY || '3', 10) || 3),
-);
+/** Parallel pages (tabs) — one Chromium; default 1. @see knowledge/scan-host-load.md */
+const DOMAIN_SCAN_CONCURRENCY = resolveDomainScanConcurrency();
 
 /** Delay (ms) between starting new page scans to avoid rate limiting (env: DOMAIN_SCAN_DELAY_MS). */
-const DOMAIN_SCAN_DELAY_MS = Math.max(0, parseInt(process.env.DOMAIN_SCAN_DELAY_MS || '500', 10) || 500);
+const DOMAIN_SCAN_DELAY_MS = resolveDomainScanDelayMs();
 
 /** Return value from DB-backed scan control (pause / resume / cancel). */
 export type DomainScanControlState = 'run' | 'pause' | 'cancel';
@@ -225,6 +227,10 @@ export async function* runDomainScan(
     const inFlight: InFlight[] = [];
     let nextPageIndex = 0;
 
+    /** One Chromium for the whole crawl — avoids N× browser RAM with parallel pages. */
+    const sharedBrowser = await launchStandaloneScanBrowser();
+
+    try {
     async function tryReuseOrRunFullScan(
         current: { url: string; depth: number },
         pageScanId: string,
@@ -273,6 +279,7 @@ export async function* runDomainScan(
             groupId: domainId,
             userId: options.userId,
             id: pageScanId,
+            sharedBrowser,
         })
 
         if (projectId && !result.reusedUnchanged) {
@@ -495,4 +502,11 @@ export async function* runDomainScan(
         yield { type: 'complete', domainResult: finalResult };
     }
     return finalResult;
+    } finally {
+        try {
+            await sharedBrowser.close();
+        } catch {
+            /* browser may already be closed */
+        }
+    }
 }
