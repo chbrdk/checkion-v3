@@ -201,7 +201,7 @@
     "teamInviteLink": "Invite link",
     "teamInviteCopied": "Invite link copied",
     "teamAdded": "Member added",
-    "teamUserMissing": "User not in this company — use Invite link so they can accept after signing in.",
+    "teamUserMissing": "User not in this company — keep the email in the draft and use Invite link to send them an invite.",
     "teamRemove": "Remove",
     "dialogOptional": "Optional",
     "dialogNameHint": "CHECKION display name for this collection",
@@ -261,7 +261,8 @@
     "dialogCreate": "Create",
     "dialogDeleteTitle": "Archive project?",
     "dialogDeleteBody": "Archives {name} in Plexon and all product mirrors. Hidden from default lists — restore in Plexon.",
-    "dialogDeleteConfirm": "Archive"
+    "dialogDeleteConfirm": "Archive",
+    "teamInviteEmailed": "Invite emailed to {email}"
   },
   "scan": {
     "heroTitle": "Start a run",

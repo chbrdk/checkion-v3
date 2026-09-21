@@ -201,7 +201,7 @@
     "teamInviteLink": "Einladungslink",
     "teamInviteCopied": "Einladungslink kopiert",
     "teamAdded": "Mitglied hinzugefügt",
-    "teamUserMissing": "Nutzer nicht in dieser Company — Einladungslink nutzen, damit sie nach dem Login annehmen können.",
+    "teamUserMissing": "Nutzer nicht in dieser Company — E-Mail im Entwurf lassen und Einladungslink nutzen, um die Einladung zu senden.",
     "teamRemove": "Entfernen",
     "dialogOptional": "Optional",
     "dialogNameHint": "CHECKION-Anzeigename für diese Collection",
@@ -261,7 +261,8 @@
     "dialogCreate": "Erstellen",
     "dialogDeleteTitle": "Projekt archivieren?",
     "dialogDeleteBody": "Archiviert {name} in Plexon und allen Produkt-Spiegeln. In den Standardlisten ausgeblendet — wiederherstellbar in Plexon.",
-    "dialogDeleteConfirm": "Archivieren"
+    "dialogDeleteConfirm": "Archivieren",
+    "teamInviteEmailed": "Einladung per E-Mail an {email} gesendet"
   },
   "scan": {
     "heroTitle": "Lauf starten",

@@ -116,23 +116,34 @@ export function ProjectTeamPanel({
   }
 
   async function onInviteLink() {
+    const toEmail = draft.trim() || undefined
+    skipBlurSave.current = true
     setBusy(true)
     setError(null)
     setInviteUrl(null)
+    setStatus(null)
     try {
       const res = await fetch(paths.routes.apiProjectInvites(projectId), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ role: 'member' }),
+        body: JSON.stringify({
+          role: 'member',
+          ...(toEmail ? { toEmail } : {}),
+        }),
       })
       const body = (await res.json().catch(() => ({}))) as {
         inviteUrl?: string
+        emailedTo?: string
         error?: string
       }
       if (!res.ok) throw new Error(body.error || `Invite failed (${res.status})`)
       const url = body.inviteUrl ?? ''
       setInviteUrl(url)
-      if (url && navigator.clipboard?.writeText) {
+      if (body.emailedTo) {
+        setStatus(t('projects.teamInviteEmailed', { email: body.emailedTo }))
+        setDraftOpen(false)
+        setDraft('')
+      } else if (url && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url)
         setStatus(t('projects.teamInviteCopied'))
       }

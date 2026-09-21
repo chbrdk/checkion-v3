@@ -104,5 +104,32 @@ describe('project members BFF', () => {
     const body = (await res.json()) as { inviteUrl: string }
     expect(body.inviteUrl).toContain('/invite/')
     expect(addCollectionMemberOnPlexon).not.toHaveBeenCalled()
+    expect(createCollectionInviteOnPlexon).toHaveBeenCalledWith(
+      expect.objectContaining({ role: 'member' }),
+    )
+  })
+
+  it('POST invite forwards toEmail to Plexon', async () => {
+    vi.mocked(createCollectionInviteOnPlexon).mockResolvedValue({
+      ok: true,
+      inviteUrl: 'https://plexon.test/invite/tok',
+      inviteId: 'inv-1',
+      emailedTo: 'peer@example.com',
+    })
+    const { POST } = await import('../app/api/projects/[id]/invites/route')
+    const res = await POST(
+      new Request('http://localhost/api/projects/proj-1/invites', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ role: 'member', toEmail: ' peer@example.com ' }),
+      }),
+      { params: Promise.resolve({ id: 'proj-1' }) },
+    )
+    expect(res.status).toBe(200)
+    expect(createCollectionInviteOnPlexon).toHaveBeenCalledWith(
+      expect.objectContaining({ toEmail: 'peer@example.com' }),
+    )
+    const body = (await res.json()) as { emailedTo?: string }
+    expect(body.emailedTo).toBe('peer@example.com')
   })
 })

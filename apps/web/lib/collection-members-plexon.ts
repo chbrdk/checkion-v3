@@ -162,8 +162,9 @@ export async function createCollectionInviteOnPlexon(input: {
   platformProjectId: string
   plexonUserId: string
   role?: 'admin' | 'member'
+  toEmail?: string
 }): Promise<
-  | { ok: true; inviteUrl: string; inviteId: string; expiresAt?: string }
+  | { ok: true; inviteUrl: string; inviteId: string; expiresAt?: string; emailedTo?: string }
   | { ok: false; status: number; error: string }
 > {
   if (!isRealPlatformProjectId(input.platformProjectId) || getFederationMode() !== 'live' || !isPlexonFederationConfigured()) {
@@ -171,6 +172,9 @@ export async function createCollectionInviteOnPlexon(input: {
   }
   const base = plexonBaseUrl().replace(/\/$/, '')
   const url = `${base}${paths.plexonProvisioningCollectionInvitesPath(input.platformProjectId)}`
+  const body: Record<string, unknown> = { role: input.role ?? 'member' }
+  const toEmail = input.toEmail?.trim()
+  if (toEmail) body.toEmail = toEmail
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -178,7 +182,7 @@ export async function createCollectionInviteOnPlexon(input: {
         'Content-Type': 'application/json',
         ...plexonHeaders(input.plexonUserId),
       },
-      body: JSON.stringify({ role: input.role ?? 'member' }),
+      body: JSON.stringify(body),
       cache: 'no-store',
     })
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
@@ -194,6 +198,7 @@ export async function createCollectionInviteOnPlexon(input: {
       inviteUrl: String(data.inviteUrl ?? ''),
       inviteId: String(data.inviteId ?? ''),
       expiresAt: typeof data.expiresAt === 'string' ? data.expiresAt : undefined,
+      emailedTo: typeof data.emailedTo === 'string' ? data.emailedTo : undefined,
     }
   } catch (e) {
     return {
