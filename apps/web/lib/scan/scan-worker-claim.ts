@@ -39,6 +39,43 @@ export function isStaleWorkerTimestamp(
   return nowMs - updatedMs >= staleMs
 }
 
+export function parseWorkerStartedAtMs(startedAt: Date | string | null | undefined): number {
+  if (startedAt instanceof Date) return startedAt.getTime()
+  if (typeof startedAt === 'string') {
+    const n = Date.parse(startedAt)
+    return Number.isFinite(n) ? n : NaN
+  }
+  return NaN
+}
+
+/**
+ * Decide reclaim outcome for a running worker job.
+ * - foreign session → reclaim (or abandon if no progress past grace)
+ * - stale heartbeat → reclaim (or abandon)
+ * - same session + fresh heartbeat → keep running
+ */
+export function resolveWorkerReclaimAction(input: {
+  workerSessionId: string | null | undefined
+  currentSessionId: string
+  updatedAt: Date | string | null | undefined
+  startedAt: Date | string | null | undefined
+  pageCount: number | null | undefined
+  nowMs: number
+  staleMs: number
+  abandonNoProgressMs: number
+}): 'keep' | 'requeue' | 'abandon' {
+  const foreign =
+    !input.workerSessionId || input.workerSessionId !== input.currentSessionId
+  const stale = isStaleWorkerTimestamp(input.updatedAt, input.nowMs, input.staleMs)
+  if (!foreign && !stale) return 'keep'
+
+  const startedMs = parseWorkerStartedAtMs(input.startedAt)
+  const ageMs = Number.isFinite(startedMs) ? input.nowMs - startedMs : Number.POSITIVE_INFINITY
+  const pages = typeof input.pageCount === 'number' && Number.isFinite(input.pageCount) ? input.pageCount : 0
+  if (pages <= 0 && ageMs >= input.abandonNoProgressMs) return 'abandon'
+  return 'requeue'
+}
+
 /** Domain job options stored on `domain_scans.payload.job` for external enqueue. */
 export type DomainScanJobOptions = {
   maxPages: number

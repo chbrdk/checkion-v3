@@ -160,25 +160,39 @@ function calculateScore(counts: ScanStats): number {
 }
 
 const PUPPETEER_LAUNCH_RETRIES = 3;
+const PUPPETEER_LAUNCH_ATTEMPT_TIMEOUT_MS = 60_000;
 
 /** One Chromium process for multi-device standalone scans; caller must `close()` after all `runScan` calls finish. */
 export async function launchStandaloneScanBrowser(): Promise<Awaited<ReturnType<typeof puppeteer.launch>>> {
     return launchPuppeteerWithRetry();
 }
 
+async function launchPuppeteerWithTimeout(): Promise<Awaited<ReturnType<typeof puppeteer.launch>>> {
+    return await Promise.race([
+        puppeteer.launch({
+            args: SCAN_PUPPETEER_LAUNCH_ARGS,
+            headless: true,
+            protocolTimeout: PUPPETEER_PROTOCOL_TIMEOUT_MS,
+        }),
+        new Promise<never>((_, reject) => {
+            setTimeout(
+                () => reject(new Error(`puppeteer_launch_timeout after ${PUPPETEER_LAUNCH_ATTEMPT_TIMEOUT_MS}ms`)),
+                PUPPETEER_LAUNCH_ATTEMPT_TIMEOUT_MS,
+            );
+        }),
+    ]);
+}
+
 async function launchPuppeteerWithRetry(): Promise<Awaited<ReturnType<typeof puppeteer.launch>>> {
     let last: unknown;
     for (let attempt = 0; attempt < PUPPETEER_LAUNCH_RETRIES; attempt++) {
         try {
-            const browser = await puppeteer.launch({
-                args: SCAN_PUPPETEER_LAUNCH_ARGS,
-                headless: true,
-                protocolTimeout: PUPPETEER_PROTOCOL_TIMEOUT_MS,
-            });
+            const browser = await launchPuppeteerWithTimeout();
             wireVisualDismissForBrowser(browser);
             return browser;
         } catch (e) {
             last = e;
+            console.warn('[checkion-v3] puppeteer launch failed', attempt + 1, e);
             if (attempt < PUPPETEER_LAUNCH_RETRIES - 1) {
                 await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
             }

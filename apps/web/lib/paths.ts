@@ -82,6 +82,13 @@ export const paths = {
   envScanWorkerMode: 'CHECKION_SCAN_WORKER_MODE',
   /** Worker stale reclaim grace ms (default 120000). */
   envScanWorkerStaleMs: 'CHECKION_SCAN_WORKER_STALE_MS',
+  /**
+   * Abandon running worker jobs with no progress (pageCount 0) after this age (default 600000 = 10m).
+   * Prevents one hung crawl from blocking the claim queue forever.
+   */
+  envScanWorkerAbandonNoProgressMs: 'CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS',
+  /** Absolute wall-clock per domain job in the worker (default 1200000 = 20m). */
+  envScanWorkerJobTimeoutMs: 'CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS',
   /** Coolify scan-worker health port. */
   scanWorkerPort: 3011,
   scanWorkerServiceName: 'checkion-scan-worker',

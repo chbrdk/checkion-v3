@@ -10,13 +10,17 @@ import { executeSingleLiveScan } from '@/lib/scan/pipeline'
 import { createLiveDomainScanHooks } from '@/lib/scan/live-domain-scan-hooks'
 import { enrichIssueInspect } from '@/lib/fixtures/scan-overview-rich'
 import {
-  isStaleWorkerTimestamp,
   pickOldestClaimCandidate,
+  resolveWorkerReclaimAction,
   type DomainScanJobOptions,
 } from '@/lib/scan/scan-worker-claim'
 import { resolveDomainScanMaxPages } from '@/lib/scan/domain-scan-max-pages'
 import { resolveSkipUnchangedPages } from '@/lib/scan/domain-scan-reuse'
-import { resolveScanWorkerStaleMs } from '@/lib/scan/scan-worker-mode'
+import {
+  resolveScanWorkerAbandonNoProgressMs,
+  resolveScanWorkerJobTimeoutMs,
+  resolveScanWorkerStaleMs,
+} from '@/lib/scan/scan-worker-mode'
 import { paths } from '@/lib/paths'
 
 export const SCAN_WORKER_SESSION_ID = crypto.randomUUID()
@@ -55,6 +59,7 @@ async function listQueuedDomains(): Promise<DomainScanRow[]> {
 
 async function reclaimStaleJobs(): Promise<number> {
   const staleMs = resolveScanWorkerStaleMs()
+  const abandonNoProgressMs = resolveScanWorkerAbandonNoProgressMs()
   const now = Date.now()
   const db = getDb()
   let n = 0
@@ -64,7 +69,38 @@ async function reclaimStaleJobs(): Promise<number> {
     .from(domainScans)
     .where(inArray(domainScans.status, ['running', 'cancelling']))
   for (const row of activeDomains) {
-    if (!isStaleWorkerTimestamp(row.updatedAt, now, staleMs)) continue
+    const action = resolveWorkerReclaimAction({
+      workerSessionId: row.payload?.runtime?.workerSessionId,
+      currentSessionId: SCAN_WORKER_SESSION_ID,
+      updatedAt: row.updatedAt,
+      startedAt: row.startedAt,
+      pageCount: row.pageCount,
+      nowMs: now,
+      staleMs,
+      abandonNoProgressMs,
+    })
+    if (action === 'keep') continue
+
+    if (action === 'abandon') {
+      const failedAt = new Date().toISOString()
+      await db
+        .update(domainScans)
+        .set({
+          status: 'failed',
+          completedAt: failedAt,
+          payload: {
+            ...(row.payload ?? {}),
+            error: 'scan_worker_abandoned_no_progress',
+            runtime: {},
+          },
+          updatedAt: new Date(),
+        })
+        .where(eq(domainScans.id, row.id))
+      console.warn('[checkion-scan-worker] abandoned domain (no progress)', row.id)
+      n += 1
+      continue
+    }
+
     await db
       .update(domainScans)
       .set({
@@ -76,6 +112,7 @@ async function reclaimStaleJobs(): Promise<number> {
         updatedAt: new Date(),
       })
       .where(eq(domainScans.id, row.id))
+    console.info('[checkion-scan-worker] requeued stale domain', row.id)
     n += 1
   }
 
@@ -84,7 +121,39 @@ async function reclaimStaleJobs(): Promise<number> {
     .from(scans)
     .where(and(eq(scans.mode, 'single'), inArray(scans.status, ['running'])))
   for (const row of activeSingles) {
-    if (!isStaleWorkerTimestamp(row.updatedAt, now, staleMs)) continue
+    // Singles have no pageCount column — treat as 0 so long-stuck jobs are abandoned, not requeued forever.
+    const action = resolveWorkerReclaimAction({
+      workerSessionId: row.payload?.runtime?.workerSessionId,
+      currentSessionId: SCAN_WORKER_SESSION_ID,
+      updatedAt: row.updatedAt,
+      startedAt: row.startedAt,
+      pageCount: 0,
+      nowMs: now,
+      staleMs,
+      abandonNoProgressMs,
+    })
+    if (action === 'keep') continue
+
+    if (action === 'abandon') {
+      const failedAt = new Date().toISOString()
+      await db
+        .update(scans)
+        .set({
+          status: 'failed',
+          completedAt: failedAt,
+          payload: {
+            ...(row.payload ?? {}),
+            error: 'scan_worker_abandoned_no_progress',
+            runtime: {},
+          },
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, row.id))
+      console.warn('[checkion-scan-worker] abandoned single (no progress)', row.id)
+      n += 1
+      continue
+    }
+
     await db
       .update(scans)
       .set({
@@ -96,6 +165,7 @@ async function reclaimStaleJobs(): Promise<number> {
         updatedAt: new Date(),
       })
       .where(eq(scans.id, row.id))
+    console.info('[checkion-scan-worker] requeued stale single', row.id)
     n += 1
   }
 
@@ -242,6 +312,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
   const skipUnchangedPages = resolveSkipUnchangedPages(job.skipUnchangedPages)
   const linkScanId = job.linkScanId?.trim() || undefined
   const stopHb = startHeartbeat('domain', row.id)
+  const jobTimeoutMs = resolveScanWorkerJobTimeoutMs()
 
   const linkScan = linkScanId
     ? {
@@ -263,9 +334,17 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
     if (!beforeOk) return
 
     await hooks.markRunning(row.id)
+    console.info(
+      '[checkion-scan-worker] domain execute start',
+      row.id,
+      row.rootUrl,
+      `maxPages=${maxPages}`,
+      `timeoutMs=${jobTimeoutMs}`,
+    )
 
     const { executeDomainLiveScan } = await import('@/lib/scan/pipeline')
-    const bundle = await executeDomainLiveScan({
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+    const executePromise = executeDomainLiveScan({
       id: row.id,
       projectId: row.projectId,
       url: row.rootUrl,
@@ -277,8 +356,42 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
         await hooks.updateProgress?.(row.id, scanned, total, currentUrl)
         const db = getDb()
         await db.update(domainScans).set({ updatedAt: new Date() }).where(eq(domainScans.id, row.id))
+        if (scanned === 1 || scanned % 5 === 0 || scanned === total) {
+          console.info('[checkion-scan-worker] domain progress', row.id, `${scanned}/${total}`, currentUrl)
+        }
       },
     })
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        void (async () => {
+          try {
+            await getDb()
+              .update(domainScans)
+              .set({
+                status: 'cancelling',
+                payload: {
+                  ...(row.payload ?? {}),
+                  runtime: { workerSessionId: SCAN_WORKER_SESSION_ID },
+                  error: 'scan_worker_job_timeout',
+                },
+                updatedAt: new Date(),
+              })
+              .where(eq(domainScans.id, row.id))
+          } catch {
+            /* best-effort cancel signal for spider */
+          }
+        })()
+        reject(new Error(`scan_worker_job_timeout after ${jobTimeoutMs}ms`))
+      }, jobTimeoutMs)
+    })
+
+    let bundle: Awaited<ReturnType<typeof executeDomainLiveScan>>
+    try {
+      bundle = await Promise.race([executePromise, timeoutPromise])
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle)
+    }
 
     const { pageSamples, systemicIssues, lede, ...rest } = bundle.overview
     const payload = {
@@ -299,6 +412,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
     } else {
       await hooks.persistCompleted(payload)
     }
+    console.info('[checkion-scan-worker] domain execute done', row.id, bundle.terminal)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'domain_scan_failed'
     console.error('[checkion-scan-worker] domain failed', row.id, message)

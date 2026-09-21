@@ -38,6 +38,8 @@ PUPPETEER_CACHE_DIR=/opt/puppeteer
 PORT=3011
 HOSTNAME=0.0.0.0
 CHECKION_SCAN_WORKER_STALE_MS=120000   # optional
+CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS=600000  # optional: fail hung 0-page jobs
+CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS=1200000         # optional: domain wall-clock
 DOMAIN_SCAN_CONCURRENCY=1              # optional
 # Optional LLM for page classification (same as web):
 # OPENAI_API_KEY=…
