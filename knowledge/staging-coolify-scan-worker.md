@@ -55,7 +55,11 @@ Mount the **same** Coolify **directory** file-storage on main-app and scan-worke
 
 Separate `persistent` volumes per app do **not** share files — screenshots written by the worker would be invisible to `GET /api/scans/:id/screenshot` on main-app.
 
-After attaching storage: redeploy **both** apps, then re-run a scan (captures from before the shared mount stay on the old ephemeral disk).
+**Do not** put `VOLUME […]` in the main Dockerfile for this path. An anonymous Docker volume can shadow Coolify’s bind and leave main-app on an empty disk while the worker writes to the shared host dir. Coolify file-storage is the only mount source of truth.
+
+After attaching storage: **force-redeploy** (not restart-only) **both** apps so containers pick up the bind, then re-run a scan (captures from before the shared mount stay on the old ephemeral disk).
+
+Worker `/health` includes `screenshots: { path, writable, jpegCount }` — use it to confirm the shared mount is writable and that JPEG count rises after a crawl.
 
 ## Wire main-app
 
@@ -71,7 +75,7 @@ Via Coolify REST: `PATCH /applications/{uuid}/envs/bulk` then redeploy main. Loc
 
 ```
 curl -s https://<scan-worker-fqdn>/health
-# {"ok":true,"service":"checkion-scan-worker",...}
+# {"ok":true,"service":"checkion-scan-worker","screenshots":{"path":"/workspace/checkion-v3/data/screenshots","writable":true,"jpegCount":N},...}
 ```
 
 Enqueue a single or domain scan from Plexon / Checkion UI; worker logs should show claim + crawl; web UI stays responsive.

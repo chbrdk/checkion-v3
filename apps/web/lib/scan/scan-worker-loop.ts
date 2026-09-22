@@ -21,6 +21,7 @@ import {
   resolveScanWorkerJobTimeoutMs,
   resolveScanWorkerStaleMs,
 } from '@/lib/scan/scan-worker-mode'
+import { screenshotStorageProbe } from '@/lib/scan/screenshot-storage'
 import { paths } from '@/lib/paths'
 
 export const SCAN_WORKER_SESSION_ID = crypto.randomUUID()
@@ -484,11 +485,13 @@ export function scanWorkerHealthPayload(): {
   service: string
   sessionId: string
   port: number
+  screenshots: { path: string; writable: boolean; jpegCount: number }
 } {
   return {
     ok: true,
     service: paths.scanWorkerServiceName,
     sessionId: SCAN_WORKER_SESSION_ID,
     port: paths.scanWorkerPort,
+    screenshots: screenshotStorageProbe(),
   }
 }

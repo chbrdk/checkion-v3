@@ -23,16 +23,15 @@ export function asBrowserFunction<T extends AnyFn>(fn: T): T {
   return wrapped
 }
 
-type EvaluateLike = (pageFunction: unknown, ...args: unknown[]) => Promise<unknown>
-
 let patched = false
 
-/** Patch Page.evaluate / evaluateOnNewDocument once (scan-worker entry). */
+/**
+ * Patch Page.evaluate / evaluateOnNewDocument once (scan-worker entry).
+ * Accepts Puppeteer's Page ctor via structural typing — avoid fighting evaluate generics.
+ */
 export function installPuppeteerEsbuildNamePatch(PageCtor: {
-  prototype: {
-    evaluate: EvaluateLike
-    evaluateOnNewDocument: EvaluateLike
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- monkeypatch bridge
+  prototype: { evaluate: (...args: any[]) => any; evaluateOnNewDocument: (...args: any[]) => any }
 }): void {
   if (patched) return
   patched = true

@@ -13,7 +13,8 @@ describe('domain scan control packaging', () => {
 
     const df = readFileSync(resolve(repoRoot, 'Dockerfile'), 'utf8')
     expect(df).toContain('SCAN_SCREENSHOTS_PATH')
-    expect(df).toContain('VOLUME')
+    // Anonymous Docker VOLUME would shadow Coolify's shared host bind.
+    expect(df).not.toMatch(/^\s*VOLUME\s+\[/m)
 
     const spec = readFileSync(resolve(repoRoot, 'specs/domain/scan-modes.md'), 'utf8')
     expect(spec).toContain('Phase 7c')

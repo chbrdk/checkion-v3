@@ -198,7 +198,10 @@ RUN npx --yes puppeteer browsers install chrome \
     && test -d "${PUPPETEER_CACHE_DIR}" \
     && mkdir -p "${SCAN_SCREENSHOTS_PATH}"
 
-VOLUME ["/workspace/checkion-v3/data/screenshots"]
+# Do NOT declare VOLUME here — an anonymous Docker volume would shadow Coolify's
+# shared host bind (`/data/coolify/shared/checkion-v3-screenshots`) and make
+# worker JPEGs invisible to main-app. Coolify file-storage owns the mount.
+# @see knowledge/staging-coolify-scan-worker.md
 
 RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/check-database-url.mjs
 

@@ -44,6 +44,18 @@ describe('screenshot storage + route', () => {
     expect(read?.equals(buf)).toBe(true)
   })
 
+  it('probes writable screenshot dir for worker health', async () => {
+    const { screenshotStorageProbe, getScreenshotDir } = await import(
+      '../lib/scan/screenshot-storage'
+    )
+    expect(getScreenshotDir()).toBe(tmpDir)
+    const probe = screenshotStorageProbe()
+    expect(probe.path).toBe(tmpDir)
+    expect(probe.writable).toBe(true)
+    await writeScreenshot('probe-scan', Buffer.from([0xff, 0xd8, 0xff, 0xd9]))
+    expect(screenshotStorageProbe().jpegCount).toBeGreaterThanOrEqual(1)
+  })
+
   it('serves stored jpeg for an existing scan', async () => {
     const { GET } = await import('../app/api/scans/[id]/screenshot/route')
     const { createScan, getScanOverview } = await import('../lib/fixtures/scan-store')

@@ -89,7 +89,7 @@ Live WCAG captures write JPEGs under `SCAN_SCREENSHOTS_PATH` (image default: `/w
 SCAN_SCREENSHOTS_PATH=/workspace/checkion-v3/data/screenshots
 ```
 
-Coolify → Application → **Persistent Storage** → mount host/volume path to `/workspace/checkion-v3/data/screenshots`.
+Coolify → Application → **Persistent Storage** → directory file-storage with shared host `fs_path` (not a per-app anonymous `VOLUME`). See `knowledge/staging-coolify-scan-worker.md`.
 
 ## Coolify attach checklist
 
