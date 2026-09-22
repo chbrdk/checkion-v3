@@ -18,10 +18,33 @@ import {
 import { listDomainCorpusPages } from '../../../../../../lib/domain-corpus-pages'
 import { listGeoJobs, getGeoOverview } from '../../../../../../lib/fixtures/geo-store'
 
-const CATALOG_LIMIT = 25
-const SCORE_HISTORY_LIMIT = 12
-const CORPUS_PAGES_LIMIT = 50
-const GEO_QUERY_RUNS_LIMIT = 80
+/** Wave F–H raised caps — tabular distillates for METRON suite sync. */
+const CATALOG_LIMIT = 100
+const SCORE_HISTORY_LIMIT = 80
+const CORPUS_PAGES_LIMIT = 200
+const GEO_QUERY_RUNS_LIMIT = 250
+const TOP_ISSUES_LIMIT = 200
+const SYSTEMIC_ISSUES_LIMIT = 120
+const PAGE_SAMPLES_LIMIT = 60
+const POSITION_CELLS_LIMIT = 800
+const RECENT_SCAN_DEPTH = 40
+const RECENT_ISSUES_LIMIT = 800
+const RECENT_SCORE_CARDS_LIMIT = 600
+const ISSUE_RULE_FREQUENCY_LIMIT = 200
+const DOMAIN_HISTORY_DEPTH = 12
+const DOMAIN_SYSTEMIC_HISTORY_LIMIT = 300
+const DOMAIN_SCORE_CARDS_HISTORY_LIMIT = 300
+const DOMAIN_CORPUS_HISTORY_LIMIT = 300
+const GEO_HISTORY_DEPTH = 12
+const GEO_SOV_HISTORY_LIMIT = 200
+const GEO_PRESENCE_MODEL_HISTORY_LIMIT = 120
+const GEO_QUERY_RUNS_HISTORY_LIMIT = 400
+const GEO_RECOMMENDATIONS_HISTORY_LIMIT = 120
+const GEO_PROMPT_DUELS_HISTORY_LIMIT = 120
+const GEO_INTENTS_HISTORY_LIMIT = 160
+const GEO_PRESENCE_QUERY_HISTORY_LIMIT = 200
+const GEO_MISS_VS_RIVAL_HISTORY_LIMIT = 80
+const ISSUE_SECTION_FREQUENCY_LIMIT = 80
 const PLEXON_USER_HEADER = 'X-Plexon-User-Id'
 
 type DistillateScan = {
@@ -78,7 +101,7 @@ async function distillateFromScanId(input: {
       max: s.max,
     })),
     issueRollup: [...rollupMap.values()].sort((a, b) => b.count - a.count),
-    topIssues: issues.slice(0, 50).map((i) => ({
+    topIssues: issues.slice(0, TOP_ISSUES_LIMIT).map((i) => ({
       id: i.id,
       severity: i.severity,
       section: i.section,
@@ -185,6 +208,132 @@ export async function GET(
     .sort((a, b) => b.at - a.at)
     .slice(0, SCORE_HISTORY_LIMIT)
     .map(({ at: _at, ...row }) => row)
+
+  /** Wave F — expand recent completed standalone scans into issue/score long tables. */
+  const recentScanIssues: Array<{
+    scanId: string
+    url: string
+    completedAt: string | null
+    id: string
+    severity: string
+    section: string
+    title: string
+    ruleId: string
+    affectedCount: number
+  }> = []
+  const recentScanScoreCards: Array<{
+    scanId: string
+    url: string
+    completedAt: string | null
+    overallScore: number | null
+    kind: string
+    label: string
+    value: number
+    max: number
+  }> = []
+  const scanSeverityByScan: Array<{
+    scanId: string
+    url: string
+    completedAt: string | null
+    overallScore: number | null
+    issueCount: number
+    error: number
+    warn: number
+    info: number
+  }> = []
+  const ruleFreqMap = new Map<
+    string,
+    { ruleId: string; title: string; severity: string; section: string; count: number; scanCount: number }
+  >()
+  const ruleScanSets = new Map<string, Set<string>>()
+
+  for (const s of completedStandalone.slice(0, RECENT_SCAN_DEPTH)) {
+    const [issues, scores] = await Promise.all([getScanIssues(s.id), getScanScores(s.id)])
+    let error = 0
+    let warn = 0
+    let info = 0
+    for (const score of scores) {
+      if (recentScanScoreCards.length >= RECENT_SCORE_CARDS_LIMIT) break
+      recentScanScoreCards.push({
+        scanId: s.id,
+        url: s.url,
+        completedAt: s.completedAt,
+        overallScore: s.overallScore,
+        kind: score.kind,
+        label: score.label,
+        value: score.value,
+        max: score.max,
+      })
+    }
+    for (const issue of issues) {
+      const sev = String(issue.severity).toLowerCase()
+      if (sev === 'error' || sev === 'critical') error += 1
+      else if (sev === 'warn' || sev === 'warning') warn += 1
+      else info += 1
+
+      const ruleKey = issue.ruleId || issue.id
+      const prev = ruleFreqMap.get(ruleKey)
+      if (prev) prev.count += 1
+      else {
+        ruleFreqMap.set(ruleKey, {
+          ruleId: issue.ruleId,
+          title: issue.title,
+          severity: issue.severity,
+          section: issue.section,
+          count: 1,
+          scanCount: 0,
+        })
+      }
+      let scanSet = ruleScanSets.get(ruleKey)
+      if (!scanSet) {
+        scanSet = new Set()
+        ruleScanSets.set(ruleKey, scanSet)
+      }
+      scanSet.add(s.id)
+
+      if (recentScanIssues.length < RECENT_ISSUES_LIMIT) {
+        recentScanIssues.push({
+          scanId: s.id,
+          url: s.url,
+          completedAt: s.completedAt,
+          id: issue.id,
+          severity: issue.severity,
+          section: issue.section,
+          title: issue.title,
+          ruleId: issue.ruleId,
+          affectedCount: issue.affectedCount,
+        })
+      }
+    }
+    scanSeverityByScan.push({
+      scanId: s.id,
+      url: s.url,
+      completedAt: s.completedAt,
+      overallScore: s.overallScore,
+      issueCount: s.issueCount ?? issues.length,
+      error,
+      warn,
+      info,
+    })
+  }
+
+  for (const [ruleKey, row] of ruleFreqMap) {
+    row.scanCount = ruleScanSets.get(ruleKey)?.size ?? 0
+  }
+  const issueRuleFrequency = [...ruleFreqMap.values()]
+    .sort((a, b) => b.count - a.count || b.scanCount - a.scanCount)
+    .slice(0, ISSUE_RULE_FREQUENCY_LIMIT)
+
+  const sectionFreqMap = new Map<string, { severity: string; section: string; count: number }>()
+  for (const issue of recentScanIssues) {
+    const key = `${issue.severity}::${issue.section}`
+    const prev = sectionFreqMap.get(key)
+    if (prev) prev.count += 1
+    else sectionFreqMap.set(key, { severity: issue.severity, section: issue.section, count: 1 })
+  }
+  const issueSectionFrequency = [...sectionFreqMap.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, ISSUE_SECTION_FREQUENCY_LIMIT)
 
   /** Wave C/D — latest completed domain overview (health + lenses). */
   let latestDomainHealth: {
@@ -324,7 +473,7 @@ export async function GET(
           value: s.value,
           max: s.max,
         })),
-        systemicIssues: (overview.systemicIssues ?? []).slice(0, 40).map((i) => ({
+        systemicIssues: (overview.systemicIssues ?? []).slice(0, SYSTEMIC_ISSUES_LIMIT).map((i) => ({
           id: i.id,
           title: i.title,
           pageCount: i.pageCount,
@@ -351,7 +500,7 @@ export async function GET(
               duplicateTitleGroupCount: overview.seoCoverage.duplicateTitleGroupCount,
             }
           : null,
-        pageSamples: (overview.pageSamples ?? []).slice(0, 25).map((p) => ({
+        pageSamples: (overview.pageSamples ?? []).slice(0, PAGE_SAMPLES_LIMIT).map((p) => ({
           url: p.url,
           score: p.score,
           errors: p.errors ?? 0,
@@ -662,17 +811,520 @@ export async function GET(
           ourPosition: r.ourPosition,
           citationCount: r.citations?.length ?? 0,
         })),
-        positionCells: positionCells.slice(0, 200),
+        positionCells: positionCells.slice(0, POSITION_CELLS_LIMIT),
       }
     }
   }
+
+  /** Wave G — multi-run domain + GEO history distillates. */
+  const recentDomainScoreCards: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    overallScore: number | null
+    kind: string
+    label: string
+    value: number
+    max: number
+  }> = []
+  const recentDomainSystemic: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    id: string
+    title: string
+    pageCount: number
+    severity: string
+    ruleId: string
+  }> = []
+  const recentDomainPerformance: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    overallScore: number | null
+    avgTtfb: number
+    avgFcp: number
+    avgLcp: number
+    avgDomLoad: number
+    pageCount: number
+  }> = []
+  const recentDomainUx: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    score: number
+    cls: number
+    readabilityGrade: string
+    readabilityScore: number
+    brokenLinkCount: number
+    tapTargetIssueCount: number
+    pagesWithMultipleH1: number
+    pagesWithSkippedLevels: number
+    pageCount: number
+  }> = []
+  const recentDomainEco: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    avgCo2: number
+    grade: string
+    avgPageWeightKb: number
+    pageCount: number
+  }> = []
+  const recentDomainSeo: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    totalPages: number
+    withTitle: number
+    withH1: number
+    withMetaDescription: number
+    withCanonical: number
+    canonicalMismatchCount: number
+    duplicateTitleGroupCount: number
+  }> = []
+  const recentDomainLinks: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    internal: number
+    external: number
+    broken: number
+    missingNoopener: number
+    total: number
+  }> = []
+  const recentDomainSecurity: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    https: boolean
+    hsts: boolean
+    csp: boolean
+    hasPrivacyPolicy: boolean
+    hasCookieBanner: boolean
+    mixedContent: boolean
+    mixedContentCount: number
+  }> = []
+  const recentDomainEeat: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    totalPages: number
+    pagesWithContact: number
+    pagesWithPrivacy: number
+    pagesWithImpressum: number
+    pagesWithAuthorBio: number
+    pagesWithArticleAuthor: number
+    avgCitationsPerPage: number
+    pagesWithTeam: number
+    pagesWithAbout: number
+    pagesWithCaseStudyMention: number
+  }> = []
+  const recentDomainGenerative: Array<{
+    domainScanId: string
+    url: string
+    completedAt: string | null
+    score: number
+    discoverability: number
+    repurposing: number
+    withLlmsTxt: number
+    withRobotsAllowingAi: number
+    pageCount: number
+    citationDensity: number
+  }> = []
+  const recentDomainCorpusPages: Array<{
+    domainScanId: string
+    rootUrl: string
+    completedAt: string | null
+    url: string
+    scanId: string
+    overallScore: number | null
+    errors: number
+    warnings: number
+    resultsPath: string
+  }> = []
+
+  for (const d of completedDomains.slice(0, DOMAIN_HISTORY_DEPTH)) {
+    const overview = await getDomainOverview(d.id)
+    if (!overview) continue
+    const rootUrl = overview.scan.rootUrl
+    const completedAt = overview.scan.completedAt
+    for (const score of overview.scores ?? []) {
+      if (recentDomainScoreCards.length >= DOMAIN_SCORE_CARDS_HISTORY_LIMIT) break
+      recentDomainScoreCards.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        overallScore: overview.scan.overallScore,
+        kind: score.kind,
+        label: score.label,
+        value: score.value,
+        max: score.max,
+      })
+    }
+    for (const issue of overview.systemicIssues ?? []) {
+      if (recentDomainSystemic.length >= DOMAIN_SYSTEMIC_HISTORY_LIMIT) break
+      recentDomainSystemic.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        id: issue.id,
+        title: issue.title,
+        pageCount: issue.pageCount,
+        severity: issue.severity ?? '',
+        ruleId: issue.ruleId ?? '',
+      })
+    }
+    if (overview.performance) {
+      recentDomainPerformance.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        overallScore: overview.scan.overallScore,
+        avgTtfb: overview.performance.avgTtfb,
+        avgFcp: overview.performance.avgFcp,
+        avgLcp: overview.performance.avgLcp,
+        avgDomLoad: overview.performance.avgDomLoad,
+        pageCount: overview.performance.pageCount,
+      })
+    }
+    if (overview.ux) {
+      recentDomainUx.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        score: overview.ux.score,
+        cls: overview.ux.cls,
+        readabilityGrade: overview.ux.readabilityGrade,
+        readabilityScore: overview.ux.readabilityScore,
+        brokenLinkCount: overview.ux.brokenLinkCount,
+        tapTargetIssueCount: overview.ux.tapTargetIssueCount,
+        pagesWithMultipleH1: overview.ux.pagesWithMultipleH1,
+        pagesWithSkippedLevels: overview.ux.pagesWithSkippedLevels,
+        pageCount: overview.ux.pageCount,
+      })
+    }
+    if (overview.eco) {
+      recentDomainEco.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        avgCo2: overview.eco.avgCo2,
+        grade: overview.eco.grade,
+        avgPageWeightKb: overview.eco.avgPageWeightKb,
+        pageCount: overview.eco.pageCount,
+      })
+    }
+    if (overview.seoCoverage) {
+      recentDomainSeo.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        totalPages: overview.seoCoverage.totalPages,
+        withTitle: overview.seoCoverage.withTitle,
+        withH1: overview.seoCoverage.withH1,
+        withMetaDescription: overview.seoCoverage.withMetaDescription,
+        withCanonical: overview.seoCoverage.withCanonical,
+        canonicalMismatchCount: overview.seoCoverage.canonicalMismatchCount,
+        duplicateTitleGroupCount: overview.seoCoverage.duplicateTitleGroupCount,
+      })
+    }
+    if (overview.links) {
+      recentDomainLinks.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        internal: overview.links.internal,
+        external: overview.links.external,
+        broken: overview.links.broken,
+        missingNoopener: overview.links.missingNoopener,
+        total: overview.links.total ?? overview.links.internal + overview.links.external,
+      })
+    }
+    if (overview.securityPrivacy) {
+      recentDomainSecurity.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        https: overview.securityPrivacy.https,
+        hsts: overview.securityPrivacy.hsts,
+        csp: overview.securityPrivacy.csp,
+        hasPrivacyPolicy: overview.securityPrivacy.hasPrivacyPolicy,
+        hasCookieBanner: overview.securityPrivacy.hasCookieBanner,
+        mixedContent: overview.securityPrivacy.mixedContent,
+        mixedContentCount: overview.securityPrivacy.mixedContentCount ?? 0,
+      })
+    }
+    if (overview.eeat) {
+      recentDomainEeat.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        totalPages: overview.eeat.totalPages,
+        pagesWithContact: overview.eeat.trust.pagesWithContact,
+        pagesWithPrivacy: overview.eeat.trust.pagesWithPrivacy,
+        pagesWithImpressum: overview.eeat.trust.pagesWithImpressum,
+        pagesWithAuthorBio: overview.eeat.expertise.pagesWithAuthorBio,
+        pagesWithArticleAuthor: overview.eeat.expertise.pagesWithArticleAuthor,
+        avgCitationsPerPage: overview.eeat.expertise.avgCitationsPerPage,
+        pagesWithTeam: overview.eeat.experience.pagesWithTeam,
+        pagesWithAbout: overview.eeat.experience.pagesWithAbout,
+        pagesWithCaseStudyMention: overview.eeat.experience.pagesWithCaseStudyMention,
+      })
+    }
+    if (overview.generative) {
+      recentDomainGenerative.push({
+        domainScanId: d.id,
+        url: rootUrl,
+        completedAt,
+        score: overview.generative.score,
+        discoverability: overview.generative.discoverability,
+        repurposing: overview.generative.repurposing,
+        withLlmsTxt: overview.generative.withLlmsTxt,
+        withRobotsAllowingAi: overview.generative.withRobotsAllowingAi ?? 0,
+        pageCount: overview.generative.pageCount,
+        citationDensity: overview.generative.citationDensity ?? 0,
+      })
+    }
+    if (recentDomainCorpusPages.length < DOMAIN_CORPUS_HISTORY_LIMIT) {
+      const remaining = DOMAIN_CORPUS_HISTORY_LIMIT - recentDomainCorpusPages.length
+      const corpus = await listDomainCorpusPages(d.id, {
+        page: 1,
+        pageSize: Math.min(50, remaining),
+        sort: 'score_asc',
+      })
+      for (const p of corpus?.items ?? []) {
+        if (recentDomainCorpusPages.length >= DOMAIN_CORPUS_HISTORY_LIMIT) break
+        recentDomainCorpusPages.push({
+          domainScanId: d.id,
+          rootUrl,
+          completedAt,
+          url: p.url,
+          scanId: p.scanId,
+          overallScore: p.overallScore,
+          errors: p.errors,
+          warnings: p.warnings,
+          resultsPath: p.resultsPath,
+        })
+      }
+    }
+  }
+
+  const recentGeoJobMetrics: Array<{
+    geoJobId: string
+    title: string
+    url: string
+    completedAt: string | null
+    score: number | null
+    citedShare: number
+    measurement: string
+    experience: number | null
+    expertise: number | null
+    authoritativeness: number | null
+    trustworthiness: number | null
+    geoFitness: number | null
+    queryCount: number
+    modelCount: number
+    missRate: number | null
+    hitCount: number | null
+    cellCount: number | null
+  }> = []
+  const recentGeoShareOfVoice: Array<{
+    geoJobId: string
+    completedAt: string | null
+    domain: string
+    shareOfVoice: number
+    avgPosition: number
+    mentionCount: number
+    isTarget: boolean
+  }> = []
+  const recentGeoPresenceByModel: Array<{
+    geoJobId: string
+    completedAt: string | null
+    modelId: string
+    cellCount: number
+    hitCount: number
+    hitRate: number
+  }> = []
+  const recentGeoRecommendations: Array<{
+    geoJobId: string
+    completedAt: string | null
+    id: string
+    title: string
+    severity: string
+    source: string
+  }> = []
+  const recentGeoQueryRuns: Array<{
+    geoJobId: string
+    completedAt: string | null
+    queryId: string
+    query: string
+    modelId: string
+    ourPosition: number | null
+    citationCount: number
+  }> = []
+  const recentGeoPromptDuels: Array<{
+    geoJobId: string
+    completedAt: string | null
+    query: string
+    outcome: string
+    targetHitRate: number
+    targetAvgPosition: number | null
+    leaderDomain: string | null
+    intent: string
+  }> = []
+  const recentGeoIntents: Array<{
+    geoJobId: string
+    completedAt: string | null
+    query: string
+    intent: string
+    source: string
+  }> = []
+  const recentGeoPresenceByQuery: Array<{
+    geoJobId: string
+    completedAt: string | null
+    query: string
+    cellCount: number
+    hitCount: number
+    hitRate: number
+  }> = []
+  const recentGeoMissVsRival: Array<{
+    geoJobId: string
+    completedAt: string | null
+    query: string
+    modelId: string
+    rivalDomain: string
+    rivalPosition: number
+    otherRivals: string
+  }> = []
+
+  for (const job of completedGeo.slice(0, GEO_HISTORY_DEPTH)) {
+    const overview = await getGeoOverview(job.id)
+    if (!overview) continue
+    const presence = overview.presence
+    const solo = presence?.solo
+    const completedAt = job.completedAt
+    recentGeoJobMetrics.push({
+      geoJobId: job.id,
+      title: job.title,
+      url: job.url,
+      completedAt,
+      score: job.overallScore,
+      citedShare: job.citedShare ?? solo?.citedShare ?? 0,
+      measurement: String(job.measurement ?? ''),
+      experience: overview.eeat?.experience ?? null,
+      expertise: overview.eeat?.expertise ?? null,
+      authoritativeness: overview.eeat?.authoritativeness ?? null,
+      trustworthiness: overview.eeat?.trustworthiness ?? null,
+      geoFitness: overview.eeat?.geoFitness ?? null,
+      queryCount: job.queryCount ?? overview.queries?.length ?? 0,
+      modelCount: job.modelCount ?? overview.models?.length ?? 0,
+      missRate: solo?.missRate ?? null,
+      hitCount: solo?.hitCount ?? null,
+      cellCount: solo?.cellCount ?? null,
+    })
+    for (const row of overview.shareOfVoice ?? []) {
+      if (recentGeoShareOfVoice.length >= GEO_SOV_HISTORY_LIMIT) break
+      recentGeoShareOfVoice.push({
+        geoJobId: job.id,
+        completedAt,
+        domain: row.domain,
+        shareOfVoice: row.shareOfVoice,
+        avgPosition: row.avgPosition,
+        mentionCount: row.mentionCount,
+        isTarget: Boolean(row.isTarget),
+      })
+    }
+    for (const m of solo?.byModel ?? []) {
+      if (recentGeoPresenceByModel.length >= GEO_PRESENCE_MODEL_HISTORY_LIMIT) break
+      recentGeoPresenceByModel.push({
+        geoJobId: job.id,
+        completedAt,
+        modelId: m.modelId,
+        cellCount: m.cellCount,
+        hitCount: m.hitCount,
+        hitRate: m.hitRate,
+      })
+    }
+    for (const r of overview.recommendations ?? []) {
+      if (recentGeoRecommendations.length >= GEO_RECOMMENDATIONS_HISTORY_LIMIT) break
+      recentGeoRecommendations.push({
+        geoJobId: job.id,
+        completedAt,
+        id: r.id,
+        title: r.title,
+        severity: r.severity,
+        source: r.source ?? '',
+      })
+    }
+    for (const run of overview.queryRuns ?? []) {
+      if (recentGeoQueryRuns.length >= GEO_QUERY_RUNS_HISTORY_LIMIT) break
+      recentGeoQueryRuns.push({
+        geoJobId: job.id,
+        completedAt,
+        queryId: run.queryId,
+        query: run.query,
+        modelId: run.modelId,
+        ourPosition: run.ourPosition,
+        citationCount: run.citations?.length ?? 0,
+      })
+    }
+    for (const d of overview.insights?.promptDuels ?? []) {
+      if (recentGeoPromptDuels.length >= GEO_PROMPT_DUELS_HISTORY_LIMIT) break
+      recentGeoPromptDuels.push({
+        geoJobId: job.id,
+        completedAt,
+        query: d.query,
+        outcome: d.outcome,
+        targetHitRate: d.targetHitRate,
+        targetAvgPosition: d.targetAvgPosition,
+        leaderDomain: d.leaderDomain,
+        intent: d.intent,
+      })
+    }
+    for (const i of overview.insights?.intents ?? []) {
+      if (recentGeoIntents.length >= GEO_INTENTS_HISTORY_LIMIT) break
+      recentGeoIntents.push({
+        geoJobId: job.id,
+        completedAt,
+        query: i.query,
+        intent: i.intent,
+        source: i.source,
+      })
+    }
+    for (const q of solo?.byQuery ?? []) {
+      if (recentGeoPresenceByQuery.length >= GEO_PRESENCE_QUERY_HISTORY_LIMIT) break
+      recentGeoPresenceByQuery.push({
+        geoJobId: job.id,
+        completedAt,
+        query: q.query,
+        cellCount: q.cellCount,
+        hitCount: q.hitCount,
+        hitRate: q.hitRate,
+      })
+    }
+    for (const m of overview.insights?.missVsRival ?? []) {
+      if (recentGeoMissVsRival.length >= GEO_MISS_VS_RIVAL_HISTORY_LIMIT) break
+      recentGeoMissVsRival.push({
+        geoJobId: job.id,
+        completedAt,
+        query: m.query,
+        modelId: m.modelId,
+        rivalDomain: m.rivalDomain,
+        rivalPosition: m.rivalPosition,
+        otherRivals: (m.otherRivals ?? []).join('|'),
+      })
+    }
+  }
+
+  const standaloneTotal = scans.filter((s) => s.mode === 'single' && !s.domainScanId).length
 
   return jsonWithContract({
     externalProjectId: project.id,
     platformProjectId,
     scanCount: activitySingles + domains.length + geoJobs.length,
     domainScanCount: domains.length,
-    standaloneScanCount: standalone.length,
+    standaloneScanCount: standaloneTotal,
     geoJobCount: geoJobs.length,
     domainScans: domainCatalog.map((d) => ({
       id: d.id,
@@ -682,6 +1334,7 @@ export async function GET(
       issueCount: d.issueCount ?? 0,
       timestamp: d.completedAt ?? d.startedAt,
       totalPages: d.pageCount,
+      title: d.title ?? null,
     })),
     standaloneScans: standalone.map((s) => ({
       id: s.id,
@@ -690,6 +1343,7 @@ export async function GET(
       timestamp: s.completedAt ?? s.startedAt,
       status: s.status,
       issueCount: s.issueCount,
+      mode: s.mode,
     })),
     geoJobs: geoCatalog.map((j) => ({
       id: j.id,
@@ -701,11 +1355,37 @@ export async function GET(
       citedShare: j.citedShare,
       queryCount: j.queryCount,
       modelCount: j.modelCount,
+      measurement: j.measurement ?? null,
     })),
     scoreHistory,
     latestCompletedScan,
     latestDomainHealth,
     latestGeoDepth,
+    recentScanIssues,
+    recentScanScoreCards,
+    issueRuleFrequency,
+    issueSectionFrequency,
+    scanSeverityByScan,
+    recentDomainScoreCards,
+    recentDomainSystemic,
+    recentDomainPerformance,
+    recentDomainUx,
+    recentDomainEco,
+    recentDomainSeo,
+    recentDomainLinks,
+    recentDomainSecurity,
+    recentDomainEeat,
+    recentDomainGenerative,
+    recentDomainCorpusPages,
+    recentGeoJobMetrics,
+    recentGeoShareOfVoice,
+    recentGeoPresenceByModel,
+    recentGeoRecommendations,
+    recentGeoQueryRuns,
+    recentGeoPromptDuels,
+    recentGeoIntents,
+    recentGeoPresenceByQuery,
+    recentGeoMissVsRival,
   })
 }
 
