@@ -76,6 +76,10 @@ Via Coolify REST: `PATCH /applications/{uuid}/envs/bulk` then redeploy main. Loc
 ```
 curl -s https://<scan-worker-fqdn>/health
 # {"ok":true,"service":"checkion-scan-worker","screenshots":{"path":"/workspace/checkion-v3/data/screenshots","writable":true,"jpegCount":N},...}
+
+curl -s https://checkion-v3.projects-a.plygrnd.tech/api/health
+# {"ok":true,"product":"checkion-v3","screenshots":{"path":"…","writable":true,"jpegCount":N},…}
+# jpegCount on main-app should match worker after a shared-mount redeploy.
 ```
 
 Enqueue a single or domain scan from Plexon / Checkion UI; worker logs should show claim + crawl; web UI stays responsive.

@@ -8,6 +8,7 @@ const gated = auth((req) => {
   const { pathname } = req.nextUrl
   const authHeader = req.headers.get('authorization')?.toLowerCase() ?? ''
   const hasBearer = authHeader.startsWith('bearer ')
+  const hasServiceSecret = Boolean(req.headers.get('x-service-secret')?.trim())
   const isPublic =
     pathname === paths.routes.login ||
     pathname.startsWith('/api/auth') ||
@@ -18,8 +19,8 @@ const gated = auth((req) => {
     pathname.startsWith('/share') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
-    /** Machine clients: Bearer validated in-route via getRequestUser. */
-    (pathname.startsWith('/api/') && hasBearer)
+    /** Machine clients: Bearer / service secret validated in-route via getRequestUser. */
+    (pathname.startsWith('/api/') && (hasBearer || hasServiceSecret))
 
   if (isPublic) {
     return NextResponse.next()
