@@ -39,7 +39,7 @@ PORT=3011
 HOSTNAME=0.0.0.0
 CHECKION_SCAN_WORKER_STALE_MS=120000   # optional
 CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS=600000  # optional: fail hung 0-page jobs
-CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS=1200000         # optional: domain wall-clock
+CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS=21600000        # optional override; default scales to max 6h
 DOMAIN_SCAN_CONCURRENCY=5              # parallel pages per domain job (worker image default 5)
 # Optional: second scan-worker replica for parallel domain jobs (exclusive DB claim)
 # Optional LLM for page classification (same as web):

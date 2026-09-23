@@ -55,7 +55,9 @@ export function resolveScanWorkerJobTimeoutMs(
     typeof maxPages === 'number' && Number.isFinite(maxPages) && maxPages > 0
       ? Math.min(10_000, Math.floor(maxPages))
       : 50
-  // Assume concurrency ≈3 (worker Dockerfile default); 90s per wave.
+  // Budget waves as if concurrency ≈3 (worker Dockerfile is 5; keep /3 margin
+  // for politeness + slow pages). Cap was 45m and killed 1000-page deepscans
+  // (~HDI) around page 300–350; allow up to 6h wall-clock.
   const waves = Math.ceil(pages / 3)
-  return Math.min(2_700_000, Math.max(900_000, waves * 90_000))
+  return Math.min(21_600_000, Math.max(900_000, waves * 90_000))
 }

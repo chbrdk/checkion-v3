@@ -47,6 +47,9 @@ describe('scan-worker-mode', () => {
     expect(resolveScanWorkerJobTimeoutMs(50)).toBe(1_530_000)
     expect(resolveScanWorkerJobTimeoutMs(undefined, '60000')).toBe(1_530_000)
     expect(resolveScanWorkerJobTimeoutMs(50, '900000')).toBe(900_000)
+    // 1000-page deepscan: formula wants ~8.3h → clamp to 6h (was 45m and timed out)
+    expect(resolveScanWorkerJobTimeoutMs(1000)).toBe(21_600_000)
+    expect(resolveScanWorkerJobTimeoutMs(100)).toBe(3_060_000)
   })
 })
 

@@ -39,7 +39,7 @@
 | `CHECKION_SCAN_WORKER_MODE` | `inline` (default, web executes crawls) or `external` (DB claim by scan-worker). Spec: `specs/domain/scan-worker.md` |
 | `CHECKION_SCAN_WORKER_STALE_MS` | Worker-only stale reclaim grace (default 120000) |
 | `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` | Fail foreign/stale 0-page jobs after this age (default 600000) |
-| `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` | Domain job wall-clock in worker (or scaled `ceil(maxPages/3)*90s`) |
+| `CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS` | Domain job wall-clock in worker (or scaled `ceil(maxPages/3)*90s`, min 15m, max 6h) |
 | `PUPPETEER_PROTOCOL_TIMEOUT_MS` | Chromium CDP protocol timeout (default 120000) |
 | `DOMAIN_PAGE_SCAN_TIMEOUT_MS` | Per-page wall-clock in domain spider (default 150000) |
 | `DOMAIN_SCAN_CONCURRENCY` | Spider parallelism (worker Dockerfile default **5**). Parallel domain jobs = more worker replicas. Asset skip: `specs/domain/scan-crawl-assets.md` |
