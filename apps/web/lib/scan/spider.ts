@@ -1,5 +1,6 @@
 import { launchStandaloneScanBrowser, runScan } from './scanner';
 import { DOMAIN_PAGE_SCAN_TIMEOUT_MS } from '@/lib/scan/constants';
+import { shouldSkipCrawlUrl } from '@/lib/scan/crawlable-url';
 import { discoverSitemapPageUrls } from './sitemap';
 import type { ScanResult, DomainScanResult, DomainScanResultWithFullPages, EeatDomainAggregate } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -186,6 +187,7 @@ export async function* runDomainScan(
         if (sitemapUrls.length > 1) {
             const startNorm = normalizeScanUrl(startUrl);
             sitemapUrls.forEach((u) => {
+                if (shouldSkipCrawlUrl(u)) return;
                 const n = normalizeScanUrl(u);
                 if (!visited.has(n)) {
                     visited.add(n);
@@ -325,6 +327,7 @@ export async function* runDomainScan(
             if (depth < MAX_DEPTH && results.length + queue.length < maxPages * 2) {
                 const newLinks = result.allLinks || [];
                 newLinks.forEach((link) => {
+                    if (shouldSkipCrawlUrl(link)) return;
                     const norm = normalizeScanUrl(link);
                     const isInternal = norm.startsWith(origin) || isSameDomain(link, origin);
                     if (isInternal && !visited.has(norm)) {
@@ -360,6 +363,12 @@ export async function* runDomainScan(
                 queue.length = 0;
                 break;
             }
+            // Drain non-HTML assets without counting toward maxPages.
+            while (queue.length > 0 && shouldSkipCrawlUrl(queue[0]!.url)) {
+                const skipped = queue.shift()!;
+                visited.add(normalizeScanUrl(skipped.url));
+            }
+            if (queue.length === 0) break;
             const current = queue.shift()!;
             const normalizedCurrent = normalizeScanUrl(current.url);
             const pageIndex = nextPageIndex++;

@@ -16,8 +16,10 @@ Live scans historically ran **in-process** inside the Next.js container (`apps/w
 2. **Dedicated scan-worker container** (preferred for staging): `CHECKION_SCAN_WORKER_MODE=external` on web; crawls run in `checkion-v3:scan-worker`. Spec: `specs/domain/scan-worker.md` · ops: `knowledge/staging-coolify-scan-worker.md`.
 
 ```
-DOMAIN_SCAN_CONCURRENCY=2
-DOMAIN_SCAN_DELAY_MS=500
+DOMAIN_SCAN_CONCURRENCY=5
+DOMAIN_SCAN_DELAY_MS=200
 ```
 
-Tests: `apps/web/__tests__/domain-scan-concurrency.test.ts`, `apps/web/__tests__/scan-worker-mode.test.ts`
+Asset URLs (PDF/media) are skipped in the spider — `specs/domain/scan-crawl-assets.md`.
+
+Tests: `apps/web/__tests__/domain-scan-concurrency.test.ts`, `apps/web/__tests__/scan-worker-mode.test.ts`, `apps/web/__tests__/crawlable-url.test.ts`

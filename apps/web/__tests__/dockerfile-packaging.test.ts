@@ -123,7 +123,7 @@ describe('Dockerfile Coolify packaging', () => {
     expect(df).toContain('puppeteer browsers install chrome')
     expect(df).toMatch(/CMD \["npm", "run", "scan-worker"\]/)
     expect(df).toContain('PUPPETEER_CACHE_DIR')
-    expect(df).toContain('DOMAIN_SCAN_CONCURRENCY=3')
+    expect(df).toContain('DOMAIN_SCAN_CONCURRENCY=5')
     expect(existsSync(resolve(repoRoot, 'apps/web/scripts/run-scan-worker.ts'))).toBe(true)
     expect(existsSync(resolve(repoRoot, 'specs/domain/scan-worker.md'))).toBe(true)
   })

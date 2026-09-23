@@ -12,6 +12,7 @@ const requiredSpecs = [
   'specs/domain/project-workspace.md',
   'specs/domain/scan-modes.md',
   'specs/domain/scan-worker.md',
+  'specs/domain/scan-crawl-assets.md',
   'specs/domain/scan-result-workspace.md',
   'specs/domain/single-scan-rich-overview.md',
   'specs/domain/domain-scan-sections.md',
