@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Button, CardActions, Chip, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
+import { Button, CardActions, Chip, CollectionHubCard, CollectionHubMetric, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -44,28 +44,6 @@ function capabilityHint(status: CapabilitySyncStatus, t: Translator): string | n
 type CapFilter = 'all' | CapabilitySyncStatus
 type ProjectsView = 'tiles' | 'list'
 
-function ProjectMetric({
-  icon,
-  value,
-  label,
-  linked = true,
-}: {
-  icon: ReactNode
-  value: string
-  label: string
-  linked?: boolean
-}) {
-  return (
-    <div className="checkion-collection-metric" data-linked={linked ? 'true' : 'false'}>
-      <span className="checkion-collection-metric-icon" aria-hidden>
-        {icon}
-      </span>
-      <span className="checkion-collection-metric-value">{value}</span>
-      <span className="checkion-collection-metric-label">{label}</span>
-    </div>
-  )
-}
-
 function ProjectCollectionCard({
   project,
   onEdit,
@@ -81,79 +59,57 @@ function ProjectCollectionCard({
   const cap = capabilityLabel(project.capabilityStatus, t)
 
   return (
-    <article className="checkion-collection-card">
-      <header className="checkion-collection-card-head">
-        <Text role="meta" as="p" className="checkion-collection-card-kicker">
-          {domain ?? '\u00a0'}
-        </Text>
-        <span
-          className="checkion-collection-card-badge"
-          data-status={project.capabilityStatus}
-          title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}
-        >
+    <CollectionHubCard
+      kicker={domain ?? '\u00a0'}
+      badge={
+        <span title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}>
           {cap}
         </span>
-      </header>
-
-      <Text role="headline" as="h3" className="checkion-collection-card-title">
-        {project.name}
-      </Text>
-
-      {hint ? (
-        <Text role="meta" as="p" className="checkion-collection-card-hint">
-          {hint}
-        </Text>
-      ) : null}
-
-      <div className="checkion-collection-card-stats" aria-label={t('projects.metricsAria')}>
-        <ProjectMetric
-          icon={<MetricIconScans />}
-          value={String(project.scanCount)}
-          label={t('common.scans')}
-        />
-        <ProjectMetric
-          icon={<MetricIconLastScan />}
-          value={formatScanShort(project.lastScanAt)}
-          label={t('common.lastScan')}
-          linked={project.lastScanAt != null}
-        />
-      </div>
-
-      <CardActions className="checkion-collection-card-actions">
-        <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
-          <Button variant="ghost">{t('common.open')}</Button>
-        </Link>
-        <span className="checkion-collection-card-link">
+      }
+      badgeStatus={project.capabilityStatus}
+      title={project.name}
+      hint={hint}
+      stats={
+        <div aria-label={t('projects.metricsAria')}>
+          <CollectionHubMetric
+            icon={<MetricIconScans />}
+            value={String(project.scanCount)}
+            label={t('common.scans')}
+          />
+          <CollectionHubMetric
+            icon={<MetricIconLastScan />}
+            value={formatScanShort(project.lastScanAt)}
+            label={t('common.lastScan')}
+            linked={project.lastScanAt != null}
+          />
+        </div>
+      }
+      actions={
+        <CardActions>
+          <Link href={paths.routes.projectDetail(project.id)}>
+            <Button variant="ghost">{t('common.open')}</Button>
+          </Link>
           <Button variant="ghost" type="button" onClick={() => onEdit(project)}>
             {t('common.edit')}
           </Button>
-        </span>
-        <span className="checkion-collection-card-link">
           <Button variant="ghost" type="button" onClick={() => onDelete(project)}>
             {t('projects.archiveConfirm')}
           </Button>
-        </span>
-      </CardActions>
-    </article>
+        </CardActions>
+      }
+    />
   )
 }
 
 function CreateProjectCard({ onClick }: { onClick: () => void }) {
   const t = useT()
   return (
-    <button
-      type="button"
-      className="checkion-collection-card checkion-collection-card--create"
+    <CollectionHubCard
+      variant="create"
+      title={t('projects.createTitle')}
+      hint={t('projects.createDeck')}
       onClick={onClick}
-    >
-      <span className="checkion-collection-card-kicker">{'\u00a0'}</span>
-      <Text role="headline" as="span" className="checkion-collection-card-title">
-        {t('projects.createTitle')}
-      </Text>
-      <Text role="meta" as="span" className="checkion-collection-card-hint">
-        {t('projects.createDeck')}
-      </Text>
-    </button>
+    />
   )
 }
 
@@ -171,14 +127,14 @@ function ProjectListRow({
   const t = useT()
   const domain = project.domain?.trim() || null
   return (
-    <li className="checkion-projects-list-row">
-      <span className="checkion-magazine-list-num" aria-hidden>
+    <li className="ds-collection-hub-list-row">
+      <span className="ds-collection-hub-list-num" aria-hidden>
         {String(index + 1).padStart(2, '0')}
       </span>
-      <div className="checkion-projects-list-row__main">
+      <div className="ds-collection-hub-list-row__main">
         <Link
           href={paths.routes.projectDetail(project.id)}
-          className="checkion-projects-list-row__title"
+          className="ds-collection-hub-list-row__title"
         >
           {project.name}
         </Link>
@@ -191,9 +147,9 @@ function ProjectListRow({
           <span>{formatScanShort(project.lastScanAt)}</span>
         </p>
       </div>
-      <div className="checkion-projects-list-row__trail">
+      <div className="ds-collection-hub-list-row__trail">
         <span
-          className="checkion-collection-card-badge checkion-projects-list-row__badge"
+          className="ds-collection-hub-card__badge checkion-projects-list-row__badge"
           data-status={project.capabilityStatus}
         >
           {capabilityLabel(project.capabilityStatus, t)}
@@ -300,7 +256,7 @@ export function ProjectListPanel({
 
       <div className="checkion-collection-list">
         {view === 'tiles' ? (
-          <div className="checkion-collection-grid" aria-label={t('projects.listAria')}>
+          <div className="ds-collection-hub-grid" aria-label={t('projects.listAria')}>
             <CreateProjectCard onClick={() => setCreateOpen(true)} />
             {filtered.map((project) => (
               <ProjectCollectionCard
@@ -315,16 +271,16 @@ export function ProjectListPanel({
           <div className="checkion-projects-list-wrap">
             <button
               type="button"
-              className="checkion-projects-list-create"
+              className="ds-collection-hub-list-create"
               onClick={() => setCreateOpen(true)}
             >
-              <span className="checkion-projects-list-create__label">{t('projects.createTitle')}</span>
-              <span className="checkion-projects-list-create__deck">
+              <span className="ds-collection-hub-list-create__label">{t('projects.createTitle')}</span>
+              <span className="ds-collection-hub-list-create__deck">
                 {t('projects.createDeck')}
               </span>
             </button>
             {filtered.length > 0 ? (
-              <ol className="checkion-magazine-list checkion-projects-list" aria-label={t('projects.listAria')}>
+              <ol className="ds-collection-hub-list" aria-label={t('projects.listAria')}>
                 {filtered.map((project, index) => (
                   <ProjectListRow
                     key={project.id}

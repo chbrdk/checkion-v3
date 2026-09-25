@@ -52,11 +52,11 @@ describe('panels smoke', () => {
       },
     ]
     render(<ProjectListPanel projects={projects} />)
-    expect(document.querySelector('.checkion-collection-grid')).toBeTruthy()
-    expect(document.querySelectorAll('.checkion-collection-card').length).toBeGreaterThanOrEqual(2)
+    expect(document.querySelector('.ds-collection-hub-grid')).toBeTruthy()
+    expect(document.querySelectorAll('.ds-collection-hub-card').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByRole('heading', { name: 'Demo' })).toBeTruthy()
     expect(screen.getByText('example.com')).toBeTruthy()
-    expect(document.querySelector('.checkion-collection-card-badge[data-status="in_sync"]')).toBeTruthy()
+    expect(document.querySelector('.ds-collection-hub-card__badge[data-status="in_sync"]')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/projects/p1')
     expect(screen.getByRole('button', { name: /New project/i })).toBeTruthy()
   })

@@ -29,14 +29,14 @@ const projects: ProjectSummary[] = [
 describe('ProjectListPanel layout', () => {
   it('toggles between tiles and numbered list', () => {
     render(<ProjectListPanel projects={projects} />)
-    expect(screen.getByLabelText('Projects').className).toContain('checkion-collection-grid')
+    expect(screen.getByLabelText('Projects').className).toContain('ds-collection-hub-grid')
     fireEvent.click(screen.getByRole('button', { name: 'List' }))
     const list = screen.getByRole('list', { name: 'Projects' })
-    expect(list.className).toContain('checkion-projects-list')
+    expect(list.className).toContain('ds-collection-hub-list')
     expect(screen.getByRole('link', { name: 'Alpha' })).toBeTruthy()
     expect(screen.getByLabelText('Project metrics').textContent).toMatch(/3 scans/)
-    expect(screen.getByRole('button', { name: 'Open' }).closest('.checkion-projects-list-row__trail')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Open' }).closest('.ds-collection-hub-list-row__trail')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Tiles' }))
-    expect(screen.getByLabelText('Projects').className).toContain('checkion-collection-grid')
+    expect(screen.getByLabelText('Projects').className).toContain('ds-collection-hub-grid')
   })
 })

@@ -63,7 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
 # SeriesChart for GEO position history — msqdx-ui main @ af801ee (2026-09-19).
-ARG MSQDX_UI_REF=af801ee72b2cfd763d0c50d8256de3b360889998
+ARG MSQDX_UI_REF=6684945af8202fbae971da74650179861f9f1438
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \

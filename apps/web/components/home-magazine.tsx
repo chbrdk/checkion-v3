@@ -8,7 +8,7 @@ import type {
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
-import { Button, EmptyState, Text } from '@msqdx/ui'
+import { Button, CollectionHubCard, CollectionHubMetric, EmptyState, Text } from '@msqdx/ui'
 import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
 import { paths } from '../lib/paths'
 import { useT } from '../lib/user-prefs'
@@ -132,43 +132,35 @@ function HomeProjectCard({ project }: { project: ProjectSummary }) {
   const domain = project.domain?.trim() || null
   const cap = capabilityLabel(project.capabilityStatus, t)
   return (
-    <article className="checkion-collection-card checkion-home-project-card">
-      <header className="checkion-collection-card-head">
-        <Text role="meta" as="p" className="checkion-collection-card-kicker">
-          {domain ?? '\u00a0'}
-        </Text>
-        <span
-          className="checkion-collection-card-badge"
-          data-status={project.capabilityStatus}
-          title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}
-        >
+    <CollectionHubCard
+      className="checkion-home-project-card"
+      kicker={domain ?? '\u00a0'}
+      badge={
+        <span title={t('projects.capabilityBadgeTitle', { status: cap.toLowerCase() })}>
           {cap}
         </span>
-      </header>
-      <Text role="headline" as="h3" className="checkion-collection-card-title">
-        {project.name}
-      </Text>
-      <div className="checkion-collection-card-stats" aria-label={t('projects.metricsAria')}>
-        <div className="checkion-collection-metric" data-linked="true">
-          <span className="checkion-collection-metric-value">{project.scanCount}</span>
-          <span className="checkion-collection-metric-label">{t('common.scans')}</span>
+      }
+      badgeStatus={project.capabilityStatus}
+      title={project.name}
+      stats={
+        <div aria-label={t('projects.metricsAria')}>
+          <CollectionHubMetric
+            value={String(project.scanCount)}
+            label={t('common.scans')}
+          />
+          <CollectionHubMetric
+            value={formatScanShort(project.lastScanAt)}
+            label={t('common.lastScan')}
+            linked={project.lastScanAt != null}
+          />
         </div>
-        <div
-          className="checkion-collection-metric"
-          data-linked={project.lastScanAt != null ? 'true' : 'false'}
-        >
-          <span className="checkion-collection-metric-value">
-            {formatScanShort(project.lastScanAt)}
-          </span>
-          <span className="checkion-collection-metric-label">{t('common.lastScan')}</span>
-        </div>
-      </div>
-      <div className="checkion-collection-card-actions">
-        <Link href={paths.routes.projectDetail(project.id)} className="checkion-collection-card-link">
+      }
+      actions={
+        <Link href={paths.routes.projectDetail(project.id)}>
           <Button variant="ghost">{t('common.open')}</Button>
         </Link>
-      </div>
-    </article>
+      }
+    />
   )
 }
 
@@ -387,7 +379,7 @@ export function HomeMagazine({
           </EmptyState>
         ) : (
           <div
-            className="checkion-collection-grid checkion-home-projects"
+            className="ds-collection-hub-grid checkion-home-projects"
             aria-label={t('home.projectsAria')}
           >
             {recentProjects.map((project) => (
