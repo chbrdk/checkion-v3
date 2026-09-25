@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
-import { AppShell } from './app-shell'
+import { PageLead } from './page-lead'
 import { auth } from '../auth'
 import { listProjectsForViewer } from '../lib/fixtures/project-store'
 import type { DeferredJobCard } from '../lib/fixtures/deferred-jobs'
@@ -23,10 +23,11 @@ export async function DeferredJobsPage({
   )
 
   return (
-    <AppShell title={title} description={description}>
+    <>
+      <PageLead description={description} />
       <div className="checkion-magazine">
         <Panel>
-          <SectionChrome title="Deferred slice" meta="dummy" />
+          <SectionChrome title={title} meta="Deferred slice" />
           <Text role="body">{specHint}</Text>
           <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <Link href={paths.routes.scan}>Core Quality scan →</Link>
@@ -52,6 +53,6 @@ export async function DeferredJobsPage({
           </ul>
         </Panel>
       </div>
-    </AppShell>
+    </>
   )
 }

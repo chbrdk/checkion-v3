@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button, Chip, Panel, SectionChrome, Text } from '@msqdx/ui'
-import { AppShell } from './app-shell'
+import { PageLead } from './page-lead'
 import { auth } from '../auth'
 import { listProjectsForViewer } from '../lib/fixtures/project-store'
 import { listGeoJobsForViewer } from '../lib/resource-access'
@@ -16,10 +16,8 @@ export async function GeoIndexPage() {
   )
 
   return (
-    <AppShell
-      title="GEO / E-E-A-T"
-      description="Competitive LLM placement — fixture magazine results."
-    >
+    <>
+      <PageLead description="Competitive LLM placement — fixture magazine results." />
       <div className="checkion-magazine checkion-magazine--editorial">
         <Panel>
           <SectionChrome title="GEO jobs" meta={`${jobs.length} fixtures`} />
@@ -42,12 +40,12 @@ export async function GeoIndexPage() {
               return (
                 <li key={job.id} className="checkion-index-card">
                   <div className="checkion-index-card__meta">
-                  <Chip static size="sm">
-                    {job.status}
-                  </Chip>
-                  <Chip static size="sm">
-                    {geoMeasurementLabel(geoJobMeasurement(job))}
-                  </Chip>
+                    <Chip static size="sm">
+                      {job.status}
+                    </Chip>
+                    <Chip static size="sm">
+                      {geoMeasurementLabel(geoJobMeasurement(job))}
+                    </Chip>
                     <Text role="meta">{projects[job.projectId] ?? job.projectId}</Text>
                     <Chip static size="sm">
                       {job.overallScore ?? '—'}
@@ -66,6 +64,6 @@ export async function GeoIndexPage() {
           </ul>
         </Panel>
       </div>
-    </AppShell>
+    </>
   )
 }
