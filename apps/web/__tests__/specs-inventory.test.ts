@@ -37,6 +37,8 @@ const requiredSpecs = [
   'specs/domain/geo-position-history.md',
   'specs/domain/journey-ui.md',
   'specs/domain/project-reports.md',
+  'specs/domain/suite-enterprise-program.md',
+  'specs/domain/scan-run-delta.md',
   'specs/api/projects.md',
   'specs/api/scans.md',
   'specs/api/fetch-page.md',
@@ -49,6 +51,7 @@ const requiredSpecs = [
   'specs/api/geo-job-title.md',
   'specs/api/scan-run-title.md',
   'specs/api/geo-position-history.md',
+  'specs/api/scan-run-delta.md',
   'knowledge/specs-index.md',
   'knowledge/paths.md',
   'knowledge/settings-api-tokens.md',
@@ -107,6 +110,9 @@ describe('specs inventory', () => {
     )
     expect(paths.routes.apiGeoJobExportCsv('geo-1')).toBe('/api/geo-jobs/geo-1/export')
     expect(paths.routes.apiGeoJobExportCsv('a/b')).toBe('/api/geo-jobs/a%2Fb/export')
+    expect(paths.routes.apiScanDelta('s1')).toBe('/api/scans/s1/delta')
+    expect(paths.routes.apiDomainScanDelta('d1')).toBe('/api/domain-scans/d1/delta')
+    expect(paths.routes.apiGeoJobDelta('geo-1')).toBe('/api/geo-jobs/geo-1/delta')
     expect(paths.routes.journey).toBe('/journey')
     expect(paths.routes.reports).toBe('/reports')
     expect(paths.federationContract).toBe('2026-05-plexon-federation-v3')

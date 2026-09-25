@@ -12,6 +12,7 @@ Accepted (Phase 1)
 | GET | `/api/domain-scans/:id/overview` | Light overview |
 | GET | `/api/domain-scans/:id/issues` | Paginated/grouped later |
 | GET | `/api/domain-scans/:id/pages` | Corpus page slim list — see `domain-scan-pages.md` |
+| GET | `/api/domain-scans/:id/delta` | Gegentest vs previous — see `scan-run-delta.md` |
 
 No mega-JSON hydrate in MVP.
 

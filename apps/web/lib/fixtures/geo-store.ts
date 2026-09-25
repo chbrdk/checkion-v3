@@ -81,6 +81,7 @@ async function memoryCreateGeoJob(input: {
   includePageScan?: boolean
   waitForCompletion?: boolean
   measurement?: GeoMeasurement
+  actorUserId?: string
 }): Promise<GeoJobSummary> {
   const jobId = newGeoJobId()
   const models = input.models?.length ? input.models : [OPENAI_MODEL]
@@ -101,6 +102,9 @@ async function memoryCreateGeoJob(input: {
     })
     memoryUpsert(overview)
     triggerGeoAutosync(jobId)
+    void import('../db/geo-jobs').then(({ scheduleSuiteEnterpriseGeoJobComplete }) => {
+      scheduleSuiteEnterpriseGeoJobComplete(jobId, input.actorUserId)
+    })
     return overview.job
   }
 
@@ -130,7 +134,12 @@ async function memoryCreateGeoJob(input: {
         measurement,
         onStatus: async (status, overview) => {
           memoryUpsert(overview)
-          if (status === 'completed') triggerGeoAutosync(jobId)
+          if (status === 'completed') {
+            triggerGeoAutosync(jobId)
+            void import('../db/geo-jobs').then(({ scheduleSuiteEnterpriseGeoJobComplete }) => {
+              scheduleSuiteEnterpriseGeoJobComplete(jobId, input.actorUserId)
+            })
+          }
         },
       })
     } catch (err) {
@@ -167,6 +176,7 @@ export async function createGeoJob(input: {
   includePageScan?: boolean
   waitForCompletion?: boolean
   measurement?: GeoMeasurement
+  actorUserId?: string
 }): Promise<GeoJobSummary> {
   if (isDatabaseConfigured()) return (await dbApi()).dbCreateGeoJob(input)
   return memoryCreateGeoJob(input)

@@ -919,6 +919,59 @@ export interface GeoPositionHistoryResult {
   items: GeoQuestionHistorySeries[]
 }
 
+/** Gegentest / run delta — specs/domain/scan-run-delta.md (Wave E3) */
+export type ScanRunDeltaKind = 'single' | 'deep' | 'geo'
+
+export type ScanRunDeltaScoreKind = ScoreKind | GeoRunDeltaScoreKind
+
+/** GEO delta score lanes (never mixed across measurement layers). */
+export type GeoRunDeltaScoreKind =
+  | 'cited_share'
+  | 'eeat_experience'
+  | 'eeat_expertise'
+  | 'eeat_authoritativeness'
+  | 'eeat_trustworthiness'
+  | 'eeat_geo_fitness'
+
+export interface ScanRunDeltaFindingRef {
+  key: string
+  ruleId: string
+  title: string
+  severity?: IssueSeverity | 'high' | 'medium' | 'low'
+  section?: IssueSummary['section']
+}
+
+export interface ScanRunDeltaScore {
+  kind: ScanRunDeltaScoreKind
+  current: number | null
+  previous: number | null
+  /** current − previous; null when either side missing */
+  delta: number | null
+  max?: number
+}
+
+export interface ScanRunDeltaResult {
+  kind: ScanRunDeltaKind
+  currentId: string
+  previousId: string
+  /** Normalized URL set used for the match */
+  urlSet: string[]
+  findings: {
+    new: ScanRunDeltaFindingRef[]
+    gone: ScanRunDeltaFindingRef[]
+    same: ScanRunDeltaFindingRef[]
+  }
+  scores: ScanRunDeltaScore[]
+  /** GEO only — same layer on both runs */
+  measurement?: GeoMeasurement
+}
+
+export type ScanRunDeltaErrorCode =
+  | 'not_found'
+  | 'no_baseline'
+  | 'measurement_mismatch'
+  | 'kind_mismatch'
+
 export interface FederationHealth {
   contract: '2026-05-plexon-federation-v3'
   plexonReachable: boolean

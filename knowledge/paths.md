@@ -138,6 +138,7 @@ Public landing: `/share/[token]` · API `/api/share`
 - Rename WCAG run: `PATCH /api/scans/:id` `{ title }` (`paths.routes.apiScanDetail`) — masthead **Rename** · `specs/api/scan-run-title.md` · project Runs list uses same title
 - Domain magazines: `/domain/:id/{overview|issues|detail}` (`paths.routes.domainSection`)
 - Rename deep crawl: `PATCH /api/domain-scans/:id` `{ title }` (`paths.routes.apiDomainScanDetail`) — same title rules as WCAG / GEO
+- Gegentest (Wave E3): `GET /api/scans/:id/delta` · `GET /api/domain-scans/:id/delta` · `GET /api/geo-jobs/:id/delta` (`paths.routes.apiScanDelta` / `apiDomainScanDelta` / `apiGeoJobDelta`) — optional `?previousId=` · named error `no_baseline` · `specs/api/scan-run-delta.md` · `specs/domain/scan-run-delta.md`
 - Spec: `specs/domain/project-workspace.md`
 
 ## Settings

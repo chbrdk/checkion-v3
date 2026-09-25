@@ -138,6 +138,8 @@ export const paths = {
   routes: {
     apiGeoJobs: '/api/geo-jobs',
     apiGeoJobDetail: (id: string) => `/api/geo-jobs/${id}`,
+    /** Gegentest — Wave E3 GEO delta vs previous job (same measurement). */
+    apiGeoJobDelta: (id: string) => `/api/geo-jobs/${encodeURIComponent(id)}/delta`,
     /** GEO job CSV export — one row per query×model cell. */
     apiGeoJobExportCsv: (id: string) => `/api/geo-jobs/${encodeURIComponent(id)}/export`,
     /** Explicit publish GEO distillate → Collection Knowledge Pack. */
@@ -223,10 +225,14 @@ export const paths = {
     apiScanOverview: (id: string) => `/api/scans/${id}/overview`,
     apiScanIssues: (id: string) => `/api/scans/${id}/issues`,
     apiScanScores: (id: string) => `/api/scans/${id}/scores`,
+    /** Gegentest — Wave E3 run delta vs previous single (`specs/api/scan-run-delta.md`). */
+    apiScanDelta: (id: string) => `/api/scans/${encodeURIComponent(id)}/delta`,
     apiScanScreenshot: (id: string) => `/api/scans/${encodeURIComponent(id)}/screenshot`,
     apiScanWeakestSignal: (id: string) => `/api/scans/${id}/weakest-signal`,
     apiDomainScans: '/api/domain-scans',
     apiDomainScanDetail: (id: string) => `/api/domain-scans/${id}`,
+    /** Gegentest — Wave E3 run delta vs previous deep crawl. */
+    apiDomainScanDelta: (id: string) => `/api/domain-scans/${encodeURIComponent(id)}/delta`,
     apiDomainScanControl: (id: string) => `/api/domain-scans/${id}/control`,
     apiProjectActiveDomainScans: (projectId: string) =>
       `/api/projects/${projectId}/domain-scans/active`,

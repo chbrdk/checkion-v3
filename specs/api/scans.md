@@ -13,6 +13,7 @@ Accepted (Phase 1) · Correlation fields implemented with AUDION ↔ CHECKION si
 | GET | `/api/scans/:id/overview` | Light overview payload |
 | GET | `/api/scans/:id/issues` | `{ items: IssueSummary[] }` |
 | GET | `/api/scans/:id/scores` | `{ items: ScoreCard[] }` |
+| GET | `/api/scans/:id/delta` | Gegentest vs previous — see `scan-run-delta.md` |
 
 See also `specs/api/domain-scan-payload.md`.
 

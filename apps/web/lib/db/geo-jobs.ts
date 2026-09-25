@@ -15,6 +15,44 @@ function triggerGeoAutosync(jobId: string): void {
   })
 }
 
+export function scheduleSuiteEnterpriseGeoJobComplete(jobId: string, actorUserId?: string): void {
+  void (async () => {
+    const { getGeoOverview } = await import('../fixtures/geo-store')
+    const overview = await getGeoOverview(jobId)
+    if (!overview || overview.job.status !== 'completed') return
+    const { getProject } = await import('../fixtures/project-store')
+    const { checkionPublicUrl } = await import('../runtime-config')
+    const { paths } = await import('../paths')
+    const { scheduleSuiteAuditEvent } = await import('../plexon-suite-audit')
+    const { scheduleCollectionActivityDistillate } = await import('../plexon-collection-activity')
+    const project = await getProject(overview.job.projectId)
+    const platformProjectId = project?.platformProjectId?.trim() ?? ''
+    if (!platformProjectId || platformProjectId.startsWith('plx-local-')) return
+    const href = `${checkionPublicUrl().replace(/\/$/, '')}${paths.routes.geoDetail(jobId)}`
+    scheduleCollectionActivityDistillate({
+      platformProjectId,
+      productId: 'checkion',
+      kind: 'geo_job',
+      status: 'completed',
+      subjectRef: jobId,
+      title: overview.job.title || `GEO ${overview.targetHost || overview.job.url}`,
+      href,
+      at: overview.job.completedAt ?? undefined,
+      actorUserId,
+    })
+    if (actorUserId?.trim()) {
+      scheduleSuiteAuditEvent({
+        platformProjectId,
+        productId: 'checkion',
+        action: 'run_finished',
+        actorUserId,
+        subjectRef: jobId,
+        meta: { kind: 'geo_job', url: overview.job.url },
+      })
+    }
+  })().catch(() => undefined)
+}
+
 function rowToOverview(row: GeoJobRow): GeoOverview {
   const overview = structuredClone(row.payload.overview)
   overview.job = {
@@ -98,6 +136,7 @@ export async function dbCreateGeoJob(input: {
   includePageScan?: boolean
   waitForCompletion?: boolean
   measurement?: GeoMeasurement
+  actorUserId?: string
 }): Promise<GeoJobSummary> {
   const jobId = newGeoJobId()
   const models = input.models?.length ? input.models : [OPENAI_MODEL]
@@ -118,6 +157,7 @@ export async function dbCreateGeoJob(input: {
     })
     await dbUpsertGeoOverview(overview)
     triggerGeoAutosync(jobId)
+    scheduleSuiteEnterpriseGeoJobComplete(jobId, input.actorUserId)
     return overview.job
   }
 
@@ -147,7 +187,10 @@ export async function dbCreateGeoJob(input: {
         measurement,
         onStatus: async (status, overview) => {
           await dbUpsertGeoOverview(overview)
-          if (status === 'completed') triggerGeoAutosync(jobId)
+          if (status === 'completed') {
+            triggerGeoAutosync(jobId)
+            scheduleSuiteEnterpriseGeoJobComplete(jobId, input.actorUserId)
+          }
         },
       })
     } catch (err) {

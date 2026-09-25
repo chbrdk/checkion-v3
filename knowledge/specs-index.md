@@ -33,6 +33,8 @@
 | GEO position history | `specs/domain/geo-position-history.md` |
 | Journey UI (deferred) | `specs/domain/journey-ui.md` |
 | Project reports (deferred) | `specs/domain/project-reports.md` |
+| Suite Enterprise Program | `specs/domain/suite-enterprise-program.md` |
+| Scan run delta (Gegentest, Wave E3) | `specs/domain/scan-run-delta.md` |
 
 ## API
 | Spec | Path |
@@ -49,6 +51,7 @@
 | GEO job title (rename) | `specs/api/geo-job-title.md` |
 | Scan / domain run title (rename) | `specs/api/scan-run-title.md` |
 | GEO position history | `specs/api/geo-position-history.md` |
+| Scan run delta (Gegentest) | `specs/api/scan-run-delta.md` |
 
 ## Knowledge
 | Doc | Path |

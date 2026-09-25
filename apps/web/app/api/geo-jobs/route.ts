@@ -150,6 +150,7 @@ export async function POST(request: Request) {
     includePageScan: body.includePageScan,
     waitForCompletion: body.waitForCompletion === true,
     measurement: parseGeoMeasurement(body.measurement),
+    actorUserId: viewer.viewerId,
   })
 
   return NextResponse.json(
