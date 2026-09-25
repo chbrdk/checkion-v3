@@ -15,6 +15,8 @@ import type {
 import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
+import { PublishClientRoomCta } from './publish-client-room-cta'
+import { isRealPlatformProjectId } from '../lib/plexon-platform-id'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { HubIndexLayoutSwitch, useHubIndexLayout } from '../lib/hub-index-layout'
 import { paths } from '../lib/paths'
@@ -442,6 +444,10 @@ export function ProjectWorkspace({
           ) : null}
         </div>
         <div className="checkion-project-cover__actions">
+          <PublishClientRoomCta
+            projectId={project.id}
+            canPublish={isRealPlatformProjectId(project.platformProjectId)}
+          />
           <Button type="button" size="lg" variant="ghost" onClick={() => setEditOpen(true)}>
             {t('common.edit')}
           </Button>

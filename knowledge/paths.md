@@ -129,8 +129,10 @@ Public landing: `/share/[token]` · API `/api/share`
 - Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists · **GEO History** (`paths.routes.projectGeoHistory` → `?chapter=geo-history`)
 - Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
 - API: `GET/POST /api/projects` · `GET/PATCH /api/projects/:id` · `POST /api/projects/:id/archive` (global Collection archive; `DELETE` = archive alias)
+- ClientRoom freigabe (Enterprise E2): `POST /api/projects/:id/client-room/publish` (`paths.routes.apiProjectClientRoomPublish`) → Plexon `PUT …/client-room/slots/checkion_overview` via `lib/plexon-client-room.ts` · CTA on project magazine cover
 - GEO history: `GET /api/projects/:id/geo-history` (`paths.routes.apiProjectGeoHistory`) — soft-match position series · `specs/api/geo-position-history.md` · `knowledge/geo-position-history.md`
 - Plexon lifecycle: `PATCH {NEXT_PLEXON_BASE_URL}/api/platform/provisioning/projects/:platformProjectId` `{ status: archived }` (`paths.plexonProvisioningProjectPath`)
+- Suite Enterprise clients: activity `…/activity` · audit `…/audit` · client-room slot `…/client-room/slots/:slotId` (`paths.plexonProvisioningCollectionClientRoomSlotPath`) · spec `specs/domain/suite-enterprise-program.md`
 
 ## Results
 - Index `/results` redirects home (no rail entry / no scan ledger) — discovery via Home, Projects, job notifications

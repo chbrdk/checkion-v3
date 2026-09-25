@@ -78,6 +78,12 @@ export const paths = {
     `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/members/${encodeURIComponent(userId)}`,
   plexonProvisioningCollectionInvitesPath: (platformProjectId: string) =>
     `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/invites`,
+  /** Enterprise E2 — set/clear ClientRoom slot on Plexon. */
+  plexonProvisioningCollectionClientRoomSlotPath: (
+    platformProjectId: string,
+    slotId: string,
+  ) =>
+    `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/client-room/slots/${encodeURIComponent(slotId)}`,
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
   /** `inline` (web executes) or `external` (scan-worker claims DB jobs). */
@@ -220,6 +226,9 @@ export const paths = {
     apiProjectInvites: (id: string) => `/api/projects/${encodeURIComponent(id)}/invites`,
     apiProjectGeoHistory: (id: string) => `/api/projects/${encodeURIComponent(id)}/geo-history`,
     apiProjectArchive: (id: string) => `/api/projects/${id}/archive`,
+    /** Enterprise E2 — publish project overview into Collection ClientRoom slot `checkion_overview`. */
+    apiProjectClientRoomPublish: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/client-room/publish`,
     apiScans: '/api/scans',
     /** Thin Chromium page text for AUDION research (no axe/Pa11y). */
     apiFetchPage: '/api/fetch-page',

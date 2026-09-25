@@ -1,6 +1,6 @@
 # CHECKION — Suite Enterprise Program
 
-**Status:** Accepted (program) — 2026-09-25. E3 Gegentest delta APIs landed; E4/E1 Plexon-Clients (`plexon-suite-audit`, `plexon-collection-activity`) feuern bei GEO-Job `completed` (Audit nur mit Session-Actor). Magazine chrome und Flow `retest` remain open.  
+**Status:** Accepted (program) — 2026-09-25. E2 slot publish client landed (`plexon-client-room` + `POST /api/projects/:id/client-room/publish`); E3 Gegentest delta APIs landed; E4/E1 Plexon-Clients (`plexon-suite-audit`, `plexon-collection-activity`) feuern bei GEO-Job `completed` (Audit nur mit Session-Actor). Magazine chrome und Flow `retest` remain open.  
 **Programm:** `plexon-v3/specs/domain/suite-enterprise-program.md`  
 **Federation:** `2026-05-plexon-federation-v3`
 
