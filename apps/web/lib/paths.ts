@@ -7,6 +7,8 @@ export const paths = {
   mainGutterRem: 2.5,
   railDockEdge: 'left' as const,
   railDockStorageKey: 'checkion.v3.railDock',
+  /** Cards | List preference for projects hub (Audion hubIndexLayout pattern). */
+  hubIndexLayoutKey: 'checkion.v3.hubIndexLayout',
   /** Prefer DS `MSQDX_SHELL_CORNER_RADIUS` (24) via BrandCorner default — do not override. */
   brandLabel: 'CHECKION',
   productId: 'checkion' as const,

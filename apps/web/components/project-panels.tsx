@@ -16,6 +16,7 @@ import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
 import { MetricIconLastScan, MetricIconScans } from './nav-icons'
+import { HubIndexLayoutSwitch, useHubIndexLayout } from '../lib/hub-index-layout'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
 import { formatDomainScoresByKindMeta } from '../lib/domain-scores-by-kind-meta'
@@ -42,7 +43,6 @@ function capabilityHint(status: CapabilitySyncStatus, t: Translator): string | n
 }
 
 type CapFilter = 'all' | CapabilitySyncStatus
-type ProjectsView = 'tiles' | 'list'
 
 function ProjectCollectionCard({
   project,
@@ -138,12 +138,11 @@ function ProjectListRow({
         >
           {project.name}
         </Link>
-        <Text role="meta" as="p" className="checkion-projects-list-row__domain">
-          {domain ?? t('projects.noDomain')}
-        </Text>
-        <p className="checkion-projects-list-row__metrics" aria-label={t('projects.metricsAria')}>
+        <p className="ds-collection-hub-list-meta" aria-label={t('projects.metricsAria')}>
+          <span>{domain ?? t('projects.noDomain')}</span>
+          <span aria-hidden> · </span>
           <span>{t('projects.scanCount', { count: project.scanCount.toLocaleString() })}</span>
-          <span aria-hidden>·</span>
+          <span aria-hidden> · </span>
           <span>{formatScanShort(project.lastScanAt)}</span>
         </p>
       </div>
@@ -182,7 +181,7 @@ export function ProjectListPanel({
 }) {
   const [query, setQuery] = useState('')
   const [capFilter, setCapFilter] = useState<CapFilter>('all')
-  const [view, setView] = useState<ProjectsView>('tiles')
+  const { layout, setLayout } = useHubIndexLayout()
   const [createOpen, setCreateOpen] = useState(Boolean(bindPlatformProjectId))
   const [editTarget, setEditTarget] = useState<ProjectDetail | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null)
@@ -244,18 +243,11 @@ export function ProjectListPanel({
             </Chip>
           ))}
         </FilterRow>
-        <FilterRow role="group" aria-label={t('projects.layoutAria')}>
-          <Chip size="sm" selected={view === 'tiles'} onClick={() => setView('tiles')}>
-            {t('projects.tiles')}
-          </Chip>
-          <Chip size="sm" selected={view === 'list'} onClick={() => setView('list')}>
-            {t('projects.list')}
-          </Chip>
-        </FilterRow>
+        <HubIndexLayoutSwitch layout={layout} onChange={setLayout} />
       </div>
 
       <div className="checkion-collection-list">
-        {view === 'tiles' ? (
+        {layout === 'cards' ? (
           <div className="ds-collection-hub-grid" aria-label={t('projects.listAria')}>
             <CreateProjectCard onClick={() => setCreateOpen(true)} />
             {filtered.map((project) => (

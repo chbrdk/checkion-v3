@@ -125,7 +125,7 @@ Public landing: `/share/[token]` · API `/api/share`
 - Staging base for AUDION links: `NEXT_PUBLIC_CHECKION_URL` / `URL_CHECKION_V3` = `https://checkion-v3.projects-a.plygrnd.tech`
 
 ## Projects
-- Route: `/projects` (`paths.routes.projects`) — magazine collection hub (plexon-v3 Collection card composition)
+- Route: `/projects` (`paths.routes.projects`) — magazine collection hub · Cards/List via `HubIndexLayoutSwitch` · `paths.hubIndexLayoutKey` · `.app-main { max-width: none }` (Audion SSOT)
 - Detail: `/projects/:id` (`paths.routes.projectDetail`) — magazine cover · corpus pulse · single/domain/GEO chapter lists · **GEO History** (`paths.routes.projectGeoHistory` → `?chapter=geo-history`)
 - Deep-link: `/projects?platformProjectId=` → bound detail or create dialog
 - API: `GET/POST /api/projects` · `GET/PATCH /api/projects/:id` · `POST /api/projects/:id/archive` (global Collection archive; `DELETE` = archive alias)
