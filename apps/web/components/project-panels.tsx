@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Button, CardActions, Chip, CollectionHubCard, CollectionHubMetric, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
