@@ -25,18 +25,23 @@ async function dbApi() {
 
 let memoryOverviews: GeoOverview[] = GEO_OVERVIEWS.map((o) => structuredClone(o))
 
-export async function listGeoJobs(): Promise<GeoJobSummary[]> {
-  if (isDatabaseConfigured()) return (await dbApi()).dbListGeoJobs()
-  return memoryOverviews.map((o) => ({ ...o.job }))
+export async function listGeoJobs(options?: {
+  projectId?: string
+  limit?: number
+}): Promise<GeoJobSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListGeoJobs(options)
+  let jobs = memoryOverviews.map((o) => ({ ...o.job }))
+  if (options?.projectId) jobs = jobs.filter((j) => j.projectId === options.projectId)
+  if (options?.limit && options.limit > 0) jobs = jobs.slice(0, options.limit)
+  return jobs
 }
 
 /** Completed + in-progress overviews for a project (memory / DB). */
 export async function listGeoOverviewsForProject(projectId: string): Promise<GeoOverview[]> {
   if (isDatabaseConfigured()) {
-    const jobs = await (await dbApi()).dbListGeoJobs()
-    const forProject = jobs.filter((j) => j.projectId === projectId)
+    const jobs = await (await dbApi()).dbListGeoJobs({ projectId })
     const out: GeoOverview[] = []
-    for (const job of forProject) {
+    for (const job of jobs) {
       const overview = await (await dbApi()).dbGetGeoOverview(job.id)
       if (overview) out.push(overview)
     }

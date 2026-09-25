@@ -43,52 +43,53 @@ export async function filterItemsByAccessibleProject<T extends { projectId: stri
 export async function listScansForViewer(
   viewerId: string | null,
   projectId?: string,
+  options?: { limit?: number },
 ): Promise<ScanSummary[]> {
   if (isOpenAccessMode()) {
-    return projectId ? listScans(projectId) : listScans()
+    return projectId ? listScans(projectId, options) : listScans(undefined, options)
   }
   if (!viewerId) return []
   if (projectId) {
     const project = await getProject(projectId)
     if (!project || !(await viewerCanAccessProject(project, viewerId))) return []
-    return listScans(projectId)
+    return listScans(projectId, options)
   }
-  return filterItemsByAccessibleProject(await listScans(), viewerId)
+  return filterItemsByAccessibleProject(await listScans(undefined, options), viewerId)
 }
 
 export async function listDomainScansForViewer(
   viewerId: string | null,
   projectId?: string,
+  options?: { limit?: number },
 ): Promise<DomainScanLight[]> {
   if (isOpenAccessMode()) {
-    return projectId ? listDomainScans(projectId) : listDomainScans()
+    return projectId ? listDomainScans(projectId, options) : listDomainScans(undefined, options)
   }
   if (!viewerId) return []
   if (projectId) {
     const project = await getProject(projectId)
     if (!project || !(await viewerCanAccessProject(project, viewerId))) return []
-    return listDomainScans(projectId)
+    return listDomainScans(projectId, options)
   }
-  return filterItemsByAccessibleProject(await listDomainScans(), viewerId)
+  return filterItemsByAccessibleProject(await listDomainScans(undefined, options), viewerId)
 }
 
 export async function listGeoJobsForViewer(
   viewerId: string | null,
   projectId?: string,
+  options?: { limit?: number },
 ): Promise<GeoJobSummary[]> {
   if (isOpenAccessMode()) {
-    const all = await listGeoJobs()
-    return projectId ? all.filter((j) => j.projectId === projectId) : all
+    return listGeoJobs({ projectId, limit: options?.limit })
   }
   if (!viewerId) return []
-  const all = await listGeoJobs()
-  const scoped = projectId ? all.filter((j) => j.projectId === projectId) : all
+  const all = await listGeoJobs({ projectId, limit: options?.limit })
   if (projectId) {
     const project = await getProject(projectId)
     if (!project || !(await viewerCanAccessProject(project, viewerId))) return []
-    return scoped
+    return all
   }
-  return filterItemsByAccessibleProject(scoped, viewerId)
+  return filterItemsByAccessibleProject(all, viewerId)
 }
 
 export async function viewerCanAccessProjectId(

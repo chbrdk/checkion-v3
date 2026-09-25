@@ -564,9 +564,13 @@ function memoryReassignProjectResources(
   }
 }
 
-export async function listScans(projectId?: string): Promise<ScanSummary[]> {
-  if (isDatabaseConfigured()) return (await dbApi()).dbListScans(projectId)
-  return memoryListScans(projectId)
+export async function listScans(
+  projectId?: string,
+  options?: { limit?: number },
+): Promise<ScanSummary[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListScans(projectId, options)
+  const all = memoryListScans(projectId)
+  return options?.limit && options.limit > 0 ? all.slice(0, options.limit) : all
 }
 
 export async function listDomainCorpusPageScans(domainId: string): Promise<ScanSummary[]> {
@@ -594,9 +598,13 @@ export async function getScanScores(id: string): Promise<ScoreCard[]> {
   return memoryGetScanScores(id)
 }
 
-export async function listDomainScans(projectId?: string): Promise<DomainScanLight[]> {
-  if (isDatabaseConfigured()) return (await dbApi()).dbListDomainScans(projectId)
-  return memoryListDomainScans(projectId)
+export async function listDomainScans(
+  projectId?: string,
+  options?: { limit?: number },
+): Promise<DomainScanLight[]> {
+  if (isDatabaseConfigured()) return (await dbApi()).dbListDomainScans(projectId, options)
+  const all = memoryListDomainScans(projectId)
+  return options?.limit && options.limit > 0 ? all.slice(0, options.limit) : all
 }
 
 export async function getDomainScan(id: string): Promise<DomainScanLight | null> {

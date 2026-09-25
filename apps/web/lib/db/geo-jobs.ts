@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import type { GeoJobSummary, GeoMeasurement, GeoOverview } from '@checkion-v3/contracts'
 import { getDb } from './client'
 import { geoJobs, type GeoJobRow } from './schema'
@@ -87,10 +87,49 @@ function overviewColumns(overview: GeoOverview) {
   }
 }
 
-export async function dbListGeoJobs(): Promise<GeoJobSummary[]> {
+export async function dbListGeoJobs(options?: {
+  projectId?: string
+  limit?: number
+}): Promise<GeoJobSummary[]> {
   const db = getDb()
-  const rows = await db.select().from(geoJobs).orderBy(desc(geoJobs.createdAt))
-  return rows.map((row) => rowToOverview(row).job)
+  const limit = options?.limit && options.limit > 0 ? options.limit : undefined
+  // Hub lists need job cards, not full GEO overview JSON.
+  const base = db
+    .select({
+      id: geoJobs.id,
+      title: geoJobs.title,
+      projectId: geoJobs.projectId,
+      url: geoJobs.url,
+      status: geoJobs.status,
+      overallScore: geoJobs.overallScore,
+      completedAt: geoJobs.completedAt,
+      queryCount: geoJobs.queryCount,
+      modelCount: geoJobs.modelCount,
+      citedShare: geoJobs.citedShare,
+      measurement: sql<string | null>`${geoJobs.payload}->'overview'->'job'->>'measurement'`,
+      searchMarket: sql<string | null>`${geoJobs.payload}->'overview'->'job'->>'searchMarket'`,
+    })
+    .from(geoJobs)
+    .orderBy(desc(geoJobs.createdAt))
+  const rows = options?.projectId
+    ? await (limit
+        ? base.where(eq(geoJobs.projectId, options.projectId)).limit(limit)
+        : base.where(eq(geoJobs.projectId, options.projectId)))
+    : await (limit ? base.limit(limit) : base)
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    projectId: row.projectId,
+    url: row.url,
+    status: row.status as GeoJobSummary['status'],
+    overallScore: row.overallScore,
+    completedAt: row.completedAt,
+    queryCount: row.queryCount,
+    modelCount: row.modelCount,
+    citedShare: row.citedShare,
+    measurement: parseGeoMeasurement(row.measurement ?? undefined),
+    searchMarket: row.searchMarket?.trim() || undefined,
+  }))
 }
 
 export async function dbGetGeoOverview(id: string): Promise<GeoOverview | null> {

@@ -252,9 +252,12 @@ function memoryArchiveProject(id: string): ProjectDetail | null {
 
 /** Visible capability projects (excludes the system unassigned bucket). Unfiltered — prefer {@link listProjectsForViewer}. */
 export async function listProjects(): Promise<ProjectSummary[]> {
-  const base = isDatabaseConfigured()
-    ? await (await dbApi()).dbListProjects()
-    : memoryListProjects()
+  if (isDatabaseConfigured()) {
+    // Postgres rows already store scanCount/lastScanAt — do not reload every scan payload
+    // just to recompute hub badges (was multi-second on Staging with large corpora).
+    return (await dbApi()).dbListProjects()
+  }
+  const base = memoryListProjects()
   const [{ listScans, listDomainScans }, { listGeoJobs }] = await Promise.all([
     import('./scan-store'),
     import('./geo-store'),
@@ -288,7 +291,7 @@ export async function getProject(id: string): Promise<ProjectDetail | null> {
   const [scans, domains, geoJobs] = await Promise.all([
     listScans(id),
     listDomainScans(id),
-    listGeoJobs(),
+    listGeoJobs({ projectId: id }),
   ])
   const { computeProjectActivityMetrics } = await import('../project-activity')
   const metrics = computeProjectActivityMetrics(id, { scans, domains, geoJobs })

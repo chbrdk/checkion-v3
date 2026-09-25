@@ -16,9 +16,10 @@ export default async function HomePage() {
   const viewerId = session?.user?.id ?? null
   const [projects, scans, domains, geoJobs] = await Promise.all([
     listProjectsForViewer(viewerId),
-    listScansForViewer(viewerId),
-    listDomainScansForViewer(viewerId),
-    listGeoJobsForViewer(viewerId),
+    // Home magazine only needs recent teasers — avoid loading every scan payload.
+    listScansForViewer(viewerId, undefined, { limit: 40 }),
+    listDomainScansForViewer(viewerId, undefined, { limit: 40 }),
+    listGeoJobsForViewer(viewerId, undefined, { limit: 40 }),
   ])
 
   return (

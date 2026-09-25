@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import type {
   DomainOverview,
   DomainScanLight,
@@ -109,8 +109,27 @@ async function recoverStaleBackgroundScans(): Promise<void> {
   lastRecoverySweepAt = now
 
   const db = getDb()
-  const activeDomainRows = await db.select().from(domainScans)
-  const activeScanRows = await db.select().from(scans)
+  const activeStatuses = ['queued', 'running', 'paused', 'cancelling'] as const
+  // Only active rows + skip full overview/issues blobs — list pages hit this often.
+  const activeDomainRows = await db
+    .select({
+      id: domainScans.id,
+      status: domainScans.status,
+      updatedAt: domainScans.updatedAt,
+      payload: domainScans.payload,
+    })
+    .from(domainScans)
+    .where(inArray(domainScans.status, [...activeStatuses]))
+  const activeScanRows = await db
+    .select({
+      id: scans.id,
+      mode: scans.mode,
+      status: scans.status,
+      updatedAt: scans.updatedAt,
+      payload: scans.payload,
+    })
+    .from(scans)
+    .where(inArray(scans.status, [...activeStatuses]))
   const staleDomainRows = activeDomainRows.filter(
     (row) =>
       isStaleSweepDomainStatus(row.status) &&
@@ -239,17 +258,48 @@ function rowToDomain(row: DomainScanRow): DomainScanLight {
   }
 }
 
-export async function dbListScans(projectId?: string): Promise<ScanSummary[]> {
+export async function dbListScans(
+  projectId?: string,
+  options?: { limit?: number },
+): Promise<ScanSummary[]> {
   await recoverStaleBackgroundScans()
   const db = getDb()
+  const limit = options?.limit && options.limit > 0 ? options.limit : undefined
+  // List hubs do not need overview/issues blobs in payload — only domainScanId + error.
+  const base = db
+    .select({
+      id: scans.id,
+      projectId: scans.projectId,
+      mode: scans.mode,
+      url: scans.url,
+      status: scans.status,
+      startedAt: scans.startedAt,
+      completedAt: scans.completedAt,
+      overallScore: scans.overallScore,
+      issueCount: scans.issueCount,
+      domainScanId: sql<string | null>`${scans.payload}->'scan'->>'domainScanId'`,
+      error: sql<string | null>`${scans.payload}->>'error'`,
+    })
+    .from(scans)
+    .orderBy(desc(scans.createdAt))
   const rows = projectId
-    ? await db
-        .select()
-        .from(scans)
-        .where(eq(scans.projectId, projectId))
-        .orderBy(desc(scans.createdAt))
-    : await db.select().from(scans).orderBy(desc(scans.createdAt))
-  return rows.map(rowToScan)
+    ? await (limit
+        ? base.where(eq(scans.projectId, projectId)).limit(limit)
+        : base.where(eq(scans.projectId, projectId)))
+    : await (limit ? base.limit(limit) : base)
+  return rows.map((row) => ({
+    id: row.id,
+    projectId: row.projectId,
+    mode: row.mode as ScanSummary['mode'],
+    url: row.url,
+    domainScanId: row.domainScanId?.trim() || undefined,
+    status: row.status as ScanSummary['status'],
+    startedAt: row.startedAt,
+    completedAt: row.completedAt,
+    overallScore: row.overallScore,
+    issueCount: row.issueCount,
+    error: row.error ?? undefined,
+  }))
 }
 
 async function dbGetScanRow(id: string): Promise<ScanRow | null> {
@@ -384,17 +434,58 @@ export async function dbGetScanOverview(id: string): Promise<ScanOverview | null
   return null
 }
 
-export async function dbListDomainScans(projectId?: string): Promise<DomainScanLight[]> {
+export async function dbListDomainScans(
+  projectId?: string,
+  options?: { limit?: number },
+): Promise<DomainScanLight[]> {
   await recoverStaleBackgroundScans()
   const db = getDb()
+  const limit = options?.limit && options.limit > 0 ? options.limit : undefined
+  const base = db
+    .select({
+      id: domainScans.id,
+      projectId: domainScans.projectId,
+      rootUrl: domainScans.rootUrl,
+      status: domainScans.status,
+      pageCount: domainScans.pageCount,
+      overallScore: domainScans.overallScore,
+      issueCount: domainScans.issueCount,
+      startedAt: domainScans.startedAt,
+      completedAt: domainScans.completedAt,
+      title: sql<string | null>`${domainScans.payload}->'domain'->>'title'`,
+      error: sql<string | null>`${domainScans.payload}->>'error'`,
+      progressScanned: sql<number | null>`(${domainScans.payload}->'progress'->>'scanned')::int`,
+      progressTotal: sql<number | null>`(${domainScans.payload}->'progress'->>'total')::int`,
+      progressUrl: sql<string | null>`${domainScans.payload}->'progress'->>'currentUrl'`,
+    })
+    .from(domainScans)
+    .orderBy(desc(domainScans.createdAt))
   const rows = projectId
-    ? await db
-        .select()
-        .from(domainScans)
-        .where(eq(domainScans.projectId, projectId))
-        .orderBy(desc(domainScans.createdAt))
-    : await db.select().from(domainScans).orderBy(desc(domainScans.createdAt))
-  return rows.map(rowToDomain)
+    ? await (limit
+        ? base.where(eq(domainScans.projectId, projectId)).limit(limit)
+        : base.where(eq(domainScans.projectId, projectId)))
+    : await (limit ? base.limit(limit) : base)
+  return rows.map((row) => ({
+    id: row.id,
+    projectId: row.projectId,
+    rootUrl: row.rootUrl,
+    status: row.status as DomainScanLight['status'],
+    pageCount: row.pageCount,
+    overallScore: row.overallScore,
+    issueCount: row.issueCount,
+    startedAt: row.startedAt,
+    completedAt: row.completedAt,
+    title: row.title?.trim() || undefined,
+    error: row.error ?? undefined,
+    progress:
+      row.progressScanned != null && row.progressTotal != null
+        ? {
+            scanned: row.progressScanned,
+            total: row.progressTotal,
+            currentUrl: row.progressUrl ?? undefined,
+          }
+        : undefined,
+  }))
 }
 
 async function dbGetDomainScanRow(id: string): Promise<DomainScanRow | null> {

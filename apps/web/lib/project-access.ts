@@ -4,6 +4,7 @@
  * Spec: specs/domain/access-model-b-visibility.md
  */
 
+import { cache } from 'react'
 import { getPlexonContractHeaders } from './plexon-contract'
 import { paths } from './paths'
 import {
@@ -35,10 +36,10 @@ export async function resolveViewerId(
  * Fetch Collection ids the user may see from Plexon (P71).
  * Pages through `nextCursor` so visibility is not truncated at 50.
  * Returns null when federation is unavailable (caller should use owner fallback).
+ * Cached per React request so list hubs do not re-page Plexon on every ACL check.
  */
-export async function fetchAccessiblePlatformProjectIds(
-  plexonUserId: string,
-): Promise<Set<string> | null> {
+export const fetchAccessiblePlatformProjectIds = cache(
+  async (plexonUserId: string): Promise<Set<string> | null> => {
   if (getFederationMode() !== 'live' || !isPlexonFederationConfigured()) {
     return null
   }
@@ -87,7 +88,8 @@ export async function fetchAccessiblePlatformProjectIds(
   } catch {
     return null
   }
-}
+  },
+)
 
 export function projectVisibleToOwner(
   project: ProjectAccessFields,
