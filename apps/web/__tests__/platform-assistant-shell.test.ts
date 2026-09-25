@@ -12,6 +12,7 @@ describe('checkion platform assistant shell mount', () => {
     expect(shell).toContain('ShellBrandCorner')
     expect(shell).not.toContain('topbar={')
     expect(host).toContain('postPlatformAssistantTheme')
+    expect(host).toContain('embedSrcLockedRef')
     expect(host).toContain('headerActions')
     expect(paths).toContain('envPlexonPublicUrl')
     expect(paths).toContain('NEXT_PUBLIC_PLEXON_URL')
