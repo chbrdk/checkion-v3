@@ -223,6 +223,10 @@ export function buildRankChapterModel(input: {
         meta: movers.length
           ? `${movers.length} movers · this check`
           : 'No movement yet · need a prior check',
+        columns: base.aside?.ledger?.columns ?? [
+          { key: 'keyword', label: 'Tracked', dual: true },
+          { key: 'change', label: 'Δ', align: 'end' },
+        ],
         rows: movers,
       },
     },
