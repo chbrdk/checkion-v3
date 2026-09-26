@@ -1,6 +1,6 @@
 # Cleanup inventory — checkion-v3
 
-**Date:** 2026-09-26  
+**Date:** 2026-09-26 (Prio 5 Sweeper: drop_safe magazine/Coolify/SEFE orphans purged)  
 **Inventor:** agent (suite cleanup · Inventor)
 
 | Path | Klasse | Nachweis | Notes |
@@ -11,12 +11,12 @@
 | `knowledge/project-hub-migration-map.md` | keep | specs-inventory + specs-index | Collection/Hub-Mapping; Wave-5-Hinweise noch referenzwürdig. |
 | `knowledge/dummy-data-mode.md` | keep | specs-inventory · `knowledge/paths.md` · `specs/domain/geo-answer-insights.md` | Aktive Fixture/Live-Gates; nicht obsolet trotz Keep-Drop-Kandidat „dummy-data notes“. |
 | `apps/web/lib/fixtures/` (Corpus + `*-store.ts`) | reshape | Breite Import-Graph (App-Routes, APIs, Vitest) · Keep-Drop „Fixture-heavy local mode“ | Bleibt bis Staging/live-only; kein drop_safe (Runtime + Tests). |
-| `knowledge/magazine-button.md` | drop_safe | Repo-Suche: keine Pfad-Strings außer Datei selbst | Einzeiler-Verweis auf `msqdx-ui`; kein specs-inventory-Eintrag. |
-| `knowledge/magazine-lede-filter.md` | drop_safe | Keine Imports/Spec-Refs im Repo | Cutover-Notiz 2026-08-03; SSOT ist msqdx-ui `lede-filter-panel`. |
+| `knowledge/magazine-button.md` | drop_safe **done** 2026-09-26 | Purged | SSOT msqdx-ui. |
+| `knowledge/magazine-lede-filter.md` | drop_safe **done** 2026-09-26 | Purged | SSOT msqdx-ui `lede-filter-panel`. |
 | `knowledge/lab-tile-migration.md` | defer | Keine Code-Refs; LabTile live in UI/Tests | Historische Local-Iteration; optional in `paths.md` MSQDX_UI_REF konsolidieren vor Drop. |
-| `knowledge/coolify-build-fix-2026-08-11-chatoverlay.md` | drop_safe | Nur von `coolify-build-fix-2026-09-17-labtile.md` zitiert | Incident-Postmortem; Pin-Narrativ lebt in `knowledge/paths.md` / Dockerfile-Gate. |
-| `knowledge/coolify-build-fix-2026-09-17-labtile.md` | drop_safe | Wie oben; nicht in paths/specs-inventory | Gleiches Muster ChatOverlay; nach Gatekeeper mit 08-11 zusammen prüfen. |
-| `knowledge/sefe-staging-reset-2026-09-21.md` | drop_safe | Keine Repo-Refs | Einmalige Staging-Ops (SEFE archive); verweist auf fehlendes AUDION-Doc `target-group-project-id-alias.md`. |
+| `knowledge/coolify-build-fix-2026-08-11-chatoverlay.md` | drop_safe **done** 2026-09-26 | Purged | Pin-Narrativ in `knowledge/paths.md` / Dockerfile-Gate. |
+| `knowledge/coolify-build-fix-2026-09-17-labtile.md` | drop_safe **done** 2026-09-26 | Purged | Gleiches Muster ChatOverlay. |
+| `knowledge/sefe-staging-reset-2026-09-21.md` | drop_safe **done** 2026-09-26 | Purged | Einmalige Staging-Ops. |
 | `knowledge/deep-scan-score-parity.md` | defer | Keine Pfad-Refs; Verhalten in `specs/domain/scoring.md` + Code | Nützliche Ops-Erklärung `scoresByKind`; vor drop_safe in Spec oder scoring.md mergen. |
 | `knowledge/scan-worker-job-timeout-hdi-2026-09-23.md` | defer | Keine direkten Knowledge-Links; Fix in Code/Spec-Pfade | HDI-Timeout-Incident; behalten bis in `scan-worker`/`paths` Runbook verkürzt. |
 | `knowledge/distillate-call-sites.md` | keep | `apps/web/__tests__/distillate-call-sites.test.ts` liest Datei | Enterprise-Distillate-Inventar; Test-gestützt. |
