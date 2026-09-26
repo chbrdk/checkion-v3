@@ -42,6 +42,7 @@ export async function POST(
     const result = await projectCompetitors(
       auth.projectId,
       Array.isArray(body.keywords) ? body.keywords : [],
+      { userId: auth.viewerId },
     )
     return NextResponse.json(result)
   } catch (e) {

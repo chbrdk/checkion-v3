@@ -30,7 +30,7 @@ export async function POST(
   const auth = await requireProjectSeoApi(request, id)
   if (!auth.ok) return auth.response
   try {
-    const snapshot = await projectRefreshDomain(auth.projectId)
+    const snapshot = await projectRefreshDomain(auth.projectId, { userId: auth.viewerId })
     return NextResponse.json(snapshot)
   } catch (e) {
     return projectSeoErrorResponse(e)

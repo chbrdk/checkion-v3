@@ -20,6 +20,11 @@ import {
   type SuggestEvidence,
 } from './suggest-evidence'
 import { gatherSiteCorpus, type SitePageCorpus } from './url-suggest-context'
+import {
+  addLlmUsage,
+  parseOpenRouterUsage,
+  type LlmTokenUsage,
+} from '../usage-report'
 
 /** OpenRouter web plugin result cap for Distill (Phase 7). */
 export const SUGGEST_WEB_MAX_RESULTS = 5
@@ -36,6 +41,8 @@ export type SuggestAgentResult = {
   keywords: string[]
   model: string
   brief: SuggestCompanyBrief
+  /** Aggregated OpenRouter usage across Distill + keyword calls. */
+  llmUsage: LlmTokenUsage
   agent: {
     steps: string[]
     pagesFetched: string[]
@@ -83,7 +90,7 @@ async function openRouterJson(input: {
   maxTokens?: number
   /** Phase 7 — OpenRouter web plugin (Distill only). */
   web?: { maxResults: number }
-}): Promise<{ parsed: unknown; model: string }> {
+}): Promise<{ parsed: unknown; model: string; usage: LlmTokenUsage }> {
   const key = openRouterKey()
   if (!key) {
     throw new FieldSuggestError(
@@ -125,6 +132,8 @@ async function openRouterJson(input: {
   }
   const json = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>
+    model?: string
+    usage?: unknown
   }
   const content = json.choices?.[0]?.message?.content ?? '{}'
   let parsed: unknown = {}
@@ -140,7 +149,13 @@ async function openRouterJson(input: {
       }
     }
   }
-  return { parsed, model }
+  const usage = parseOpenRouterUsage(json, {
+    system: input.system,
+    user: input.user,
+    content,
+    model: typeof json.model === 'string' ? json.model : model,
+  })
+  return { parsed, model: typeof json.model === 'string' ? json.model : model, usage }
 }
 
 function knowledgeBlock(knowledge: GeoKnowledgeEnrichment | null | undefined): string | null {
@@ -260,7 +275,8 @@ export async function runMarketSuggestResearchAgent(input: {
     .join('\n\n')
 
   steps.push('distill_brief')
-  let distill: { parsed: unknown; model: string }
+  let distill: { parsed: unknown; model: string; usage: LlmTokenUsage }
+  let llmUsage: LlmTokenUsage = { input_tokens: 0, output_tokens: 0 }
   try {
     distill = await openRouterJson({
       system: DISTILL_SYSTEM,
@@ -282,6 +298,7 @@ export async function runMarketSuggestResearchAgent(input: {
     usedWebSearch = false
     steps.push('web_research_skipped')
   }
+  llmUsage = addLlmUsage(llmUsage, distill.usage)
 
   const fallbackSummary =
     pages.find((p) => p.description)?.description ||
@@ -332,6 +349,7 @@ export async function runMarketSuggestResearchAgent(input: {
     temperature: 0.35,
     maxTokens: 450,
   })
+  llmUsage = addLlmUsage(llmUsage, gen.usage)
 
   const keywords = sanitizeSuggestKeywords(
     mergeKeywordCandidates(
@@ -356,6 +374,7 @@ export async function runMarketSuggestResearchAgent(input: {
     keywords,
     model: gen.model,
     brief,
+    llmUsage,
     agent: {
       steps,
       pagesFetched,

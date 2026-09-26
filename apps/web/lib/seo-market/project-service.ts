@@ -47,6 +47,7 @@ import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
 } from './store'
+import { reportLlmUsage, reportSeoDataForSeoUsage } from '../usage-report'
 import {
   completeRankRun,
   createRankConfig,
@@ -75,6 +76,27 @@ import {
   liveGscPerformance,
   listGscSites,
 } from './gsc-client'
+
+async function recordVendorAndPlexon(input: {
+  projectId: string
+  endpoint: string
+  units: number
+  costUsd: number
+  userId?: string | null
+}): Promise<void> {
+  await recordSeoMarketUsage({
+    projectId: input.projectId,
+    endpoint: input.endpoint,
+    units: input.units,
+  })
+  reportSeoDataForSeoUsage({
+    userId: input.userId,
+    costUsd: input.costUsd,
+    endpoint: input.endpoint,
+    projectId: input.projectId,
+    softCapUnits: input.units,
+  })
+}
 
 export async function getSeoProjectOverview(projectId: string): Promise<SeoProjectOverview> {
   const project = await getProject(projectId)
@@ -123,6 +145,7 @@ export async function projectResearchKeywords(input: {
   seed: string
   limit?: number
   save?: boolean
+  userId?: string | null
 }): Promise<{ ideas: SeoKeywordIdea[]; saved: SeoSavedKeywordRow[] }> {
   let ideas: SeoKeywordIdea[]
   if (!shouldRunLiveSeoMarket()) {
@@ -134,15 +157,17 @@ export async function projectResearchKeywords(input: {
   } else {
     await assertSeoMarketSoftCap(input.projectId, 1)
     try {
-      const { result, units } = await liveKeywords({
+      const { result, units, costUsd } = await liveKeywords({
         projectId: input.projectId,
         seed: input.seed,
         limit: input.limit,
       })
-      await recordSeoMarketUsage({
+      await recordVendorAndPlexon({
         projectId: input.projectId,
         endpoint: 'keywords',
         units,
+        costUsd,
+        userId: input.userId,
       })
       ideas = result.items
     } catch (e) {
@@ -160,7 +185,10 @@ export async function projectResearchKeywords(input: {
   return { ideas, saved }
 }
 
-export async function projectRefreshDomain(projectId: string): Promise<SeoDomainSnapshot> {
+export async function projectRefreshDomain(
+  projectId: string,
+  opts?: { userId?: string | null },
+): Promise<SeoDomainSnapshot> {
   const project = await getProject(projectId)
   if (!project?.domain) throw new Error('project has no domain')
   const domain = normalizeDomain(project.domain)
@@ -172,10 +200,12 @@ export async function projectRefreshDomain(projectId: string): Promise<SeoDomain
     await assertSeoMarketSoftCap(projectId, 2)
     try {
       const live = await liveDomainOverview({ projectId, domain })
-      await recordSeoMarketUsage({
+      await recordVendorAndPlexon({
         projectId,
         endpoint: 'domain-overview',
         units: live.units,
+        costUsd: live.costUsd,
+        userId: opts?.userId,
       })
       result = live.result
     } catch (e) {
@@ -197,7 +227,10 @@ export async function projectRefreshDomain(projectId: string): Promise<SeoDomain
   })
 }
 
-export async function projectRefreshBacklinks(projectId: string): Promise<SeoBacklinkSnapshot> {
+export async function projectRefreshBacklinks(
+  projectId: string,
+  opts?: { userId?: string | null },
+): Promise<SeoBacklinkSnapshot> {
   const project = await getProject(projectId)
   if (!project?.domain) throw new Error('project has no domain')
   const domain = normalizeDomain(project.domain)
@@ -209,10 +242,12 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
     await assertSeoMarketSoftCap(projectId, 20)
     try {
       const live = await liveBacklinks({ projectId, domain })
-      await recordSeoMarketUsage({
+      await recordVendorAndPlexon({
         projectId,
         endpoint: 'backlinks',
         units: live.units,
+        costUsd: live.costUsd,
+        userId: opts?.userId,
       })
       result = live.result
     } catch (e) {
@@ -232,6 +267,7 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
 export async function projectCompetitors(
   projectId: string,
   keywords: string[],
+  opts?: { userId?: string | null },
 ): Promise<SeoCompetitorSnapshot> {
   const project = await getProject(projectId)
   const domain = project?.domain ? normalizeDomain(project.domain) : 'example.com'
@@ -257,10 +293,12 @@ export async function projectCompetitors(
     await assertSeoMarketSoftCap(projectId, kw.length)
     const counts = new Map<string, { overlap: number; rankSum: number; n: number }>()
     let units = 0
+    let costUsd = 0
     try {
       for (const keyword of kw.slice(0, 10)) {
-        const { result: serp, units: u } = await liveSerp({ projectId, keyword })
+        const { result: serp, units: u, costUsd: c } = await liveSerp({ projectId, keyword })
         units += u
+        costUsd += c
         for (const item of serp.items) {
           const d = item.domain.toLowerCase()
           const brand = brandSeedFromHost(domain)
@@ -272,7 +310,13 @@ export async function projectCompetitors(
           counts.set(d, cur)
         }
       }
-      await recordSeoMarketUsage({ projectId, endpoint: 'competitors', units })
+      await recordVendorAndPlexon({
+        projectId,
+        endpoint: 'competitors',
+        units,
+        costUsd,
+        userId: opts?.userId,
+      })
       result = {
         source: 'dataforseo',
         stubbed: false,
@@ -307,6 +351,7 @@ export async function projectSuggestFieldKeywords(input: {
   projectId: string
   locale?: string
   seedHint?: string
+  userId?: string | null
 }): Promise<SeoFieldSuggestResult> {
   return projectSuggestMarketKeywords({ ...input, surface: 'field' })
 }
@@ -315,6 +360,7 @@ export async function projectSuggestResearchSeeds(input: {
   projectId: string
   locale?: string
   seedHint?: string
+  userId?: string | null
 }): Promise<SeoFieldSuggestResult> {
   return projectSuggestMarketKeywords({ ...input, surface: 'research' })
 }
@@ -323,6 +369,7 @@ export async function projectSuggestRankTrackSet(input: {
   projectId: string
   locale?: string
   seedHint?: string
+  userId?: string | null
 }): Promise<SeoFieldSuggestResult> {
   return projectSuggestMarketKeywords({ ...input, surface: 'ranks' })
 }
@@ -332,6 +379,7 @@ async function projectSuggestMarketKeywords(input: {
   surface: 'field' | 'research' | 'ranks'
   locale?: string
   seedHint?: string
+  userId?: string | null
 }): Promise<SeoFieldSuggestResult> {
   const project = await getProject(input.projectId)
   if (!project?.domain) throw new Error('project has no domain')
@@ -491,6 +539,13 @@ async function projectSuggestMarketKeywords(input: {
       }
     }
 
+    reportLlmUsage({
+      userId: input.userId,
+      usage: agentResult.llmUsage,
+      surface: input.surface,
+      idempotencyKey: `seo-suggest:${input.projectId}:${input.surface}:${fetchedAt}`,
+    })
+
     return {
       projectId: input.projectId,
       domain,
@@ -546,7 +601,10 @@ export async function projectCreateRankConfig(input: {
   })
 }
 
-export async function projectRefreshRankConfig(configId: string): Promise<SeoRankConfig> {
+export async function projectRefreshRankConfig(
+  configId: string,
+  opts?: { userId?: string | null },
+): Promise<SeoRankConfig> {
   const config = await getRankConfig(configId)
   if (!config) throw new Error('not_found')
   await assertSeoMarketSoftCap(config.projectId, config.keywords.length || 1)
@@ -562,10 +620,12 @@ export async function projectRefreshRankConfig(configId: string): Promise<SeoRan
         locationCode: config.locationCode,
         languageCode: config.languageCode,
       })
-      await recordSeoMarketUsage({
+      await recordVendorAndPlexon({
         projectId: config.projectId,
         endpoint: 'rank-refresh',
         units: live.units,
+        costUsd: live.costUsd,
+        userId: opts?.userId,
       })
       snapshots = live.snapshots
     } catch (e) {

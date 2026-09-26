@@ -28,6 +28,7 @@ type DataForSeoEnvelope = {
 async function dataForSeoPost(path: string, body: unknown[]): Promise<{
   envelope: DataForSeoEnvelope
   units: number
+  costUsd: number
 }> {
   const key = requireDataForSeoKey()
   const url = `${paths.dataForSeoApiBase}${path}`
@@ -54,8 +55,9 @@ async function dataForSeoPost(path: string, body: unknown[]): Promise<{
   if (task?.status_code && task.status_code >= 40000) {
     throw new Error(task.status_message ?? `DataForSEO task ${task.status_code}`)
   }
-  const units = Math.max(1, Math.ceil(Number(envelope.cost ?? task?.cost ?? 1) * 100) || 1)
-  return { envelope, units }
+  const costUsd = Math.max(0, Number(envelope.cost ?? task?.cost ?? 0) || 0)
+  const units = Math.max(1, Math.ceil(costUsd * 100) || 1)
+  return { envelope, units, costUsd }
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -68,9 +70,9 @@ export async function liveKeywords(input: {
   locationCode?: number
   languageCode?: string
   limit?: number
-}): Promise<{ result: SeoKeywordsResult; units: number }> {
+}): Promise<{ result: SeoKeywordsResult; units: number; costUsd: number }> {
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 50)
-  const { envelope, units } = await dataForSeoPost(
+  const { envelope, units, costUsd } = await dataForSeoPost(
     '/keywords_data/google_ads/keywords_for_keywords/live',
     [
       {
@@ -96,6 +98,7 @@ export async function liveKeywords(input: {
   }).filter((k) => k.keyword)
 
   let unitsTotal = units
+  let costTotal = costUsd
   const keywords = items.map((i) => i.keyword).filter(Boolean).slice(0, limit)
   if (keywords.length > 0) {
     try {
@@ -104,6 +107,7 @@ export async function liveKeywords(input: {
         [{ keywords, location_code: input.locationCode ?? 2840, language_code: input.languageCode ?? 'en' }],
       )
       unitsTotal += kd.units
+      costTotal += kd.costUsd
       const kdResult = kd.envelope.tasks?.[0]?.result
       const kdFirst = Array.isArray(kdResult) ? asRecord(kdResult[0]) : null
       const kdItems =
@@ -132,6 +136,7 @@ export async function liveKeywords(input: {
 
   return {
     units: unitsTotal,
+    costUsd: costTotal,
     result: {
       source: 'dataforseo',
       stubbed: false,
@@ -148,8 +153,8 @@ export async function liveSerp(input: {
   keyword: string
   locationCode?: number
   languageCode?: string
-}): Promise<{ result: SeoSerpResult; units: number }> {
-  const { envelope, units } = await dataForSeoPost('/serp/google/organic/live/regular', [
+}): Promise<{ result: SeoSerpResult; units: number; costUsd: number }> {
+  const { envelope, units, costUsd } = await dataForSeoPost('/serp/google/organic/live/regular', [
     {
       keyword: input.keyword,
       location_code: input.locationCode ?? 2840,
@@ -174,6 +179,7 @@ export async function liveSerp(input: {
   }
   return {
     units,
+    costUsd,
     result: {
       source: 'dataforseo',
       stubbed: false,
@@ -188,9 +194,9 @@ export async function liveSerp(input: {
 export async function liveDomainOverview(input: {
   projectId: string
   domain: string
-}): Promise<{ result: SeoDomainOverviewResult; units: number }> {
+}): Promise<{ result: SeoDomainOverviewResult; units: number; costUsd: number }> {
   const domain = input.domain.replace(/^https?:\/\//, '').replace(/\/$/, '')
-  const { envelope, units } = await dataForSeoPost(
+  const { envelope, units, costUsd } = await dataForSeoPost(
     '/dataforseo_labs/google/domain_rank_overview/live',
     [{ target: domain }],
   )
@@ -201,12 +207,14 @@ export async function liveDomainOverview(input: {
 
   let topKeywords: SeoKeywordIdea[] = []
   let kwUnits = 0
+  let kwCost = 0
   try {
     const ranked = await dataForSeoPost(
       '/dataforseo_labs/google/ranked_keywords/live',
       [{ target: domain, limit: 40 }],
     )
     kwUnits = ranked.units
+    kwCost = ranked.costUsd
     const kwResult = ranked.envelope.tasks?.[0]?.result
     const kwFirst = Array.isArray(kwResult) ? asRecord(kwResult[0]) : null
     const items = kwFirst && Array.isArray(kwFirst.items) ? kwFirst.items : []
@@ -229,6 +237,7 @@ export async function liveDomainOverview(input: {
 
   return {
     units: units + kwUnits,
+    costUsd: costUsd + kwCost,
     result: {
       source: 'dataforseo',
       stubbed: false,
@@ -250,7 +259,7 @@ export async function liveBacklinks(input: {
   domain: string
   /** Max referring pages to pull (default 25, max 50). */
   limit?: number
-}): Promise<{ result: SeoBacklinksResult; units: number }> {
+}): Promise<{ result: SeoBacklinksResult; units: number; costUsd: number }> {
   return fetchLiveBacklinksPack(dataForSeoPost, input)
 }
 
@@ -262,6 +271,7 @@ export async function liveKeywordPositions(input: {
 }): Promise<{
   snapshots: Array<{ keyword: string; rank: number | null; url: string | null; fetchedAt: string }>
   units: number
+  costUsd: number
 }> {
   const domain = input.domain.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
   const at = new Date().toISOString()
@@ -272,6 +282,7 @@ export async function liveKeywordPositions(input: {
     fetchedAt: string
   }> = []
   let units = 0
+  let costUsd = 0
   for (const keyword of input.keywords.slice(0, 20)) {
     const serp = await liveSerp({
       projectId: '_rank',
@@ -280,6 +291,7 @@ export async function liveKeywordPositions(input: {
       languageCode: input.languageCode,
     })
     units += serp.units
+    costUsd += serp.costUsd
     const brand = brandSeedFromHost(domain)
     const hit =
       serp.result.items.find(
@@ -292,5 +304,5 @@ export async function liveKeywordPositions(input: {
       fetchedAt: at,
     })
   }
-  return { snapshots, units }
+  return { snapshots, units, costUsd }
 }

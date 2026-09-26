@@ -22,6 +22,7 @@ export async function POST(
       projectId: auth.projectId,
       locale: typeof body.locale === 'string' ? body.locale : undefined,
       seedHint: typeof body.seedHint === 'string' ? body.seedHint : undefined,
+      userId: auth.viewerId,
     })
     return NextResponse.json(result)
   } catch (e) {

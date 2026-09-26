@@ -67,6 +67,7 @@ export async function POST(
       seed,
       limit: body.limit,
       save: body.save ?? action === 'hydrate',
+      userId: auth.viewerId,
     })
     return NextResponse.json({
       projectId: auth.projectId,

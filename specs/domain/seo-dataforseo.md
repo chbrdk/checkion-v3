@@ -69,7 +69,7 @@ Persisted on `seo_backlink_snapshots` columns + `details` jsonb (items, anchors,
 - **Smart suggestions:** OpenRouter Qwen — Field (`/competitors/suggest`), Research seeds (`/keywords/suggest`), Ranks track-set (`/rank-configs/suggest`); fail closed without `OPENROUTER_API_KEY`
 
 ### Usage / cache
-Usage events → `seo_market_usage`. Cache → `seo_market_cache` (TTL).
+Usage events → `seo_market_usage` (Checkion soft-cap). Live vendor calls also POST Plexon `seo_dataforseo` with real `cost_usd` when a viewer `userId` is present. Cache → `seo_market_cache` (TTL).
 
 ## Soft cost cap
 Default soft cap: **80** billable units / Collection / calendar day. Exceeding returns `429 cost_soft_cap`.

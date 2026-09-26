@@ -19,7 +19,7 @@ export async function POST(
     if (!existing || existing.projectId !== auth.projectId) {
       return NextResponse.json({ error: 'not_found' }, { status: 404 })
     }
-    const config = await projectRefreshRankConfig(configId)
+    const config = await projectRefreshRankConfig(configId, { userId: auth.viewerId })
     return NextResponse.json(config)
   } catch (e) {
     return projectSeoErrorResponse(e)

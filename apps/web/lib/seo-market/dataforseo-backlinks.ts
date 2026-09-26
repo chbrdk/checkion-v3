@@ -29,7 +29,7 @@ type DataForSeoEnvelope = {
 type PostFn = (
   path: string,
   body: unknown[],
-) => Promise<{ envelope: DataForSeoEnvelope; units: number }>
+) => Promise<{ envelope: DataForSeoEnvelope; units: number; costUsd: number }>
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null
@@ -78,7 +78,7 @@ function yearAgoIso(): string {
 export async function fetchLiveBacklinksPack(
   post: PostFn,
   input: { projectId: string; domain: string; limit?: number },
-): Promise<{ result: SeoBacklinksResult; units: number }> {
+): Promise<{ result: SeoBacklinksResult; units: number; costUsd: number }> {
   const domain = input.domain
     .replace(/^https?:\/\//, '')
     .replace(/\/$/, '')
@@ -202,6 +202,7 @@ export async function fetchLiveBacklinksPack(
   ])
 
   let units = summaryCall.units
+  let costUsd = summaryCall.costUsd
   for (const c of [
     pagesCall,
     anchorsCall,
@@ -213,7 +214,10 @@ export async function fetchLiveBacklinksPack(
     competitorsCall,
     historyCall,
   ]) {
-    if (c) units += c.units
+    if (c) {
+      units += c.units
+      costUsd += c.costUsd
+    }
   }
 
   const first = firstResult(summaryCall.envelope)
@@ -475,6 +479,7 @@ export async function fetchLiveBacklinksPack(
 
   return {
     units,
+    costUsd,
     result: {
       source: 'dataforseo',
       stubbed: false,

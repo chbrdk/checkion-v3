@@ -54,6 +54,8 @@ Hard caps: ≤ 1 homepage + ≤ **6** deep pages; ≤ 2 LLM calls (Distill may b
 
 OpenRouter · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed `503` when unset and live Market is on.
 
+**Plexon usage:** Distill + keyword calls report `llm_request` with vendor `prompt_tokens` / `completion_tokens` (aliases accepted). Missing usage → char/4 estimate flagged `estimated: true`. Web-plugin tokens are included in Distill prompt usage when OpenRouter returns them.
+
 ## API shape (additive)
 
 `SeoFieldSuggestResult` gains optional:
