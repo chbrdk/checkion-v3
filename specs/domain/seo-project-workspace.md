@@ -38,8 +38,9 @@ Project workspace SEO subnav + magazine chapter bodies (`@msqdx/ui`). Numbers al
 `/projects/:id/seo` mirrors OpenSEO project dashboard:
 
 1. Masthead **Dashboard**
-2. Full-width **Set up your workspace** checklist (remaining steps; done as chips)
-3. **2-column card grid**, data-first sort:
+2. Full-width **Set up your workspace** checklist (remaining steps; done as chips). Steps reflect **live** `GET /overview` persistence (saved keywords · rank configs · domain present) — not a static empty shell.
+3. Optional **next-step + seed hints** band (no DataForSEO call): first remaining setup step + deterministic Research starters (domain brand ∪ domain-snapshot top keywords when present). Chips deep-link to Keywords with `?seed=`. Smart Agent suggest stays on chapter workbenches (user-initiated).
+4. **2-column card grid**, data-first sort:
    - Search performance (GSC stats)
    - Site audit (Quality crawl top issues)
    - Backlink pulse (ref domains / new / lost)
@@ -88,7 +89,7 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 
 | Surface | Endpoint | Purpose | UI |
 |---------|----------|---------|-----|
-| Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze · **brief panel** |
+| Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze · **brief panel** · **Refresh suggestions** after Analyze |
 | Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research · **brief panel** |
 | Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords (saved Research short-circuit if ≥5 clean) | chips toggle · Use set · Track & check · **brief panel** |
 
@@ -99,6 +100,7 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 - Response may include `brief` + `agent` provenance (`publishedToPack` when Phase-2 merge succeeds).
 - Phase 2: merges distillate into Plexon Knowledge Pack (`research_brief` · `profile` · `geo_context`) when Collection is real + federation live.
 - Phase 3: workbench shows company brief + pack publish status after suggest (chips alone are not enough).
+- Phase 4: Overview loads live `GET /overview` into dashboard cards/setup; deterministic seed hints (no vendor force); Field offers Refresh suggestions after Analyze.
 - Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).

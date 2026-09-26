@@ -1374,6 +1374,10 @@ export interface SeoDashboardViewModel {
   domain: string
   setupSteps: SeoDashboardSetupStep[]
   cards: SeoDashboardCard[]
+  /** First remaining setup step id (overview next-action). */
+  nextStepId?: string | null
+  /** Deterministic Research seed hints — no vendor call (Phase 4). */
+  seedHints?: string[]
 }
 
 /** Magazine report chapter (keywords · domain · backlinks · rank · competitors · gsc). */

@@ -7424,6 +7424,22 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   max-width: 52rem;
 }
 
+.checkion-seo-dash__seeds {
+  margin-top: 0;
+}
+
+.checkion-seo-dash__seed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.checkion-seo-dash__seed-chips a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .checkion-seo-dash__issue-label {
   flex: 1;
   min-width: 0;

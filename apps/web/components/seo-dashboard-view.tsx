@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState, type ReactNode } from 'react'
 import {
   Button,
+  Chip,
   KpiMetric,
   Panel,
   SectionChrome,
@@ -350,6 +351,56 @@ function DashboardCardView({
   )
 }
 
+function SeedHintsBand({
+  projectId,
+  hints,
+  previewMode,
+  onPreviewNavigate,
+}: {
+  projectId: string
+  hints: string[]
+  previewMode: boolean
+  onPreviewNavigate?: (href: string) => void
+}) {
+  const t = useT()
+  if (!hints.length) return null
+  return (
+    <Panel
+      variant="editorial"
+      className="checkion-seo-dash__seeds"
+      aria-label={t('seoMarket.dashboard.seedHintsTitle')}
+    >
+      <SectionChrome
+        title={t('seoMarket.dashboard.seedHintsTitle')}
+        meta={t('seoMarket.dashboard.seedHintsMeta')}
+        as="h2"
+        quiet
+      />
+      <Text role="meta" as="p" className="checkion-seo-dash__copy">
+        {t('seoMarket.dashboard.seedHintsLede')}
+      </Text>
+      <div className="checkion-seo-dash__seed-chips" role="list">
+        {hints.map((hint) => {
+          const href = `${paths.routes.projectSeo(projectId, 'keywords')}?seed=${encodeURIComponent(hint)}`
+          return (
+            <span key={hint} role="listitem">
+              <NavLink
+                href={href}
+                previewMode={previewMode}
+                onPreviewNavigate={onPreviewNavigate}
+              >
+                <Chip static size="sm">
+                  {hint}
+                </Chip>
+              </NavLink>
+            </span>
+          )
+        })}
+      </div>
+    </Panel>
+  )
+}
+
 /**
  * OpenSEO-shaped SEO project dashboard — magazine DS language.
  * Spec: specs/domain/seo-project-workspace.md § Dashboard
@@ -389,6 +440,13 @@ export function SeoDashboardView({
       <SetupChecklist
         projectId={model.projectId}
         steps={model.setupSteps}
+        previewMode={previewMode}
+        onPreviewNavigate={onPreviewNavigate}
+      />
+
+      <SeedHintsBand
+        projectId={model.projectId}
+        hints={model.seedHints ?? []}
         previewMode={previewMode}
         onPreviewNavigate={onPreviewNavigate}
       />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Alert,
   Button,
@@ -11,15 +12,18 @@ import type {
   SeoBacklinkSnapshot,
   SeoChapterViewModel,
   SeoCompetitorsResult,
+  SeoDashboardViewModel,
   SeoDomainSnapshot,
   SeoFieldSuggestResult,
   SeoKeywordIdea,
+  SeoProjectOverview,
   SeoRankConfig,
   SeoSavedKeywordRow,
   SeoSerpResult,
 } from '@checkion-v3/contracts'
 import { paths, type SeoProjectChapter } from '../lib/paths'
 import { emptySeoDashboard } from '../lib/seo-market/dashboard-fixtures'
+import { buildSeoDashboardFromOverview } from '../lib/seo-market/dashboard-from-overview'
 import { emptySeoChapter } from '../lib/seo-market/chapter-fixtures'
 import { buildKeywordsChapterModel } from '../lib/seo-market/keywords-chapter-map'
 import { buildDomainChapterModel } from '../lib/seo-market/domain-chapter-map'
@@ -67,10 +71,15 @@ export function SeoProjectWorkspace({
   chapter: SeoProjectChapter
 }) {
   const t = useT()
+  const searchParams = useSearchParams()
   const { trackJob } = useJobNotifications()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<SeoSavedKeywordRow[]>([])
+  const [dashModel, setDashModel] = useState<SeoDashboardViewModel>(() =>
+    emptySeoDashboard({ projectId, projectName, domain, t }),
+  )
+  const [fieldAnalyzed, setFieldAnalyzed] = useState(false)
   const [kwModel, setKwModel] = useState<SeoChapterViewModel>(() =>
     emptySeoChapter('keywords', { projectId, projectName, domain }),
   )
@@ -562,6 +571,7 @@ export function SeoProjectWorkspace({
             t,
           }),
         )
+        setFieldAnalyzed(true)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'request failed')
       } finally {
@@ -618,9 +628,42 @@ export function SeoProjectWorkspace({
 
   useEffect(() => {
     void (async () => {
+      if (chapter === 'overview') {
+        const data = (await api(paths.routes.apiProjectSeoOverview(projectId))) as
+          | SeoProjectOverview
+          | null
+        if (data?.projectId) {
+          setDashModel(
+            buildSeoDashboardFromOverview({
+              overview: data,
+              projectName,
+              t,
+            }),
+          )
+        }
+      }
       if (chapter === 'keywords') {
         const data = await api(paths.routes.apiProjectSeoKeywords(projectId))
         if (data?.keywords) setSaved(data.keywords as SeoSavedKeywordRow[])
+        const seedParam = searchParams.get('seed')?.trim()
+        if (seedParam && !isJunkKeywordToken(seedParam)) {
+          setKwModel((prev) => ({
+            ...prev,
+            searchBand: {
+              seed: seedParam,
+              locale: prev.searchBand?.locale ?? 'de',
+              location:
+                prev.searchBand?.location ?? t('seoMarket.locations.germany'),
+              seedLabel: prev.searchBand?.seedLabel,
+              actionLabel: prev.searchBand?.actionLabel,
+              recent: prev.searchBand?.recent,
+              locales: prev.searchBand?.locales,
+              suggestions: prev.searchBand?.suggestions,
+              suggestionsLabel: prev.searchBand?.suggestionsLabel,
+              suggestionsMode: prev.searchBand?.suggestionsMode,
+            },
+          }))
+        }
       }
       if (chapter === 'domain') {
         const data = await api(paths.routes.apiProjectSeoDomain(projectId))
@@ -726,7 +769,7 @@ export function SeoProjectWorkspace({
         }
       }
     })()
-  }, [api, applyBacklinksHistory, chapter, domain, projectId, projectName, t])
+  }, [api, applyBacklinksHistory, chapter, domain, projectId, projectName, searchParams, t])
 
   return (
     <div className="checkion-seo-project" data-section="seo-project-workspace">
@@ -740,16 +783,7 @@ export function SeoProjectWorkspace({
 
       {error ? <Alert tone="error">{error}</Alert> : null}
 
-      {chapter === 'overview' ? (
-        <SeoDashboardView
-          model={emptySeoDashboard({
-            projectId,
-            projectName,
-            domain,
-            t,
-          })}
-        />
-      ) : null}
+      {chapter === 'overview' ? <SeoDashboardView model={dashModel} /> : null}
 
       {chapter === 'keywords' ? (
         <SeoChapterView
@@ -948,10 +982,14 @@ export function SeoProjectWorkspace({
                 disabled={busy}
                 onClick={() => void runCompetitorsSuggest()}
               >
-                {t('seoMarket.workspace.fieldSuggest')}
+                {fieldAnalyzed || (compModel.searchBand?.suggestions?.length ?? 0) > 0
+                  ? t('seoMarket.workspace.fieldSuggestRefresh')
+                  : t('seoMarket.workspace.fieldSuggest')}
               </Button>
               <Text role="meta" as="p">
-                {t('seoMarket.workspace.fieldSuggestHint')}
+                {fieldAnalyzed
+                  ? t('seoMarket.workspace.fieldSuggestRefreshHint')
+                  : t('seoMarket.workspace.fieldSuggestHint')}
               </Text>
               {suggestBrief ? <SeoSuggestBriefPanel view={suggestBrief} /> : null}
             </div>

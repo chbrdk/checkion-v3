@@ -383,14 +383,20 @@ export function localizeSeoDashboard(
         return {
           ...step,
           label: t('seoMarket.dashboard.steps.keywords'),
-          detail: t('seoMarket.dashboard.steps.keywordsDetail'),
+          detail:
+            step.status === 'done'
+              ? t('seoMarket.dashboard.steps.keywordsDetailDone')
+              : t('seoMarket.dashboard.steps.keywordsDetail'),
         }
       }
       if (step.id === 'rank') {
         return {
           ...step,
           label: t('seoMarket.dashboard.steps.rank'),
-          detail: t('seoMarket.dashboard.steps.rankDetail'),
+          detail:
+            step.status === 'done'
+              ? t('seoMarket.dashboard.steps.rankDetailDone')
+              : t('seoMarket.dashboard.steps.rankDetail'),
         }
       }
       if (step.id === 'gsc') {

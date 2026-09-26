@@ -1250,11 +1250,16 @@
         "domainDetailMissing": "Set a domain on the Collection project.",
         "keywords": "Start research",
         "keywordsDetail": "Seed → save ideas for Ranks and Field.",
+        "keywordsDetailDone": "Research ideas saved — ready for Ranks and Field.",
         "rank": "Set up rank monitor",
         "rankDetail": "Tracked set + Track & check.",
+        "rankDetailDone": "Rank config active — check positions under Ranks.",
         "gsc": "Connect Search Console",
         "gscDetail": "First-party clicks & queries — OAuth follows."
-      }
+      },
+      "seedHintsTitle": "Research starters",
+      "seedHintsMeta": "no vendor call",
+      "seedHintsLede": "Deterministic seeds from domain and latest domain snapshot. Chip opens Research."
     },
     "workspace": {
       "saved": "Saved",
@@ -1276,8 +1281,10 @@
       "loadingGsc": "Loading GSC status…",
       "gscFirstParty": "First-party Search Console only — OAuth wiring lands later.",
       "fieldSuggest": "Smart suggestions",
+      "fieldSuggestRefresh": "Refresh suggestions",
       "fieldSuggestMeta": "Research agent · Qwen",
       "fieldSuggestHint": "Proposes 5–8 SERP keywords for Field. Review chips, use set, then Analyze.",
+      "fieldSuggestRefreshHint": "After Analyze: refresh proposals from the research agent (brief + site).",
       "researchSuggest": "Seed suggestions",
       "researchSuggestMeta": "Research agent · Qwen",
       "researchSuggestHint": "Proposes Research seeds. Pick one chip, then Research.",

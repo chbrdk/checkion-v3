@@ -1,5 +1,6 @@
 import type { SeoDashboardViewModel } from '@checkion-v3/contracts'
 import type { Translator } from '../i18n'
+import { brandSeedFromHost } from './host-utils'
 import { localizeSeoDashboard } from './seo-market-i18n'
 
 /** Rich OpenSEO-shaped fixture for dashboard review / preview (no vendor calls). */
@@ -180,6 +181,8 @@ export function emptySeoDashboard(input?: {
     projectId,
     projectName,
     domain,
+    nextStepId: domain && domain !== 'example.com' ? 'keywords' : 'domain',
+    seedHints: domain && domain !== 'example.com' ? [brandSeedFromHost(domain)].filter((s) => s !== 'brand') : [],
     setupSteps: [
       {
         id: 'domain',

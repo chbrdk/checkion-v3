@@ -92,6 +92,12 @@ After a successful suggest on Field · Research · Ranks, the workbench MUST sur
 - **Pack status** — `publishedToPack` → ok status; missing Collection / autosync off → quiet info; `publishError` → soft error (keywords still usable).
 - Clear or replace on the next suggest for that surface; no separate persistence in CHECKION UI (Pack is SSOT).
 
+## Phase 4 — Overview setup + Field refresh
+
+- Overview MUST compose the dashboard from live `GET /api/projects/:id/seo/overview` (setup done/todo from saved keywords · rank configs · domain; cards fill KPIs when snapshots exist). Never invent Acme numbers.
+- Overview MAY show deterministic **seed hints** (brand ∪ domain top keywords) without calling OpenRouter or DataForSEO. Smart Agent remains user-initiated on chapter workbenches.
+- Field workbench MUST offer **Refresh suggestions** after an Analyze run (same suggest endpoint); label may switch from first-run copy when chips already exist.
+
 ## Offline / stub
 
 When live SEO Market is off: knowledge seeds ∪ homepage title crumbs (existing fixture path). No agent loop.
