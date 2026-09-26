@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  emptySeoChapter,
   fixtureSeoChapter,
   SEO_CHAPTER_IDS,
 } from '../lib/seo-market/chapter-fixtures'
@@ -19,6 +20,21 @@ describe('seo chapter fixtures', () => {
       expect(model.rows.length).toBeGreaterThan(0)
       const first = model.rows[0]!.cells[model.columns[0]!.key]
       expect(first).toBeTruthy()
+    }
+  })
+
+  it('empty shells keep chrome but invent no rows or KPIs', () => {
+    for (const chapter of SEO_CHAPTER_IDS) {
+      const model = emptySeoChapter(chapter, {
+        projectName: 'Live Co',
+        domain: 'live.example',
+      })
+      expect(model.rows).toEqual([])
+      expect(model.charts).toBeUndefined()
+      expect(model.emptyMessage).toBeTruthy()
+      expect(model.stats?.every((s) => s.value === '—')).toBe(true)
+      expect(model.aside?.ledger?.rows ?? []).toEqual([])
+      expect(model.facets.some((f) => f.kind === 'mode' && f.value === 'Empty')).toBe(true)
     }
   })
 

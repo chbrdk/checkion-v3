@@ -1,6 +1,6 @@
 import type { SeoDashboardViewModel } from '@checkion-v3/contracts'
 
-/** Rich OpenSEO-shaped fixture for dashboard review (no vendor calls). */
+/** Rich OpenSEO-shaped fixture for dashboard review / preview (no vendor calls). */
 export function fixtureSeoDashboard(input?: {
   projectId?: string
   projectName?: string
@@ -78,18 +78,16 @@ export function fixtureSeoDashboard(input?: {
         key: 'audit',
         title: 'Site audit',
         hasData: true,
-        href: 'quality',
+        href: 'audit',
         facets: [
           { kind: 'source', label: 'Source', value: 'Quality crawl' },
-          { kind: 'scope', label: 'Pages', value: '86' },
-          { kind: 'time', label: 'Crawled', value: day },
           { kind: 'mode', label: 'Mode', value: 'Fixture' },
         ],
-        issues: [
-          { label: 'Missing meta description', severity: 'warning', count: 12 },
-          { label: 'Thin content', severity: 'warning', count: 7 },
-          { label: 'Broken internal links', severity: 'critical', count: 3 },
-          { label: 'Duplicate title', severity: 'info', count: 2 },
+        stats: [
+          { label: 'Issues', value: '18', tone: 'neg' },
+          { label: 'Critical', value: '3', tone: 'neg' },
+          { label: 'Pages', value: '86' },
+          { label: 'Score', value: '72' },
         ],
       },
       {
@@ -158,6 +156,127 @@ export function fixtureSeoDashboard(input?: {
           { label: 'Best avg rank', value: '6,2', tone: 'neg' },
           { label: 'High threats', value: '3', tone: 'neg' },
         ],
+      },
+    ],
+  }
+}
+
+/**
+ * Empty overview for the live workspace — CTAs only until real Market data exists.
+ */
+export function emptySeoDashboard(input?: {
+  projectId?: string
+  projectName?: string
+  domain?: string
+}): SeoDashboardViewModel {
+  const projectId = input?.projectId ?? 'proj-seo'
+  const projectName = input?.projectName ?? 'Project'
+  const domain = input?.domain ?? 'example.com'
+
+  return {
+    projectId,
+    projectName,
+    domain,
+    setupSteps: [
+      {
+        id: 'domain',
+        label: 'Website bestätigt',
+        detail: domain
+          ? `${domain} ist als Collection-Domain hinterlegt.`
+          : 'Domain am Collection-Projekt hinterlegen.',
+        status: domain && domain !== 'example.com' ? 'done' : 'todo',
+      },
+      {
+        id: 'keywords',
+        label: 'Research starten',
+        detail: 'Seed → Ideas speichern für Ranks und Field.',
+        status: 'todo',
+      },
+      {
+        id: 'rank',
+        label: 'Rank monitor einrichten',
+        detail: 'Tracked set + Track & check.',
+        status: 'todo',
+      },
+      {
+        id: 'gsc',
+        label: 'Search Console verbinden',
+        detail: 'First-party Clicks & Queries — OAuth folgt.',
+        status: 'todo',
+      },
+    ],
+    cards: [
+      {
+        key: 'gsc',
+        title: 'Search performance',
+        hasData: false,
+        href: 'gsc',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Google Search Console' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'GSC verbinden — first-party Queries & Clicks.',
+        emptyCtaLabel: 'GSC öffnen',
+      },
+      {
+        key: 'audit',
+        title: 'Site audit',
+        hasData: false,
+        href: 'audit',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Quality crawl' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'Quality-Crawl starten für On-page Issues.',
+        emptyCtaLabel: 'Scan starten',
+      },
+      {
+        key: 'backlinks',
+        title: 'Backlink pulse',
+        hasData: false,
+        href: 'backlinks',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Backlinks' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'Backlinks refresh — referring domains & new/lost.',
+        emptyCtaLabel: 'Backlinks öffnen',
+      },
+      {
+        key: 'rank',
+        title: 'Rank monitor',
+        hasData: false,
+        href: 'rank-tracking',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Rank configs' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'Keywords tracken und Positionen prüfen.',
+        emptyCtaLabel: 'Ranks öffnen',
+      },
+      {
+        key: 'domain',
+        title: 'Domain overview',
+        hasData: false,
+        href: 'domain',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'DataForSEO organic' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'Domain refresh — organic keywords & traffic.',
+        emptyCtaLabel: 'Domain öffnen',
+      },
+      {
+        key: 'competitors',
+        title: 'Competitive field',
+        hasData: false,
+        href: 'competitors',
+        facets: [
+          { kind: 'source', label: 'Job', value: 'SERP overlap' },
+          { kind: 'mode', label: 'Mode', value: 'Empty' },
+        ],
+        emptyMessage: 'Keyword-Set analysieren — Overlap aus Research oder manuellem Set.',
+        emptyCtaLabel: 'Field öffnen',
       },
     ],
   }

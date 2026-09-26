@@ -4,7 +4,7 @@ import type {
   SeoDomainSnapshot,
   SeoKeywordIdea,
 } from '@checkion-v3/contracts'
-import { fixtureSeoChapter } from './chapter-fixtures'
+import { emptySeoChapter } from './chapter-fixtures'
 
 function fmtInt(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -75,7 +75,7 @@ export function mapDomainKeywordsToRows(
   })
 }
 
-/** Merge a live domain snapshot into the OpenSEO domain chapter shell. */
+/** Merge a live domain snapshot into an empty Domain chapter shell. */
 export function buildDomainChapterModel(input: {
   projectId: string
   projectName: string
@@ -87,20 +87,25 @@ export function buildDomainChapterModel(input: {
   snapshot?: SeoDomainSnapshot | null
 }): SeoChapterViewModel {
   const host = (input.seed || input.domain).replace(/^https?:\/\//, '').replace(/\/$/, '')
-  const base = fixtureSeoChapter('domain', {
+  const base = emptySeoChapter('domain', {
     projectId: input.projectId,
     projectName: input.projectName,
     domain: host,
   })
   const snap = input.snapshot
   const ideas = snap?.topKeywords ?? []
-  const rows =
-    ideas.length > 0 ? mapDomainKeywordsToRows(ideas, host) : base.rows
+  const rows = mapDomainKeywordsToRows(ideas, host)
+  const hasLive = Boolean(snap)
 
   return {
     ...base,
     lede: undefined,
     domain: host,
+    emptyMessage: hasLive && rows.length === 0
+      ? 'No organic keywords in this snapshot.'
+      : hasLive
+        ? undefined
+        : base.emptyMessage,
     facets: base.facets.map((f) => {
       if (f.kind === 'mode' && snap) return { ...f, value: 'Live snapshot' }
       if (f.kind === 'scope' && input.locale) {
@@ -117,7 +122,7 @@ export function buildDomainChapterModel(input: {
       actionLabel: 'Refresh',
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
-      recent: input.recent ?? base.searchBand?.recent,
+      recent: input.recent ?? [],
       locales: base.searchBand?.locales,
     },
     stats: snap
@@ -127,7 +132,7 @@ export function buildDomainChapterModel(input: {
           { label: 'Cost', value: fmtCost(snap.organicCost) },
           {
             label: 'Pages',
-            value: String(base.aside?.ledger?.rows.length ?? rows.length),
+            value: String(rows.length),
           },
         ]
       : base.stats,
@@ -139,7 +144,10 @@ export function buildDomainChapterModel(input: {
       ledger: base.aside?.ledger
         ? {
             ...base.aside.ledger,
-            meta: `${base.aside.ledger.rows.length} ranking URLs · ${host}`,
+            meta: hasLive
+              ? `${base.aside.ledger.rows.length} ranking URLs · ${host}`
+              : 'No data yet',
+            rows: [],
           }
         : undefined,
     },

@@ -45,7 +45,7 @@ Project workspace SEO subnav + magazine chapter bodies (`@msqdx/ui`). Numbers al
    - Domain overview KPIs
    - Competitors (empty → CTA)
 
-Compose with `@msqdx/ui` magazine language: `Panel variant="card"|editorial` · `SectionChrome` · `KpiMetric` · `WidgetGrid` · `StatusDot`. Provenance as **hairline facet row** (label + value, square top rule — same language as project cover attrs), not soft Chips and not a single meta stamp string. **Not** `LabTile` / soft radius shells. Fixture SSOT: `lib/seo-market/dashboard-fixtures.ts`. Local preview: `apps/seo-dashboard-preview` (full width up to ~90rem).
+Compose with `@msqdx/ui` magazine language: `Panel variant="card"|editorial` · `SectionChrome` · `KpiMetric` · `WidgetGrid` · `StatusDot`. Provenance as **hairline facet row** (label + value, square top rule — same language as project cover attrs), not soft Chips and not a single meta stamp string. **Not** `LabTile` / soft radius shells. **Live workspace** uses empty shells (`emptySeoChapter` / `emptySeoDashboard`) until Analyze/Research/Refresh or persisted snapshots fill the model — never invent Acme KPIs in product UI. Rich fixtures remain for `apps/seo-dashboard-preview` + unit depth tests only.
 
 ### Chapter detail — magazine report depth
 Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not a second dashboard:
@@ -82,7 +82,7 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 
-Fixture SSOT: `lib/seo-market/chapter-fixtures.ts` · Overview: `dashboard-fixtures.ts`. Preview hash nav: `#gsc`, `#backlinks`, …
+Fixture SSOT (preview/tests only): `lib/seo-market/chapter-fixtures.ts` · Overview preview: `dashboard-fixtures.ts`. Live product UI: `emptySeoChapter` / `emptySeoDashboard`. Preview hash nav: `#gsc`, `#backlinks`, …
 
 ## Notifications
 Rank refresh jobs: `resource: 'seo-market'`.

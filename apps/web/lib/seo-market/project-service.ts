@@ -108,11 +108,7 @@ export async function projectResearchKeywords(input: {
       ideas = result.items
     } catch (e) {
       if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-      ideas = fixtureKeywordsResult({
-        projectId: input.projectId,
-        seed: input.seed,
-        limit: input.limit ?? 12,
-      }).items
+      throw e
     }
   }
   await upsertKeywordMetrics(input.projectId, ideas)
@@ -145,7 +141,7 @@ export async function projectRefreshDomain(projectId: string): Promise<SeoDomain
       result = live.result
     } catch (e) {
       if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-      result = fixtureDomainOverview({ projectId, domain })
+      throw e
     }
   }
 
@@ -182,7 +178,7 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
       result = live.result
     } catch (e) {
       if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-      result = fixtureBacklinks({ projectId, domain })
+      throw e
     }
   }
 
@@ -209,8 +205,19 @@ export async function projectCompetitors(
     keywords.length > 0
       ? keywords
       : (await listSavedKeywords(projectId)).slice(0, 5).map((k) => k.keyword)
-  if (!shouldRunLiveSeoMarket() || kw.length === 0) {
+  if (!shouldRunLiveSeoMarket()) {
     return fixtureCompetitors({ projectId, domain, keywords: kw })
+  }
+  if (kw.length === 0) {
+    return {
+      source: 'dataforseo',
+      stubbed: false,
+      fetchedAt: new Date().toISOString(),
+      projectId,
+      domain,
+      keywords: [],
+      items: [],
+    }
   }
   await assertSeoMarketSoftCap(projectId, kw.length)
   const counts = new Map<string, { overlap: number; rankSum: number; n: number }>()
@@ -248,7 +255,7 @@ export async function projectCompetitors(
     }
   } catch (e) {
     if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-    return fixtureCompetitors({ projectId, domain, keywords: kw })
+    throw e
   }
 }
 
@@ -298,7 +305,7 @@ export async function projectRefreshRankConfig(configId: string): Promise<SeoRan
       snapshots = live.snapshots
     } catch (e) {
       if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-      snapshots = fixtureRankSnapshots(config.domain, config.keywords)
+      throw e
     }
   }
 

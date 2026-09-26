@@ -73,10 +73,7 @@ export async function researchKeywords(input: {
     return result
   } catch (e) {
     if ((e as Error & { code?: string }).code === 'cost_soft_cap') throw e
-    const result = fixtureKeywordsResult(input)
-    result.source = 'fixture'
-    result.stubbed = true
-    return result
+    throw e
   }
 }
 
@@ -118,7 +115,7 @@ export async function researchSerp(input: {
     return result
   } catch (e) {
     if ((e as Error & { code?: string }).code === 'cost_soft_cap') throw e
-    return fixtureSerpResult(input)
+    throw e
   }
 }
 
@@ -157,7 +154,7 @@ export async function researchDomainOverview(input: {
     return result
   } catch (e) {
     if ((e as Error & { code?: string }).code === 'cost_soft_cap') throw e
-    return fixtureDomainOverview({ ...input, domain })
+    throw e
   }
 }
 
@@ -169,7 +166,18 @@ export async function researchCompetitors(input: {
   const domain = normalizeDomain(input.domain)
   const keywords = input.keywords.map((k) => k.trim()).filter(Boolean).slice(0, 10)
   if (keywords.length === 0) {
-    return fixtureCompetitors({ projectId: input.projectId, domain, keywords: [] })
+    if (!shouldRunLiveSeoMarket()) {
+      return fixtureCompetitors({ projectId: input.projectId, domain, keywords: [] })
+    }
+    return {
+      source: 'dataforseo',
+      stubbed: false,
+      fetchedAt: new Date().toISOString(),
+      projectId: input.projectId,
+      domain,
+      keywords: [],
+      items: [],
+    }
   }
 
   if (!shouldRunLiveSeoMarket()) {
@@ -222,7 +230,7 @@ export async function researchCompetitors(input: {
     }
   } catch (e) {
     if ((e as Error & { code?: string }).code === 'cost_soft_cap') throw e
-    return fixtureCompetitors({ projectId: input.projectId, domain, keywords })
+    throw e
   }
 }
 
@@ -263,7 +271,7 @@ export async function researchBacklinks(input: {
     return result
   } catch (e) {
     if ((e as Error & { code?: string }).code === 'cost_soft_cap') throw e
-    return fixtureBacklinks({ ...input, domain })
+    throw e
   }
 }
 

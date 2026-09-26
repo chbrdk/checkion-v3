@@ -4,7 +4,7 @@ import type {
   SeoCompetitorRow,
   SeoCompetitorsResult,
 } from '@checkion-v3/contracts'
-import { fixtureSeoChapter } from './chapter-fixtures'
+import { emptySeoChapter } from './chapter-fixtures'
 
 function fmtAvgRank(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -103,7 +103,7 @@ export function buildCompetitorsChapterModel(input: {
   recent?: string[]
   result?: SeoCompetitorsResult | null
 }): SeoChapterViewModel {
-  const base = fixtureSeoChapter('competitors', {
+  const base = emptySeoChapter('competitors', {
     projectId: input.projectId,
     projectName: input.projectName,
     domain: input.domain,
@@ -115,10 +115,9 @@ export function buildCompetitorsChapterModel(input: {
         .split(/[,;]+/)
         .map((k) => k.trim())
         .filter(Boolean)
-  const rows =
-    result?.items?.length
-      ? mapCompetitorRows(result.items, keywords)
-      : base.rows
+  const rows = result?.items?.length
+    ? mapCompetitorRows(result.items, keywords)
+    : []
   const overlaps = rows
     .map((r) => Number.parseInt(String(r.cells.overlap ?? ''), 10))
     .filter((n) => Number.isFinite(n))
@@ -134,20 +133,22 @@ export function buildCompetitorsChapterModel(input: {
     (keywords.length ? keywords.slice(0, 3).join(', ') : null) ||
     base.searchBand?.seed ||
     'brand'
-  const battles = result?.items?.length
-    ? battlesFromRows(rows)
-    : base.aside?.ledger?.rows ?? []
+  const battles = result?.items?.length ? battlesFromRows(rows) : []
   const livePoints = result?.items?.length ? overlapPoints(rows) : []
-  const fixturePlot = base.aside?.charts?.find((c) => c.kind === 'plot')
-  const fixturePoints =
-    fixturePlot && fixturePlot.kind === 'plot' ? fixturePlot.points : []
+  const hasLive = Boolean(result)
 
   return {
     ...base,
     lede: undefined,
+    emptyMessage:
+      hasLive && rows.length === 0
+        ? 'No overlapping rivals for this keyword set.'
+        : hasLive
+          ? undefined
+          : base.emptyMessage,
     facets: base.facets.map((f) => {
       if (f.kind === 'mode' && result) return { ...f, value: 'Live overlap' }
-      if (f.kind === 'scope') {
+      if (f.kind === 'scope' && hasLive) {
         const n = keywords.length || rows.length
         const loc = (input.locale ?? 'de').toUpperCase()
         return { ...f, value: `${n} terms · ${loc}` }
@@ -170,10 +171,10 @@ export function buildCompetitorsChapterModel(input: {
       allowEmptySeed: true,
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
-      recent: input.recent ?? base.searchBand?.recent,
+      recent: input.recent ?? [],
       locales: base.searchBand?.locales,
     },
-    stats: result
+    stats: hasLive
       ? [
           { label: 'Rivals', value: String(rows.length) },
           {
@@ -205,15 +206,15 @@ export function buildCompetitorsChapterModel(input: {
           variant: 'bar',
           title: 'Overlap by rival',
           height: 168,
-          points: livePoints.length > 0 ? livePoints : fixturePoints,
+          points: livePoints,
         },
         ...(base.aside?.charts?.filter((c) => c.kind === 'series') ?? []),
       ],
       ledger: {
         title: 'Battles they win',
-        meta: result?.items?.length
+        meta: battles.length
           ? `${battles.length} pressure points`
-          : base.aside?.ledger?.meta,
+          : 'No battles yet',
         columns: base.aside?.ledger?.columns ?? [
           { key: 'keyword', label: 'Keyword', dual: true },
           { key: 'gap', label: 'Gap', align: 'end' },

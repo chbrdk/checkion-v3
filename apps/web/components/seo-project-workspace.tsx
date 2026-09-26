@@ -18,8 +18,8 @@ import type {
   SeoSerpResult,
 } from '@checkion-v3/contracts'
 import { paths, type SeoProjectChapter } from '../lib/paths'
-import { fixtureSeoDashboard } from '../lib/seo-market/dashboard-fixtures'
-import { fixtureSeoChapter } from '../lib/seo-market/chapter-fixtures'
+import { emptySeoDashboard } from '../lib/seo-market/dashboard-fixtures'
+import { emptySeoChapter } from '../lib/seo-market/chapter-fixtures'
 import { buildKeywordsChapterModel } from '../lib/seo-market/keywords-chapter-map'
 import { buildDomainChapterModel } from '../lib/seo-market/domain-chapter-map'
 import { buildRankChapterModel } from '../lib/seo-market/rank-chapter-map'
@@ -61,16 +61,16 @@ export function SeoProjectWorkspace({
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<SeoSavedKeywordRow[]>([])
   const [kwModel, setKwModel] = useState<SeoChapterViewModel>(() =>
-    fixtureSeoChapter('keywords', { projectId, projectName, domain }),
+    emptySeoChapter('keywords', { projectId, projectName, domain }),
   )
   const [domainModel, setDomainModel] = useState<SeoChapterViewModel>(() =>
-    fixtureSeoChapter('domain', { projectId, projectName, domain }),
+    emptySeoChapter('domain', { projectId, projectName, domain }),
   )
   const [rankModel, setRankModel] = useState<SeoChapterViewModel>(() =>
-    fixtureSeoChapter('rank-tracking', { projectId, projectName, domain }),
+    emptySeoChapter('rank-tracking', { projectId, projectName, domain }),
   )
   const [compModel, setCompModel] = useState<SeoChapterViewModel>(() =>
-    fixtureSeoChapter('competitors', { projectId, projectName, domain }),
+    emptySeoChapter('competitors', { projectId, projectName, domain }),
   )
   const [backlinks, setBacklinks] = useState<SeoBacklinkSnapshot[]>([])
   const [configs, setConfigs] = useState<SeoRankConfig[]>([])
@@ -104,10 +104,10 @@ export function SeoProjectWorkspace({
   )
 
   useEffect(() => {
-    setKwModel(fixtureSeoChapter('keywords', { projectId, projectName, domain }))
-    setDomainModel(fixtureSeoChapter('domain', { projectId, projectName, domain }))
-    setRankModel(fixtureSeoChapter('rank-tracking', { projectId, projectName, domain }))
-    setCompModel(fixtureSeoChapter('competitors', { projectId, projectName, domain }))
+    setKwModel(emptySeoChapter('keywords', { projectId, projectName, domain }))
+    setDomainModel(emptySeoChapter('domain', { projectId, projectName, domain }))
+    setRankModel(emptySeoChapter('rank-tracking', { projectId, projectName, domain }))
+    setCompModel(emptySeoChapter('competitors', { projectId, projectName, domain }))
   }, [projectId, projectName, domain])
 
   const runKeywordSearch = useCallback(
@@ -452,7 +452,7 @@ export function SeoProjectWorkspace({
 
       {chapter === 'overview' ? (
         <SeoDashboardView
-          model={fixtureSeoDashboard({
+          model={emptySeoDashboard({
             projectId,
             projectName,
             domain,
@@ -488,7 +488,7 @@ export function SeoProjectWorkspace({
 
       {chapter === 'backlinks' ? (
         <SeoChapterView
-          model={fixtureSeoChapter('backlinks', { projectId, projectName, domain })}
+          model={emptySeoChapter('backlinks', { projectId, projectName, domain })}
           workbench={
             <div className="checkion-seo-project__stack">
               <SectionChrome title="Workbench" quiet meta="Capture snapshot" />
@@ -599,7 +599,7 @@ export function SeoProjectWorkspace({
 
       {chapter === 'gsc' ? (
         <SeoChapterView
-          model={fixtureSeoChapter('gsc', { projectId, projectName, domain })}
+          model={emptySeoChapter('gsc', { projectId, projectName, domain })}
           workbench={
             <div className="checkion-seo-project__stack">
               <SectionChrome title="Workbench" quiet meta="Connection" />

@@ -1607,3 +1607,70 @@ export const SEO_CHAPTER_IDS: SeoChapterId[] = [
   'rank-tracking',
   'competitors',
 ]
+
+const EMPTY_MESSAGES: Record<SeoChapterId, string> = {
+  gsc: 'Connect Search Console or run a refresh to load query performance.',
+  keywords: 'Enter a seed and run Research to load keyword ideas.',
+  domain: 'Refresh the domain to load organic keywords and traffic.',
+  backlinks: 'Refresh backlinks to load referring pages.',
+  'rank-tracking': 'Add keywords and Track & check to load positions.',
+  competitors: 'Enter a keyword set and Analyze to load SERP overlap.',
+}
+
+/**
+ * Chrome-only chapter shell for the live workspace (no invented KPIs / rows / charts).
+ * Rich `fixtureSeoChapter` stays for preview + unit depth tests.
+ */
+export function emptySeoChapter(
+  chapter: SeoChapterId,
+  input?: ChapterInput,
+): SeoChapterViewModel {
+  const rich = fixtureSeoChapter(chapter, input)
+  const stripChart = (
+    chart: NonNullable<SeoChapterViewModel['charts']>[number],
+  ): NonNullable<SeoChapterViewModel['charts']>[number] => {
+    if (chart.kind === 'series') {
+      return {
+        ...chart,
+        series: chart.series.map((s) => ({ ...s, points: [] })),
+      }
+    }
+    if (chart.kind === 'plot') {
+      return { ...chart, points: [] }
+    }
+    return chart
+  }
+
+  return {
+    ...rich,
+    lede: undefined,
+    facets: rich.facets.map((f) =>
+      f.kind === 'mode' ? { ...f, value: 'Empty' } : f,
+    ),
+    stats: rich.stats?.map((s) => ({ label: s.label, value: '—' })),
+    charts: undefined,
+    rows: [],
+    ledgerMeta: rich.ledgerMeta
+      ? rich.ledgerMeta.replace(/·\s*[\d.,kK$%]+/, '· 0')
+      : undefined,
+    searchBand: rich.searchBand
+      ? {
+          ...rich.searchBand,
+          recent: [],
+        }
+      : undefined,
+    aside: rich.aside
+      ? {
+          charts: rich.aside.charts?.map(stripChart),
+          ledger: rich.aside.ledger
+            ? {
+                ...rich.aside.ledger,
+                meta: 'No data yet',
+                rows: [],
+              }
+            : undefined,
+        }
+      : undefined,
+    emptyMessage: EMPTY_MESSAGES[chapter],
+  }
+}

@@ -67,7 +67,7 @@ describe('domain chapter map', () => {
     expect(model.stats?.find((s) => s.label === 'Organic KW')?.value).toBe('1.120')
     expect(model.rows).toHaveLength(1)
     expect(model.ledgerMeta).toBe('Top keywords · 1')
-    expect(model.aside?.ledger?.rows.length).toBeGreaterThan(0)
+    expect(model.aside?.ledger?.rows).toEqual([])
     expect(model.lede).toBeUndefined()
   })
 })

@@ -4,7 +4,7 @@ import type {
   SeoKeywordIdea,
   SeoSerpResult,
 } from '@checkion-v3/contracts'
-import { fixtureSeoChapter } from './chapter-fixtures'
+import { emptySeoChapter } from './chapter-fixtures'
 
 function fmtVol(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -70,7 +70,7 @@ export function mapSerpToAsideRows(serp: SeoSerpResult): SeoChapterRow[] {
   }))
 }
 
-/** Merge live research/SERP into the OpenSEO keywords chapter fixture shell. */
+/** Merge live research/SERP into an empty Research chapter shell (no fixture rows). */
 export function buildKeywordsChapterModel(input: {
   projectId: string
   projectName: string
@@ -82,13 +82,13 @@ export function buildKeywordsChapterModel(input: {
   ideas?: SeoKeywordIdea[]
   serp?: SeoSerpResult | null
 }): SeoChapterViewModel {
-  const base = fixtureSeoChapter('keywords', {
+  const base = emptySeoChapter('keywords', {
     projectId: input.projectId,
     projectName: input.projectName,
     domain: input.domain,
   })
   const ideas = input.ideas ?? []
-  const rows = ideas.length > 0 ? mapKeywordIdeasToRows(ideas) : base.rows
+  const rows = mapKeywordIdeasToRows(ideas)
   const volumes = ideas
     .map((i) => i.searchVolume)
     .filter((n): n is number => n != null && Number.isFinite(n))
@@ -101,13 +101,15 @@ export function buildKeywordsChapterModel(input: {
   const avg = (xs: number[]) =>
     xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null
 
-  const serpRows = input.serp ? mapSerpToAsideRows(input.serp) : base.aside?.ledger?.rows ?? []
+  const serpRows = input.serp ? mapSerpToAsideRows(input.serp) : []
+  const hasLive = ideas.length > 0 || serpRows.length > 0
 
   return {
     ...base,
     lede: undefined,
+    emptyMessage: hasLive ? undefined : base.emptyMessage,
     facets: base.facets.map((f) =>
-      f.kind === 'mode' && ideas.length > 0
+      f.kind === 'mode' && hasLive
         ? { ...f, value: 'Live research' }
         : f,
     ),
@@ -117,7 +119,7 @@ export function buildKeywordsChapterModel(input: {
       actionLabel: 'Research',
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
-      recent: input.recent ?? base.searchBand?.recent,
+      recent: input.recent ?? [],
       locales: base.searchBand?.locales,
     },
     stats: [
@@ -133,7 +135,9 @@ export function buildKeywordsChapterModel(input: {
       charts: base.aside?.charts,
       ledger: {
         title: 'SERP snapshot',
-        meta: `${serpRows.length} organic results${input.seed ? ` · ${input.seed}` : ''}`,
+        meta: serpRows.length
+          ? `${serpRows.length} organic results${input.seed ? ` · ${input.seed}` : ''}`
+          : 'No SERP yet',
         columns: base.aside?.ledger?.columns ?? [
           { key: 'rank', label: '#', align: 'end' },
           { key: 'page', label: 'Page', dual: true },

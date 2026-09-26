@@ -4,7 +4,7 @@ import type {
   SeoRankConfig,
   SeoRankSnapshot,
 } from '@checkion-v3/contracts'
-import { fixtureSeoChapter } from './chapter-fixtures'
+import { emptySeoChapter } from './chapter-fixtures'
 
 function pathFromUrl(url: string | null | undefined, domain: string): string {
   if (!url) return domain
@@ -118,7 +118,7 @@ function distributionPoints(rows: SeoChapterRow[]) {
   ]
 }
 
-/** Merge live rank config snapshots into the OpenSEO rank-monitor chapter shell. */
+/** Merge live rank config snapshots into an empty Rank-monitor chapter shell. */
 export function buildRankChapterModel(input: {
   projectId: string
   projectName: string
@@ -129,26 +129,25 @@ export function buildRankChapterModel(input: {
   recent?: string[]
   config?: SeoRankConfig | null
 }): SeoChapterViewModel {
-  const base = fixtureSeoChapter('rank-tracking', {
+  const base = emptySeoChapter('rank-tracking', {
     projectId: input.projectId,
     projectName: input.projectName,
     domain: input.domain,
   })
   const cfg = input.config
   const snapshots = cfg?.latest ?? []
-  const rows =
-    snapshots.length > 0
-      ? mapRankSnapshotsToRows(snapshots, cfg?.domain || input.domain)
-      : base.rows
+  const rows = mapRankSnapshotsToRows(snapshots, cfg?.domain || input.domain)
   const improved = rows.filter((r) => r.tags?.includes('up')).length
   const declined = rows.filter((r) => r.tags?.includes('down')).length
   const top10 = rows.filter((r) => r.tags?.includes('top10')).length
   const movers = moversFromRows(rows)
   const seed = input.seed || base.searchBand?.seed || 'brand'
+  const hasLive = snapshots.length > 0
 
   return {
     ...base,
     lede: undefined,
+    emptyMessage: hasLive ? undefined : base.emptyMessage,
     facets: base.facets.map((f) => {
       if (f.kind === 'mode' && cfg) return { ...f, value: 'Live config' }
       if (f.kind === 'scope' && cfg) {
@@ -171,7 +170,7 @@ export function buildRankChapterModel(input: {
       actionLabel: 'Track & check',
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
-      recent: input.recent ?? base.searchBand?.recent,
+      recent: input.recent ?? [],
       locales: base.searchBand?.locales,
     },
     stats: [
@@ -212,12 +211,12 @@ export function buildRankChapterModel(input: {
         title: 'Biggest movers',
         meta: movers.length
           ? `${movers.length} movers · this check`
-          : base.aside?.ledger?.meta,
+          : 'No movers yet',
         columns: base.aside?.ledger?.columns ?? [
           { key: 'keyword', label: 'Tracked', dual: true },
           { key: 'change', label: 'Δ', align: 'end' },
         ],
-        rows: movers.length > 0 ? movers : base.aside?.ledger?.rows ?? [],
+        rows: movers,
       },
     },
   }
