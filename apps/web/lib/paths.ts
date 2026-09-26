@@ -1,5 +1,14 @@
 /** Central path and shell configuration for CHECKION v3 web app. */
 
+export type SeoProjectChapter =
+  | 'overview'
+  | 'keywords'
+  | 'domain'
+  | 'backlinks'
+  | 'rank-tracking'
+  | 'competitors'
+  | 'gsc'
+
 export const paths = {
   railInsetRem: 1,
   railGapRem: 4,
@@ -86,6 +95,14 @@ export const paths = {
     `/api/platform/provisioning/collections/${encodeURIComponent(platformProjectId)}/client-room/slots/${encodeURIComponent(slotId)}`,
   envLiveScans: 'CHECKION_LIVE_SCANS',
   envLiveGeo: 'CHECKION_LIVE_GEO',
+  /** Force live / fixture DataForSEO Market SEO. */
+  envLiveSeoMarket: 'CHECKION_LIVE_SEO_MARKET',
+  /** Base64 email:password for DataForSEO (server-only). */
+  envDataForSeoApiKey: 'DATAFORSEO_API_KEY',
+  /** Soft billable units per Collection per day (default 50). */
+  envSeoMarketDailySoftCap: 'CHECKION_SEO_MARKET_DAILY_SOFT_CAP',
+  seoMarketDailySoftCapDefault: 50,
+  dataForSeoApiBase: 'https://api.dataforseo.com/v3',
   /** `inline` (web executes) or `external` (scan-worker claims DB jobs). */
   envScanWorkerMode: 'CHECKION_SCAN_WORKER_MODE',
   /** Worker stale reclaim grace ms (default 120000). */
@@ -166,6 +183,8 @@ export const paths = {
       audionRunId?: string
       stepUrl?: string
       measurement?: 'recall' | 'live' | 'both'
+      /** SEO progressive layer — quality crawl vs Market hub. */
+      seoLayer?: 'quality' | 'market'
     }) => {
       const params = new URLSearchParams()
       if (q.projectId) params.set('projectId', q.projectId)
@@ -175,6 +194,7 @@ export const paths = {
       if (q.audionRunId) params.set('audionRunId', q.audionRunId)
       if (q.stepUrl) params.set('stepUrl', q.stepUrl)
       if (q.measurement) params.set('measurement', q.measurement)
+      if (q.seoLayer) params.set('seoLayer', q.seoLayer)
       const qs = params.toString()
       return qs ? `/scan?${qs}` : '/scan'
     },
@@ -183,6 +203,12 @@ export const paths = {
     /** Project workspace GEO History chapter deep-link. */
     projectGeoHistory: (id: string) =>
       `/projects/${encodeURIComponent(id)}?chapter=geo-history`,
+    /** Market SEO workspace under Collection project (OpenSEO-style IA). */
+    projectSeo: (id: string, chapter?: SeoProjectChapter) => {
+      const base = `/projects/${encodeURIComponent(id)}/seo`
+      if (!chapter || chapter === 'overview') return base
+      return `${base}/${chapter}`
+    },
     /** Index redirects home — use resultSection / resultDetail for magazines. */
     results: '/results',
     resultDetail: (id: string) => `/results/${id}`,
@@ -254,6 +280,45 @@ export const paths = {
       `/api/domain-scans/${id}/issues/${issueId}/pages`,
     apiDomainTrustReading: (id: string) => `/api/domain-scans/${id}/trust-reading`,
     apiDomainSeoReading: (id: string) => `/api/domain-scans/${id}/seo-reading`,
+    /**
+     * Legacy global SEO hub — redirects to project SEO when projectId present.
+     * Prefer `projectSeo(id)`.
+     */
+    seo: '/seo',
+    seoLaunch: (q: {
+      projectId?: string
+      domain?: string
+      chapter?: SeoProjectChapter
+    }) => {
+      if (q.projectId) {
+        return paths.routes.projectSeo(q.projectId, q.chapter)
+      }
+      const params = new URLSearchParams()
+      if (q.domain) params.set('domain', q.domain)
+      if (q.chapter && q.chapter !== 'overview') params.set('chapter', q.chapter)
+      const qs = params.toString()
+      return qs ? `/seo?${qs}` : '/seo'
+    },
+    apiProjectSeoOverview: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/overview`,
+    apiProjectSeoKeywords: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/keywords`,
+    apiProjectSeoDomain: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/domain`,
+    apiProjectSeoBacklinks: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/backlinks`,
+    apiProjectSeoRankConfigs: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/rank-configs`,
+    apiProjectSeoRankConfig: (id: string, configId: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/rank-configs/${encodeURIComponent(configId)}`,
+    apiProjectSeoRankConfigRefresh: (id: string, configId: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/rank-configs/${encodeURIComponent(configId)}/refresh`,
+    apiProjectSeoCompetitors: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/competitors`,
+    apiProjectSeoGsc: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/gsc`,
+    /** @deprecated transitional soft-cap endpoint */
+    apiSeoMarketUsage: '/api/seo-market/usage',
     apiShare: '/api/share',
     apiShareDetail: (token: string) => `/api/share/${token}`,
     apiTokens: '/api/tokens',

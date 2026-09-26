@@ -57,6 +57,9 @@ export type LaunchCapability = 'seo' | 'geo' | 'wcag'
 /** WCAG secondary depth (only when capability = WCAG). */
 export type WcagDepth = 'single' | 'deep'
 
+/** SEO secondary layer (Quality crawl vs Market hub). */
+export type SeoLayer = 'quality' | 'market'
+
 export function capabilityFromLaunchMode(mode: LaunchMode): LaunchCapability {
   if (mode === 'seo') return 'seo'
   if (mode === 'geo') return 'geo'
@@ -111,6 +114,18 @@ export function initialGeoMeasurements(
   if (defaultMeasurement) return parseGeoMeasurements(defaultMeasurement)
   // mode=geo alone does not pre-select a layer — same progressive step as WCAG depth.
   return []
+}
+
+export function initialSeoLayer(
+  fromAudion: boolean,
+  defaultMode?: LaunchMode,
+  defaultSeoLayer?: SeoLayer,
+): SeoLayer | null {
+  if (fromAudion) return null
+  if (defaultSeoLayer === 'quality' || defaultSeoLayer === 'market') return defaultSeoLayer
+  // mode=seo alone does not pre-select — same progressive step as WCAG depth.
+  if (defaultMode === 'seo') return null
+  return null
 }
 
 /** @deprecated use initialGeoMeasurements — kept for single-layer callers. */
@@ -200,6 +215,23 @@ function geoMeasurementCards(t: Translator) {
   ]
 }
 
+function seoLayerCards(t: Translator) {
+  return [
+    {
+      id: 'quality' as const,
+      label: t('scan.seoQualityLabel'),
+      kicker: t('scan.seoQualityKicker'),
+      deck: t('scan.seoQualityDeck'),
+    },
+    {
+      id: 'market' as const,
+      label: t('scan.seoMarketLabel'),
+      kicker: t('scan.seoMarketKicker'),
+      deck: t('scan.seoMarketDeck'),
+    },
+  ]
+}
+
 export function ScanLaunchForm({
   projects,
   defaultMode,
@@ -210,6 +242,7 @@ export function ScanLaunchForm({
   projectLabel,
   defaultMeasurement,
   defaultMeasurements,
+  defaultSeoLayer,
 }: {
   projects: Array<{ id: string; name: string; domain?: string; platformProjectId?: string }>
   /** When set (deep-link / AUDION), skip progressive disclosure and show the full chain. */
@@ -225,6 +258,7 @@ export function ScanLaunchForm({
   projectLabel?: string
   defaultMeasurement?: GeoMeasurement
   defaultMeasurements?: GeoMeasurement[]
+  defaultSeoLayer?: SeoLayer
 }) {
   const { trackJob } = useJobNotifications()
   const t = useT()
@@ -238,6 +272,9 @@ export function ScanLaunchForm({
   )
   const [geoMeasurements, setGeoMeasurements] = useState<GeoMeasurement[]>(() =>
     initialGeoMeasurements(fromAudion, defaultMode, defaultMeasurement, defaultMeasurements),
+  )
+  const [seoLayer, setSeoLayer] = useState<SeoLayer | null>(() =>
+    initialSeoLayer(fromAudion, defaultMode, defaultSeoLayer),
   )
   const [url, setUrl] = useState(initialUrl)
   const [companyName, setCompanyName] = useState('')
@@ -270,9 +307,11 @@ export function ScanLaunchForm({
   const activeCapability = fromAudion ? 'wcag' : capability
   const activeWcagDepth = fromAudion ? 'single' : wcagDepth
   const activeGeoMeasurements = fromAudion ? [] : geoMeasurements
+  const activeSeoLayer = fromAudion ? null : seoLayer
   const showMaxPages =
     !fromAudion &&
-    (activeCapability === 'seo' || (activeCapability === 'wcag' && activeWcagDepth === 'deep'))
+    ((activeCapability === 'seo' && activeSeoLayer === 'quality') ||
+      (activeCapability === 'wcag' && activeWcagDepth === 'deep'))
   const geoBothLayers = activeGeoMeasurements.length > 1
   const geoTargetReady = Boolean(url.trim() || companyName.trim())
   const geoSuggestUrl =
@@ -298,9 +337,10 @@ export function ScanLaunchForm({
 
   const showDepth = activeCapability === 'wcag' && !fromAudion
   const showGeoMeasurement = activeCapability === 'geo' && !fromAudion
+  const showSeoLayer = activeCapability === 'seo' && !fromAudion
   const showCompose =
     fromAudion ||
-    activeCapability === 'seo' ||
+    (activeCapability === 'seo' && activeSeoLayer !== null) ||
     (activeCapability === 'geo' && activeGeoMeasurements.length > 0) ||
     (activeCapability === 'wcag' && activeWcagDepth !== null)
 
@@ -314,8 +354,12 @@ export function ScanLaunchForm({
     switch (activeCapability) {
       case 'seo':
         return {
-          cta: t('scan.ctaSeo'),
-          loading: t('scan.loadingSeo'),
+          cta:
+            activeSeoLayer === 'market' ? t('scan.ctaSeoMarket') : t('scan.ctaSeo'),
+          loading:
+            activeSeoLayer === 'market'
+              ? t('scan.loadingSeoMarket')
+              : t('scan.loadingSeo'),
         }
       case 'geo':
         if (geoBothLayers) {
@@ -345,12 +389,13 @@ export function ScanLaunchForm({
           loading: t('scan.ctaStarting'),
         }
     }
-  }, [activeCapability, activeWcagDepth, geoBothLayers, fromAudion, t])
+  }, [activeCapability, activeWcagDepth, activeSeoLayer, geoBothLayers, fromAudion, t])
 
   function onCapabilityChange(next: LaunchCapability) {
     if (fromAudion) return
     setCapability(next)
     setError(null)
+    setSeoLayer(null)
     // GEO: empty project by default. WCAG / SEO: keep / restore a Collection pick.
     if (next === 'geo') {
       // Progressive: measurement tiles first; only explicit deep-link layers skip ahead.
@@ -390,6 +435,11 @@ export function ScanLaunchForm({
 
   function onGeoMeasurementToggle(next: GeoMeasurement) {
     setGeoMeasurements((prev) => toggleGeoMeasurement(prev, next))
+    setError(null)
+  }
+
+  function onSeoLayerChange(next: SeoLayer) {
+    setSeoLayer(next)
     setError(null)
   }
 
@@ -451,6 +501,27 @@ export function ScanLaunchForm({
   }
 
   async function launchSeo() {
+    if (activeSeoLayer === 'market') {
+      const domain =
+        hostFromUrl(normalizeGeoUrl(url) || url) || url.replace(/^https?:\/\//, '').split('/')[0]
+      if (!projectId) {
+        setError(t('scan.seoMarketNeedProject'))
+        return
+      }
+      const href = paths.routes.projectSeo(projectId)
+      trackJob({
+        id: `seo-market-${Date.now()}`,
+        resource: 'seo-market',
+        status: 'completed',
+        title: 'SEO workspace',
+        href,
+        projectId,
+        targetUrl: url,
+        detail: domain || url,
+      })
+      window.location.assign(href)
+      return
+    }
     const res = await fetch(paths.routes.apiDomainScans, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -596,6 +667,7 @@ export function ScanLaunchForm({
     if (!showCompose || !activeCapability) return
     if (activeCapability === 'wcag' && !activeWcagDepth) return
     if (activeCapability === 'geo' && activeGeoMeasurements.length === 0) return
+    if (activeCapability === 'seo' && !activeSeoLayer) return
     setStatus('submitting')
     setError(null)
     try {
@@ -620,7 +692,9 @@ export function ScanLaunchForm({
   const composeKey =
     activeCapability === 'wcag'
       ? `compose-wcag-${activeWcagDepth ?? 'pending'}`
-      : `compose-${activeCapability ?? 'none'}`
+      : activeCapability === 'seo'
+        ? `compose-seo-${activeSeoLayer ?? 'pending'}`
+        : `compose-${activeCapability ?? 'none'}`
 
   return (
     <article className="checkion-magazine checkion-magazine--launch">
@@ -765,6 +839,50 @@ export function ScanLaunchForm({
                 })}
               </div>
               <Hint>{t('scan.geoMeasureHint')}</Hint>
+            </div>
+          ) : null}
+
+          {showSeoLayer ? (
+            <div
+              key="seo-layer"
+              className="checkion-launch-depth checkion-launch-reveal"
+            >
+              <div className="checkion-launch-tip-row" aria-label={t('scan.seoLayerTipsAria')}>
+                <LabelWithTip tipId="launch.seo">
+                  <span>{t('scan.seoQualityLabel')}</span>
+                </LabelWithTip>
+                <LabelWithTip tipId="launch.seo">
+                  <span>{t('scan.seoMarketLabel')}</span>
+                </LabelWithTip>
+              </div>
+              <div
+                className="checkion-depth-grid"
+                role="radiogroup"
+                aria-label={t('scan.seoLayerAria')}
+              >
+                {seoLayerCards(t).map((card) => {
+                  const selected = activeSeoLayer === card.id
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${card.label}. ${card.deck}`}
+                      className={
+                        selected
+                          ? 'checkion-depth-tile checkion-depth-tile--selected'
+                          : 'checkion-depth-tile'
+                      }
+                      onClick={() => onSeoLayerChange(card.id)}
+                    >
+                      <span className="checkion-depth-tile__kicker">{card.kicker}</span>
+                      <span className="checkion-depth-tile__label">{card.label}</span>
+                      <span className="checkion-depth-tile__deck">{card.deck}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           ) : null}
 

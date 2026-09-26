@@ -36,6 +36,9 @@
 | `DATABASE_URL` | Product Postgres; when unset, stores use in-memory fixtures. Also enables live scans / live GEO unless the matching `CHECKION_LIVE_*=0` flag is set |
 | `CHECKION_LIVE_SCANS` | `1` force live Puppeteer pipeline; `0` force fixture synthesize |
 | `CHECKION_LIVE_GEO` | `1` force live GEO LLM pipeline; `0` force fixture synthesize |
+| `CHECKION_LIVE_SEO_MARKET` | `1` force live DataForSEO Market; `0` force fixture; unset → live when `DATAFORSEO_API_KEY` + `DATABASE_URL` |
+| `DATAFORSEO_API_KEY` | Base64 `email:password` for Market SEO (server-only). Spec: `specs/domain/seo-dataforseo.md` |
+| `CHECKION_SEO_MARKET_DAILY_SOFT_CAP` | Soft billable units / Collection / day (default 50) |
 | `CHECKION_SCAN_WORKER_MODE` | `inline` (default, web executes crawls) or `external` (DB claim by scan-worker). Spec: `specs/domain/scan-worker.md` |
 | `CHECKION_SCAN_WORKER_STALE_MS` | Worker-only stale reclaim grace (default 120000) |
 | `CHECKION_SCAN_WORKER_ABANDON_NO_PROGRESS_MS` | Fail foreign/stale 0-page jobs after this age (default 600000) |
@@ -77,12 +80,20 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Primary tiles: SEO · GEO · WCAG; WCAG reveals secondary **Quick single** · **Deep scan** (`ToggleGroup`)
 - Deep-link helper: `paths.routes.scanLaunch({ projectId, mode: 'seo'|'geo'|'single'|'deep', url, measurement?, … })` — GEO `measurement=recall|live|both`
 - Modes:
-  - `mode=seo` → `POST /api/domain-scans` → `/domain/:id/overview` (SEO coverage chapter)
+  - `mode=seo` → SEO layer tiles: Quality → `POST /api/domain-scans` → `/domain/:id/overview`; Market → `/projects/:id/seo` (`seoLayer=quality|market`, requires project) · specs `seo-market-program.md` / `seo-project-workspace.md`
   - `mode=geo` → `POST /api/geo-jobs` → `/geo/:id/overview` (visible URL and/or company name + Project; optional `measurement=recall|live|both` — both starts two jobs; Project defaults empty — select / create, or auto-create on submit when omitted; optional `companyName` on GEO body — see `scan-modes.md` · `geo-measurement-layers.md`)
   - `mode=single` → WCAG Quick single → `POST /api/scans` → `/results/:id/overview`
   - `mode=deep` → WCAG Deep scan → `POST /api/scans` (+ domain payload, optional `maxPages`) → `/results/:id/overview`
   - Deep / SEO page cap: `lib/scan/domain-scan-max-pages.ts` (presets 50–1000 + All 10000; default 1000) — Select on compose when Deep or SEO
 - Spec: `specs/domain/scan-modes.md`
+
+## SEO Market (DataForSEO) — project workspace
+- Specs: `specs/domain/seo-project-workspace.md` · `seo-market-program.md` · `seo-dataforseo.md` · `specs/api/seo-project.md`
+- UI: `/projects/:id/seo` · `/keywords` · `/domain` · `/backlinks` · `/rank-tracking` · `/competitors` · `/gsc`
+- API: `/api/projects/:id/seo/*` (`paths.routes.apiProjectSeo*`)
+- Legacy `/seo` redirects to project SEO when `projectId` present
+- Env: `DATAFORSEO_API_KEY` · `CHECKION_LIVE_SEO_MARKET` · soft cap `CHECKION_SEO_MARKET_DAILY_SOFT_CAP`
+- MCP: `checkion_v3.seo_*` → project-scoped APIs
 
 ## Domain scan corpus pages (Wave 1)
 - API: `GET /api/domain-scans/:id/pages` — `paths.routes.apiDomainScanPages(id)` · spec `specs/api/domain-scan-pages.md`

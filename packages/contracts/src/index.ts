@@ -1008,3 +1008,180 @@ export type FetchPageResponse = {
   httpStatus: number | null
   stubbed: boolean
 }
+
+/** SEO Market — DataForSEO / fixture envelopes. Spec: specs/api/seo-market.md */
+export type SeoMarketSource = 'dataforseo' | 'fixture'
+
+export interface SeoMarketEnvelope {
+  source: SeoMarketSource
+  stubbed: boolean
+  fetchedAt: string
+  projectId: string
+}
+
+export interface SeoKeywordIdea {
+  keyword: string
+  searchVolume: number | null
+  competition: number | null
+  cpc: number | null
+  intent?: string | null
+  difficulty?: number | null
+}
+
+export interface SeoKeywordsResult extends SeoMarketEnvelope {
+  seed: string
+  items: SeoKeywordIdea[]
+}
+
+export interface SeoSavedKeywordRow {
+  id: string
+  projectId: string
+  keyword: string
+  locationCode: number
+  languageCode: string
+  createdAt: string
+  metrics?: SeoKeywordIdea | null
+}
+
+export interface SeoSerpOrganicItem {
+  rank: number
+  domain: string
+  url: string
+  title: string
+  description?: string | null
+}
+
+export interface SeoSerpResult extends SeoMarketEnvelope {
+  keyword: string
+  items: SeoSerpOrganicItem[]
+}
+
+export interface SeoDomainOverviewResult extends SeoMarketEnvelope {
+  domain: string
+  organicKeywords: number | null
+  organicTraffic: number | null
+  organicCost: number | null
+  topKeywords: SeoKeywordIdea[]
+}
+
+export interface SeoDomainSnapshot extends SeoDomainOverviewResult {
+  id: string
+  capturedAt: string
+}
+
+export interface SeoCompetitorRow {
+  domain: string
+  overlapCount: number
+  avgRank: number | null
+}
+
+export interface SeoCompetitorsResult extends SeoMarketEnvelope {
+  domain: string
+  keywords: string[]
+  items: SeoCompetitorRow[]
+}
+
+export interface SeoBacklinksResult extends SeoMarketEnvelope {
+  domain: string
+  referringDomains: number | null
+  backlinks: number | null
+  rank: number | null
+  spamScore: number | null
+  newBacklinks?: number | null
+  lostBacklinks?: number | null
+  newReferringDomains?: number | null
+  lostReferringDomains?: number | null
+}
+
+export interface SeoBacklinkSnapshot extends SeoBacklinksResult {
+  id: string
+  capturedAt: string
+}
+
+export type SeoRankSchedule = 'manual' | 'daily' | 'weekly'
+export type SeoRankRunStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+export type SeoRankTrackerStatus = 'idle' | 'queued' | 'running' | 'completed' | 'failed'
+
+export interface SeoRankSnapshot {
+  keyword: string
+  rank: number | null
+  url: string | null
+  fetchedAt: string
+  device?: 'desktop' | 'mobile'
+}
+
+export interface SeoRankConfig {
+  id: string
+  projectId: string
+  domain: string
+  locationCode: number
+  languageCode: string
+  schedule: SeoRankSchedule
+  isActive: boolean
+  keywords: string[]
+  lastCheckedAt: string | null
+  nextCheckAt: string | null
+  createdAt: string
+  updatedAt: string
+  latestRunStatus?: SeoRankRunStatus | null
+  latest: SeoRankSnapshot[]
+}
+
+/** @deprecated transitional alias — prefer SeoRankConfig */
+export interface SeoRankTracker {
+  id: string
+  projectId: string
+  domain: string
+  keywords: string[]
+  locationCode: number
+  languageCode: string
+  status: SeoRankTrackerStatus
+  createdAt: string
+  updatedAt: string
+  lastRefreshAt: string | null
+  latest: SeoRankSnapshot[]
+}
+
+export interface SeoProjectOverview {
+  projectId: string
+  domain: string
+  domainSnapshot: SeoDomainSnapshot | null
+  backlinkSnapshot: SeoBacklinkSnapshot | null
+  rankConfigs: Array<{
+    id: string
+    domain: string
+    keywordCount: number
+    lastCheckedAt: string | null
+  }>
+  savedKeywordCount: number
+}
+
+export interface SeoMarketUsage {
+  projectId: string
+  day: string
+  units: number
+  softCap: number
+}
+
+export interface SeoGscStatus {
+  projectId: string
+  connected: boolean
+  siteUrl: string | null
+  stubbed: boolean
+}
+
+export interface SeoGscPerformanceRow {
+  query: string
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+}
+
+export interface SeoGscPerformanceResult extends SeoMarketEnvelope {
+  siteUrl: string
+  startDate: string
+  endDate: string
+  items: SeoGscPerformanceRow[]
+}

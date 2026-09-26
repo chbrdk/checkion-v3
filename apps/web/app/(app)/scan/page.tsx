@@ -36,6 +36,7 @@ export default async function ScanPage({
     audionRunId?: string
     stepUrl?: string
     measurement?: string
+    seoLayer?: string
   }>
 }) {
   const params = await searchParams
@@ -66,6 +67,10 @@ export default async function ScanPage({
     defaultMode === 'geo' && params.measurement != null && String(params.measurement).trim() !== ''
       ? parseGeoMeasurementsOrDefault(params.measurement)
       : undefined
+  const defaultSeoLayer =
+    defaultMode === 'seo' && (params.seoLayer === 'quality' || params.seoLayer === 'market')
+      ? params.seoLayer
+      : undefined
   const selectedProject = defaultProjectId
     ? projects.find((p) => p.id === defaultProjectId)
     : undefined
@@ -75,6 +80,7 @@ export default async function ScanPage({
       projects={projects}
       defaultMode={defaultMode}
       defaultMeasurements={defaultMeasurements}
+      defaultSeoLayer={defaultSeoLayer}
       defaultProjectId={defaultProjectId}
       defaultUrl={defaultUrl}
       correlation={{

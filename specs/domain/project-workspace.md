@@ -31,7 +31,7 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
 - No AppShell `checkion-page-lead` (domain lives on the cover host line)
 - Comfortable **top padding** under the rail (same breath as projects hub / home)
 
-1. **Topbar** — breadcrumb `Projects / {name}` · primary CTAs (New scan · Open GEO / Start GEO)
+1. **Topbar** — breadcrumb `Projects / {name}` · primary CTAs (New scan · **SEO** · Open GEO / Start GEO)
 2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · ghost Edit · Archive
 3. **Corpus pulse** — magazine chapter band (single / deep scan / GEO counts · latest score) as hairline editorial meters — not a dense boxed dashboard
 4. **Latest runs** — three equal columns (same composition as home `checkion-home-run-columns`):
@@ -39,8 +39,9 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
    - **Deep scans** → `/domain/:id/overview`
    - **GEO runs** — always show the column; EmptyState when empty → `/geo/:id/overview`
 5. **GEO History** — per-query position timelines across completed GEO jobs (soft match by measurement + normalized query text). Model filter + `SeriesChart` cards. Deep-link `?chapter=geo-history`. Spec: [`geo-position-history.md`](./geo-position-history.md).
+6. **SEO Market** — OpenSEO-style workspace at `/projects/:id/seo/*` (keywords, domain, backlinks, rank tracking, competitors, GSC). Spec: [`seo-project-workspace.md`](./seo-project-workspace.md).
 
-Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub.
+Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub (SEO is a nested route tree under the project, not extra tabs on the magazine cover).
 
 ## Archive semantics
 UI **Archive** (not Delete) calls `POST /api/projects/:id/archive` → Plexon `PATCH …/provisioning/projects/:platformProjectId` `{ status: archived }` when bound, then local mirror `status: archived` (hidden from default lists). Unbound / dummy: local archive only. Scans stay on the project. Hard-delete remains Plexon global-admin / ops only.

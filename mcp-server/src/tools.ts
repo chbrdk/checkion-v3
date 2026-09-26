@@ -91,6 +91,16 @@ export const CHECKION_V3_TOOL_NAMES = [
   'checkion_v3.share_create',
   'checkion_v3.share_get',
   'checkion_v3.fetch_page',
+  'checkion_v3.seo_overview',
+  'checkion_v3.seo_keywords',
+  'checkion_v3.seo_domain',
+  'checkion_v3.seo_backlinks',
+  'checkion_v3.seo_rank_configs_list',
+  'checkion_v3.seo_rank_config_create',
+  'checkion_v3.seo_rank_config_refresh',
+  'checkion_v3.seo_competitors',
+  'checkion_v3.seo_gsc',
+  'checkion_v3.seo_usage',
 ] as const
 
 export function registerCheckionV3Tools(server: ToolServer) {
@@ -691,6 +701,217 @@ export function registerCheckionV3Tools(server: ToolServer) {
         method: 'POST',
         body: JSON.stringify(args),
       }),
+  )
+
+  // --- SEO Project workspace (DataForSEO, project-scoped) ---
+  registerTool(
+    'checkion_v3.seo_overview',
+    {
+      title: 'SEO project overview',
+      description: 'GET /api/projects/:id/seo/overview — KPIs + latest snapshots.',
+      inputSchema: z.object({
+        projectId: z.string(),
+      }),
+    },
+    async (args) => {
+      const { projectId } = args as { projectId: string }
+      return textResult(`/api/projects/${encodeURIComponent(projectId)}/seo/overview`)
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_keywords',
+    {
+      title: 'SEO keywords',
+      description:
+        'GET list saved / POST research|save on /api/projects/:id/seo/keywords.',
+      inputSchema: z.object({
+        projectId: z.string(),
+        action: z.enum(['list', 'research', 'save']).optional(),
+        seed: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
+        limit: z.number().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, action = 'list', seed, keywords, limit } = args as {
+        projectId: string
+        action?: 'list' | 'research' | 'save'
+        seed?: string
+        keywords?: string[]
+        limit?: number
+      }
+      const path = `/api/projects/${encodeURIComponent(projectId)}/seo/keywords`
+      if (action === 'list') return textResult(path)
+      return textResult(path, {
+        method: 'POST',
+        body: JSON.stringify(
+          action === 'save'
+            ? { action: 'save', keywords: keywords ?? [] }
+            : { action: 'research', seed, limit, save: true },
+        ),
+      })
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_domain',
+    {
+      title: 'SEO domain snapshot',
+      description: 'GET latest / POST refresh /api/projects/:id/seo/domain.',
+      inputSchema: z.object({
+        projectId: z.string(),
+        refresh: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, refresh } = args as { projectId: string; refresh?: boolean }
+      const path = `/api/projects/${encodeURIComponent(projectId)}/seo/domain`
+      if (refresh) {
+        return textResult(path, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'refresh' }),
+        })
+      }
+      return textResult(path)
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_backlinks',
+    {
+      title: 'SEO backlinks',
+      description: 'GET history / POST refresh /api/projects/:id/seo/backlinks.',
+      inputSchema: z.object({
+        projectId: z.string(),
+        refresh: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, refresh } = args as { projectId: string; refresh?: boolean }
+      const path = `/api/projects/${encodeURIComponent(projectId)}/seo/backlinks`
+      if (refresh) {
+        return textResult(path, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'refresh' }),
+        })
+      }
+      return textResult(path)
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_rank_configs_list',
+    {
+      title: 'List SEO rank configs',
+      description: 'GET /api/projects/:id/seo/rank-configs',
+      inputSchema: z.object({
+        projectId: z.string(),
+      }),
+    },
+    async (args) => {
+      const { projectId } = args as { projectId: string }
+      return textResult(`/api/projects/${encodeURIComponent(projectId)}/seo/rank-configs`)
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_rank_config_create',
+    {
+      title: 'Create SEO rank config',
+      description: 'POST /api/projects/:id/seo/rank-configs',
+      inputSchema: z.object({
+        projectId: z.string(),
+        keywords: z.array(z.string()),
+        domain: z.string().optional(),
+        schedule: z.enum(['manual', 'daily', 'weekly']).optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, ...body } = args as {
+        projectId: string
+        keywords: string[]
+        domain?: string
+        schedule?: string
+      }
+      return textResult(`/api/projects/${encodeURIComponent(projectId)}/seo/rank-configs`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      })
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_rank_config_refresh',
+    {
+      title: 'Refresh SEO rank config',
+      description: 'POST /api/projects/:id/seo/rank-configs/:configId/refresh',
+      inputSchema: z.object({
+        projectId: z.string(),
+        configId: z.string(),
+      }),
+    },
+    async (args) => {
+      const { projectId, configId } = args as { projectId: string; configId: string }
+      return textResult(
+        `/api/projects/${encodeURIComponent(projectId)}/seo/rank-configs/${encodeURIComponent(configId)}/refresh`,
+        { method: 'POST' },
+      )
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_competitors',
+    {
+      title: 'SEO competitors',
+      description: 'POST /api/projects/:id/seo/competitors — SERP overlap.',
+      inputSchema: z.object({
+        projectId: z.string(),
+        keywords: z.array(z.string()).optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, keywords } = args as {
+        projectId: string
+        keywords?: string[]
+      }
+      return textResult(`/api/projects/${encodeURIComponent(projectId)}/seo/competitors`, {
+        method: 'POST',
+        body: JSON.stringify({ keywords: keywords ?? [] }),
+      })
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_gsc',
+    {
+      title: 'SEO GSC status',
+      description: 'GET /api/projects/:id/seo/gsc — status + stub performance.',
+      inputSchema: z.object({
+        projectId: z.string(),
+      }),
+    },
+    async (args) => {
+      const { projectId } = args as { projectId: string }
+      return textResult(`/api/projects/${encodeURIComponent(projectId)}/seo/gsc`)
+    },
+  )
+
+  registerTool(
+    'checkion_v3.seo_usage',
+    {
+      title: 'SEO Market usage',
+      description: 'GET /api/seo-market/usage?projectId= — soft-cap units for today.',
+      inputSchema: z.object({
+        projectId: z.string(),
+      }),
+    },
+    async (args) => {
+      const { projectId } = args as { projectId: string }
+      return textResult(
+        `/api/seo-market/usage?projectId=${encodeURIComponent(projectId)}`,
+      )
+    },
   )
 
   // silence unused import warning if tree-shaken oddly

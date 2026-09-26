@@ -7231,3 +7231,55 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   border: 0;
   white-space: nowrap;
 }
+
+/* SEO project workspace */
+.checkion-seo-project {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0 0 2rem;
+}
+
+.checkion-seo-project__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.checkion-seo-project__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.checkion-seo-project__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkion-seo-project__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.checkion-seo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.checkion-seo-table th,
+.checkion-seo-table td {
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.checkion-seo-table th {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--fg) 70%, transparent);
+}

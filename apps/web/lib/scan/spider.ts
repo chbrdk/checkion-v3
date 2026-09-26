@@ -108,7 +108,10 @@ function calculateDomainScore(pages: Array<{ result: ScanResult; depth: number }
 /**
  * Identifies Systemic Issues (same issue ID appearing on >50% of pages)
  */
-function identifySystemicIssues(pages: Array<ScanResult>) {
+function identifySystemicIssues(
+    pages: Array<ScanResult>,
+    graph?: { nodes: Array<{ id: string }>; links: Array<{ source: string; target: string }> },
+) {
     const issueMap = new Map<string, { title: string; count: number; urls: string[] }>();
     const totalPages = pages.length;
 
@@ -143,6 +146,75 @@ function identifySystemicIssues(pages: Array<ScanResult>) {
             });
         }
     });
+
+    // Corpus SEO Quality checks (OpenSEO audit 80/20 — Checkion spider, not OpenSEO crawler)
+    const brokenPages = pages.filter((p) => (p.links?.broken?.length ?? 0) > 0);
+    if (brokenPages.length > 0) {
+        systemic.push({
+            issueId: 'seo-broken-internal-links',
+            title: 'Broken links detected on crawled pages',
+            count: brokenPages.length,
+            pages: brokenPages.map((p) => p.url),
+        });
+    }
+
+    const redirectHeavy = pages.filter(
+        (p) =>
+            (p.technicalInsights?.redirectCount ?? 0) >= 2 ||
+            (p.technicalInsights?.metaRefreshPresent ?? false),
+    );
+    if (redirectHeavy.length > 0) {
+        systemic.push({
+            issueId: 'seo-redirect-chains',
+            title: 'Redirect chains or meta-refresh on pages',
+            count: redirectHeavy.length,
+            pages: redirectHeavy.map((p) => p.url),
+        });
+    }
+
+    if (graph && graph.nodes.length > 1 && graph.links.length > 0) {
+        const hasInlink = new Set(graph.links.map((l) => l.target));
+        // Start / seed URLs may lack inlinks; treat as orphan only when never targeted.
+        const orphanUrls = pages
+            .map((p) => p.url)
+            .filter((url) => {
+                try {
+                    const id = new URL(url).href.replace(/\/$/, '');
+                    const alt = url.replace(/\/$/, '');
+                    return (
+                        !hasInlink.has(url) &&
+                        !hasInlink.has(id) &&
+                        !hasInlink.has(alt) &&
+                        ![...hasInlink].some((t) => t.replace(/\/$/, '') === alt)
+                    );
+                } catch {
+                    return false;
+                }
+            });
+        // Only flag when crawl likely completed enough of the graph (not truncated noise).
+        if (orphanUrls.length > 0 && orphanUrls.length < totalPages) {
+            systemic.push({
+                issueId: 'seo-orphan-pages',
+                title: 'Orphan pages — no observed inlinks in this crawl',
+                count: orphanUrls.length,
+                pages: orphanUrls.slice(0, 100),
+            });
+        }
+    }
+
+    const thin = pages.filter(
+        (p) =>
+            p.seo?.skinnyContent === true ||
+            (typeof p.seo?.bodyWordCount === 'number' && p.seo.bodyWordCount < 50),
+    );
+    if (thin.length > 0 && totalPages > 1 && thin.length >= Math.ceil(totalPages / 4)) {
+        systemic.push({
+            issueId: 'seo-thin-content',
+            title: 'Thin content across multiple pages',
+            count: thin.length,
+            pages: thin.map((p) => p.url),
+        });
+    }
 
     return systemic.sort((a, b) => b.count - a.count);
 }
@@ -497,7 +569,10 @@ export async function* runDomainScan(
 
     // Final calculations
     const domainScore = calculateDomainScore(results);
-    const systemicIssues = identifySystemicIssues(results.map((r) => r.result));
+    const systemicIssues = identifySystemicIssues(results.map((r) => r.result), {
+        nodes: graphNodes,
+        links: graphLinks,
+    });
 
     const terminalStatus = userCancel ? 'cancelled' : 'complete';
     const finalResult: DomainScanResultWithFullPages = {

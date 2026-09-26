@@ -194,3 +194,222 @@ export const apiTokens = pgTable('api_tokens', {
 })
 
 export type ApiTokenRow = typeof apiTokens.$inferSelect
+
+/** SEO Market cache (TTL) — DataForSEO response blobs. */
+export const seoMarketCache = pgTable(
+  'seo_market_cache',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    cacheKey: text('cache_key').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    projectKeyUnique: uniqueIndex('seo_market_cache_project_key_unique').on(
+      t.projectId,
+      t.cacheKey,
+    ),
+  }),
+)
+
+export type SeoMarketCacheRow = typeof seoMarketCache.$inferSelect
+
+export const seoMarketUsage = pgTable(
+  'seo_market_usage',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    day: text('day').notNull(),
+    endpoint: text('endpoint').notNull(),
+    units: integer('units').notNull().default(1),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    projectDayIdx: uniqueIndex('seo_market_usage_id_unique').on(t.id),
+  }),
+)
+
+export type SeoMarketUsageRow = typeof seoMarketUsage.$inferSelect
+
+export const seoSavedKeywords = pgTable(
+  'seo_saved_keywords',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    keyword: text('keyword').notNull(),
+    locationCode: integer('location_code').notNull().default(2840),
+    languageCode: text('language_code').notNull().default('en'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniq: uniqueIndex('seo_saved_keywords_project_kw_loc_lang').on(
+      t.projectId,
+      t.keyword,
+      t.locationCode,
+      t.languageCode,
+    ),
+  }),
+)
+
+export type SeoSavedKeywordRow = typeof seoSavedKeywords.$inferSelect
+
+export const seoKeywordMetrics = pgTable(
+  'seo_keyword_metrics',
+  {
+    id: text('id').primaryKey(),
+    projectId: text('project_id').notNull(),
+    keyword: text('keyword').notNull(),
+    locationCode: integer('location_code').notNull().default(2840),
+    languageCode: text('language_code').notNull().default('en'),
+    searchVolume: integer('search_volume'),
+    cpc: doublePrecision('cpc'),
+    competition: doublePrecision('competition'),
+    keywordDifficulty: integer('keyword_difficulty'),
+    intent: text('intent'),
+    fetchedAt: text('fetched_at').notNull(),
+  },
+  (t) => ({
+    uniq: uniqueIndex('seo_keyword_metrics_project_kw_loc_lang').on(
+      t.projectId,
+      t.keyword,
+      t.locationCode,
+      t.languageCode,
+    ),
+  }),
+)
+
+export type SeoKeywordMetricsRow = typeof seoKeywordMetrics.$inferSelect
+
+export const seoRankConfigs = pgTable('seo_rank_configs', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  domain: text('domain').notNull(),
+  locationCode: integer('location_code').notNull().default(2840),
+  languageCode: text('language_code').notNull().default('en'),
+  schedule: text('schedule').notNull().default('manual'),
+  isActive: integer('is_active').notNull().default(1),
+  lastCheckedAt: text('last_checked_at'),
+  nextCheckAt: text('next_check_at'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type SeoRankConfigRow = typeof seoRankConfigs.$inferSelect
+
+export const seoRankKeywords = pgTable(
+  'seo_rank_keywords',
+  {
+    id: text('id').primaryKey(),
+    configId: text('config_id').notNull(),
+    keyword: text('keyword').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniq: uniqueIndex('seo_rank_keywords_config_kw').on(t.configId, t.keyword),
+  }),
+)
+
+export type SeoRankKeywordRow = typeof seoRankKeywords.$inferSelect
+
+export const seoRankRuns = pgTable('seo_rank_runs', {
+  id: text('id').primaryKey(),
+  configId: text('config_id').notNull(),
+  projectId: text('project_id').notNull(),
+  status: text('status').notNull().default('pending'),
+  keywordsTotal: integer('keywords_total').notNull().default(0),
+  keywordsChecked: integer('keywords_checked').notNull().default(0),
+  errorMessage: text('error_message'),
+  startedAt: text('started_at').notNull(),
+  completedAt: text('completed_at'),
+})
+
+export type SeoRankRunRow = typeof seoRankRuns.$inferSelect
+
+export const seoRankSnapshots = pgTable('seo_rank_snapshots', {
+  id: text('id').primaryKey(),
+  runId: text('run_id').notNull(),
+  trackingKeywordId: text('tracking_keyword_id').notNull(),
+  keyword: text('keyword').notNull(),
+  device: text('device').notNull().default('desktop'),
+  position: integer('position'),
+  url: text('url'),
+  checkedAt: text('checked_at').notNull(),
+})
+
+export type SeoRankSnapshotRow = typeof seoRankSnapshots.$inferSelect
+
+export const seoBacklinkSnapshots = pgTable('seo_backlink_snapshots', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  domain: text('domain').notNull(),
+  rank: integer('rank'),
+  backlinks: integer('backlinks'),
+  referringDomains: integer('referring_domains'),
+  brokenBacklinks: integer('broken_backlinks'),
+  newBacklinks: integer('new_backlinks'),
+  lostBacklinks: integer('lost_backlinks'),
+  newReferringDomains: integer('new_referring_domains'),
+  lostReferringDomains: integer('lost_referring_domains'),
+  spamScore: integer('spam_score'),
+  source: text('source').notNull().default('fixture'),
+  stubbed: integer('stubbed').notNull().default(1),
+  capturedAt: text('captured_at').notNull(),
+})
+
+export type SeoBacklinkSnapshotRow = typeof seoBacklinkSnapshots.$inferSelect
+
+export const seoDomainSnapshots = pgTable('seo_domain_snapshots', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  domain: text('domain').notNull(),
+  organicKeywords: integer('organic_keywords'),
+  organicTraffic: doublePrecision('organic_traffic'),
+  organicCost: doublePrecision('organic_cost'),
+  topKeywords: jsonb('top_keywords').$type<Array<Record<string, unknown>>>().notNull().default([]),
+  source: text('source').notNull().default('fixture'),
+  stubbed: integer('stubbed').notNull().default(1),
+  capturedAt: text('captured_at').notNull(),
+})
+
+export type SeoDomainSnapshotRow = typeof seoDomainSnapshots.$inferSelect
+
+/** @deprecated legacy blob tracker — prefer seo_rank_configs */
+export type SeoRankTrackerPayload = {
+  keywords: string[]
+  locationCode: number
+  languageCode: string
+  latest: Array<{
+    keyword: string
+    rank: number | null
+    url: string | null
+    fetchedAt: string
+  }>
+  error?: string
+}
+
+export const seoRankTrackers = pgTable('seo_rank_trackers', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  domain: text('domain').notNull(),
+  status: text('status').notNull().default('idle'),
+  lastRefreshAt: text('last_refresh_at'),
+  payload: jsonb('payload').$type<SeoRankTrackerPayload>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type SeoRankTrackerRow = typeof seoRankTrackers.$inferSelect
+
+export const seoKeywordSets = pgTable('seo_keyword_sets', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  label: text('label').notNull(),
+  keywords: jsonb('keywords').$type<string[]>().notNull().default([]),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type SeoKeywordSetRow = typeof seoKeywordSets.$inferSelect

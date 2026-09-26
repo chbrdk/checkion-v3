@@ -404,6 +404,11 @@ export function ProjectWorkspace({
               {t('projects.newScan')}
             </Button>
           </Link>
+          <Link href={paths.routes.projectSeo(project.id)}>
+            <Button variant="ghost" size="sm">
+              {t('projects.openSeo')}
+            </Button>
+          </Link>
           <Link href={geoHref}>
             <Button variant="ghost" size="sm">
               {latestGeo ? t('projects.openGeo') : t('projects.startGeo')}

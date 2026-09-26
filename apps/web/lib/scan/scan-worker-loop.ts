@@ -23,11 +23,17 @@ import {
 } from '@/lib/scan/scan-worker-mode'
 import { screenshotStorageProbe } from '@/lib/scan/screenshot-storage'
 import { paths } from '@/lib/paths'
+import {
+  listDueRankConfigs,
+  projectRefreshRankConfig,
+} from '@/lib/seo-market/project-service'
 
 export const SCAN_WORKER_SESSION_ID = crypto.randomUUID()
 
 const HEARTBEAT_MS = 15_000
 const POLL_IDLE_MS = 2_000
+/** At most one scheduled SEO rank refresh per idle tick. */
+const SEO_RANK_REFRESH_PER_TICK = 1
 
 function createdAtMs(row: { createdAt: Date | string | null }): number {
   if (row.createdAt instanceof Date) return row.createdAt.getTime()
@@ -432,9 +438,24 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
 
 export type ScanWorkerTickResult = {
   claimed: boolean
-  kind?: 'single' | 'domain'
+  kind?: 'single' | 'domain' | 'seo-rank'
   id?: string
   reclaimed: number
+}
+
+async function runDueSeoRankRefreshes(): Promise<{ ran: boolean; id?: string }> {
+  try {
+    const due = await listDueRankConfigs()
+    const slice = due.slice(0, SEO_RANK_REFRESH_PER_TICK)
+    if (slice.length === 0) return { ran: false }
+    const config = slice[0]!
+    console.info('[checkion-scan-worker] seo rank refresh', config.id, config.domain)
+    await projectRefreshRankConfig(config.id)
+    return { ran: true, id: config.id }
+  } catch (err) {
+    console.error('[checkion-scan-worker] seo rank refresh failed', err)
+    return { ran: false }
+  }
 }
 
 /** One poll/claim/execute cycle (for tests + loop). */
@@ -446,7 +467,13 @@ export async function runScanWorkerTick(): Promise<ScanWorkerTickResult> {
     singles.map((s) => ({ id: s.id, createdAtMs: createdAtMs(s) })),
     domains.map((d) => ({ id: d.id, createdAtMs: createdAtMs(d) })),
   )
-  if (!pick) return { claimed: false, reclaimed }
+  if (!pick) {
+    const seo = await runDueSeoRankRefreshes()
+    if (seo.ran) {
+      return { claimed: true, kind: 'seo-rank', id: seo.id, reclaimed }
+    }
+    return { claimed: false, reclaimed }
+  }
 
   if (pick.kind === 'single') {
     const claimed = await claimSingle(pick.id)

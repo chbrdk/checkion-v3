@@ -49,6 +49,7 @@ Prefix: `checkion_v3.` (distinct from v2 `checkion.*` if both MCPs are installed
 | GEO | `geo_jobs_list`, `geo_job_start`, `geo_job_get`, `geo_suggest_queries`, `geo_job_reading`, `geo_job_publish_knowledge`, `geo_job_export_csv` |
 | Share | `share_create`, `share_get` |
 | Research | `fetch_page` |
+| SEO Market | `seo_overview`, `seo_keywords`, `seo_domain`, `seo_backlinks`, `seo_rank_configs_list`, `seo_rank_config_create`, `seo_rank_config_refresh`, `seo_competitors`, `seo_gsc`, `seo_usage` |
 
 ## Tool: `checkion_v3.domain_scan_pages_list`
 

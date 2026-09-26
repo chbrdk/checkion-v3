@@ -44,8 +44,11 @@ Issue affected-page links prefer these rows (URL match). Virtual `dpage__` / `ds
 ## Corpus pages API (Wave 1)
 Full slim list beyond `pageSamples` teaser: `specs/api/domain-scan-pages.md` — `GET /api/domain-scans/:id/pages`.
 
+## Market SEO (separate)
+Organic keywords / ranks / backlinks live under `/seo` Market hub — not domain magazine chapters. Optional cross-link from Overview meta when `projectId` + host known. Spec: [`seo-market-program.md`](./seo-market-program.md).
+
 ## Deferred
-Crawl map / graph, prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep.
+Crawl map / graph UI, prod 8-tab shell (visual-map, journey, …). Single rich overview spec does **not** apply to deep. Corpus SEO Quality checks (broken links, redirect chains, orphans, thin content) emit as systemic issues from the spider (`seo-broken-internal-links`, `seo-redirect-chains`, `seo-orphan-pages`, `seo-thin-content`).
 
 ## Live deep-scan wiring
 `adaptDomainResultToContracts` must populate Overview aggregate chapters from the spider corpus (`seoCoverage`, `eeat`, `generative`, plus performance / ux / eco / links / securityPrivacy when page signals exist). Silent omission of SEO/Trust·GEO chapters when aggregates are missing is a bug, not an empty state. Existing thin payloads need a re-run (or backfill) after this lands. Page captures are written during the spider under the stable page-scan id and upserted into `scans` on domain complete.

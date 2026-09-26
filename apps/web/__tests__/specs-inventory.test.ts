@@ -35,6 +35,9 @@ const requiredSpecs = [
   'specs/domain/geo-job-rename.md',
   'specs/domain/scan-run-rename.md',
   'specs/domain/geo-position-history.md',
+  'specs/domain/seo-project-workspace.md',
+  'specs/domain/seo-market-program.md',
+  'specs/api/seo-project.md',
   'specs/domain/journey-ui.md',
   'specs/domain/project-reports.md',
   'specs/domain/suite-enterprise-program.md',
@@ -109,6 +112,8 @@ describe('specs inventory', () => {
       '/api/geo-jobs/geo-1/publish-knowledge',
     )
     expect(paths.routes.apiGeoJobExportCsv('geo-1')).toBe('/api/geo-jobs/geo-1/export')
+    expect(paths.routes.projectSeo('p1')).toBe('/projects/p1/seo')
+    expect(paths.routes.apiProjectSeoOverview('p1')).toBe('/api/projects/p1/seo/overview')
     expect(paths.routes.apiGeoJobExportCsv('a/b')).toBe('/api/geo-jobs/a%2Fb/export')
     expect(paths.routes.apiScanDelta('s1')).toBe('/api/scans/s1/delta')
     expect(paths.routes.apiDomainScanDelta('d1')).toBe('/api/domain-scans/d1/delta')

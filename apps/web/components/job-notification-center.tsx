@@ -21,7 +21,7 @@ import { NavIconJobs } from './nav-icons'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
 
-type TrackedJobResource = 'scan' | 'domain' | 'geo'
+type TrackedJobResource = 'scan' | 'domain' | 'geo' | 'seo-market'
 type TrackedJobStatus = ScanStatus
 
 const JOB_STATUS_TIP: Partial<Record<TrackedJobStatus, TipId>> = {

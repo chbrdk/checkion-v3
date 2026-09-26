@@ -1,19 +1,19 @@
 # Scan modes — CHECKION v3
 
 ## Status
-Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project; Phase 7 — launch / re-run notification center; Phase 8 — GEO measurement tiles: Model memory vs Live search)
+Accepted (Phase 2 — live single + domain pipelines; Phase 3 — GEO launch on `/scan`; Phase 4 — capability-first launch IA: WCAG · GEO · SEO; Phase 5 — progressive disclosure on `/scan`; Phase 6 — GEO compose requires URL **or** company name + Project; Phase 7 — launch / re-run notification center; Phase 8 — GEO measurement tiles: Model memory vs Live search; Phase 9 — SEO layer tiles: Quality crawl · Market hub)
 
 ## MVP modes (deep-link / API)
 | Mode | Primary capability | Result |
 |------|--------------------|--------|
-| `seo` | SEO | `/domain/[id]/overview` via `POST /api/domain-scans` (SEO coverage chapter on domain magazine) |
+| `seo` | SEO | Quality: `/domain/[id]/overview` via `POST /api/domain-scans`. Market: `/projects/:id/seo` via launch layer `seoLayer=market` — see [`seo-project-workspace.md`](./seo-project-workspace.md) |
 | `geo` | GEO | `/geo/[id]/overview` via `POST /api/geo-jobs` |
 | `single` | WCAG → Quick single | `/results/[id]/{overview\|issues\|detail}` via `POST /api/scans` |
 | `deep` | WCAG → Deep scan | Same + `/domain/[id]/…` for light domain payload via `POST /api/scans` |
 
 `geo` is a **launch mode** on the central form, not a `ScanMode` on accessibility scan rows. Product semantics stay in `geo-competitive-presence.md`.
 
-`seo` is a **launch mode** that starts a domain crawl — the closest first-class SEO surface already shipped (corpus `seoCoverage` + `GET /api/domain-scans/:id/seo-reading`). There is no separate SEO-only pipeline yet.
+`seo` is a **launch mode** with secondary **SEO layer** tiles: **Quality crawl** (domain corpus `seoCoverage`) · **Market** (project SEO workspace — [`seo-project-workspace.md`](./seo-project-workspace.md)). Bare `mode=seo` does not pre-select a layer (same progressive step as WCAG depth). `seoLayer=quality|market` deep-links skip ahead.
 
 ## Launch UX (central magazine)
 One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`) — **full stage width** (no 52rem magazine cap); hero deck may stay narrow for reading:
@@ -22,7 +22,7 @@ One composition on `/scan` (`ScanLaunchForm` / `checkion-magazine--launch`) — 
 2. **Progressive disclosure** (smooth `checkion-rise` / `checkion-launch-reveal`; `prefers-reduced-motion` disables animation):
    - **WCAG** → reveal depth tiles (**Quick single scan** · **Deep scan**); after depth is chosen (or immediately if depth was already chosen this session / via deep-link) → reveal compose.
    - **GEO** → reveal **measurement tiles** (**Model memory** · **Live search**, same aesthetic as WCAG depth); after measurement is chosen (or immediately if `measurement=` / `measurement=both` deep-link) → reveal GEO compose (**URL and/or Company name**, **Project**, **queries**, **models**, CTA); skip WCAG depth. Bare `mode=geo` does **not** pre-select a layer — same progressive step as cold WCAG depth. See [`geo-measurement-layers.md`](./geo-measurement-layers.md).
-   - **SEO** → reveal compose (URL, project, CTA); skip depth.
+   - **SEO** → reveal **SEO layer** tiles (**Quality crawl** · **Market**); after layer chosen (or `seoLayer=` deep-link) → reveal compose. Quality: URL, project, max pages, CTA → domain crawl. Market: project required, CTA → `/projects/:id/seo`.
    - Changing capability swaps/re-animates the secondary sections accordingly.
    - Deep-links with `mode=seo|geo|single|deep` (and AUDION handoff) **skip ahead** and show the full relevant chain on first paint — no empty trap for AUDION / handoff URLs. Prefills still seed visible fields (not silent-only).
 3. **WCAG depth** (secondary, only when WCAG selected and not AUDION) — compact sibling tiles matching the capability aesthetic: **Quick single scan** · **Deep scan** (not a ToggleGroup strip). No visible “WCAG depth” section label above the tiles (accessible name via `aria-label` only); depth grid uses a bottom hairline only (no top rule), same as capability.
@@ -101,8 +101,8 @@ Deep-links (`paths.routes.scanLaunch`):
 - Fixture synthesize remains for local demos and CI (no Chromium).
 
 ### SEO (`seo`)
-- Same live/fixture domain pipeline as `POST /api/domain-scans`.
-- Launch opens the domain magazine where SEO coverage is a first-class chapter (`domain-scan-sections.md`).
+- **Quality** — same live/fixture domain pipeline as `POST /api/domain-scans`; domain magazine SEO coverage chapter (`domain-scan-sections.md`).
+- **Market** — DataForSEO (or fixture) via `/api/projects/:id/seo/*`; workspace `/projects/:id/seo` (`seo-project-workspace.md`). Never invent rankings.
 
 ### GEO (`geo`)
 - Gate: `lib/geo-eeat/live-geo-gate.ts` — live when `DATABASE_URL` **or** `CHECKION_LIVE_GEO=1`; `CHECKION_LIVE_GEO=0` forces synthesize.
@@ -117,4 +117,4 @@ AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / 
 AUDION research may call **`POST /api/fetch-page`** for Chromium page text when HTTP crawl is blocked — see `specs/api/fetch-page.md` (not a WCAG scan).
 
 ## Deferred
-Dedicated SEO-only crawl (without full domain magazine), Journey agent live, performance-as-primary tab, page reuse cache (`skipUnchangedPages` + `page_scan_cache`), competitor cron, normalized `scan_issues` tables, multi-provider GEO cron.
+Journey agent live, performance-as-primary tab, page reuse cache (`skipUnchangedPages` + `page_scan_cache`), competitor cron, normalized `scan_issues` tables, multi-provider GEO cron. Market SEO GSC OAuth polish beyond status/fixture.
