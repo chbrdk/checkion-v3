@@ -35,6 +35,8 @@ export type SuggestAgentResult = {
     steps: string[]
     pagesFetched: string[]
     usedKnowledge: boolean
+    publishedToPack?: boolean
+    publishError?: string
   }
 }
 
