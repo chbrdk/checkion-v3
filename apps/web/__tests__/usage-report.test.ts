@@ -77,10 +77,41 @@ describe('usage-report', () => {
     expect(bodies.every((b) => b.service === 'checkion')).toBe(true)
   })
 
-  it('skips reportUsage without userId or plexon config', () => {
-    const fetchMock = vi.fn()
+  it('POSTs domain_scan_page and geo_eeat events', async () => {
+    vi.stubEnv('PLEXON_AUTH_URL', 'https://plexon.test')
+    vi.stubEnv('PLEXON_SERVICE_SECRET', 'sec')
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ ok: true }) }))
     vi.stubGlobal('fetch', fetchMock)
-    reportUsage({ userId: '', eventType: 'llm_request', rawUnits: {} })
-    expect(fetchMock).not.toHaveBeenCalled()
+
+    const { reportDomainScanPage, reportGeoPipelineUsage } = await import('../lib/usage-report')
+    reportDomainScanPage({
+      userId: 'user-1',
+      domainScanId: 'domain-1',
+      pageIndex: 0,
+      url: 'https://example.com/',
+      ok: true,
+      reusedUnchanged: true,
+    })
+    reportGeoPipelineUsage({
+      userId: 'user-1',
+      jobId: 'geo-1',
+      inputTokens: 200,
+      outputTokens: 50,
+    })
+
+    await Promise.resolve()
+    const bodies = fetchMock.mock.calls.map((c) => JSON.parse(String(c[1]?.body)))
+    expect(
+      bodies.some(
+        (b) =>
+          b.event_type === 'domain_scan_page' &&
+          b.raw_units.reused_unchanged === true &&
+          b.idempotency_key === 'domain_scan_page:domain-1:0',
+      ),
+    ).toBe(true)
+    expect(bodies.some((b) => b.event_type === 'geo_eeat')).toBe(true)
+    expect(
+      bodies.some((b) => b.event_type === 'llm_request' && b.raw_units.surface === 'geo.pipeline'),
+    ).toBe(true)
   })
 })

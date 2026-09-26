@@ -224,6 +224,7 @@ export async function dbCreateGeoJob(input: {
         title: input.title,
         includePageScan: input.includePageScan,
         measurement,
+        userId: input.actorUserId,
         onStatus: async (status, overview) => {
           await dbUpsertGeoOverview(overview)
           if (status === 'completed') {

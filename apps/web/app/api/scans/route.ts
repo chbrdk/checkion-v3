@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     maxPages: body.mode === 'deep' ? body.maxPages : undefined,
     waitForCompletion: body.waitForCompletion === true,
     correlation: parseScanCorrelation(body),
+    userId: viewer.viewerId ?? undefined,
   })
   return NextResponse.json(scan, { status: 201 })
 }

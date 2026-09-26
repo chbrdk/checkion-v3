@@ -85,4 +85,6 @@ export type DomainScanJobOptions = {
   useSitemap?: boolean
   skipUnchangedPages?: boolean
   linkScanId?: string
+  /** Plexon billing user for usage events. */
+  userId?: string
 }

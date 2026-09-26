@@ -358,6 +358,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
       maxPages,
       useSitemap: job.useSitemap,
       skipUnchangedPages,
+      userId: typeof job.userId === 'string' ? job.userId : undefined,
       getScanControl: hooks.getScanControl ? () => hooks.getScanControl!(row.id) : undefined,
       onProgress: async (scanned, total, currentUrl) => {
         await hooks.updateProgress?.(row.id, scanned, total, currentUrl)

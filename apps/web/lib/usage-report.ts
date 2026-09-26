@@ -113,6 +113,7 @@ export function reportLlmUsage(input: {
   usage: LlmTokenUsage
   surface?: string
   idempotencyKey?: string
+  product?: string
 }): void {
   if (!input.userId) return
   if (input.usage.input_tokens <= 0 && input.usage.output_tokens <= 0) return
@@ -125,7 +126,91 @@ export function reportLlmUsage(input: {
       ...(input.usage.estimated ? { estimated: true } : {}),
       ...(input.usage.model ? { model: input.usage.model } : {}),
       ...(input.surface ? { surface: input.surface } : {}),
-      product: 'seo_market_suggest',
+      ...(input.product ? { product: input.product } : {}),
+    },
+    idempotencyKey: input.idempotencyKey,
+  })
+}
+
+/** Deep-scan page finished — Plexon domain_scan_page (50, or 5 when reused). */
+export function reportDomainScanPage(input: {
+  userId: string | null | undefined
+  domainScanId: string
+  pageIndex: number
+  url: string
+  ok: boolean
+  reusedUnchanged?: boolean
+}): void {
+  if (!input.userId) return
+  reportUsage({
+    userId: input.userId,
+    eventType: 'domain_scan_page',
+    rawUnits: {
+      pages: 1,
+      domain_scan_id: input.domainScanId,
+      page_index: input.pageIndex,
+      url: input.url,
+      ok: input.ok,
+      ...(input.reusedUnchanged ? { reused_unchanged: true } : {}),
+    },
+    idempotencyKey: `domain_scan_page:${input.domainScanId}:${input.pageIndex}`,
+  })
+}
+
+/** GEO pipeline totals → geo_eeat (+ llm_request when tokens present). */
+export function reportGeoPipelineUsage(input: {
+  userId: string | null | undefined
+  jobId: string
+  inputTokens: number
+  outputTokens: number
+}): void {
+  if (!input.userId) return
+  const inputTok = Math.max(0, Math.floor(input.inputTokens))
+  const outputTok = Math.max(0, Math.floor(input.outputTokens))
+  if (inputTok > 0 || outputTok > 0) {
+    reportUsage({
+      userId: input.userId,
+      eventType: 'llm_request',
+      rawUnits: {
+        input_tokens: inputTok,
+        output_tokens: outputTok,
+        surface: 'geo.pipeline',
+        geo_job_id: input.jobId,
+      },
+      idempotencyKey: `geo_llm:${input.jobId}`,
+    })
+  }
+  reportUsage({
+    userId: input.userId,
+    eventType: 'geo_eeat',
+    rawUnits: {
+      ...(inputTok || outputTok
+        ? { input_tokens: inputTok, output_tokens: outputTok }
+        : {}),
+      geo_job_id: input.jobId,
+    },
+    idempotencyKey: `geo_eeat:${input.jobId}`,
+  })
+}
+
+/** Vendor USD (Jev / OpenRouter Decisions). */
+export function reportVendorCostUsd(input: {
+  userId: string | null | undefined
+  costUsd: number
+  surface?: string
+  model?: string
+  idempotencyKey?: string
+}): void {
+  if (!input.userId) return
+  const cost = Number(input.costUsd)
+  if (!Number.isFinite(cost) || cost < 0) return
+  reportUsage({
+    userId: input.userId,
+    eventType: 'vendor_cost',
+    rawUnits: {
+      cost_usd: cost,
+      ...(input.surface ? { surface: input.surface } : {}),
+      ...(input.model ? { model: input.model } : {}),
     },
     idempotencyKey: input.idempotencyKey,
   })

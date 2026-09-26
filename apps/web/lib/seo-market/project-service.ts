@@ -543,6 +543,7 @@ async function projectSuggestMarketKeywords(input: {
       userId: input.userId,
       usage: agentResult.llmUsage,
       surface: input.surface,
+      product: 'seo_market_suggest',
       idempotencyKey: `seo-suggest:${input.projectId}:${input.surface}:${fetchedAt}`,
     })
 

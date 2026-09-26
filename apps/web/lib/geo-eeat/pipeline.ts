@@ -60,6 +60,7 @@ export async function executeLiveGeoPipeline(input: {
   includePageScan?: boolean
   onStatus?: (status: 'running' | 'completed', overview: GeoOverview) => Promise<void>
   measurement?: GeoMeasurement
+  userId?: string
 }): Promise<GeoOverview> {
   requireOpenAiKeyForLiveGeo()
 
@@ -96,6 +97,7 @@ export async function executeLiveGeoPipeline(input: {
         standard: 'WCAG2AA',
         runners: ['axe', 'htmlcs'],
         device: 'desktop',
+        userId: input.userId,
       })
       const stage1 = buildGeoEeatResultFromScan(scan)
       try {
@@ -139,6 +141,18 @@ export async function executeLiveGeoPipeline(input: {
     measurement,
     searchMarket: queryOut.searchMarket,
   })
+
+  try {
+    const { reportGeoPipelineUsage } = await import('../usage-report')
+    reportGeoPipelineUsage({
+      userId: input.userId,
+      jobId: input.jobId,
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+    })
+  } catch {
+    /* never affect GEO */
+  }
 
   await input.onStatus?.('completed', overview)
   return overview

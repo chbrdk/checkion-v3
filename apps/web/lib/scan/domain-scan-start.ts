@@ -63,6 +63,8 @@ export type StartDomainScanInput = {
   waitForCompletion?: boolean
   /** Reuse prior page results when ETag/Last-Modified still match (default true). */
   skipUnchangedPages?: boolean
+  /** Plexon billing user for domain_scan_page events. */
+  userId?: string
 }
 
 export async function startDomainScan(
@@ -113,6 +115,7 @@ export async function startDomainScan(
         maxPages,
         useSitemap: input.useSitemap,
         skipUnchangedPages,
+        userId: input.userId,
         getScanControl: hooks.getScanControl
           ? () => hooks.getScanControl!(id)
           : undefined,

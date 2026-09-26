@@ -559,6 +559,7 @@ export async function dbCreateScan(input: {
   /** Await live crawl before returning (tests). */
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
+  userId?: string
 }): Promise<ScanSummary> {
   if (!shouldRunLiveScans()) {
     return dbCreateSynthesizedScan(input)
@@ -636,6 +637,7 @@ async function dbCreateLiveScan(input: {
   maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
+  userId?: string
 }): Promise<ScanSummary> {
   const id = `scan-${input.mode}-${Date.now()}`
   const startedAt = new Date().toISOString()
@@ -684,6 +686,7 @@ async function dbCreateLiveScan(input: {
         url: input.url,
         maxPages: input.maxPages,
         linkScanId: id,
+        userId: input.userId,
       })
       const queuedWithDomain = { ...queued, domainScanId: domain.id }
       await db
@@ -708,6 +711,7 @@ async function dbCreateLiveScan(input: {
         url: input.url,
         maxPages: input.maxPages,
         waitForCompletion: input.waitForCompletion,
+        userId: input.userId,
       },
       createLiveDomainScanHooks({
         workerSessionId: WORKER_SESSION_ID,
@@ -817,6 +821,7 @@ export async function enqueueQueuedDomainScan(input: {
   useSitemap?: boolean
   skipUnchangedPages?: boolean
   linkScanId?: string
+  userId?: string
 }): Promise<DomainScanLight> {
   const id = `domain-${Date.now()}`
   const startedAt = new Date().toISOString()
@@ -851,6 +856,7 @@ export async function enqueueQueuedDomainScan(input: {
         ...(input.useSitemap === false ? { useSitemap: false } : {}),
         skipUnchangedPages,
         ...(input.linkScanId ? { linkScanId: input.linkScanId } : {}),
+        ...(input.userId ? { userId: input.userId } : {}),
       },
     },
     updatedAt: new Date(),
@@ -866,6 +872,7 @@ export async function dbCreateDomainScan(input: {
   useSitemap?: boolean
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
+  userId?: string
 }): Promise<DomainScanLight> {
   if (!shouldRunLiveScans()) {
     // Fixture-style instant domain row when live off
@@ -888,6 +895,7 @@ export async function dbCreateDomainScan(input: {
       maxPages: input.maxPages,
       useSitemap: input.useSitemap,
       skipUnchangedPages: input.skipUnchangedPages,
+      userId: input.userId,
     })
     if (input.waitForCompletion) {
       return (await waitUntilDomainTerminal(domain.id)) ?? domain
@@ -903,6 +911,7 @@ export async function dbCreateDomainScan(input: {
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
       skipUnchangedPages: input.skipUnchangedPages,
+      userId: input.userId,
     },
     createLiveDomainScanHooks({
       workerSessionId: WORKER_SESSION_ID,

@@ -28,6 +28,7 @@ export type DomainScanRunner = (
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    userId?: string
     skipUnchangedPages?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
@@ -61,6 +62,7 @@ async function defaultDomainRunner(
     maxPages?: number
     domainScanId?: string
     projectId?: string | null
+    userId?: string
     skipUnchangedPages?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
@@ -114,6 +116,7 @@ export async function executeDomainLiveScan(input: {
   maxPages?: number
   useSitemap?: boolean
   skipUnchangedPages?: boolean
+  userId?: string
   onProgress?: (scanned: number, total: number, currentUrl: string) => void | Promise<void>
   getScanControl?: () => Promise<DomainScanControlState>
 }): Promise<PersistedDomainBundle & { terminal: 'completed' | 'cancelled' }> {
@@ -129,6 +132,7 @@ export async function executeDomainLiveScan(input: {
       maxPages,
       domainScanId: input.id,
       projectId: input.projectId,
+      userId: input.userId,
       skipUnchangedPages: input.skipUnchangedPages,
       getScanControl: input.getScanControl,
     }),
@@ -137,6 +141,20 @@ export async function executeDomainLiveScan(input: {
   for await (const update of stream) {
     if (update.type === 'progress') {
       await input.onProgress?.(update.scannedCount, update.total, update.url)
+    } else if (update.type === 'page_complete') {
+      try {
+        const { reportDomainScanPage } = await import('../usage-report')
+        reportDomainScanPage({
+          userId: input.userId,
+          domainScanId: input.id,
+          pageIndex: update.pageIndex,
+          url: update.url,
+          ok: update.ok,
+          reusedUnchanged: update.reusedUnchanged,
+        })
+      } catch {
+        /* never affect scan */
+      }
     } else if (update.type === 'complete') {
       completed = update.domainResult
       terminal = 'completed'

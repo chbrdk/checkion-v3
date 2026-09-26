@@ -137,6 +137,7 @@ async function memoryCreateGeoJob(input: {
         title: input.title,
         includePageScan: input.includePageScan,
         measurement,
+        userId: input.actorUserId,
         onStatus: async (status, overview) => {
           memoryUpsert(overview)
           if (status === 'completed') {

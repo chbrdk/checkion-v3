@@ -211,7 +211,6 @@ export async function runScan(
         device = 'desktop',
         groupId,
         targetRegion,
-        userId,
         onProgress,
         sharedBrowser,
         id: explicitId,
@@ -2182,30 +2181,11 @@ export async function runScan(
 
         report('page_classification');
         phaseTiming.mark('pre_classification');
+        // Phase 2 stub — classifyPageWithLlm returns null; no usage until Phase 3.
         const { classifyPageWithLlm } = await import('./llm/page-classification');
-        const { reportUsage } = await import('./usage-report');
         const classifyOutcome = await classifyPageWithLlm(result).catch(() => null);
         if (classifyOutcome?.classification) {
             result.pageClassification = classifyOutcome.classification;
-        }
-        if (
-            userId &&
-            classifyOutcome?.usage &&
-            (classifyOutcome.usage.input_tokens > 0 || classifyOutcome.usage.output_tokens > 0)
-        ) {
-            try {
-                reportUsage({
-                    userId,
-                    eventType: 'llm_request',
-                    rawUnits: {
-                        input_tokens: classifyOutcome.usage.input_tokens,
-                        output_tokens: classifyOutcome.usage.output_tokens,
-                    },
-                    idempotencyKey: `page_classify_inline:${scanId}`,
-                });
-            } catch {
-                /* never affect scan */
-            }
         }
 
         phaseTiming.mark('classification');

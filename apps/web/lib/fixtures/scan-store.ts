@@ -300,6 +300,7 @@ async function memoryCreateLiveScan(input: {
   maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
+  userId?: string
 }): Promise<ScanSummary> {
   const id = `scan-${input.mode}-${Date.now()}`
   const startedAt = new Date().toISOString()
@@ -328,6 +329,7 @@ async function memoryCreateLiveScan(input: {
       maxPages: input.maxPages,
       waitForCompletion: input.waitForCompletion,
       linkScanId: id,
+      userId: input.userId,
     })
     const queuedWithDomain = { ...queued, domainScanId: domain.id }
     store.scans = store.scans.map((s) => (s.id === id ? queuedWithDomain : s))
@@ -374,6 +376,7 @@ async function memoryCreateDomainScan(input: {
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
   linkScanId?: string
+  userId?: string
 }): Promise<DomainScanLight> {
   if (!shouldRunLiveScans()) {
     const synth = memoryCreateSynthesizedScan({
@@ -392,6 +395,7 @@ async function memoryCreateDomainScan(input: {
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
       skipUnchangedPages: input.skipUnchangedPages,
+      userId: input.userId,
     },
     {
       insertQueued: async (row) => {
@@ -624,6 +628,7 @@ export async function createScan(input: {
   maxPages?: number
   waitForCompletion?: boolean
   correlation?: ScanCorrelationInput
+  userId?: string
 }): Promise<ScanSummary> {
   if (isDatabaseConfigured()) {
     return (await dbApi()).dbCreateScan(input)
@@ -641,6 +646,7 @@ export async function createDomainScan(input: {
   useSitemap?: boolean
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
+  userId?: string
 }): Promise<DomainScanLight> {
   if (isDatabaseConfigured()) {
     return (await dbApi()).dbCreateDomainScan(input)

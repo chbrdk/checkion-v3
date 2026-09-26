@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     useSitemap: body.useSitemap,
     waitForCompletion: body.waitForCompletion === true,
     skipUnchangedPages: body.skipUnchangedPages,
+    userId: viewer.viewerId ?? undefined,
   })
   return NextResponse.json(domain, { status: 201 })
 }
