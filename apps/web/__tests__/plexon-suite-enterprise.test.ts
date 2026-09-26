@@ -235,4 +235,18 @@ describe('plexon suite enterprise clients (checkion)', () => {
       actorUserId: 'user-9',
     })
   })
+
+  it('ships hub revoke fan-out provisioning route', async () => {
+    const { existsSync, readFileSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    const route = join(
+      __dirname,
+      '../app/api/platform/provisioning/collections/[platformProjectId]/share-links/[shareId]/route.ts',
+    )
+    expect(existsSync(route)).toBe(true)
+    const src = readFileSync(route, 'utf8')
+    expect(src).toContain('isProvisioningAuthorized')
+    expect(src).toContain('deleteShare')
+    expect(src).toContain('Do not sync back to Plexon')
+  })
 })

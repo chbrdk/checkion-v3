@@ -30,3 +30,7 @@ Password, expiry, journey shares, video/screenshot access tokens (v2 parity late
 
 ## Suite Share-Links Hub
 Create/revoke projects into Plexon Collection Share Links (`scan_overview`) when the scan’s project is Collection-bound and an actor session is present. Spec: `plexon-v3/specs/domain/collection-share-links.md` · client `lib/plexon-share-links.ts`.
+
+**Hub revoke fan-out:** Plexon `DELETE …/share-links/:token?productId=checkion` calls
+`DELETE /api/platform/provisioning/collections/:platformProjectId/share-links/:token`
+(service secret + contract). Does not re-project to Plexon.

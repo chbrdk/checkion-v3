@@ -107,7 +107,7 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 - Anthropic hosted search tool type: `paths.anthropicWebSearchTool`
 
 ## Share
-Public landing: `/share/[token]` · API `/api/share` → Plexon Share-Links Hub (`scan_overview`) via `lib/plexon-share-links.ts` when Collection-bound + session actor
+Public landing: `/share/[token]` · API `/api/share` → Plexon Share-Links Hub (`scan_overview`) via `lib/plexon-share-links.ts` when Collection-bound + session actor · Hub revoke fan-out `DELETE /api/platform/provisioning/collections/:id/share-links/:token`
 
 ## Scan screenshots
 - Persist: Puppeteer JPEG via `lib/scan/screenshot-storage.ts` under `SCAN_SCREENSHOTS_PATH` (default `data/screenshots`)
