@@ -2,7 +2,7 @@
 
 **Status:** Accepted — 2026-09-19  
 **Parent:** `access-model-b-visibility.md` · Plexon `collection-members.md` / `collection-invite-links.md`  
-**Parity:** Audion project Team panel (`knowledge/collection-team-plexon.md`)
+**Parity:** Audion project Team panel (`audion-v3/knowledge/collection-team-plexon.md`) · local companion `knowledge/collection-team-plexon.md`
 
 ## Goal
 

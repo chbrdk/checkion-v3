@@ -21,6 +21,6 @@
 | `knowledge/scan-worker-job-timeout-hdi-2026-09-23.md` | defer | Keine direkten Knowledge-Links; Fix in Code/Spec-Pfade | HDI-Timeout-Incident; behalten bis in `scan-worker`/`paths` Runbook verkürzt. |
 | `knowledge/distillate-call-sites.md` | keep | `apps/web/__tests__/distillate-call-sites.test.ts` liest Datei | Enterprise-Distillate-Inventar; Test-gestützt. |
 | `apps/web/public/fixtures/scans/scan-single-1-heatmap.svg` | keep | URL in `lib/fixtures/live-scan-single-1.ts` | Einziges Public-Fixture-Asset im Tree. |
-| `apps/web/public/fixtures/scans/scan-single-1.jpg` · `scan-single-1.svg` | defer | Referenziert in `live-scan-single-1.ts` / `scan-overview-rich.ts`, **Dateien fehlen** im Repo | Kein drop_safe — broken Media-URLs; reshape (Assets nachziehen oder Pfade bereinigen). |
-| `knowledge/checkion-deep-scan-sitemap.md` (fehlend) | defer | `@see` in `apps/web/lib/scan/sitemap.ts`, Datei existiert nicht | Gap: Doc anlegen oder JSDoc auf `specs/`/`scan-crawl-assets` umbiegen. |
-| `knowledge/collection-team-plexon.md` (fehlend) | defer | `specs/domain/project-team.md` Companion-Link | Broken Spec-Companion; Datei anlegen oder Spec-Link auf Plexon/Audion-Doc korrigieren. |
+| `apps/web/public/fixtures/scans/scan-single-1.jpg` · `scan-single-1.svg` | keep **done** 2026-09-26 | Referenced in fixtures | Placeholder assets added (Querschnitt). |
+| `knowledge/checkion-deep-scan-sitemap.md` | keep **done** 2026-09-26 | `@see` in `sitemap.ts` | Companion stub → `scan-crawl-assets` spec. |
+| `knowledge/collection-team-plexon.md` | keep **done** 2026-09-26 | `specs/domain/project-team.md` | Companion + Audion parity link. |
