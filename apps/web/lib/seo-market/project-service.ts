@@ -393,6 +393,7 @@ async function projectSuggestMarketKeywords(input: {
         usedField: evidence.usedField,
         usedGsc: evidence.usedGsc,
         usedQuality: evidence.usedQuality,
+        usedWebSearch: false,
       },
     }
   }
@@ -416,6 +417,7 @@ async function projectSuggestMarketKeywords(input: {
           usedField: evidence.usedField,
           usedGsc: evidence.usedGsc,
           usedQuality: evidence.usedQuality,
+          usedWebSearch: false,
         },
       }
     }

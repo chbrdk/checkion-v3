@@ -1113,6 +1113,8 @@ export interface SeoFieldSuggestResult {
     usedField?: boolean
     usedGsc?: boolean
     usedQuality?: boolean
+    /** True when Distill used OpenRouter web plugin (Phase 7). */
+    usedWebSearch?: boolean
     /** True when distillate was merged into Plexon Knowledge Pack. */
     publishedToPack?: boolean
     publishError?: string

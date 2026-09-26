@@ -1,6 +1,6 @@
 /**
  * Market Suggest Research Agent — corpus → company brief → keywords.
- * Spec: specs/domain/seo-market-suggest-agent.md
+ * Spec: specs/domain/seo-market-suggest-agent.md (Phase 7 web distill)
  */
 
 import type { GeoKnowledgeEnrichment } from '../plexon-knowledge-pack'
@@ -21,6 +21,9 @@ import {
 } from './suggest-evidence'
 import { gatherSiteCorpus, type SitePageCorpus } from './url-suggest-context'
 
+/** OpenRouter web plugin result cap for Distill (Phase 7). */
+export const SUGGEST_WEB_MAX_RESULTS = 5
+
 export type SuggestCompanyBrief = {
   summary: string
   category: string | null
@@ -40,6 +43,7 @@ export type SuggestAgentResult = {
     usedField?: boolean
     usedGsc?: boolean
     usedQuality?: boolean
+    usedWebSearch?: boolean
     publishedToPack?: boolean
     publishError?: string
   }
@@ -77,6 +81,8 @@ async function openRouterJson(input: {
   user: string
   temperature?: number
   maxTokens?: number
+  /** Phase 7 — OpenRouter web plugin (Distill only). */
+  web?: { maxResults: number }
 }): Promise<{ parsed: unknown; model: string }> {
   const key = openRouterKey()
   if (!key) {
@@ -86,6 +92,24 @@ async function openRouterJson(input: {
     )
   }
   const model = suggestModel()
+  const body: Record<string, unknown> = {
+    model,
+    temperature: input.temperature ?? 0.3,
+    max_tokens: input.maxTokens ?? 700,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: input.system },
+      { role: 'user', content: input.user },
+    ],
+  }
+  if (input.web && input.web.maxResults > 0) {
+    body.plugins = [
+      {
+        id: 'web',
+        max_results: Math.min(input.web.maxResults, SUGGEST_WEB_MAX_RESULTS),
+      },
+    ]
+  }
   const res = await fetch(`${openRouterBase()}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -94,16 +118,7 @@ async function openRouterJson(input: {
       'HTTP-Referer': paths.openRouterAppReferer,
       'X-Title': paths.openRouterAppTitle,
     },
-    body: JSON.stringify({
-      model,
-      temperature: input.temperature ?? 0.3,
-      max_tokens: input.maxTokens ?? 700,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: input.system },
-        { role: 'user', content: input.user },
-      ],
-    }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) {
     throw new FieldSuggestError(`OpenRouter HTTP ${res.status}`, 'upstream')
@@ -191,6 +206,17 @@ function surfaceKeywordSystem(surface: SeoSuggestSurface, locale: string): strin
   return `You suggest competitive SERP-overlap keywords for Field. Prefer queries where rivals already appear in Field evidence. ${common}`
 }
 
+const DISTILL_SYSTEM = [
+  'You are a company research analyst for SEO Market suggestions.',
+  'Read the site excerpts, Collection knowledge, market evidence, and any web search results attached to this request.',
+  'Use web results to identify real products, category, and audiences a buyer would search for.',
+  'Do NOT treat legal footer crumbs (GmbH, address, Geschäftsführer, logo, Technology Center) as the product.',
+  'Do NOT treat sister brands or person names without a product as offerings.',
+  'Prefer concrete products/services a buyer would search for.',
+  'Return JSON only:',
+  '{"summary":"2-4 sentences","category":"string|null","products":["..."],"services":["..."],"audiences":["..."]}',
+].join(' ')
+
 /**
  * Run the Market Suggest Research Agent.
  */
@@ -210,6 +236,7 @@ export async function runMarketSuggestResearchAgent(input: {
   const brand = displayBrandFromHost(input.domain)
   const usedKnowledge = enrichmentHasSignal(input.knowledge)
   const evidence = input.evidence ?? null
+  let usedWebSearch = false
 
   steps.push('gather_knowledge')
   steps.push('gather_evidence')
@@ -227,26 +254,34 @@ export async function runMarketSuggestResearchAgent(input: {
     knowledgeBlock(input.knowledge),
     evidence ? formatEvidenceForPrompt(evidence, input.surface) : null,
     pagesBlock(pages),
-    'Task: Research what this company is and does. Extract products, services, category, and audiences from the evidence.',
+    'Task: Research what this company is and does. Extract products, services, category, and audiences from the evidence and web results.',
   ]
     .filter(Boolean)
     .join('\n\n')
 
   steps.push('distill_brief')
-  const distill = await openRouterJson({
-    system: [
-      'You are a company research analyst for SEO Market suggestions.',
-      'Read the site excerpts, Collection knowledge, and market evidence. Infer what the company actually offers.',
-      'Do NOT treat legal footer crumbs (GmbH, address, Geschäftsführer, logo, Technology Center) as the product.',
-      'Do NOT treat sister brands or person names without a product as offerings.',
-      'Prefer concrete products/services a buyer would search for.',
-      'Return JSON only:',
-      '{"summary":"2-4 sentences","category":"string|null","products":["..."],"services":["..."],"audiences":["..."]}',
-    ].join(' '),
-    user: corpusUser,
-    temperature: 0.25,
-    maxTokens: 700,
-  })
+  let distill: { parsed: unknown; model: string }
+  try {
+    distill = await openRouterJson({
+      system: DISTILL_SYSTEM,
+      user: corpusUser,
+      temperature: 0.25,
+      maxTokens: 700,
+      web: { maxResults: SUGGEST_WEB_MAX_RESULTS },
+    })
+    usedWebSearch = true
+    steps.push('web_research')
+  } catch {
+    // Fail soft: Distill without web plugin when OpenRouter web fails.
+    distill = await openRouterJson({
+      system: DISTILL_SYSTEM,
+      user: corpusUser,
+      temperature: 0.25,
+      maxTokens: 700,
+    })
+    usedWebSearch = false
+    steps.push('web_research_skipped')
+  }
 
   const fallbackSummary =
     pages.find((p) => p.description)?.description ||
@@ -328,6 +363,7 @@ export async function runMarketSuggestResearchAgent(input: {
       usedField: evidence?.usedField ?? false,
       usedGsc: evidence?.usedGsc ?? false,
       usedQuality: evidence?.usedQuality ?? false,
+      usedWebSearch,
     },
   }
 }

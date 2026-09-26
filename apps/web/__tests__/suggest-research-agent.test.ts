@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { discoverDeepLinks } from '../lib/seo-market/url-suggest-context'
-import { runMarketSuggestResearchAgent } from '../lib/seo-market/suggest-research-agent'
+import {
+  runMarketSuggestResearchAgent,
+  SUGGEST_WEB_MAX_RESULTS,
+} from '../lib/seo-market/suggest-research-agent'
 
 describe('suggest-research-agent', () => {
   afterEach(() => {
@@ -24,6 +27,7 @@ describe('suggest-research-agent', () => {
 
   it('runs corpus → brief → keywords with mocked site + LLM', async () => {
     process.env.OPENROUTER_API_KEY = 'sk-test'
+    const llmBodies: string[] = []
     let llmCalls = 0
     vi.stubGlobal(
       'fetch',
@@ -32,6 +36,7 @@ describe('suggest-research-agent', () => {
         if (url.includes('openrouter.ai') || url.includes('/chat/completions')) {
           llmCalls += 1
           const body = typeof init?.body === 'string' ? init.body : ''
+          llmBodies.push(body)
           if (llmCalls === 1 || body.includes('company research analyst')) {
             return {
               ok: true,
@@ -113,8 +118,98 @@ describe('suggest-research-agent', () => {
     expect(result.keywords).not.toContain('vaillant vergleich')
     expect(result.keywords.every((k) => !/straße|geschäftsführer/i.test(k))).toBe(true)
     expect(result.agent.steps).toContain('distill_brief')
+    expect(result.agent.steps).toContain('web_research')
     expect(result.agent.steps).toContain('generate_keywords')
+    expect(result.agent.usedWebSearch).toBe(true)
     expect(result.agent.pagesFetched.length).toBeGreaterThanOrEqual(1)
     expect(llmCalls).toBeGreaterThanOrEqual(2)
+
+    const distillBody = JSON.parse(llmBodies[0]!) as {
+      plugins?: Array<{ id: string; max_results?: number }>
+    }
+    expect(distillBody.plugins?.[0]?.id).toBe('web')
+    expect(distillBody.plugins?.[0]?.max_results).toBe(SUGGEST_WEB_MAX_RESULTS)
+
+    const keywordBody = JSON.parse(llmBodies[llmBodies.length - 1]!) as {
+      plugins?: unknown
+    }
+    expect(keywordBody.plugins).toBeUndefined()
+  })
+
+  it('retries Distill without web plugin when web-augmented call fails', async () => {
+    process.env.OPENROUTER_API_KEY = 'sk-test'
+    let llmCalls = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input)
+        if (url.includes('openrouter.ai') || url.includes('/chat/completions')) {
+          llmCalls += 1
+          const body = typeof init?.body === 'string' ? JSON.parse(init.body) : {}
+          if (llmCalls === 1 && body.plugins) {
+            return { ok: false, status: 502, json: async () => ({ error: 'web_failed' }) }
+          }
+          if (body.plugins) {
+            return { ok: false, status: 502, json: async () => ({ error: 'unexpected_web' }) }
+          }
+          if (String(body.messages?.[0]?.content ?? '').includes('company research analyst')) {
+            return {
+              ok: true,
+              json: async () => ({
+                choices: [
+                  {
+                    message: {
+                      content: JSON.stringify({
+                        summary:
+                          'Vaillant Group makes heat pumps and boilers for homes and commercial buildings in Europe.',
+                        category: 'Heizung',
+                        products: ['Wärmepumpe', 'Gastherme'],
+                        services: ['Service'],
+                        audiences: ['Hausbesitzer'],
+                      }),
+                    },
+                  },
+                ],
+              }),
+            }
+          }
+          return {
+            ok: true,
+            json: async () => ({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      keywords: ['wärmepumpe', 'vaillant wärmepumpe', 'gastherme', 'heizung'],
+                    }),
+                  },
+                },
+              ],
+            }),
+          }
+        }
+        if (url.includes('vaillant-group.com')) {
+          return {
+            ok: true,
+            headers: { get: () => 'text/html' },
+            text: async () =>
+              `<html><head><title>Vaillant</title><meta name="description" content="Heizung"/></head><body><h1>Vaillant</h1></body></html>`,
+          }
+        }
+        return { ok: false, status: 404, headers: { get: () => '' }, text: async () => '' }
+      }),
+    )
+
+    const result = await runMarketSuggestResearchAgent({
+      surface: 'research',
+      domain: 'vaillant-group.com',
+      projectName: 'Vaillant',
+      locale: 'de',
+    })
+
+    expect(result.agent.usedWebSearch).toBe(false)
+    expect(result.agent.steps).toContain('web_research_skipped')
+    expect(result.keywords.length).toBeGreaterThanOrEqual(3)
+    expect(llmCalls).toBeGreaterThanOrEqual(3)
   })
 })

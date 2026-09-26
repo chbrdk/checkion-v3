@@ -23,9 +23,11 @@ Same pipeline for Field, Research, and Ranks. No hardcoded industry packs.
 | Out | Why |
 |-----|-----|
 | Full Audion research dossier | Product-local; agent publishes distillate only later |
-| Unbounded web search / SERP crawl | Cost + latency; v1 = own site + knowledge |
+| Unbounded web search / SERP crawl | Cost + latency; DataForSEO SERP stays off Suggest |
 | Free-form multi-agent orchestration | Keep deterministic steps + hard caps |
 | Writing Knowledge Pack by default | Preview-only brief in response; Plexon publish = Phase 2 |
+
+**Allowed (Phase 7):** exactly **one** OpenRouter `web` plugin call on Distill (`max_results ≤ 5`). Keyword generation stays offline.
 
 ## Algorithm (deterministic)
 
@@ -39,13 +41,14 @@ inputs: domain, projectName, description?, knowledge?, surface, locale?, seedHin
      leistungen|services|company|wir|marke|brand|technology|blog|wissen|faq (max 6)
 4. pages ← fetch each link (timeout 8s, body excerpt ≤ 4k chars)
 5. brief ← Qwen distill JSON from corpus + pages + evidence
+     **+ OpenRouter web plugin (max_results 5)** for cold-start product grounding
      { summary, category, products[], services[], audiences[], notes? }
-6. keywords ← Qwen generate 5–8 surface-specific queries from brief + evidence
+6. keywords ← Qwen generate 5–8 surface-specific queries from brief + evidence (**no** web plugin)
 7. sanitize (no www/hosts/addresses/weak brand+vergleich; no imprint/legal chrome: GmbH, Geschäftsführer, logo, Technology Center; no bare sister-brand/person entities without product intent)
-return { keywords, brief, model, agent: { steps, pagesFetched, usedKnowledge, usedField?, usedGsc?, usedQuality? } }
+return { keywords, brief, model, agent: { steps, pagesFetched, usedKnowledge, usedField?, usedGsc?, usedQuality?, usedWebSearch? } }
 ```
 
-Hard caps: ≤ 1 homepage + ≤ **6** deep pages; ≤ 2 LLM calls; wall clock ~60–90s; fail soft per page.
+Hard caps: ≤ 1 homepage + ≤ **6** deep pages; ≤ 2 LLM calls (Distill may be web-augmented); wall clock ~60–90s; fail soft per page / web.
 
 ## Vendor
 
@@ -70,6 +73,7 @@ agent?: {
   usedField?: boolean
   usedGsc?: boolean
   usedQuality?: boolean
+  usedWebSearch?: boolean
   publishedToPack?: boolean
   publishError?: string
 }
@@ -138,6 +142,16 @@ Algorithm additions:
 - Overview seed hints reuse evidence deterministically (no LLM).
 - GSC: project-bound OAuth (`webmasters.readonly`) → connection + performance snapshot; Suggest reads snapshot.
 
+## Phase 7 — Bounded Web Research (cold start)
+
+Cold start is the normal case (no GSC / thin Evidence). Distill MUST ground products via OpenRouter `plugins: [{ id: "web", max_results: 5 }]` when live Market is on:
+
+- Exactly **one** web-augmented LLM call (Distill only). Keyword call stays offline.
+- Prompt: use web for products / category / audiences; ignore imprint, legal roles, logos, Technology Center, bare sister brands.
+- Fail soft: if the web-augmented Distill fails, retry Distill **without** plugin; set `agent.usedWebSearch: false`.
+- Stub / offline Market: no web plugin.
+- Still **no** DataForSEO SERP crawl on Suggest.
+
 ## Offline / stub
 
 When live SEO Market is off: knowledge seeds ∪ homepage title crumbs ∪ evidence seeds (saved/domain/field/gsc when present). No agent loop.
@@ -149,3 +163,4 @@ When live SEO Market is off: knowledge seeds ∪ homepage title crumbs ∪ evide
 - Agent returns brief + keywords with mocked fetch/LLM.
 - Evidence merge includes Field / GSC / Quality when present.
 - GSC connection store + snapshot persist (memory).
+- Distill request includes web plugin `max_results: 5`; keyword request does not.
