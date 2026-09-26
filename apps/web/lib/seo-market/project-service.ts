@@ -168,7 +168,7 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
   if (!shouldRunLiveSeoMarket()) {
     result = fixtureBacklinks({ projectId, domain })
   } else {
-    await assertSeoMarketSoftCap(projectId, 10)
+    await assertSeoMarketSoftCap(projectId, 20)
     try {
       const live = await liveBacklinks({ projectId, domain })
       await recordSeoMarketUsage({

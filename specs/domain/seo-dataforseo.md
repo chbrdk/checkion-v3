@@ -35,24 +35,31 @@ Fixture mode returns deterministic sample rows (`stubbed: true`, `source: "fixtu
 - `POST /dataforseo_labs/google/ranked_keywords/live` — top ranked keywords (limit **40**)
 
 ### Backlinks (one Capture / Refresh)
-Primary (required for live success — summary must succeed):
+Primary (required for live success — **summary + pages + anchors + referring_domains** must succeed):
 
 | Call | Endpoint | Maps to |
 |------|----------|---------|
-| Summary | `/backlinks/summary/live` | DR (`rank` 0–100), backlinks, ref domains, spam, broken, referring pages, TLD/types/attributes/platforms/locations/countries, target info |
-| Pages | `/backlinks/backlinks/live` | Referring-page ledger (limit 25) |
+| Summary | `/backlinks/summary/live` | DR (`rank`; prefer `rank_scale: one_hundred`), backlinks, ref domains, spam, broken, referring pages, TLD/types/attributes/platforms/locations/countries, target info |
+| Pages | `/backlinks/backlinks/live` | Referring-page ledger (limit 25, `include_subdomains: true`) |
+| Anchors | `/backlinks/anchors/live` | Aside anchor ledger |
+| Ref domains | `/backlinks/referring_domains/live` | Aside + fallback main ledger when pages empty |
+
+Best-effort (`.catch` → omit; never blank the chapter if core succeeded):
+
+| Call | Endpoint | Maps to |
+|------|----------|---------|
 | Timeseries | `/backlinks/timeseries_summary/live` | Weekly backlinks + ref-domain charts |
 | New/Lost | `/backlinks/timeseries_new_lost_summary/live` | True new/lost weekly series |
-| Anchors | `/backlinks/anchors/live` | Aside anchor ledger |
-| Ref domains | `/backlinks/referring_domains/live` | Aside rival-domain ledger |
-| Domain pages | `/backlinks/domain_pages_summary/live` | Pages that attract links (aside / secondary ledger) |
+| Domain pages | `/backlinks/domain_pages_summary/live` | Linked pages aside |
 | Networks | `/backlinks/referring_networks/live` | IP/subnet concentration chart |
-| Competitors | `/backlinks/competitors/live` | Link competitors (also hydrates Field when present) |
-| History | `/backlinks/history/live` | Monthly history (long-range chart; last 12 months) |
+| Competitors | `/backlinks/competitors/live` | Link competitors (also hydrates Field) |
+| History | `/backlinks/history/live` | Monthly history (long-range chart) |
 
-Best-effort calls (`.catch` → omit): pages, timeseries, new/lost, anchors, ref domains, domain pages, networks, competitors, history. Soft-cap reserve for a full refresh: **10** units.
+Soft-cap reserve for a full refresh: **20** units. Summary distributions (TLD / platforms / countries / types) always drive charts even when timeseries omit.
 
 Persisted on `seo_backlink_snapshots` columns + `details` jsonb (items, anchors, referringDomainsList, domainPages, networks, competitors, history, distribution objects, timeseries*).
+
+**UI honesty:** When referring pages are empty but summary/ref-domains exist, show distribution charts + ref-domain ledger — never a KPI-only shell.
 
 **Out of scope this wave:** bulk_* multi-target compare, `domain_intersection` / `page_intersection` link-gap (follow-up when Field gets an explicit Link-gap band).
 

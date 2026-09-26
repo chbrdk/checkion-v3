@@ -81,6 +81,7 @@ const STAT_I18N: Record<string, string> = {
   Backlinks: 'seoMarket.stats.backlinks',
   'Ref. domains': 'seoMarket.stats.refDomains',
   'Lost links': 'seoMarket.stats.lostLinks',
+  'Ref. pages': 'seoMarket.stats.refPages',
   Ideen: 'seoMarket.stats.ideas',
   Überwacht: 'seoMarket.stats.monitored',
   Rivalen: 'seoMarket.stats.rivals',
@@ -96,6 +97,7 @@ const CHART_I18N: Record<string, string> = {
   'Referring platforms': 'seoMarket.charts.referringPlatforms',
   'Referring countries': 'seoMarket.charts.referringCountries',
   'Referring networks': 'seoMarket.charts.referringNetworks',
+  'Link types': 'seoMarket.charts.linkTypes',
   Positionsverteilung: 'seoMarket.charts.positionDistribution',
   'Overlap nach Rivale': 'seoMarket.charts.overlapByRival',
 }
@@ -120,8 +122,11 @@ export function localizeSeoChapter(
     }
     if (
       model.emptyMessage === 'Summary loaded — no referring pages in this capture.' ||
+      model.emptyMessage ===
+        'Summary distributions loaded — referring pages omitted in this capture.' ||
       model.emptyMessage.includes('no referring pages') ||
-      model.emptyMessage.includes('keine Referring Pages')
+      model.emptyMessage.includes('keine Referring Pages') ||
+      model.emptyMessage.includes('distributions loaded')
     ) {
       return t('seoMarket.chapters.backlinks.emptySummary')
     }

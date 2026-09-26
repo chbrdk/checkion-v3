@@ -46,14 +46,6 @@ function hostPath(url: string): string {
   }
 }
 
-function avgPageRank(items: SeoBacklinkReferringPage[]): number | null {
-  const ranks = items
-    .map((i) => i.pageFromRank)
-    .filter((n): n is number => n != null && Number.isFinite(n))
-  if (!ranks.length) return null
-  return ranks.reduce((a, b) => a + b, 0) / ranks.length
-}
-
 export function mapBacklinkPagesToRows(
   items: SeoBacklinkReferringPage[],
 ): SeoChapterRow[] {
@@ -118,7 +110,10 @@ export function mapBacklinkSnapshotsToRows(
   return latest?.items?.length ? mapBacklinkPagesToRows(latest.items) : []
 }
 
-function buildAside(snap: SeoBacklinkSnapshot): {
+function buildAside(
+  snap: SeoBacklinkSnapshot,
+  opts?: { skipReferringDomains?: boolean },
+): {
   ledger?: SeoChapterAsideLedger
   ledgers?: SeoChapterAsideLedger[]
 } {
@@ -147,7 +142,7 @@ function buildAside(snap: SeoBacklinkSnapshot): {
     })
   }
 
-  if (snap.referringDomainsList?.length) {
+  if (snap.referringDomainsList?.length && !opts?.skipReferringDomains) {
     ledgers.push({
       title: 'Referring domains',
       meta: `${snap.referringDomainsList.length} domains`,
@@ -320,6 +315,20 @@ function buildCharts(snap: SeoBacklinkSnapshot): SeoChapterChart[] {
     })
   }
 
+  if (snap.referringLinksTypes && Object.keys(snap.referringLinksTypes).length) {
+    charts.push({
+      kind: 'plot',
+      title: 'Link types',
+      variant: 'bar',
+      height: 160,
+      points: Object.entries(snap.referringLinksTypes)
+        .map(([label, value]) => ({ label, value }))
+        .filter((p) => p.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 6),
+    })
+  }
+
   if (snap.referringLinksPlatforms?.length) {
     charts.push({
       kind: 'plot',
@@ -362,6 +371,46 @@ function buildCharts(snap: SeoBacklinkSnapshot): SeoChapterChart[] {
   return charts
 }
 
+function displayRank(rank: number | null | undefined): {
+  label: string
+  value: string
+} {
+  if (rank == null || !Number.isFinite(rank)) return { label: 'DR', value: '—' }
+  // DataForSEO default scale is 0–1000; one_hundred is 0–100. Normalize for DR chip.
+  if (rank > 100) {
+    return { label: 'DR', value: fmtInt(Math.round(rank / 10)) }
+  }
+  return { label: 'DR', value: fmtInt(rank) }
+}
+
+function mapReferringDomainsToRows(
+  domains: NonNullable<SeoBacklinkSnapshot['referringDomainsList']>,
+): SeoChapterRow[] {
+  return domains.map((d) => ({
+    id: d.id,
+    tags: d.dofollow === false ? ['nofollow'] : ['dofollow'],
+    cells: {
+      page: {
+        primary: d.domain,
+        secondary: [d.country, d.firstSeen ? fmtWhen(d.firstSeen) : null]
+          .filter(Boolean)
+          .join(' · ') || '—',
+      },
+      dr: fmtInt(d.rank),
+      ur: '—',
+      domains: d.country ?? '—',
+      links: fmtInt(d.backlinks),
+      anchor: { primary: '—', secondary: d.domain },
+      type: 'Domain',
+      status: d.dofollow === false ? 'Nofollow' : 'Dofollow',
+      seen: {
+        primary: fmtWhen(d.firstSeen),
+        secondary: '—',
+      },
+    },
+  }))
+}
+
 /** Merge DataForSEO backlink pack into the chapter shell. */
 export function buildBacklinksChapterModel(input: {
   projectId: string
@@ -389,11 +438,18 @@ export function buildBacklinksChapterModel(input: {
         : []
   const snap = history[0] ?? input.snapshot ?? null
   const items = snap?.items ?? []
-  const rows = mapBacklinkPagesToRows(items)
+  const refDomainRows =
+    !items.length && snap?.referringDomainsList?.length
+      ? mapReferringDomainsToRows(snap.referringDomainsList)
+      : []
+  const rows = items.length ? mapBacklinkPagesToRows(items) : refDomainRows
+  const usingDomainFallback = Boolean(items.length === 0 && refDomainRows.length)
   const hasLive = Boolean(snap)
-  const ur = avgPageRank(items)
-  const aside = snap ? buildAside(snap) : {}
+  const aside = snap
+    ? buildAside(snap, { skipReferringDomains: usingDomainFallback })
+    : {}
   const charts = snap ? buildCharts(snap) : []
+  const dr = displayRank(snap?.rank ?? null)
 
   const infoBits = [
     snap?.targetInfo?.cms,
@@ -403,24 +459,33 @@ export function buildBacklinksChapterModel(input: {
     snap?.referringIps != null ? `${fmtInt(snap.referringIps)} IPs` : null,
   ].filter(Boolean)
 
+  const emptyMessage =
+    hasLive && rows.length === 0
+      ? charts.length
+        ? 'Summary distributions loaded — referring pages omitted in this capture.'
+        : 'Summary loaded — no referring pages in this capture.'
+      : hasLive
+        ? undefined
+        : base.emptyMessage
+
   const model: SeoChapterViewModel = {
     ...base,
     lede: undefined,
     domain: host,
-    emptyMessage:
-      hasLive && rows.length === 0
-        ? 'Summary loaded — no referring pages in this capture.'
-        : hasLive
-          ? undefined
-          : base.emptyMessage,
+    emptyMessage: rows.length ? undefined : emptyMessage,
     facets: base.facets.map((f) => {
       if (f.kind === 'mode' && snap) return { ...f, value: 'Live snapshot' }
       if (f.kind === 'scope' && snap) {
+        const pageN = items.length
+        const anchorN = snap.anchors?.length ?? 0
+        const rdN = snap.referringDomainsList?.length ?? 0
         return {
           ...f,
           value: snap.stubbed
             ? 'Fixture pack'
-            : `DataForSEO · ${items.length} pages · ${snap.anchors?.length ?? 0} anchors`,
+            : usingDomainFallback
+              ? `DataForSEO · ${rdN} ref. domains · ${anchorN} anchors`
+              : `DataForSEO · ${pageN} pages · ${anchorN} anchors`,
         }
       }
       if (f.kind === 'time' && snap?.capturedAt) {
@@ -468,13 +533,13 @@ export function buildBacklinksChapterModel(input: {
     stats: snap
       ? [
           {
-            label: 'DR',
-            value: fmtInt(snap.rank),
+            label: dr.label,
+            value: dr.value,
             tone: snap.rank != null && snap.rank > 0 ? 'pos' : undefined,
           },
           {
-            label: 'UR',
-            value: fmtInt(ur != null ? Math.round(ur) : null),
+            label: 'Ref. pages',
+            value: fmtInt(snap.referringPages ?? (items.length || null)),
           },
           {
             label: 'Backlinks',
@@ -501,7 +566,9 @@ export function buildBacklinksChapterModel(input: {
           },
         ]
       : base.stats,
-    ledgerMeta: `Backlinks · ${fmtInt(snap?.backlinks ?? rows.length)}`,
+    ledgerMeta: usingDomainFallback
+      ? `Referring domains · ${rows.length}`
+      : `Referring pages · ${fmtInt(snap?.referringPages ?? rows.length)}`,
     pageSize: 10,
     rows,
     charts: charts.length ? charts : undefined,

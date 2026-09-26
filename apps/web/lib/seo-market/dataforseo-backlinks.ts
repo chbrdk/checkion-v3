@@ -90,48 +90,64 @@ export async function fetchLiveBacklinksPack(
 
   const soft = <T>(p: Promise<T>): Promise<T | null> => p.catch(() => null)
 
+  const targetBody = {
+    target: domain,
+    include_subdomains: true,
+    rank_scale: 'one_hundred' as const,
+  }
+
+  // Wave 1 — summary (required).
+  const summaryCall = await post('/backlinks/summary/live', [
+    {
+      ...targetBody,
+      internal_list_limit: 12,
+      backlinks_status_type: 'live',
+    },
+  ])
+
+  // Wave 2 — core ledger endpoints (required; not soft-swallowed).
+  const [pagesCall, anchorsCall, refDomainsCall] = await Promise.all([
+    post('/backlinks/backlinks/live', [
+      {
+        ...targetBody,
+        mode: 'as_is',
+        limit,
+        order_by: ['rank,desc'],
+        backlinks_status_type: 'live',
+      },
+    ]),
+    post('/backlinks/anchors/live', [
+      {
+        ...targetBody,
+        limit: 15,
+        order_by: ['backlinks,desc'],
+      },
+    ]),
+    post('/backlinks/referring_domains/live', [
+      {
+        ...targetBody,
+        limit: 15,
+        order_by: ['rank,desc'],
+      },
+    ]),
+  ])
+
+  // Wave 3 — enrichment (best-effort).
   const [
-    summaryCall,
-    pagesCall,
     seriesCall,
     newLostCall,
-    anchorsCall,
-    refDomainsCall,
     domainPagesCall,
     networksCall,
     competitorsCall,
     historyCall,
   ] = await Promise.all([
-    post('/backlinks/summary/live', [
-      {
-        target: domain,
-        include_subdomains: true,
-        internal_list_limit: 12,
-        backlinks_status_type: 'live',
-        rank_scale: 'one_hundred',
-      },
-    ]),
-    soft(
-      post('/backlinks/backlinks/live', [
-        {
-          target: domain,
-          mode: 'as_is',
-          limit,
-          order_by: ['rank,desc'],
-          backlinks_status_type: 'live',
-          rank_scale: 'one_hundred',
-        },
-      ]),
-    ),
     soft(
       post('/backlinks/timeseries_summary/live', [
         {
-          target: domain,
+          ...targetBody,
           date_from: dateFrom,
           date_to: dateTo,
           group_range: 'week',
-          include_subdomains: true,
-          rank_scale: 'one_hundred',
         },
       ]),
     ),
@@ -139,40 +155,19 @@ export async function fetchLiveBacklinksPack(
       post('/backlinks/timeseries_new_lost_summary/live', [
         {
           target: domain,
+          include_subdomains: true,
           date_from: dateFrom,
           date_to: dateTo,
           group_range: 'week',
-          include_subdomains: true,
-        },
-      ]),
-    ),
-    soft(
-      post('/backlinks/anchors/live', [
-        {
-          target: domain,
-          limit: 15,
-          order_by: ['backlinks,desc'],
-          rank_scale: 'one_hundred',
-        },
-      ]),
-    ),
-    soft(
-      post('/backlinks/referring_domains/live', [
-        {
-          target: domain,
-          limit: 15,
-          order_by: ['rank,desc'],
-          rank_scale: 'one_hundred',
         },
       ]),
     ),
     soft(
       post('/backlinks/domain_pages_summary/live', [
         {
-          target: domain,
+          ...targetBody,
           limit: 12,
           order_by: ['backlinks,desc'],
-          rank_scale: 'one_hundred',
         },
       ]),
     ),
@@ -189,10 +184,9 @@ export async function fetchLiveBacklinksPack(
     soft(
       post('/backlinks/competitors/live', [
         {
-          target: domain,
+          ...targetBody,
           limit: 12,
           order_by: ['rank,desc'],
-          rank_scale: 'one_hundred',
         },
       ]),
     ),
@@ -210,10 +204,10 @@ export async function fetchLiveBacklinksPack(
   let units = summaryCall.units
   for (const c of [
     pagesCall,
-    seriesCall,
-    newLostCall,
     anchorsCall,
     refDomainsCall,
+    seriesCall,
+    newLostCall,
     domainPagesCall,
     networksCall,
     competitorsCall,

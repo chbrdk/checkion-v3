@@ -38,7 +38,8 @@ async function dataForSeoPost(path: string, body: unknown[]): Promise<{
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(60_000),
+    // Backlinks pack fans out; individual calls can be slow on large domains.
+    signal: AbortSignal.timeout(90_000),
   })
   const envelope = (await res.json()) as DataForSeoEnvelope
   if (!res.ok) {

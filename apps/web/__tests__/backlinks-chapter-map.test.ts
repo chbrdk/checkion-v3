@@ -39,7 +39,7 @@ describe('backlinks-chapter-map', () => {
     expect(model.searchBand?.actionLabel).toBe('Refresh')
     expect(model.stats?.find((s) => s.label === 'DR')?.value).not.toBe('—')
     expect(model.stats?.find((s) => s.label === 'Backlinks')?.value).not.toBe('—')
-    expect(model.stats?.find((s) => s.label === 'UR')?.value).not.toBe('—')
+    expect(model.stats?.find((s) => s.label === 'Ref. pages')?.value).not.toBe('—')
     expect(model.rows.length).toBeGreaterThan(0)
     expect(model.charts?.length).toBeGreaterThanOrEqual(2)
     expect(model.filters?.some((f) => f.id === 'new')).toBe(true)
@@ -48,6 +48,36 @@ describe('backlinks-chapter-map', () => {
       true,
     )
     expect(model.emptyMessage).toBeUndefined()
+  })
+
+  it('keeps summary charts and ref-domain fallback when pages omit', () => {
+    const snap = asSnap()
+    const thin: SeoBacklinkSnapshot = {
+      ...snap,
+      items: [],
+    }
+    const model = buildBacklinksChapterModel({
+      projectId: 'p1',
+      projectName: 'Acme',
+      domain: 'acme.example',
+      snapshot: thin,
+      history: [thin],
+    })
+    expect(model.charts?.length).toBeGreaterThanOrEqual(2)
+    expect(model.rows.length).toBeGreaterThan(0)
+    expect(model.ledgerMeta).toMatch(/Referring domains/i)
+    expect(model.stats?.find((s) => s.label === 'DR')?.value).not.toBe('—')
+  })
+
+  it('normalizes 0–1000 rank into DR display', () => {
+    const snap = { ...asSnap(), rank: 399, items: asSnap().items }
+    const model = buildBacklinksChapterModel({
+      projectId: 'p1',
+      projectName: 'Acme',
+      domain: 'acme.example',
+      snapshot: snap,
+    })
+    expect(model.stats?.find((s) => s.label === 'DR')?.value).toBe('40')
   })
 
   it('keeps empty chrome when no snapshot yet', () => {

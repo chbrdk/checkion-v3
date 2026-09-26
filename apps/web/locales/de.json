@@ -1070,7 +1070,8 @@
       "backlinkHistory": "Backlink-Historie",
       "referringPlatforms": "Referring Platforms",
       "referringCountries": "Referring Countries",
-      "referringNetworks": "Referring Networks"
+      "referringNetworks": "Referring Networks",
+      "linkTypes": "Link-Typen"
     },
     "seed": {
       "seed": "Seed",
@@ -1139,6 +1140,7 @@
       "dr": "DR",
       "backlinks": "Backlinks",
       "refDomains": "Ref.-Domains",
+      "refPages": "Ref.-Pages",
       "lostLinks": "Verloren"
     },
     "columns": {
