@@ -129,6 +129,7 @@ export function buildRankChapterModel(input: {
   locale?: string
   location?: string
   recent?: string[]
+  suggestions?: string[] | null
   config?: SeoRankConfig | null
   t?: Translator
 }): SeoChapterViewModel {
@@ -174,6 +175,9 @@ export function buildRankChapterModel(input: {
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
       recent: input.recent ?? [],
+      suggestions: input.suggestions?.length ? input.suggestions : undefined,
+      suggestionsLabel: input.suggestions?.length ? 'Suggestions' : undefined,
+      suggestionsMode: input.suggestions?.length ? 'toggle-set' : undefined,
       locales: base.searchBand?.locales,
     },
     stats: [

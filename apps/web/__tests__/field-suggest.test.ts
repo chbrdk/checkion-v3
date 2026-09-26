@@ -21,6 +21,16 @@ describe('field-suggest', () => {
     expect(kw.every((k) => k.toLowerCase() !== 'vaillant')).toBe(true)
   })
 
+  it('builds research seed fixtures including brand once', () => {
+    const kw = fixtureFieldSuggestions({
+      domain: 'vaillant-group.com',
+      locale: 'de',
+      surface: 'research',
+    })
+    expect(kw[0]?.toLowerCase()).toBe('vaillant-group')
+    expect(kw.length).toBeGreaterThanOrEqual(5)
+  })
+
   it('fails closed without OPENROUTER_API_KEY', async () => {
     await expect(
       suggestFieldKeywordsViaQwen({

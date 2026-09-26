@@ -75,20 +75,24 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 
 **Backlinks depth (OpenSEO-parity IA, MSQDX chrome):** Search band (domain · Refresh) → KPIs **DR/Rank** · **Backlinks** · **Ref. domains** · **Referring pages** (deltas from new/lost) → charts from summary distributions (TLD · platforms · countries · types) plus weekly new/lost when present → main **referring-page ledger** (filters All · Dofollow · Nofollow · New · Lost · Gov · Edu; fallback to **referring-domains** ledger when pages omit) → aside: **Top anchors** · **Referring domains** · **Linked pages**. Capture = core DataForSEO pack (summary + pages + anchors + ref domains) + best-effort extras (`specs/domain/seo-dataforseo.md`). Never leave a KPI-only shell when summary distributions exist.
 
-**Rank tracking depth (monitor IA):** Search band (add-to-track · locale · location · Track & check + recent tracked) → KPI (monitored · top 10 · improved · declined) → **split**: main **position ledger** (dual keyword/URL · pos · prev · Δ · device · last check · filters Improved/Declined/Top 10 · pagination) · aside **Visibility over time** `SeriesChart` (invertY) + **Position distribution** + **Biggest movers**. No volume/CPC/intent columns (those live on Research). Track posts rank-configs + refresh; merges `latest` snapshots. Fixture SSOT until live checks land.
-
 **Domain depth (OpenSEO overview IA):** Search band (domain · locale · location · Refresh + recent hosts) → KPI (organic KW · traffic · cost · pages) → **split**: main **Top keywords** ledger (dual keyword/URL · volume · pos · traffic · position-band filters · pagination; up to **40** live ranked keywords) · aside **Organic traffic** `SeriesChart` + position distribution + **Top pages** dual-line list. Refresh posts `POST /api/projects/:id/seo/domain` and merges the snapshot into the chapter model.
 
-**Keywords depth (research IA):** Search band (seed · locale · location · Research + recent seeds) → KPI (ideas · avg vol · CPC · comp) → **split**: main **idea ledger** (Volume · CPC · Comp · **KD/Score** · Intent chips · intent filters · pagination) · aside **Search demand** `SeriesChart` + **SERP snapshot** dual-line list. KD from Labs bulk difficulty (best-effort). No rank Δ / prev / device columns (those live on Ranks).
+**Keywords depth (research IA):** Search band (seed · locale · location · Research + recent seeds) → optional **Smart seed suggestions** (Qwen) → KPI (ideas · avg vol · CPC · comp) → **split**: main **idea ledger** (Volume · CPC · Comp · **KD/Score** · Intent chips · intent filters · pagination) · aside **Search demand** `SeriesChart` + **SERP snapshot** dual-line list. KD from Labs bulk difficulty (best-effort). No rank Δ / prev / device columns (those live on Ranks). Suggestions: `POST /api/projects/:id/seo/keywords/suggest`.
+
+**Rank tracking depth (monitor IA):** Search band (add-to-track · locale · location · Track & check + recent tracked) → optional **Track-set suggestions** (saved Research ∪ Domain top keywords, Qwen fill-in when thin) → KPI (monitored · top 10 · improved · declined) → **split**: main **position ledger** (dual keyword/URL · pos · prev · Δ · device · last check · filters Improved/Declined/Top 10 · pagination) · aside **Visibility over time** `SeriesChart` (invertY) + **Position distribution** + **Biggest movers**. No volume/CPC/intent columns (those live on Research). Track posts rank-configs + refresh (seed may be comma-separated set). Suggestions: `POST /api/projects/:id/seo/rank-configs/suggest`.
 
 **Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → optional **Smart suggestions** (Qwen via OpenRouter) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors`; suggestions post `POST /api/projects/:id/seo/competitors/suggest`.
 
-### Field smart suggestions (Qwen)
-- **Purpose:** Propose 5–8 SERP-capable keywords for the Field keyword set (commercial / informational intents). Never pure brand-only stuffing; exclude the Collection domain brand as the sole term.
-- **Inputs (server):** project domain + name, locale, optional saved Research keywords (up to 8), optional current seed hint.
-- **Vendor:** OpenRouter chat completions · default model `qwen/qwen3.7-flash` (override `CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed with `503` when unconfigured — no invented keywords.
-- **Output:** `{ keywords: string[], model, stubbed }` — UI shows suggestion chips under the search band; chip adds to seed; **Use set** fills the seed and leaves Analyze to the user.
-- **Cost:** Not DataForSEO units; no Market soft-cap debit. Bound tokens; JSON-object response validated locally.
+### Market smart suggestions (Qwen / OpenRouter)
+Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed `503`. Not DataForSEO units.
+
+| Surface | Endpoint | Purpose | UI |
+|---------|----------|---------|-----|
+| Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze |
+| Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research |
+| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords from saved ∪ domain tops (Qwen if &lt;3) | chips toggle · Use set · Track & check (comma-set OK) |
+
+Inputs always: domain + project name + locale + optional seed hint + saved Research (≤8). Ranks also merges latest domain `topKeywords` when present.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 

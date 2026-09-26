@@ -26,7 +26,8 @@ import {
 } from './fixtures'
 import {
   fixtureFieldSuggestions,
-  suggestFieldKeywordsViaQwen,
+  mergeKeywordCandidates,
+  suggestMarketKeywordsViaQwen,
 } from './field-suggest'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
@@ -266,43 +267,108 @@ export async function projectSuggestFieldKeywords(input: {
   locale?: string
   seedHint?: string
 }): Promise<SeoFieldSuggestResult> {
+  return projectSuggestMarketKeywords({ ...input, surface: 'field' })
+}
+
+export async function projectSuggestResearchSeeds(input: {
+  projectId: string
+  locale?: string
+  seedHint?: string
+}): Promise<SeoFieldSuggestResult> {
+  return projectSuggestMarketKeywords({ ...input, surface: 'research' })
+}
+
+export async function projectSuggestRankTrackSet(input: {
+  projectId: string
+  locale?: string
+  seedHint?: string
+}): Promise<SeoFieldSuggestResult> {
+  return projectSuggestMarketKeywords({ ...input, surface: 'ranks' })
+}
+
+async function projectSuggestMarketKeywords(input: {
+  projectId: string
+  surface: 'field' | 'research' | 'ranks'
+  locale?: string
+  seedHint?: string
+}): Promise<SeoFieldSuggestResult> {
   const project = await getProject(input.projectId)
   if (!project?.domain) throw new Error('project has no domain')
   const domain = normalizeDomain(project.domain)
   const saved = (await listSavedKeywords(input.projectId))
-    .slice(0, 8)
+    .slice(0, 12)
     .map((k) => k.keyword)
+  const domainSnap = await latestDomainSnapshot(input.projectId)
+  const domainTops = (domainSnap?.topKeywords ?? [])
+    .map((k) => k.keyword)
+    .filter(Boolean)
+    .slice(0, 12)
   const fetchedAt = new Date().toISOString()
 
   if (!shouldRunLiveSeoMarket()) {
+    const base = fixtureFieldSuggestions({
+      domain,
+      projectName: project.name,
+      locale: input.locale,
+      surface: input.surface,
+    })
+    const merged =
+      input.surface === 'ranks'
+        ? mergeKeywordCandidates(saved, domainTops, base).slice(0, 8)
+        : base
     return {
       projectId: input.projectId,
       domain,
-      keywords: fixtureFieldSuggestions({
-        domain,
-        projectName: project.name,
-        locale: input.locale,
-      }),
+      keywords: merged,
       model: 'fixture',
       stubbed: true,
       fetchedAt,
+      surface: input.surface,
     }
   }
 
-  const { keywords, model } = await suggestFieldKeywordsViaQwen({
+  // Ranks: prefer existing Market data; only call Qwen when the pool is thin.
+  if (input.surface === 'ranks') {
+    const pool = mergeKeywordCandidates(saved, domainTops)
+    if (pool.length >= 5) {
+      return {
+        projectId: input.projectId,
+        domain,
+        keywords: pool.slice(0, 8),
+        model: 'market-data',
+        stubbed: false,
+        fetchedAt,
+        surface: 'ranks',
+      }
+    }
+  }
+
+  const { keywords, model } = await suggestMarketKeywordsViaQwen({
+    surface: input.surface,
     domain,
     projectName: project.name || domain,
     locale: input.locale,
     seedHint: input.seedHint,
-    savedKeywords: saved,
+    savedKeywords: saved.slice(0, 8),
+    candidateKeywords:
+      input.surface === 'ranks'
+        ? mergeKeywordCandidates(saved, domainTops)
+        : undefined,
   })
+
+  const finalKeywords =
+    input.surface === 'ranks'
+      ? mergeKeywordCandidates(saved, domainTops, keywords).slice(0, 8)
+      : keywords
+
   return {
     projectId: input.projectId,
     domain,
-    keywords,
+    keywords: finalKeywords,
     model,
     stubbed: false,
     fetchedAt,
+    surface: input.surface,
   }
 }
 

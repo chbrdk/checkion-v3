@@ -82,6 +82,7 @@ export function buildKeywordsChapterModel(input: {
   locale?: string
   location?: string
   recent?: string[]
+  suggestions?: string[] | null
   ideas?: SeoKeywordIdea[]
   serp?: SeoSerpResult | null
   t?: Translator
@@ -124,6 +125,9 @@ export function buildKeywordsChapterModel(input: {
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
       recent: input.recent ?? [],
+      suggestions: input.suggestions?.length ? input.suggestions : undefined,
+      suggestionsLabel: input.suggestions?.length ? 'Suggestions' : undefined,
+      suggestionsMode: input.suggestions?.length ? 'pick-one' : undefined,
       locales: base.searchBand?.locales,
     },
     stats: [

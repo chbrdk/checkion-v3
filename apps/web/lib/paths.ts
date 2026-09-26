@@ -311,12 +311,16 @@ export const paths = {
       `/api/projects/${encodeURIComponent(id)}/seo/overview`,
     apiProjectSeoKeywords: (id: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/keywords`,
+    apiProjectSeoKeywordsSuggest: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/keywords/suggest`,
     apiProjectSeoDomain: (id: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/domain`,
     apiProjectSeoBacklinks: (id: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/backlinks`,
     apiProjectSeoRankConfigs: (id: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/rank-configs`,
+    apiProjectSeoRankConfigsSuggest: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/rank-configs/suggest`,
     apiProjectSeoRankConfig: (id: string, configId: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/rank-configs/${encodeURIComponent(configId)}`,
     apiProjectSeoRankConfigRefresh: (id: string, configId: string) =>

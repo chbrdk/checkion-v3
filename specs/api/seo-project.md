@@ -12,12 +12,14 @@ Base: `/api/projects/:projectId/seo`. Auth + Access Model B on project.
 | GET | `/overview` | KPIs: latest domain snapshot, latest backlinks, active rank configs summary |
 | GET | `/keywords` | Saved keywords + metrics |
 | POST | `/keywords` | `{ action: 'save'\|'research'\|'hydrate', keywords?, seed?, … }` |
+| POST | `/keywords/suggest` | Research seed suggestions (OpenRouter Qwen) — `{ locale?, seedHint? }` |
 | GET | `/domain` | Latest domain snapshot (+ ranked keywords) |
 | POST | `/domain` | `{ action: 'refresh' }` — DataForSEO → snapshot |
 | GET | `/backlinks` | Latest + history |
 | POST | `/backlinks` | `{ action: 'refresh' }` |
 | GET | `/rank-configs` | List configs |
 | POST | `/rank-configs` | Create `{ domain, keywords[], schedule?, locationCode? }` |
+| POST | `/rank-configs/suggest` | Ranks track-set suggestions — saved ∪ domain tops (+ Qwen if thin) |
 | GET | `/rank-configs/:configId` | Config + keywords + latest run/snapshots |
 | POST | `/rank-configs/:configId/refresh` | Queue/run rank check |
 | POST | `/competitors` | `{ keywords[] }` — SERP overlap (may use saved keywords) |

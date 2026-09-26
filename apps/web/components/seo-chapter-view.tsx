@@ -384,11 +384,14 @@ function ChapterSearchBand({
           </Text>
           <ul className="checkion-seo-chapter__search-recent-list">
             {band.suggestions.map((item) => {
+              const pickOne = band.suggestionsMode === 'pick-one'
               const parts = seed
                 .split(/[,;]+/)
                 .map((p) => p.trim())
                 .filter(Boolean)
-              const selected = parts.some((p) => p.toLowerCase() === item.toLowerCase())
+              const selected = pickOne
+                ? seed.trim().toLowerCase() === item.toLowerCase()
+                : parts.some((p) => p.toLowerCase() === item.toLowerCase())
               return (
                 <li key={item}>
                   <Chip
@@ -396,6 +399,10 @@ function ChapterSearchBand({
                     selected={selected}
                     disabled={busy}
                     onClick={() => {
+                      if (pickOne) {
+                        setSeed(item)
+                        return
+                      }
                       if (selected) {
                         setSeed(
                           parts
@@ -412,16 +419,18 @@ function ChapterSearchBand({
                 </li>
               )
             })}
-            <li>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => setSeed((band.suggestions ?? []).join(', '))}
-              >
-                {t('seoMarket.actions.useSuggestionSet')}
-              </Button>
-            </li>
+            {band.suggestionsMode !== 'pick-one' ? (
+              <li>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => setSeed((band.suggestions ?? []).join(', '))}
+                >
+                  {t('seoMarket.actions.useSuggestionSet')}
+                </Button>
+              </li>
+            ) : null}
           </ul>
         </div>
       ) : null}

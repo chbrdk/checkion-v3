@@ -1277,7 +1277,13 @@
       "gscFirstParty": "Nur First-Party Search Console — OAuth folgt später.",
       "fieldSuggest": "Smart Suggestions",
       "fieldSuggestMeta": "Qwen · OpenRouter",
-      "fieldSuggestHint": "Schlägt 5–8 SERP-Keywords für Field vor. Chips prüfen, Set übernehmen, dann Analysieren."
+      "fieldSuggestHint": "Schlägt 5–8 SERP-Keywords für Field vor. Chips prüfen, Set übernehmen, dann Analysieren.",
+      "researchSuggest": "Seed-Vorschläge",
+      "researchSuggestMeta": "Qwen · OpenRouter",
+      "researchSuggestHint": "Schlägt Research-Seeds vor. Ein Chip wählen, dann Research.",
+      "ranksSuggest": "Track-Set vorschlagen",
+      "ranksSuggestMeta": "Saved ∪ Domain · Qwen wenn dünn",
+      "ranksSuggestHint": "Schlägt Keywords zum Tracken vor. Set übernehmen, dann Track & check."
     }
   }
 }

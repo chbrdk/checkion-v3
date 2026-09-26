@@ -1277,7 +1277,13 @@
       "gscFirstParty": "First-party Search Console only — OAuth wiring lands later.",
       "fieldSuggest": "Smart suggestions",
       "fieldSuggestMeta": "Qwen · OpenRouter",
-      "fieldSuggestHint": "Proposes 5–8 SERP keywords for Field. Review chips, use set, then Analyze."
+      "fieldSuggestHint": "Proposes 5–8 SERP keywords for Field. Review chips, use set, then Analyze.",
+      "researchSuggest": "Seed suggestions",
+      "researchSuggestMeta": "Qwen · OpenRouter",
+      "researchSuggestHint": "Proposes Research seeds. Pick one chip, then Research.",
+      "ranksSuggest": "Track-set suggestions",
+      "ranksSuggestMeta": "Saved ∪ Domain · Qwen if thin",
+      "ranksSuggestHint": "Proposes keywords to monitor. Use set, then Track & check."
     }
   }
 }

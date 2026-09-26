@@ -66,7 +66,7 @@ Persisted on `seo_backlink_snapshots` columns + `details` jsonb (items, anchors,
 ### Competitors / Field
 - SERP overlap (existing) via organic SERP per keyword
 - When backlinks competitors exist on the latest snapshot, Field may surface them as secondary aside pressure (does not replace SERP overlap ledger)
-- **Smart suggestions:** `POST /competitors/suggest` — OpenRouter `qwen/qwen3.7-flash` (env override) proposes 5–8 Field keywords from domain + saved Research; fail closed without `OPENROUTER_API_KEY`
+- **Smart suggestions:** OpenRouter Qwen — Field (`/competitors/suggest`), Research seeds (`/keywords/suggest`), Ranks track-set (`/rank-configs/suggest`); fail closed without `OPENROUTER_API_KEY`
 
 ### Usage / cache
 Usage events → `seo_market_usage`. Cache → `seo_market_cache` (TTL).

@@ -189,6 +189,7 @@ export function SeoProjectWorkspace({
             locale: query.locale,
             location: query.location,
             recent,
+            suggestions: kwModel.searchBand?.suggestions,
             ideas,
             serp: serpData,
             t,
@@ -200,8 +201,51 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [domain, kwModel.searchBand?.recent, projectId, projectName, t],
+    [domain, kwModel.searchBand?.recent, kwModel.searchBand?.suggestions, projectId, projectName, t],
   )
+
+  const runKeywordsSuggest = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(paths.routes.apiProjectSeoKeywordsSuggest(projectId), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          locale: kwModel.searchBand?.locale ?? 'de',
+          seedHint: kwModel.searchBand?.seed ?? '',
+        }),
+      })
+      const data = (await res.json()) as {
+        keywords?: string[]
+        detail?: string
+        error?: string
+      }
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+      }
+      const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      setKwModel((prev) => ({
+        ...prev,
+        searchBand: {
+          seed: prev.searchBand?.seed ?? brandSeedFromHost(domain),
+          locale: prev.searchBand?.locale ?? 'de',
+          location: prev.searchBand?.location ?? t('seoMarket.locations.germany'),
+          seedLabel: prev.searchBand?.seedLabel,
+          actionLabel: prev.searchBand?.actionLabel,
+          recent: prev.searchBand?.recent,
+          locales: prev.searchBand?.locales,
+          suggestions: keywords,
+          suggestionsLabel: t('seoMarket.search.suggestions'),
+          suggestionsMode: 'pick-one',
+        },
+      }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'request failed')
+    } finally {
+      setBusy(false)
+    }
+  }, [domain, kwModel.searchBand?.locale, kwModel.searchBand?.seed, projectId, t])
 
   const runDomainRefresh = useCallback(
     async (query: SeoChapterSearchQuery) => {
@@ -306,12 +350,15 @@ export function SeoProjectWorkspace({
       setBusy(true)
       setError(null)
       try {
-        const keyword = query.seed.trim()
-        if (!keyword) return
+        const added = query.seed
+          .split(/[,;]+/)
+          .map((k) => k.trim())
+          .filter(Boolean)
+        if (!added.length) return
         const existing = configs[0]
         const keywords = existing
-          ? Array.from(new Set([...existing.keywords, keyword])).slice(0, 50)
-          : [keyword]
+          ? Array.from(new Set([...existing.keywords, ...added])).slice(0, 50)
+          : added.slice(0, 50)
         let config: SeoRankConfig | null = null
         if (existing) {
           // Re-create path: POST new config with merged keywords, then refresh
@@ -380,19 +427,21 @@ export function SeoProjectWorkspace({
           detail: config.domain,
         })
         const prevRecent = rankModel.searchBand?.recent ?? []
+        const seedLabel = added.join(', ')
         const recent = [
-          keyword,
-          ...prevRecent.filter((r) => r.toLowerCase() !== keyword.toLowerCase()),
+          seedLabel,
+          ...prevRecent.filter((r) => r.toLowerCase() !== seedLabel.toLowerCase()),
         ].slice(0, 6)
         setRankModel(
           buildRankChapterModel({
             projectId,
             projectName,
             domain,
-            seed: keyword,
+            seed: seedLabel,
             locale: query.locale,
             location: query.location,
             recent,
+            suggestions: rankModel.searchBand?.suggestions,
             config,
             t,
           }),
@@ -405,6 +454,49 @@ export function SeoProjectWorkspace({
     },
     [configs, domain, projectId, projectName, rankModel.searchBand?.recent, trackJob, t],
   )
+
+  const runRankTrackSetSuggest = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(paths.routes.apiProjectSeoRankConfigsSuggest(projectId), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          locale: rankModel.searchBand?.locale ?? 'de',
+          seedHint: rankModel.searchBand?.seed ?? '',
+        }),
+      })
+      const data = (await res.json()) as {
+        keywords?: string[]
+        detail?: string
+        error?: string
+      }
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+      }
+      const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      setRankModel((prev) => ({
+        ...prev,
+        searchBand: {
+          seed: prev.searchBand?.seed ?? '',
+          locale: prev.searchBand?.locale ?? 'de',
+          location: prev.searchBand?.location ?? t('seoMarket.locations.germany'),
+          seedLabel: prev.searchBand?.seedLabel,
+          actionLabel: prev.searchBand?.actionLabel,
+          recent: prev.searchBand?.recent,
+          locales: prev.searchBand?.locales,
+          suggestions: keywords,
+          suggestionsLabel: t('seoMarket.search.suggestions'),
+          suggestionsMode: 'toggle-set',
+        },
+      }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'request failed')
+    } finally {
+      setBusy(false)
+    }
+  }, [projectId, rankModel.searchBand?.locale, rankModel.searchBand?.seed, t])
 
   const runCompetitorsAnalyze = useCallback(
     async (query: SeoChapterSearchQuery) => {
@@ -642,18 +734,35 @@ export function SeoProjectWorkspace({
           searchBusy={busy}
           onSearch={runKeywordSearch}
           workbench={
-            saved.length > 0 ? (
-              <div className="checkion-seo-project__stack">
-                <SectionChrome
-                  title={t('seoMarket.workspace.saved')}
-                  quiet
-                  meta={t('seoMarket.workspace.savedMeta', { count: saved.length })}
-                />
-                <Text role="meta" as="p">
-                  {t('seoMarket.workspace.savedHint')}
-                </Text>
-              </div>
-            ) : undefined
+            <div className="checkion-seo-project__stack">
+              <SectionChrome
+                title={t('seoMarket.workspace.workbench')}
+                quiet
+                meta={t('seoMarket.workspace.researchSuggestMeta')}
+              />
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void runKeywordsSuggest()}
+              >
+                {t('seoMarket.workspace.researchSuggest')}
+              </Button>
+              <Text role="meta" as="p">
+                {t('seoMarket.workspace.researchSuggestHint')}
+              </Text>
+              {saved.length > 0 ? (
+                <>
+                  <SectionChrome
+                    title={t('seoMarket.workspace.saved')}
+                    quiet
+                    meta={t('seoMarket.workspace.savedMeta', { count: saved.length })}
+                  />
+                  <Text role="meta" as="p">
+                    {t('seoMarket.workspace.savedHint')}
+                  </Text>
+                </>
+              ) : null}
+            </div>
           }
         />
       ) : null}
@@ -710,71 +819,89 @@ export function SeoProjectWorkspace({
           searchBusy={busy}
           onSearch={runRankTrack}
           workbench={
-            configs.length > 0 ? (
-              <div className="checkion-seo-project__stack">
-                <SectionChrome
-                  title={t('seoMarket.workspace.configs')}
-                  quiet
-                  meta={t('seoMarket.workspace.configsMeta', {
-                    count: configs.length,
-                  })}
-                />
-                {configs.slice(0, 3).map((cfg) => (
-                  <div key={cfg.id} className="checkion-seo-project__row">
-                    <Text role="meta" as="span">
-                      {cfg.domain} · {cfg.keywords.length} kw · {cfg.schedule}
-                    </Text>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={busy}
-                      onClick={async () => {
-                        trackJob({
-                          id: `seo-rank-${cfg.id}-${Date.now()}`,
-                          resource: 'seo-market',
-                          status: 'running',
-                          title: t('seoMarket.workspace.rankRefresh'),
-                          href: paths.routes.projectSeo(projectId, 'rank-tracking'),
-                          projectId,
-                          detail: cfg.domain,
-                        })
-                        const updated = await api(
-                          paths.routes.apiProjectSeoRankConfigRefresh(projectId, cfg.id),
-                          { method: 'POST' },
-                        )
-                        if (updated) {
-                          const next = updated as SeoRankConfig
-                          setConfigs((prev) =>
-                            prev.map((c) => (c.id === cfg.id ? next : c)),
-                          )
-                          setRankModel(
-                            buildRankChapterModel({
-                              projectId,
-                              projectName,
-                              domain,
-                              config: next,
-                              recent: next.keywords.slice(0, 6),
-                              t,
-                            }),
-                          )
+            <div className="checkion-seo-project__stack">
+              <SectionChrome
+                title={t('seoMarket.workspace.workbench')}
+                quiet
+                meta={t('seoMarket.workspace.ranksSuggestMeta')}
+              />
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void runRankTrackSetSuggest()}
+              >
+                {t('seoMarket.workspace.ranksSuggest')}
+              </Button>
+              <Text role="meta" as="p">
+                {t('seoMarket.workspace.ranksSuggestHint')}
+              </Text>
+              {configs.length > 0 ? (
+                <>
+                  <SectionChrome
+                    title={t('seoMarket.workspace.configs')}
+                    quiet
+                    meta={t('seoMarket.workspace.configsMeta', {
+                      count: configs.length,
+                    })}
+                  />
+                  {configs.slice(0, 3).map((cfg) => (
+                    <div key={cfg.id} className="checkion-seo-project__row">
+                      <Text role="meta" as="span">
+                        {cfg.domain} · {cfg.keywords.length} kw · {cfg.schedule}
+                      </Text>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={busy}
+                        onClick={async () => {
                           trackJob({
-                            id: `seo-rank-${cfg.id}-done`,
+                            id: `seo-rank-${cfg.id}-${Date.now()}`,
                             resource: 'seo-market',
-                            status: 'completed',
-                            title: t('seoMarket.workspace.rankRefreshDone'),
+                            status: 'running',
+                            title: t('seoMarket.workspace.rankRefresh'),
                             href: paths.routes.projectSeo(projectId, 'rank-tracking'),
                             projectId,
                             detail: cfg.domain,
                           })
-                        }
-                      }}
-                    >
-                      {t('seoMarket.workspace.refreshNow')}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : undefined
+                          const updated = await api(
+                            paths.routes.apiProjectSeoRankConfigRefresh(projectId, cfg.id),
+                            { method: 'POST' },
+                          )
+                          if (updated) {
+                            const next = updated as SeoRankConfig
+                            setConfigs((prev) =>
+                              prev.map((c) => (c.id === cfg.id ? next : c)),
+                            )
+                            setRankModel(
+                              buildRankChapterModel({
+                                projectId,
+                                projectName,
+                                domain,
+                                config: next,
+                                recent: next.keywords.slice(0, 6),
+                                suggestions: rankModel.searchBand?.suggestions,
+                                t,
+                              }),
+                            )
+                            trackJob({
+                              id: `seo-rank-${cfg.id}-done`,
+                              resource: 'seo-market',
+                              status: 'completed',
+                              title: t('seoMarket.workspace.rankRefreshDone'),
+                              href: paths.routes.projectSeo(projectId, 'rank-tracking'),
+                              projectId,
+                              detail: cfg.domain,
+                            })
+                          }
+                        }}
+                      >
+                        {t('seoMarket.workspace.refreshNow')}
+                      </Button>
+                    </div>
+                  ))}
+                </>
+              ) : null}
+            </div>
           }
         />
       ) : null}
