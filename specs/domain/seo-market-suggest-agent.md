@@ -41,7 +41,7 @@ inputs: domain, projectName, description?, knowledge?, surface, locale?, seedHin
 5. brief ← Qwen distill JSON from corpus + pages + evidence
      { summary, category, products[], services[], audiences[], notes? }
 6. keywords ← Qwen generate 5–8 surface-specific queries from brief + evidence
-7. sanitize (no www/hosts/addresses/weak brand+vergleich templates)
+7. sanitize (no www/hosts/addresses/weak brand+vergleich; no imprint/legal chrome: GmbH, Geschäftsführer, logo, Technology Center; no bare sister-brand/person entities without product intent)
 return { keywords, brief, model, agent: { steps, pagesFetched, usedKnowledge, usedField?, usedGsc?, usedQuality? } }
 ```
 

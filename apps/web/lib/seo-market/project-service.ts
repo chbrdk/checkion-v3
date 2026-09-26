@@ -346,7 +346,7 @@ async function projectSuggestMarketKeywords(input: {
   // Homepage chrome when knowledge is thin (or always — cheap, fail-soft).
   const urlContext = await fetchUrlSuggestContext(domain)
   const packSeeds = candidatesFromKnowledge(knowledge)
-  const evidenceSeeds = evidenceKeywordPool(evidence)
+  const evidenceSeeds = evidenceKeywordPool(evidence, domain)
   const stubFixtures = fixtureFieldSuggestions({
     domain,
     projectName: project.name,
@@ -436,7 +436,12 @@ async function projectSuggestMarketKeywords(input: {
     })
 
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(agentResult.keywords, packSeeds, evidenceSeeds, evidence.savedKeywords),
+      mergeKeywordCandidates(
+        agentResult.keywords,
+        evidenceSeeds,
+        evidence.savedKeywords,
+        packSeeds,
+      ),
       domain,
       input.surface,
       8,

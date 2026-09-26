@@ -71,6 +71,17 @@ const WEAK_BRAND_SUFFIX_RE =
   /^(vergleich|alternative|erfahrung|kosten|test|preis|review|pricing|best|vs|kaufen|buy)$/i
 
 /**
+ * Imprint / footer / legal / corporate chrome — never Market research seeds.
+ * Spec: seo-market-suggest-agent.md sanitize (corporate noise).
+ */
+const CORPORATE_NOISE_RE =
+  /\b(gmbh|mbh|ag|kg|ug|ltd|llc|inc|plc|s\.?a\.?r?\.?l?\.?|co\.?\s*kg|&\s*co)\b|\b(geschäftsführer(?:in)?|geschäftsführung|vorstand|aufsichtsrat|managing\s+directors?|chief\s+executive|ceo|cfo|cto|coo)\b|\b(impressum|imprint|datenschutz|privacy\s*policy|cookie(?:s)?|karriere|jobs?|stellenangebote|presse(?:meldung|mitteilung)?|press\s*release|kontakt|contact\s*us)\b|\b(logo|favicon|wordmark|word\s*mark|wikipedia|wikimedia)\b|\b(technology\s+center|technikzentrum|headquarters|head\s*office|niederlassung|standort|campus)\b|\b(vat|ust\.?\s*id|handelsregister|registergericht)\b/i
+
+/** Buyer / product / commercial signal — keeps category seeds like "wärmepumpe". */
+const BUYER_INTENT_HINT_RE =
+  /\b(kaufen|buy|preis|price|kosten|cost|test|vergleich|alternative|anbieter|provider|beste?|best|service|wartung|installation|reparatur|mieten|lease|leasing|abo|abonnement|offer|angebot|shop|online|beratung|guide|ratgeber|heizung|heizen|wärmepumpe|therme|boiler|heating|heat\s*pump|klima|lüftung|solar|photovoltaik|pv\b|onkologie|pharma|saas|crm|erp|software|platform|app)\b|[äöüß]/i
+
+/**
  * True for tokens that must never surface as Market suggestion chips
  * (www / URLs / TLDs / search-engine hosts / addresses / bare junk).
  */
@@ -84,8 +95,22 @@ export function isJunkKeywordToken(raw: string | null | undefined): boolean {
   if (HOST_OR_URL_RE.test(t)) return true
   if (SEARCH_ENGINE_RE.test(t)) return true
   if (ADDRESS_RE.test(t)) return true
+  if (CORPORATE_NOISE_RE.test(t)) return true
   if (/^[a-z0-9-]{1,3}$/.test(t) && !/^(seo|b2b|crm|erp|kpi)$/.test(t)) return true
   return false
+}
+
+/**
+ * Sister-brand / person-entity phrases without product intent
+ * ("saunier", "saunier duval", "johann vaillant …" already caught by technology center).
+ */
+function isBareEntityPhrase(lower: string, brandBits: Set<string>): boolean {
+  const tokens = lower.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0 || tokens.length > 3) return false
+  if (tokens.some((tok) => brandBits.has(tok))) return false
+  if (BUYER_INTENT_HINT_RE.test(lower)) return false
+  // Latin-only short tokens → likely competitor/person label, not a search seed.
+  return tokens.every((tok) => /^[a-z]{3,16}$/.test(tok))
 }
 
 /** True when a string looks like a real searchable query (not a host/URL/address). */
@@ -129,6 +154,14 @@ export function isTrackWorthyKeyword(
     if (aBrand && WEAK_BRAND_SUFFIX_RE.test(b!)) return false
     if (bBrand && WEAK_BRAND_SUFFIX_RE.test(a!)) return false
   }
+
+  // Brand + corporate chrome → "vaillant gmbh", "vaillant logo"
+  if (tokens.some((tok) => brandBits.has(tok)) && CORPORATE_NOISE_RE.test(lower)) {
+    return false
+  }
+
+  // Competitor / person entity without buyer intent → "saunier", "saunier duval"
+  if (isBareEntityPhrase(lower, brandBits)) return false
 
   return true
 }

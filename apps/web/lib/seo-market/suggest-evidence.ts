@@ -9,7 +9,7 @@ import type {
   SeoRankConfig,
 } from '@checkion-v3/contracts'
 import { listDomainScans, getDomainOverview } from '../fixtures/scan-store'
-import { displayBrandFromHost } from './host-utils'
+import { displayBrandFromHost, isJunkKeywordToken, isTrackWorthyKeyword } from './host-utils'
 import {
   latestCompetitorSnapshot,
   latestDomainSnapshot,
@@ -120,12 +120,13 @@ export function seedHintsFromEvidence(evidence: SuggestEvidence, max = 5): strin
       ...evidence.domainTops,
       ...evidence.fieldKeywords,
       ...evidence.savedKeywords,
-    ],
+    ].filter((k) => k && !isJunkKeywordToken(k)),
     max,
   )
 }
 
-export function evidenceKeywordPool(evidence: SuggestEvidence): string[] {
+export function evidenceKeywordPool(evidence: SuggestEvidence, domain?: string): string[] {
+  const host = domain || evidence.brand
   return uniq(
     [
       ...evidence.gscQueries,
@@ -133,7 +134,13 @@ export function evidenceKeywordPool(evidence: SuggestEvidence): string[] {
       ...evidence.fieldKeywords,
       ...evidence.savedKeywords,
       ...evidence.trackedKeywords,
-    ],
+    ].filter((k) => {
+      if (isJunkKeywordToken(k)) return false
+      if (domain && !isTrackWorthyKeyword(k, domain) && k.toLowerCase() !== evidence.brand.toLowerCase()) {
+        return false
+      }
+      return true
+    }),
     24,
   )
 }

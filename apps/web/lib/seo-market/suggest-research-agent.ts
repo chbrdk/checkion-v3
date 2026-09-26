@@ -177,7 +177,9 @@ function surfaceKeywordSystem(surface: SeoSuggestSurface, locale: string): strin
   const common = [
     `Locale: ${locale}.`,
     'Return JSON: {"keywords":["..."]} with 5–8 track-worthy search queries.',
-    'No www/hosts/addresses/legal names. Prefer buyer-intent product/service queries.',
+    'No www/hosts/addresses/legal entity names (GmbH, AG), roles (Geschäftsführer), logos, Technology Center, or imprint crumbs.',
+    'No bare sister brands or person names without a product/service term.',
+    'Prefer buyer-intent product/service queries (category and brand+product).',
     'Use ONLY the company brief and evidence. Do not invent unrelated verticals.',
   ].join(' ')
   if (surface === 'research') {
@@ -235,7 +237,8 @@ export async function runMarketSuggestResearchAgent(input: {
     system: [
       'You are a company research analyst for SEO Market suggestions.',
       'Read the site excerpts, Collection knowledge, and market evidence. Infer what the company actually offers.',
-      'Do NOT treat legal footer crumbs (GmbH, address, Geschäftsführer) as the product.',
+      'Do NOT treat legal footer crumbs (GmbH, address, Geschäftsführer, logo, Technology Center) as the product.',
+      'Do NOT treat sister brands or person names without a product as offerings.',
       'Prefer concrete products/services a buyer would search for.',
       'Return JSON only:',
       '{"summary":"2-4 sentences","category":"string|null","products":["..."],"services":["..."],"audiences":["..."]}',
@@ -259,6 +262,15 @@ export async function runMarketSuggestResearchAgent(input: {
   steps.push('generate_keywords')
   const hint =
     input.seedHint?.trim() && input.seedHint.trim().length > 2 ? input.seedHint.trim() : null
+  const cleanPackSeeds = sanitizeSuggestKeywords(
+    candidatesFromKnowledge(input.knowledge),
+    input.domain,
+    input.surface,
+    12,
+  )
+  const cleanEvidenceSeeds = evidence
+    ? sanitizeSuggestKeywords(evidenceKeywordPool(evidence, input.domain), input.domain, input.surface, 12)
+    : []
   const keywordUser = [
     `Surface: ${input.surface}`,
     `Brand: ${brand}`,
@@ -270,9 +282,7 @@ export async function runMarketSuggestResearchAgent(input: {
     brief.audiences.length ? `Audiences: ${brief.audiences.join(', ')}` : null,
     knowledgeBlock(input.knowledge),
     evidence ? formatEvidenceForPrompt(evidence, input.surface) : null,
-    candidatesFromKnowledge(input.knowledge).length
-      ? `Prior seed candidates: ${candidatesFromKnowledge(input.knowledge).slice(0, 12).join(', ')}`
-      : null,
+    cleanPackSeeds.length ? `Prior seed candidates: ${cleanPackSeeds.slice(0, 12).join(', ')}` : null,
     (input.savedKeywords ?? []).length
       ? `Saved research: ${(input.savedKeywords ?? []).slice(0, 8).join(', ')}`
       : null,
@@ -291,11 +301,11 @@ export async function runMarketSuggestResearchAgent(input: {
   const keywords = sanitizeSuggestKeywords(
     mergeKeywordCandidates(
       parseKeywordList(gen.parsed),
-      candidatesFromKnowledge(input.knowledge),
-      evidence ? evidenceKeywordPool(evidence) : [],
       brief.products,
       brief.services,
       brief.category ? [brief.category] : [],
+      cleanEvidenceSeeds,
+      cleanPackSeeds,
     ),
     input.domain,
     input.surface,

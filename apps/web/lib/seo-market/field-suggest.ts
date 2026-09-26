@@ -110,7 +110,7 @@ export function candidatesFromKnowledge(
     knowledge.geoContext?.seedQueries,
     knowledge.geoContext?.queryThemes,
     knowledge.researchBrief?.topics,
-  )
+  ).filter((k) => looksLikeSearchQuery(k) && !isJunkKeywordToken(k))
 }
 
 /**
@@ -187,6 +187,8 @@ function systemPromptFor(surface: SeoSuggestSurface, locale: string): string {
     'Infer the company\'s real products and vertical from the domain URL, homepage chrome, and any Collection knowledge.',
     'Return real search queries a buyer would type — category terms, brand+product, commercial intent.',
     'Never return URLs, hostnames, www, street addresses, or search-engine names.',
+    'Never return imprint/legal chrome: GmbH, AG, Geschäftsführer, Impressum, Datenschutz, logo, Technology Center, headquarters.',
+    'Never return bare sister-brand or person names without a product (e.g. "saunier", "johann …").',
     'Never return weak templates like "brand vergleich", "brand preis", "brand alternative", or "brand brand".',
     'Mix: roughly half category terms WITHOUT brand, half brand+product. Not slogans.',
     'Works for any industry (heating, pharma, SaaS, retail, industrial, …) — do not invent an unrelated vertical.',

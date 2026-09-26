@@ -68,16 +68,43 @@ describe('field-suggest', () => {
     expect(cleaned).toEqual(['vaillant wärmepumpe', 'wärmepumpe'])
   })
 
+  it('rejects imprint / legal / logo / sister-brand entity seeds', () => {
+    const domain = 'vaillant-group.com'
+    const junk = [
+      'johann vaillant technology center',
+      'saunier',
+      'saunier duval',
+      'vaillant boiler logo',
+      'vaillant geschäftsführer',
+      'vaillant geschäftsführung',
+      'vaillant gmbh',
+    ]
+    for (const k of junk) {
+      expect(isTrackWorthyKeyword(k, domain), k).toBe(false)
+    }
+    const cleaned = sanitizeSuggestKeywords(
+      [...junk, 'vaillant', 'wärmepumpe', 'vaillant wärmepumpe', 'heizung anbieter'],
+      domain,
+      'research',
+    )
+    expect(cleaned).toEqual(
+      expect.arrayContaining(['vaillant', 'wärmepumpe', 'vaillant wärmepumpe', 'heizung anbieter']),
+    )
+    expect(cleaned.every((k) => !junk.includes(k.toLowerCase()) && !junk.includes(k))).toBe(true)
+    expect(cleaned.filter((k) => k.toLowerCase() === 'vaillant')).toHaveLength(1)
+  })
+
   it('extracts candidates from knowledge pack without addresses', () => {
     const c = candidatesFromKnowledge({
       geoContext: {
-        seedQueries: ['seed a', 'berghauser straße 40'],
+        seedQueries: ['seed a', 'berghauser straße 40', 'vaillant gmbh'],
         queryThemes: ['theme b'],
         knownCompetitors: [],
       },
-      researchBrief: { topics: ['topic c'] },
+      researchBrief: { topics: ['topic c', 'saunier duval'] },
     })
-    expect(c).toEqual(['seed a', 'theme b', 'topic c'])
+    expect(c).toEqual(['seed a', 'theme b', 'topic c', 'saunier duval'])
+    expect(c.every((k) => !/gmbh|straße/i.test(k))).toBe(true)
   })
 
   it('fails closed without OPENROUTER_API_KEY', async () => {

@@ -8,7 +8,7 @@ import type {
   SeoProjectOverview,
 } from '@checkion-v3/contracts'
 import type { Translator } from '../i18n'
-import { brandSeedFromHost, displayBrandFromHost } from './host-utils'
+import { brandSeedFromHost, displayBrandFromHost, isJunkKeywordToken, isTrackWorthyKeyword } from './host-utils'
 import { localizeSeoDashboard } from './seo-market-i18n'
 import { emptySeoDashboard } from './dashboard-fixtures'
 
@@ -33,6 +33,7 @@ export function buildSeedHintsFromOverview(overview: SeoProjectOverview): string
     .map((r) => r.query?.trim())
     .filter(Boolean) as string[]
   for (const q of gsc) {
+    if (isJunkKeywordToken(q) || !isTrackWorthyKeyword(q, overview.domain)) continue
     if (hints.some((h) => h.toLowerCase() === q.toLowerCase())) continue
     hints.push(q)
     if (hints.length >= 5) break
@@ -40,7 +41,7 @@ export function buildSeedHintsFromOverview(overview: SeoProjectOverview): string
   const fieldKws = overview.competitorSnapshot?.keywords ?? []
   for (const kw of fieldKws) {
     const t = kw.trim()
-    if (!t) continue
+    if (!t || isJunkKeywordToken(t) || !isTrackWorthyKeyword(t, overview.domain)) continue
     if (hints.some((h) => h.toLowerCase() === t.toLowerCase())) continue
     hints.push(t)
     if (hints.length >= 5) break
@@ -48,7 +49,7 @@ export function buildSeedHintsFromOverview(overview: SeoProjectOverview): string
   const tops = overview.domainSnapshot?.topKeywords ?? []
   for (const idea of tops) {
     const kw = idea.keyword?.trim()
-    if (!kw) continue
+    if (!kw || isJunkKeywordToken(kw) || !isTrackWorthyKeyword(kw, overview.domain)) continue
     if (hints.some((h) => h.toLowerCase() === kw.toLowerCase())) continue
     hints.push(kw)
     if (hints.length >= 5) break
