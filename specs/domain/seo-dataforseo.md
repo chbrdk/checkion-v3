@@ -27,7 +27,9 @@ Fixture mode returns deterministic sample rows (`stubbed: true`, `source: "fixtu
 - Keyword ideas / search volume
 - SERP organic live
 - Domain ranked keywords / overview
-- Backlinks summary
+- Backlinks **summary** (`/backlinks/summary/live`) — rank (0–100), counts, spam, TLD/types
+- Backlinks **pages** (`/backlinks/backlinks/live`) — referring-page ledger
+- Backlinks **timeseries** (`/backlinks/timeseries_summary/live`) — weekly progress charts
 - Competitors (via SERP overlap on keyword set)
 
 Usage events append to `seo_market_usage` (projectId, endpoint, units, at). Cache hits go through `seo_market_cache` (TTL).

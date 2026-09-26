@@ -4,7 +4,9 @@ import type {
   SeoDomainSnapshot,
   SeoKeywordIdea,
 } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
+import { localizeSeoChapter } from './seo-market-i18n'
 
 function fmtInt(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -85,6 +87,7 @@ export function buildDomainChapterModel(input: {
   location?: string
   recent?: string[]
   snapshot?: SeoDomainSnapshot | null
+  t?: Translator
 }): SeoChapterViewModel {
   const host = (input.seed || input.domain).replace(/^https?:\/\//, '').replace(/\/$/, '')
   const base = emptySeoChapter('domain', {
@@ -97,7 +100,7 @@ export function buildDomainChapterModel(input: {
   const rows = mapDomainKeywordsToRows(ideas, host)
   const hasLive = Boolean(snap)
 
-  return {
+  const model: SeoChapterViewModel = {
     ...base,
     lede: undefined,
     domain: host,
@@ -152,4 +155,5 @@ export function buildDomainChapterModel(input: {
         : undefined,
     },
   }
+  return input.t ? localizeSeoChapter(model, input.t) : model
 }

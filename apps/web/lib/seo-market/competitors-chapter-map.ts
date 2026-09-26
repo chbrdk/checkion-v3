@@ -4,7 +4,9 @@ import type {
   SeoCompetitorRow,
   SeoCompetitorsResult,
 } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
+import { localizeSeoChapter } from './seo-market-i18n'
 
 function fmtAvgRank(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -102,6 +104,7 @@ export function buildCompetitorsChapterModel(input: {
   location?: string
   recent?: string[]
   result?: SeoCompetitorsResult | null
+  t?: Translator
 }): SeoChapterViewModel {
   const base = emptySeoChapter('competitors', {
     projectId: input.projectId,
@@ -137,7 +140,7 @@ export function buildCompetitorsChapterModel(input: {
   const livePoints = result?.items?.length ? overlapPoints(rows) : []
   const hasLive = Boolean(result)
 
-  return {
+  const model: SeoChapterViewModel = {
     ...base,
     lede: undefined,
     emptyMessage:
@@ -223,4 +226,5 @@ export function buildCompetitorsChapterModel(input: {
       },
     },
   }
+  return input.t ? localizeSeoChapter(model, input.t) : model
 }

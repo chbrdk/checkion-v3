@@ -1,4 +1,6 @@
 import type { SeoDashboardViewModel } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
+import { localizeSeoDashboard } from './seo-market-i18n'
 
 /** Rich OpenSEO-shaped fixture for dashboard review / preview (no vendor calls). */
 export function fixtureSeoDashboard(input?: {
@@ -168,40 +170,41 @@ export function emptySeoDashboard(input?: {
   projectId?: string
   projectName?: string
   domain?: string
+  t?: Translator
 }): SeoDashboardViewModel {
   const projectId = input?.projectId ?? 'proj-seo'
   const projectName = input?.projectName ?? 'Project'
   const domain = input?.domain ?? 'example.com'
 
-  return {
+  const model: SeoDashboardViewModel = {
     projectId,
     projectName,
     domain,
     setupSteps: [
       {
         id: 'domain',
-        label: 'Website bestätigt',
+        label: 'Website confirmed',
         detail: domain
-          ? `${domain} ist als Collection-Domain hinterlegt.`
-          : 'Domain am Collection-Projekt hinterlegen.',
+          ? `${domain} is set as the Collection domain.`
+          : 'Set a domain on the Collection project.',
         status: domain && domain !== 'example.com' ? 'done' : 'todo',
       },
       {
         id: 'keywords',
-        label: 'Research starten',
-        detail: 'Seed → Ideas speichern für Ranks und Field.',
+        label: 'Start research',
+        detail: 'Seed → save ideas for Ranks and Field.',
         status: 'todo',
       },
       {
         id: 'rank',
-        label: 'Rank monitor einrichten',
+        label: 'Set up rank monitor',
         detail: 'Tracked set + Track & check.',
         status: 'todo',
       },
       {
         id: 'gsc',
-        label: 'Search Console verbinden',
-        detail: 'First-party Clicks & Queries — OAuth folgt.',
+        label: 'Connect Search Console',
+        detail: 'First-party clicks & queries — OAuth follows.',
         status: 'todo',
       },
     ],
@@ -215,8 +218,8 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Source', value: 'Google Search Console' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'GSC verbinden — first-party Queries & Clicks.',
-        emptyCtaLabel: 'GSC öffnen',
+        emptyMessage: 'Connect GSC — first-party queries & clicks.',
+        emptyCtaLabel: 'Open GSC',
       },
       {
         key: 'audit',
@@ -227,8 +230,8 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Source', value: 'Quality crawl' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'Quality-Crawl starten für On-page Issues.',
-        emptyCtaLabel: 'Scan starten',
+        emptyMessage: 'Start a Quality crawl for on-page issues.',
+        emptyCtaLabel: 'Start scan',
       },
       {
         key: 'backlinks',
@@ -239,8 +242,8 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Source', value: 'Backlinks' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'Backlinks refresh — referring domains & new/lost.',
-        emptyCtaLabel: 'Backlinks öffnen',
+        emptyMessage: 'Refresh backlinks — referring domains & new/lost.',
+        emptyCtaLabel: 'Open backlinks',
       },
       {
         key: 'rank',
@@ -251,8 +254,8 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Source', value: 'Rank configs' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'Keywords tracken und Positionen prüfen.',
-        emptyCtaLabel: 'Ranks öffnen',
+        emptyMessage: 'Track keywords and check positions.',
+        emptyCtaLabel: 'Open ranks',
       },
       {
         key: 'domain',
@@ -263,8 +266,8 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Source', value: 'DataForSEO organic' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'Domain refresh — organic keywords & traffic.',
-        emptyCtaLabel: 'Domain öffnen',
+        emptyMessage: 'Refresh domain — organic keywords & traffic.',
+        emptyCtaLabel: 'Open domain',
       },
       {
         key: 'competitors',
@@ -275,9 +278,11 @@ export function emptySeoDashboard(input?: {
           { kind: 'source', label: 'Job', value: 'SERP overlap' },
           { kind: 'mode', label: 'Mode', value: 'Empty' },
         ],
-        emptyMessage: 'Keyword-Set analysieren — Overlap aus Research oder manuellem Set.',
-        emptyCtaLabel: 'Field öffnen',
+        emptyMessage:
+          'Analyze a keyword set — overlap from Research or a manual set.',
+        emptyCtaLabel: 'Open field',
       },
     ],
   }
+  return input?.t ? localizeSeoDashboard(model, input.t) : model
 }

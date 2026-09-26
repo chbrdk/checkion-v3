@@ -4,7 +4,9 @@ import type {
   SeoRankConfig,
   SeoRankSnapshot,
 } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
+import { localizeSeoChapter } from './seo-market-i18n'
 
 function pathFromUrl(url: string | null | undefined, domain: string): string {
   if (!url) return domain
@@ -128,6 +130,7 @@ export function buildRankChapterModel(input: {
   location?: string
   recent?: string[]
   config?: SeoRankConfig | null
+  t?: Translator
 }): SeoChapterViewModel {
   const base = emptySeoChapter('rank-tracking', {
     projectId: input.projectId,
@@ -144,7 +147,7 @@ export function buildRankChapterModel(input: {
   const seed = input.seed || base.searchBand?.seed || 'brand'
   const hasLive = snapshots.length > 0
 
-  return {
+  const model: SeoChapterViewModel = {
     ...base,
     lede: undefined,
     emptyMessage: hasLive ? undefined : base.emptyMessage,
@@ -220,4 +223,5 @@ export function buildRankChapterModel(input: {
       },
     },
   }
+  return input.t ? localizeSeoChapter(model, input.t) : model
 }

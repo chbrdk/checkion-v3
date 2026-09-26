@@ -2,7 +2,9 @@ import type {
   SeoChapterId,
   SeoChapterViewModel,
 } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
 import { brandSeedFromHost } from './host-utils'
+import { localizeSeoChapter } from './seo-market-i18n'
 
 type ChapterInput = {
   projectId?: string
@@ -753,6 +755,18 @@ export function fixtureSeoChapter(
           { kind: 'time', label: 'Snapshot', value: day },
           { kind: 'mode', label: 'Mode', value: 'Fixture' },
         ],
+        searchBand: {
+          seed: domain,
+          seedLabel: 'Domain',
+          actionLabel: 'Refresh',
+          locale: 'de',
+          location: 'Germany',
+          recent: [domain],
+          locales: [
+            { value: 'de', label: 'DE' },
+            { value: 'en', label: 'EN' },
+          ],
+        },
         stats: [
           { label: 'DR', value: '68', tone: 'pos', delta: '▲ 2' },
           { label: 'UR', value: '54' },
@@ -1625,6 +1639,7 @@ const EMPTY_MESSAGES: Record<SeoChapterId, string> = {
 export function emptySeoChapter(
   chapter: SeoChapterId,
   input?: ChapterInput,
+  t?: Translator,
 ): SeoChapterViewModel {
   const rich = fixtureSeoChapter(chapter, input)
   const stripChart = (
@@ -1642,7 +1657,7 @@ export function emptySeoChapter(
     return chart
   }
 
-  return {
+  const shell: SeoChapterViewModel = {
     ...rich,
     lede: undefined,
     facets: rich.facets.map((f) =>
@@ -1674,4 +1689,5 @@ export function emptySeoChapter(
       : undefined,
     emptyMessage: EMPTY_MESSAGES[chapter],
   }
+  return t ? localizeSeoChapter(shell, t) : shell
 }

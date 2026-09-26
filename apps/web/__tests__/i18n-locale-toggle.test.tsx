@@ -46,14 +46,19 @@ describe('i18n dictionaries', () => {
     expect([...dk].filter((k) => !ek.has(k))).toEqual([])
   })
 
-  it('translates nav and settings chrome', () => {
+  it('translates SEO Market chrome in de and en', () => {
     const tEn = createTranslator('en')
     const tDe = createTranslator('de')
-    expect(tEn('nav.projects')).toBe('Projects')
-    expect(tDe('nav.projects')).toBe('Projekte')
-    expect(tEn('settings.language')).toBe('Language')
-    expect(tDe('settings.language')).toBe('Sprache')
-    expect(tDe('settings.languageHelp')).not.toMatch(/stays English/i)
+    expect(tEn('seoMarket.nav.overview')).toBe('Overview')
+    expect(tDe('seoMarket.nav.overview')).toBe('Überblick')
+    expect(tEn('seoMarket.nav.competitors')).toBe('Field')
+    expect(tDe('seoMarket.nav.competitors')).toBe('Feld')
+    expect(tEn('seoMarket.chapters.keywords.title')).toBe('Keyword research')
+    expect(tDe('seoMarket.chapters.keywords.title')).toBe('Keyword-Research')
+    expect(tEn('seoMarket.dashboard.setupTitle')).toBe('Set up your workspace')
+    expect(tDe('seoMarket.dashboard.setupTitle')).toBe('Workspace einrichten')
+    expect(tEn('seoMarket.actions.research')).toBe('Research')
+    expect(tDe('seoMarket.actions.analyze')).toBe('Analysieren')
   })
 })
 

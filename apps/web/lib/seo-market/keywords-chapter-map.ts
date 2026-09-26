@@ -4,8 +4,10 @@ import type {
   SeoKeywordIdea,
   SeoSerpResult,
 } from '@checkion-v3/contracts'
+import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
 import { brandSeedFromHost } from './host-utils'
+import { localizeSeoChapter } from './seo-market-i18n'
 
 function fmtVol(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -82,6 +84,7 @@ export function buildKeywordsChapterModel(input: {
   recent?: string[]
   ideas?: SeoKeywordIdea[]
   serp?: SeoSerpResult | null
+  t?: Translator
 }): SeoChapterViewModel {
   const base = emptySeoChapter('keywords', {
     projectId: input.projectId,
@@ -105,7 +108,7 @@ export function buildKeywordsChapterModel(input: {
   const serpRows = input.serp ? mapSerpToAsideRows(input.serp) : []
   const hasLive = ideas.length > 0 || serpRows.length > 0
 
-  return {
+  const model: SeoChapterViewModel = {
     ...base,
     lede: undefined,
     emptyMessage: hasLive ? undefined : base.emptyMessage,
@@ -147,4 +150,5 @@ export function buildKeywordsChapterModel(input: {
       },
     },
   }
+  return input.t ? localizeSeoChapter(model, input.t) : model
 }

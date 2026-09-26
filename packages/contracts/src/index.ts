@@ -1081,16 +1081,60 @@ export interface SeoCompetitorsResult extends SeoMarketEnvelope {
   items: SeoCompetitorRow[]
 }
 
+export interface SeoBacklinkReferringPage {
+  id: string
+  title: string | null
+  urlFrom: string
+  domainFrom: string
+  domainFromRank: number | null
+  pageFromRank: number | null
+  linksCount: number | null
+  anchor: string | null
+  urlTo: string | null
+  itemType: string | null
+  dofollow: boolean
+  isNew: boolean
+  isLost: boolean
+  isBroken: boolean
+  firstSeen: string | null
+  lastSeen: string | null
+  spamScore: number | null
+}
+
+export interface SeoBacklinkTldBucket {
+  tld: string
+  count: number
+}
+
+export interface SeoBacklinkTimeseriesPoint {
+  date: string
+  backlinks: number | null
+  referringDomains: number | null
+}
+
 export interface SeoBacklinksResult extends SeoMarketEnvelope {
   domain: string
   referringDomains: number | null
   backlinks: number | null
   rank: number | null
   spamScore: number | null
+  /** Target-page spam (summary `target_spam_score`). */
+  targetSpamScore?: number | null
+  brokenBacklinks?: number | null
+  referringPages?: number | null
+  referringPagesNofollow?: number | null
   newBacklinks?: number | null
   lostBacklinks?: number | null
   newReferringDomains?: number | null
   lostReferringDomains?: number | null
+  /** Top referring TLDs from summary `referring_links_tld`. */
+  referringLinksTld?: SeoBacklinkTldBucket[]
+  /** Link type counts from summary `referring_links_types`. */
+  referringLinksTypes?: Record<string, number>
+  /** Referring pages from `backlinks/backlinks/live`. */
+  items?: SeoBacklinkReferringPage[]
+  /** Weekly points from `backlinks/timeseries_summary/live`. */
+  timeseries?: SeoBacklinkTimeseriesPoint[]
 }
 
 export interface SeoBacklinkSnapshot extends SeoBacklinksResult {

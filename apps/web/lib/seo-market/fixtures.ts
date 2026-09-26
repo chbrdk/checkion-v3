@@ -115,16 +115,68 @@ export function fixtureBacklinks(input: {
   domain: string
 }): SeoBacklinksResult {
   const h = hashSeed(input.domain)
+  const backlinks = 100 + (h % 20000)
+  const referringDomains = 40 + (h % 2000)
+  const rank = 10 + (h % 90)
+  const items = Array.from({ length: 8 }, (_, i) => {
+    const host = `ref${(h + i) % 50}.example`
+    return {
+      id: `fix-bl-${i}`,
+      title: `Referring page ${i + 1} for ${input.domain}`,
+      urlFrom: `https://${host}/posts/${input.domain.replace(/\./g, '-')}-${i}`,
+      domainFrom: host,
+      domainFromRank: 20 + ((h + i * 7) % 70),
+      pageFromRank: 15 + ((h + i * 3) % 60),
+      linksCount: 1 + (i % 4),
+      anchor: i % 3 === 0 ? input.domain.split('.')[0] ?? 'brand' : `link to ${input.domain}`,
+      urlTo: `https://${input.domain}/`,
+      itemType: i % 5 === 0 ? 'image' : 'anchor',
+      dofollow: i % 3 !== 0,
+      isNew: i < 2,
+      isLost: false,
+      isBroken: false,
+      firstSeen: new Date(Date.now() - (60 - i) * 86400000).toISOString(),
+      lastSeen: new Date(Date.now() - i * 86400000).toISOString(),
+      spamScore: i % 4,
+    }
+  })
+  const timeseries = [3, 2, 1, 0].map((weeksAgo, i) => ({
+    date: new Date(Date.now() - weeksAgo * 7 * 86400000).toISOString(),
+    backlinks: Math.max(10, backlinks - (3 - i) * 40),
+    referringDomains: Math.max(5, referringDomains - (3 - i) * 8),
+  }))
   return {
     source: 'fixture',
     stubbed: true,
     fetchedAt: new Date().toISOString(),
     projectId: input.projectId,
     domain: input.domain,
-    referringDomains: 40 + (h % 2000),
-    backlinks: 100 + (h % 20000),
-    rank: 10 + (h % 400),
+    referringDomains,
+    backlinks,
+    rank,
     spamScore: h % 30,
+    targetSpamScore: h % 15,
+    brokenBacklinks: h % 20,
+    referringPages: Math.round(backlinks * 0.85),
+    referringPagesNofollow: Math.round(backlinks * 0.12),
+    newBacklinks: 12 + (h % 20),
+    lostBacklinks: 3 + (h % 8),
+    newReferringDomains: 4 + (h % 6),
+    lostReferringDomains: 1 + (h % 3),
+    referringLinksTld: [
+      { tld: '.com', count: Math.round(referringDomains * 0.55) },
+      { tld: '.de', count: Math.round(referringDomains * 0.18) },
+      { tld: '.org', count: Math.round(referringDomains * 0.12) },
+      { tld: '.io', count: Math.round(referringDomains * 0.08) },
+      { tld: '.net', count: Math.round(referringDomains * 0.07) },
+    ],
+    referringLinksTypes: {
+      anchor: Math.round(backlinks * 0.9),
+      image: Math.round(backlinks * 0.08),
+      redirect: Math.round(backlinks * 0.02),
+    },
+    items,
+    timeseries,
   }
 }
 

@@ -25,6 +25,7 @@ import type {
   SeoDashboardFacet,
   SeoDashboardStat,
 } from '@checkion-v3/contracts'
+import { useT } from '../lib/user-prefs'
 
 export type SeoChapterSearchQuery = {
   seed: string
@@ -33,9 +34,10 @@ export type SeoChapterSearchQuery = {
 }
 
 function ChapterFacets({ facets }: { facets: SeoDashboardFacet[] }) {
+  const t = useT()
   if (facets.length === 0) return null
   return (
-    <ul className="checkion-seo-dash__facets" aria-label="Chapter provenance">
+    <ul className="checkion-seo-dash__facets" aria-label={t('seoMarket.search.provenanceAria')}>
       {facets.map((facet) => (
         <li key={`${facet.kind}-${facet.label}`} data-kind={facet.kind}>
           <Text role="label" as="span" className="checkion-seo-dash__facet-label">
@@ -105,9 +107,10 @@ function ChapterKpiStrip({ stats }: { stats: SeoDashboardStat[] }) {
 }
 
 function ChapterCharts({ charts }: { charts: SeoChapterChart[] }) {
+  const t = useT()
   if (charts.length === 0) return null
   return (
-    <div className="checkion-seo-chapter__charts" role="region" aria-label="Charts">
+    <div className="checkion-seo-chapter__charts" role="region" aria-label={t('seoMarket.search.chartsAria')}>
       {charts.map((chart, i) => {
         if (chart.kind === 'series') {
           return (
@@ -273,6 +276,7 @@ function ChapterSearchBand({
   busy?: boolean
   onSearch?: (query: SeoChapterSearchQuery) => void | Promise<void>
 }) {
+  const t = useT()
   const [seed, setSeed] = useState(band.seed)
   const [locale, setLocale] = useState(band.locale)
   const [location, setLocation] = useState(band.location)
@@ -289,15 +293,15 @@ function ChapterSearchBand({
         { value: 'de', label: 'DE' },
         { value: 'en', label: 'EN' },
       ]
-  const seedLabel = band.seedLabel ?? 'Seed'
-  const actionLabel = band.actionLabel ?? 'Search'
+  const seedLabel = band.seedLabel ?? t('seoMarket.seed.seed')
+  const actionLabel = band.actionLabel ?? t('seoMarket.actions.search')
   const allowEmpty = Boolean(band.allowEmptySeed)
 
   const run = (nextSeed?: string) => {
     const s = (nextSeed ?? seed).trim()
     if ((!s && !allowEmpty) || !onSearch) return
     if (nextSeed != null) setSeed(nextSeed)
-    void onSearch({ seed: s, locale, location: location.trim() || 'Germany' })
+    void onSearch({ seed: s, locale, location: location.trim() || t('seoMarket.locations.germany') })
   }
 
   return (
@@ -315,13 +319,13 @@ function ChapterSearchBand({
                 run()
               }
             }}
-            placeholder={allowEmpty ? `${seedLabel} (saved if empty)` : seedLabel}
+            placeholder={allowEmpty ? t('seoMarket.search.savedIfEmpty', { label: seedLabel }) : seedLabel}
             disabled={busy}
           />
         </Field>
-        <Field label="Locale" className="checkion-seo-chapter__search-locale">
+        <Field label={t('seoMarket.search.locale')} className="checkion-seo-chapter__search-locale">
           <Select
-            aria-label="Locale"
+            aria-label={t('seoMarket.search.locale')}
             size="md"
             value={locale}
             onChange={setLocale}
@@ -329,7 +333,7 @@ function ChapterSearchBand({
             disabled={busy}
           />
         </Field>
-        <Field label="Location" className="checkion-seo-chapter__search-location">
+        <Field label={t('seoMarket.search.location')} className="checkion-seo-chapter__search-location">
           <Input
             size="md"
             block
@@ -350,9 +354,9 @@ function ChapterSearchBand({
         </div>
       </div>
       {band.recent?.length ? (
-        <div className="checkion-seo-chapter__search-recent" aria-label="Recent seeds">
+        <div className="checkion-seo-chapter__search-recent" aria-label={t('seoMarket.search.recentAria')}>
           <Text role="label" as="span" className="checkion-seo-chapter__search-recent-label">
-            Recent
+            {t('seoMarket.search.recent')}
           </Text>
           <ul className="checkion-seo-chapter__search-recent-list">
             {band.recent.map((item) => (
@@ -389,6 +393,7 @@ function ChapterLedger({
   title: string
   pageSize?: number
 }) {
+  const t = useT()
   const [filterId, setFilterId] = useState(filters?.[0]?.id ?? 'all')
   const [page, setPage] = useState(0)
   const active = filters?.find((f) => f.id === filterId)
@@ -414,7 +419,7 @@ function ChapterLedger({
   if (rows.length === 0) {
     return (
       <Text role="body" as="p" className="checkion-seo-dash__copy checkion-seo-dash__empty-copy">
-        No rows yet.
+        {t('seoMarket.search.noRows')}
       </Text>
     )
   }
@@ -423,7 +428,7 @@ function ChapterLedger({
   const showPager = size > 0 && visible.length > size
 
   return (
-    <div className="checkion-seo-chapter__ledger" role="region" aria-label={`${title} ledger`}>
+    <div className="checkion-seo-chapter__ledger" role="region" aria-label={t('seoMarket.search.ledgerAria', { title })}>
       {showBar ? (
         <div className="checkion-seo-chapter__ledger-bar">
           {ledgerMeta ? (
@@ -435,7 +440,7 @@ function ChapterLedger({
           )}
           {filters?.length ? (
             <ToggleGroup
-              aria-label="Ledger filters"
+              aria-label={t('seoMarket.search.filtersAria')}
               size="sm"
               value={filterId}
               onChange={setFilterId}
@@ -482,7 +487,7 @@ function ChapterLedger({
               <tr>
                 <td colSpan={columns.length}>
                   <Text role="body" as="span" className="checkion-seo-dash__copy">
-                    No rows for this filter.
+                    {t('seoMarket.search.noRowsFilter')}
                   </Text>
                 </td>
               </tr>
@@ -491,9 +496,9 @@ function ChapterLedger({
         </table>
       </div>
       {showPager ? (
-        <div className="checkion-seo-chapter__pager" role="navigation" aria-label="Ledger pages">
+        <div className="checkion-seo-chapter__pager" role="navigation" aria-label={t('seoMarket.search.pagerAria')}>
           <Text role="meta" as="span" className="checkion-seo-chapter__pager-meta">
-            {from}–{to} of {visible.length}
+            {t('seoMarket.search.pagerOf', { from, to, total: visible.length })}
           </Text>
           <div className="checkion-seo-chapter__pager-actions">
             <Button
@@ -502,7 +507,7 @@ function ChapterLedger({
               disabled={safePage <= 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
             >
-              Prev
+              {t('seoMarket.actions.prevPage')}
             </Button>
             <Button
               variant="ghost"
@@ -510,7 +515,7 @@ function ChapterLedger({
               disabled={safePage >= pageCount - 1}
               onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
             >
-              Next
+              {t('seoMarket.actions.nextPage')}
             </Button>
           </div>
         </div>
@@ -530,11 +535,12 @@ export function SeoChapterView({
   onSearch?: (query: SeoChapterSearchQuery) => void | Promise<void>
   searchBusy?: boolean
 }) {
+  const t = useT()
   const hasAside = Boolean(model.aside?.charts?.length || model.aside?.ledger)
   const mainLedger =
     model.rows.length === 0 && !model.emptyMessage ? null : model.rows.length === 0 ? (
       <Text role="body" as="p" className="checkion-seo-dash__copy checkion-seo-dash__empty-copy">
-        {model.emptyMessage ?? 'No rows yet.'}
+        {model.emptyMessage ?? t('seoMarket.search.noRows')}
       </Text>
     ) : (
       <ChapterLedger
@@ -548,7 +554,7 @@ export function SeoChapterView({
     )
 
   const asideRail = hasAside ? (
-    <aside className="checkion-seo-chapter__aside" aria-label="Chapter aside">
+    <aside className="checkion-seo-chapter__aside" aria-label={t('seoMarket.search.asideAria')}>
       {model.aside?.charts?.length ? (
         <ChapterCharts charts={model.aside.charts} />
       ) : null}
@@ -604,7 +610,7 @@ export function SeoChapterView({
         <Panel
           variant="editorial"
           className="checkion-seo-chapter__workbench checkion-seo-chapter__workbench--top"
-          aria-label="Workbench"
+          aria-label={t('seoMarket.search.workbenchAria')}
         >
           {workbench}
         </Panel>

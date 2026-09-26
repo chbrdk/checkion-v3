@@ -2,7 +2,19 @@
 
 import Link from 'next/link'
 import type { SeoProjectChapter } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
+export const SEO_CHAPTER_NAV_IDS: SeoProjectChapter[] = [
+  'overview',
+  'keywords',
+  'domain',
+  'backlinks',
+  'rank-tracking',
+  'competitors',
+  'gsc',
+]
+
+/** @deprecated Prefer SEO_CHAPTER_NAV_IDS + t(`seoMarket.nav.${id}`) */
 export const SEO_CHAPTER_NAV: Array<{ id: SeoProjectChapter; label: string }> = [
   { id: 'overview', label: 'Overview' },
   { id: 'keywords', label: 'Research' },
@@ -32,14 +44,16 @@ export function SeoChapterNav({
   /** Preview / in-page selection. */
   onSelect?: (id: SeoProjectChapter) => void
 }) {
+  const t = useT()
   return (
     <div
       className="checkion-depth-grid checkion-seo-project__chapters"
       role="radiogroup"
-      aria-label="SEO chapters"
+      aria-label={t('seoMarket.navAria')}
     >
-      {SEO_CHAPTER_NAV.map((item, i) => {
-        const selected = active === item.id
+      {SEO_CHAPTER_NAV_IDS.map((id, i) => {
+        const label = t(`seoMarket.nav.${id}`)
+        const selected = active === id
         const className = selected
           ? 'checkion-depth-tile checkion-depth-tile--selected'
           : 'checkion-depth-tile'
@@ -48,17 +62,17 @@ export function SeoChapterNav({
             <span className="checkion-depth-tile__kicker" aria-hidden>
               {chapterIndex(i)}
             </span>
-            <span className="checkion-depth-tile__label">{item.label}</span>
+            <span className="checkion-depth-tile__label">{label}</span>
           </>
         )
         if (hrefFor) {
           return (
             <Link
-              key={item.id}
-              href={hrefFor(item.id)}
+              key={id}
+              href={hrefFor(id)}
               role="radio"
               aria-checked={selected}
-              aria-label={item.label}
+              aria-label={label}
               className={className}
             >
               {body}
@@ -67,13 +81,13 @@ export function SeoChapterNav({
         }
         return (
           <button
-            key={item.id}
+            key={id}
             type="button"
             role="radio"
             aria-checked={selected}
-            aria-label={item.label}
+            aria-label={label}
             className={className}
-            onClick={() => onSelect?.(item.id)}
+            onClick={() => onSelect?.(id)}
           >
             {body}
           </button>

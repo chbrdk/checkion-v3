@@ -331,11 +331,21 @@ export async function insertBacklinkSnapshot(
     rank: row.rank,
     backlinks: row.backlinks,
     referringDomains: row.referringDomains,
+    brokenBacklinks: row.brokenBacklinks ?? null,
     newBacklinks: row.newBacklinks ?? null,
     lostBacklinks: row.lostBacklinks ?? null,
     newReferringDomains: row.newReferringDomains ?? null,
     lostReferringDomains: row.lostReferringDomains ?? null,
     spamScore: row.spamScore,
+    details: {
+      targetSpamScore: row.targetSpamScore ?? null,
+      referringPages: row.referringPages ?? null,
+      referringPagesNofollow: row.referringPagesNofollow ?? null,
+      referringLinksTld: row.referringLinksTld ?? [],
+      referringLinksTypes: row.referringLinksTypes ?? {},
+      items: row.items ?? [],
+      timeseries: row.timeseries ?? [],
+    },
     source: row.source,
     stubbed: row.stubbed ? 1 : 0,
     capturedAt: row.capturedAt,
@@ -357,23 +367,50 @@ export async function listBacklinkSnapshots(
     .where(eq(seoBacklinkSnapshots.projectId, projectId))
     .orderBy(desc(seoBacklinkSnapshots.capturedAt))
     .limit(limit)
-  return rows.map((r) => ({
-    id: r.id,
-    projectId: r.projectId,
-    domain: r.domain,
-    referringDomains: r.referringDomains,
-    backlinks: r.backlinks,
-    rank: r.rank,
-    spamScore: r.spamScore,
-    newBacklinks: r.newBacklinks,
-    lostBacklinks: r.lostBacklinks,
-    newReferringDomains: r.newReferringDomains,
-    lostReferringDomains: r.lostReferringDomains,
-    source: r.source as SeoBacklinkSnapshot['source'],
-    stubbed: Boolean(r.stubbed),
-    fetchedAt: r.capturedAt,
-    capturedAt: r.capturedAt,
-  }))
+  return rows.map((r) => {
+    const details = (r.details ?? {}) as Record<string, unknown>
+    return {
+      id: r.id,
+      projectId: r.projectId,
+      domain: r.domain,
+      referringDomains: r.referringDomains,
+      backlinks: r.backlinks,
+      rank: r.rank,
+      spamScore: r.spamScore,
+      brokenBacklinks: r.brokenBacklinks,
+      newBacklinks: r.newBacklinks,
+      lostBacklinks: r.lostBacklinks,
+      newReferringDomains: r.newReferringDomains,
+      lostReferringDomains: r.lostReferringDomains,
+      targetSpamScore:
+        typeof details.targetSpamScore === 'number' ? details.targetSpamScore : null,
+      referringPages:
+        typeof details.referringPages === 'number' ? details.referringPages : null,
+      referringPagesNofollow:
+        typeof details.referringPagesNofollow === 'number'
+          ? details.referringPagesNofollow
+          : null,
+      referringLinksTld: Array.isArray(details.referringLinksTld)
+        ? (details.referringLinksTld as SeoBacklinkSnapshot['referringLinksTld'])
+        : [],
+      referringLinksTypes:
+        details.referringLinksTypes &&
+        typeof details.referringLinksTypes === 'object' &&
+        !Array.isArray(details.referringLinksTypes)
+          ? (details.referringLinksTypes as Record<string, number>)
+          : {},
+      items: Array.isArray(details.items)
+        ? (details.items as NonNullable<SeoBacklinkSnapshot['items']>)
+        : [],
+      timeseries: Array.isArray(details.timeseries)
+        ? (details.timeseries as NonNullable<SeoBacklinkSnapshot['timeseries']>)
+        : [],
+      source: r.source as SeoBacklinkSnapshot['source'],
+      stubbed: Boolean(r.stubbed),
+      fetchedAt: r.capturedAt,
+      capturedAt: r.capturedAt,
+    }
+  })
 }
 
 export async function createRankConfig(input: {

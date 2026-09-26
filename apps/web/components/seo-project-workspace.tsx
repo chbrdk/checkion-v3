@@ -24,7 +24,9 @@ import { buildKeywordsChapterModel } from '../lib/seo-market/keywords-chapter-ma
 import { buildDomainChapterModel } from '../lib/seo-market/domain-chapter-map'
 import { buildRankChapterModel } from '../lib/seo-market/rank-chapter-map'
 import { buildCompetitorsChapterModel } from '../lib/seo-market/competitors-chapter-map'
+import { buildBacklinksChapterModel } from '../lib/seo-market/backlinks-chapter-map'
 import { brandSeedFromHost } from '../lib/seo-market/host-utils'
+import { useT } from '../lib/user-prefs'
 import { useJobNotifications } from './job-notification-center'
 import { SeoDashboardView } from './seo-dashboard-view'
 import { SeoChapterView, type SeoChapterSearchQuery } from './seo-chapter-view'
@@ -57,6 +59,7 @@ export function SeoProjectWorkspace({
   domain: string
   chapter: SeoProjectChapter
 }) {
+  const t = useT()
   const { trackJob } = useJobNotifications()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +75,9 @@ export function SeoProjectWorkspace({
   )
   const [compModel, setCompModel] = useState<SeoChapterViewModel>(() =>
     emptySeoChapter('competitors', { projectId, projectName, domain }),
+  )
+  const [backlinksModel, setBacklinksModel] = useState<SeoChapterViewModel>(() =>
+    emptySeoChapter('backlinks', { projectId, projectName, domain }),
   )
   const [backlinks, setBacklinks] = useState<SeoBacklinkSnapshot[]>([])
   const [configs, setConfigs] = useState<SeoRankConfig[]>([])
@@ -105,11 +111,12 @@ export function SeoProjectWorkspace({
   )
 
   useEffect(() => {
-    setKwModel(emptySeoChapter('keywords', { projectId, projectName, domain }))
-    setDomainModel(emptySeoChapter('domain', { projectId, projectName, domain }))
-    setRankModel(emptySeoChapter('rank-tracking', { projectId, projectName, domain }))
-    setCompModel(emptySeoChapter('competitors', { projectId, projectName, domain }))
-  }, [projectId, projectName, domain])
+    setKwModel(emptySeoChapter('keywords', { projectId, projectName, domain }, t))
+    setDomainModel(emptySeoChapter('domain', { projectId, projectName, domain }, t))
+    setRankModel(emptySeoChapter('rank-tracking', { projectId, projectName, domain }, t))
+    setCompModel(emptySeoChapter('competitors', { projectId, projectName, domain }, t))
+    setBacklinksModel(emptySeoChapter('backlinks', { projectId, projectName, domain }, t))
+  }, [projectId, projectName, domain, t])
 
   const runKeywordSearch = useCallback(
     async (query: SeoChapterSearchQuery) => {
@@ -121,7 +128,7 @@ export function SeoProjectWorkspace({
           ? brandSeedFromHost(domain)
           : seedRaw
       if (!seed || seed.toLowerCase() === 'www') {
-        setError('Seed must be a brand or keyword — check the Collection domain.')
+        setError(t('seoMarket.workspace.seedWwwError'))
         setBusy(false)
         return
       }
@@ -184,6 +191,7 @@ export function SeoProjectWorkspace({
             recent,
             ideas,
             serp: serpData,
+            t,
           }),
         )
       } catch (e) {
@@ -192,7 +200,7 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [domain, kwModel.searchBand?.recent, projectId, projectName],
+    [domain, kwModel.searchBand?.recent, projectId, projectName, t],
   )
 
   const runDomainRefresh = useCallback(
@@ -228,6 +236,7 @@ export function SeoProjectWorkspace({
             location: query.location,
             recent,
             snapshot: data,
+            t,
           }),
         )
       } catch (e) {
@@ -236,10 +245,63 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [domain, domainModel.searchBand?.recent, projectId, projectName],
+    [domain, domainModel.searchBand?.recent, projectId, projectName, t],
   )
 
-  const runRankTrack = useCallback(
+  const applyBacklinksHistory = useCallback(
+    (history: SeoBacklinkSnapshot[], seed?: string, query?: SeoChapterSearchQuery) => {
+      setBacklinks(history)
+      setBacklinksModel(
+        buildBacklinksChapterModel({
+          projectId,
+          projectName,
+          domain,
+          seed: seed || domain,
+          locale: query?.locale,
+          location: query?.location,
+          recent: history
+            .map((h) => h.domain)
+            .filter((d, i, arr) => arr.indexOf(d) === i)
+            .slice(0, 6),
+          history,
+          snapshot: history[0] ?? null,
+          t,
+        }),
+      )
+    },
+    [domain, projectId, projectName, t],
+  )
+
+  const runBacklinksRefresh = useCallback(
+    async (query: SeoChapterSearchQuery) => {
+      setBusy(true)
+      setError(null)
+      try {
+        const res = await fetch(paths.routes.apiProjectSeoBacklinks(projectId), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'refresh' }),
+        })
+        const data = (await res.json()) as SeoBacklinkSnapshot & {
+          detail?: string
+          error?: string
+        }
+        if (!res.ok) {
+          throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+        }
+        const host = query.seed.trim() || domain
+        const next = [data, ...backlinks.filter((b) => b.id !== data.id)].slice(0, 20)
+        applyBacklinksHistory(next, host, query)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'request failed')
+      } finally {
+        setBusy(false)
+      }
+    },
+    [applyBacklinksHistory, backlinks, domain, projectId],
+  )
+
+    const runRankTrack = useCallback(
     async (query: SeoChapterSearchQuery) => {
       setBusy(true)
       setError(null)
@@ -332,6 +394,7 @@ export function SeoProjectWorkspace({
             location: query.location,
             recent,
             config,
+            t,
           }),
         )
       } catch (e) {
@@ -340,7 +403,7 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [configs, domain, projectId, projectName, rankModel.searchBand?.recent, trackJob],
+    [configs, domain, projectId, projectName, rankModel.searchBand?.recent, trackJob, t],
   )
 
   const runCompetitorsAnalyze = useCallback(
@@ -382,6 +445,7 @@ export function SeoProjectWorkspace({
             location: query.location,
             recent,
             result: data,
+            t,
           }),
         )
       } catch (e) {
@@ -390,7 +454,7 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [compModel.searchBand?.recent, domain, projectId, projectName],
+    [compModel.searchBand?.recent, domain, projectId, projectName, t],
   )
 
   useEffect(() => {
@@ -409,13 +473,16 @@ export function SeoProjectWorkspace({
               projectName,
               domain,
               snapshot: snap,
+              t,
             }),
           )
         }
       }
       if (chapter === 'backlinks') {
         const data = await api(paths.routes.apiProjectSeoBacklinks(projectId))
-        if (data?.history) setBacklinks(data.history as SeoBacklinkSnapshot[])
+        if (data?.history) {
+          applyBacklinksHistory(data.history as SeoBacklinkSnapshot[])
+        }
       }
       if (chapter === 'rank-tracking') {
         const data = await api(paths.routes.apiProjectSeoRankConfigs(projectId))
@@ -431,6 +498,7 @@ export function SeoProjectWorkspace({
                 domain,
                 config: primary,
                 recent: primary.keywords.slice(0, 6),
+                t,
               }),
             )
           }
@@ -441,18 +509,18 @@ export function SeoProjectWorkspace({
         if (data?.status) {
           setGscNote(
             data.status.connected
-              ? 'GSC connected — performance stub until OAuth token store.'
-              : 'GSC not connected — fixture performance until OAuth.',
+              ? t('seoMarket.workspace.gscConnected')
+              : t('seoMarket.workspace.gscDisconnected'),
           )
         }
       }
     })()
-  }, [api, chapter, domain, projectId, projectName])
+  }, [api, applyBacklinksHistory, chapter, domain, projectId, projectName, t])
 
   return (
     <div className="checkion-seo-project" data-section="seo-project-workspace">
       <SectionChrome
-        title={`${projectName} · SEO`}
+        title={t('seoMarket.workspaceTitle', { project: projectName })}
       />
       <SeoChapterNav
         active={chapter}
@@ -467,6 +535,7 @@ export function SeoProjectWorkspace({
             projectId,
             projectName,
             domain,
+            t,
           })}
         />
       ) : null}
@@ -479,9 +548,13 @@ export function SeoProjectWorkspace({
           workbench={
             saved.length > 0 ? (
               <div className="checkion-seo-project__stack">
-                <SectionChrome title="Saved" quiet meta={`${saved.length} keywords`} />
+                <SectionChrome
+                  title={t('seoMarket.workspace.saved')}
+                  quiet
+                  meta={t('seoMarket.workspace.savedMeta', { count: saved.length })}
+                />
                 <Text role="meta" as="p">
-                  Last research auto-saves ideas for this Collection.
+                  {t('seoMarket.workspace.savedHint')}
                 </Text>
               </div>
             ) : undefined
@@ -499,30 +572,37 @@ export function SeoProjectWorkspace({
 
       {chapter === 'backlinks' ? (
         <SeoChapterView
-          model={emptySeoChapter('backlinks', { projectId, projectName, domain })}
+          model={backlinksModel}
+          searchBusy={busy}
+          onSearch={runBacklinksRefresh}
           workbench={
             <div className="checkion-seo-project__stack">
-              <SectionChrome title="Workbench" quiet meta="Capture snapshot" />
+              <SectionChrome
+                title={t('seoMarket.workspace.workbench')}
+                quiet
+                meta={
+                  backlinks.length > 0
+                    ? t('seoMarket.workspace.snapshotsInSession', {
+                        count: backlinks.length,
+                      })
+                    : t('seoMarket.workspace.captureSnapshot')
+                }
+              />
               <Button
                 variant="primary"
                 disabled={busy}
-                onClick={async () => {
-                  const snap = await api(paths.routes.apiProjectSeoBacklinks(projectId), {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'refresh' }),
+                onClick={() =>
+                  void runBacklinksRefresh({
+                    seed: domain,
+                    locale: backlinksModel.searchBand?.locale ?? 'de',
+                    location:
+                      backlinksModel.searchBand?.location ??
+                      t('seoMarket.locations.germany'),
                   })
-                  if (snap) {
-                    setBacklinks((prev) => [snap as SeoBacklinkSnapshot, ...prev])
-                  }
-                }}
+                }
               >
-                Capture backlink snapshot
+                {t('seoMarket.workspace.captureBacklinks')}
               </Button>
-              {backlinks.length > 0 ? (
-                <Text role="meta" as="p">
-                  {backlinks.length} live snapshot(s) in session.
-                </Text>
-              ) : null}
             </div>
           }
         />
@@ -537,9 +617,11 @@ export function SeoProjectWorkspace({
             configs.length > 0 ? (
               <div className="checkion-seo-project__stack">
                 <SectionChrome
-                  title="Configs"
+                  title={t('seoMarket.workspace.configs')}
                   quiet
-                  meta={`${configs.length} active`}
+                  meta={t('seoMarket.workspace.configsMeta', {
+                    count: configs.length,
+                  })}
                 />
                 {configs.slice(0, 3).map((cfg) => (
                   <div key={cfg.id} className="checkion-seo-project__row">
@@ -555,7 +637,7 @@ export function SeoProjectWorkspace({
                           id: `seo-rank-${cfg.id}-${Date.now()}`,
                           resource: 'seo-market',
                           status: 'running',
-                          title: 'Rank refresh',
+                          title: t('seoMarket.workspace.rankRefresh'),
                           href: paths.routes.projectSeo(projectId, 'rank-tracking'),
                           projectId,
                           detail: cfg.domain,
@@ -576,13 +658,14 @@ export function SeoProjectWorkspace({
                               domain,
                               config: next,
                               recent: next.keywords.slice(0, 6),
+                              t,
                             }),
                           )
                           trackJob({
                             id: `seo-rank-${cfg.id}-done`,
                             resource: 'seo-market',
                             status: 'completed',
-                            title: 'Rank refresh done',
+                            title: t('seoMarket.workspace.rankRefreshDone'),
                             href: paths.routes.projectSeo(projectId, 'rank-tracking'),
                             projectId,
                             detail: cfg.domain,
@@ -590,7 +673,7 @@ export function SeoProjectWorkspace({
                         }
                       }}
                     >
-                      Refresh now
+                      {t('seoMarket.workspace.refreshNow')}
                     </Button>
                   </div>
                 ))}
@@ -610,15 +693,19 @@ export function SeoProjectWorkspace({
 
       {chapter === 'gsc' ? (
         <SeoChapterView
-          model={emptySeoChapter('gsc', { projectId, projectName, domain })}
+          model={emptySeoChapter('gsc', { projectId, projectName, domain }, t)}
           workbench={
             <div className="checkion-seo-project__stack">
-              <SectionChrome title="Workbench" quiet meta="Connection" />
+              <SectionChrome
+                title={t('seoMarket.workspace.workbench')}
+                quiet
+                meta={t('seoMarket.workspace.connection')}
+              />
               <Text role="body" as="p" className="checkion-seo-dash__copy">
-                {gscNote ?? 'Loading GSC status…'}
+                {gscNote ?? t('seoMarket.workspace.loadingGsc')}
               </Text>
               <Text role="meta" as="p">
-                First-party Search Console only — OAuth wiring lands later.
+                {t('seoMarket.workspace.gscFirstParty')}
               </Text>
             </div>
           }

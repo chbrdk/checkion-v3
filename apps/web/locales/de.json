@@ -1001,5 +1001,255 @@
     "invalidCredentials": "Ungültige E-Mail oder Passwort",
     "createFailed": "Erstellen fehlgeschlagen",
     "revokeFailed": "Widerruf fehlgeschlagen"
+  },
+  "seoMarket": {
+    "navAria": "SEO-Kapitel",
+    "workspaceTitle": "{project} · SEO",
+    "nav": {
+      "overview": "Überblick",
+      "keywords": "Research",
+      "domain": "Domain",
+      "backlinks": "Backlinks",
+      "rank-tracking": "Ranks",
+      "competitors": "Feld",
+      "gsc": "GSC"
+    },
+    "chapters": {
+      "gsc": {
+        "title": "Suchleistung",
+        "empty": "Search Console verbinden oder aktualisieren, um Query-Performance zu laden."
+      },
+      "keywords": {
+        "title": "Keyword-Research",
+        "empty": "Seed eingeben und Research starten, um Keyword-Ideen zu laden."
+      },
+      "domain": {
+        "title": "Domain-Überblick",
+        "empty": "Domain aktualisieren, um organische Keywords und Traffic zu laden.",
+        "emptySnapshot": "Keine organischen Keywords in diesem Snapshot."
+      },
+      "backlinks": {
+        "title": "Backlinks",
+        "empty": "Backlinks aktualisieren, um verweisende Seiten zu laden.",
+        "emptySummary": "Summary geladen — keine Referring Pages in diesem Capture."
+      },
+      "rank-tracking": {
+        "title": "Rank-Monitor",
+        "empty": "Keywords hinzufügen und Track & check, um Positionen zu laden."
+      },
+      "competitors": {
+        "title": "Wettbewerbsfeld",
+        "empty": "Keyword-Set eingeben und Analyze starten, um SERP-Overlap zu laden.",
+        "emptyOverlap": "Keine überlappenden Rivalen für dieses Keyword-Set."
+      }
+    },
+    "search": {
+      "locale": "Locale",
+      "location": "Standort",
+      "recent": "Zuletzt",
+      "recentAria": "Letzte Seeds",
+      "savedIfEmpty": "{label} (gespeichert wenn leer)",
+      "provenanceAria": "Kapitel-Provenienz",
+      "cardProvenanceAria": "Karten-Provenienz",
+      "chartsAria": "Diagramme",
+      "filtersAria": "Ledger-Filter",
+      "pagerAria": "Ledger-Seiten",
+      "pagerOf": "{from}–{to} von {total}",
+      "ledgerAria": "{title}-Ledger",
+      "asideAria": "Kapitel-Nebenleiste",
+      "workbenchAria": "Workbench",
+      "noRows": "Noch keine Zeilen.",
+      "noRowsFilter": "Keine Zeilen für diesen Filter."
+    },
+    "charts": {
+      "positionDistribution": "Positionsverteilung",
+      "overlapByRival": "Overlap nach Rivale",
+      "newLostBacklinks": "Neue & verlorene Backlinks",
+      "referringDomains": "Referring Domains",
+      "tldDistribution": "Ref.-Domains nach TLD"
+    },
+    "seed": {
+      "seed": "Seed",
+      "domain": "Domain",
+      "keywordSet": "Keyword-Set",
+      "addToTrack": "Zum Tracken",
+      "keyword": "Keyword"
+    },
+    "actions": {
+      "research": "Research",
+      "refresh": "Aktualisieren",
+      "analyze": "Analysieren",
+      "trackCheck": "Track & check",
+      "search": "Suchen",
+      "track": "Tracken",
+      "continue": "Weiter",
+      "hide": "Ausblenden",
+      "next": "Weiter",
+      "moreDetails": "Mehr Details",
+      "prevPage": "Zurück",
+      "nextPage": "Weiter"
+    },
+    "locations": {
+      "germany": "Deutschland"
+    },
+    "filters": {
+      "all": "Alle",
+      "up": "Verbessert",
+      "down": "Verschlechtert",
+      "top10": "Top 10",
+      "mid": "11–20",
+      "deep": "21+",
+      "high": "Hohe Bedrohung",
+      "midThreat": "Mittel",
+      "low": "Niedrig",
+      "info": "Info",
+      "trans": "Trans",
+      "dofollow": "Dofollow",
+      "nofollow": "Nofollow"
+    },
+    "stats": {
+      "ideas": "Ideen",
+      "avgVolume": "Ø Volumen",
+      "avgCpc": "Ø CPC",
+      "avgComp": "Ø Comp",
+      "organicKw": "Organ. KW",
+      "traffic": "Traffic",
+      "cost": "Kosten",
+      "pages": "Seiten",
+      "monitored": "Überwacht",
+      "top10": "Top 10",
+      "improved": "Verbessert",
+      "declined": "Verschlechtert",
+      "rivals": "Rivalen",
+      "avgOverlap": "Ø Overlap",
+      "bestAvgRank": "Beste Ø Pos.",
+      "highThreats": "Hohe Bedrohungen",
+      "clicks": "Klicks",
+      "impressions": "Impressions",
+      "ctr": "CTR",
+      "avgPosition": "Ø Position",
+      "dr": "DR",
+      "backlinks": "Backlinks",
+      "refDomains": "Ref.-Domains",
+      "lostLinks": "Verloren"
+    },
+    "columns": {
+      "keyword": "Idee",
+      "tracked": "Tracked",
+      "volume": "Volumen",
+      "cpc": "CPC",
+      "comp": "Comp.",
+      "score": "KD",
+      "intent": "Intent",
+      "position": "Pos.",
+      "previous": "Vorher",
+      "change": "Δ",
+      "device": "Gerät",
+      "checked": "Geprüft",
+      "traffic": "Traffic",
+      "domain": "Rivale",
+      "overlap": "Overlap",
+      "avgRank": "Ø Rank",
+      "threat": "Bedrohung",
+      "query": "Query",
+      "page": "Seite",
+      "rank": "#",
+      "gap": "Gap"
+    },
+    "ledger": {
+      "ideas": "Ideen · {count}",
+      "topKeywords": "Top-Keywords · {count}",
+      "monitoredSet": "Überwachte Menge · {count}",
+      "rivalDomains": "Rivalen-Domains · {count}",
+      "backlinks": "Referring Pages · {count}",
+      "serpSnapshot": "SERP-Snapshot",
+      "serpMeta": "{count} organische Treffer",
+      "serpEmpty": "Noch kein SERP",
+      "battles": "Battles, die sie gewinnen",
+      "battlesEmpty": "Noch keine Battles",
+      "battlesMeta": "{count} Druckpunkte",
+      "movers": "Größte Bewegungen",
+      "moversEmpty": "Noch keine Bewegungen",
+      "moversMeta": "{count} Movers · dieser Check",
+      "noData": "Noch keine Daten"
+    },
+    "facets": {
+      "mode": "Modus",
+      "empty": "Leer",
+      "liveResearch": "Live-Research",
+      "liveSnapshot": "Live-Snapshot",
+      "liveConfig": "Live-Config",
+      "liveOverlap": "Live-Overlap",
+      "job": "Job",
+      "source": "Quelle",
+      "scope": "Scope",
+      "time": "Zeit"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "setupTitle": "Workspace einrichten",
+      "setupMeta": "Website · Quality-Crawl · Market-Tools",
+      "setupLede": "Site-Signale hinterlegen, Tools verbinden und Market-SEO unter dieser Collection halten.",
+      "setupAria": "Setup-Checkliste",
+      "cardsAria": "Market-SEO-Karten",
+      "noDataYet": "Noch keine Daten.",
+      "page": "Seite",
+      "pages": "Seiten",
+      "emptyCta": {
+        "gsc": "GSC öffnen",
+        "audit": "Scan starten",
+        "backlinks": "Backlinks öffnen",
+        "rank": "Ranks öffnen",
+        "domain": "Domain öffnen",
+        "competitors": "Feld öffnen"
+      },
+      "emptyMessage": {
+        "gsc": "GSC verbinden — First-Party Queries & Klicks.",
+        "audit": "Quality-Crawl starten für On-Page-Issues.",
+        "backlinks": "Backlinks aktualisieren — Ref.-Domains & New/Lost.",
+        "rank": "Keywords tracken und Positionen prüfen.",
+        "domain": "Domain aktualisieren — organische Keywords & Traffic.",
+        "competitors": "Keyword-Set analysieren — Overlap aus Research oder manuellem Set."
+      },
+      "cards": {
+        "gsc": "Suchleistung",
+        "audit": "Site-Audit",
+        "backlinks": "Backlink-Pulse",
+        "rank": "Rank-Monitor",
+        "domain": "Domain-Überblick",
+        "competitors": "Wettbewerbsfeld"
+      },
+      "steps": {
+        "domain": "Website bestätigt",
+        "domainDetail": "{domain} ist als Collection-Domain hinterlegt.",
+        "domainDetailMissing": "Domain am Collection-Projekt hinterlegen.",
+        "keywords": "Research starten",
+        "keywordsDetail": "Seed → Ideen speichern für Ranks und Feld.",
+        "rank": "Rank-Monitor einrichten",
+        "rankDetail": "Tracked set + Track & check.",
+        "gsc": "Search Console verbinden",
+        "gscDetail": "First-Party Klicks & Queries — OAuth folgt."
+      }
+    },
+    "workspace": {
+      "saved": "Gespeichert",
+      "savedMeta": "{count} Keywords",
+      "savedHint": "Letzte Research speichert Ideen automatisch für diese Collection.",
+      "gscConnected": "GSC verbunden — Performance-Stub bis OAuth-Token-Store.",
+      "gscDisconnected": "GSC nicht verbunden — OAuth verbinden, um Performance zu laden.",
+      "seedWwwError": "Seed muss Marke oder Keyword sein — Collection-Domain prüfen.",
+      "refreshNow": "Jetzt aktualisieren",
+      "workbench": "Workbench",
+      "connection": "Verbindung",
+      "captureSnapshot": "Snapshot erfassen",
+      "captureBacklinks": "Backlink-Snapshot erfassen",
+      "snapshotsInSession": "{count} Live-Snapshot(s) in der Session.",
+      "configs": "Configs",
+      "configsMeta": "{count} aktiv",
+      "rankRefresh": "Rank-Aktualisierung",
+      "rankRefreshDone": "Rank-Aktualisierung fertig",
+      "loadingGsc": "GSC-Status wird geladen…",
+      "gscFirstParty": "Nur First-Party Search Console — OAuth folgt später."
+    }
   }
 }

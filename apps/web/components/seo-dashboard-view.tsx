@@ -18,6 +18,7 @@ import type {
   SeoDashboardViewModel,
 } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
+import { useT } from '../lib/user-prefs'
 
 function NavLink({
   href,
@@ -100,6 +101,7 @@ function SetupChecklist({
   previewMode: boolean
   onPreviewNavigate?: (href: string) => void
 }) {
+  const t = useT()
   const remaining = steps.filter((s) => s.status === 'todo')
   const [selected, setSelected] = useState<string | null>(
     remaining[0]?.id ?? null,
@@ -110,16 +112,15 @@ function SetupChecklist({
     <Panel
       variant="editorial"
       className="checkion-seo-dash__setup"
-      aria-label="Setup checklist"
+      aria-label={t('seoMarket.dashboard.setupAria')}
     >
       <SectionChrome
-        title="Set up your workspace"
-        meta="Website · Quality crawl · Market tools"
+        title={t('seoMarket.dashboard.setupTitle')}
+        meta={t('seoMarket.dashboard.setupMeta')}
         as="h2"
       />
       <Text role="body" as="p" className="checkion-seo-dash__copy checkion-seo-dash__setup-lede">
-        Add your site signals, connect tools, and keep Market SEO under this
-        Collection.
+        {t('seoMarket.dashboard.setupLede')}
       </Text>
       <ul className="checkion-seo-dash__setup-list">
         {remaining.map((step) => {
@@ -142,7 +143,7 @@ function SetupChecklist({
                   </Text>
                 </span>
                 <Text role="body" as="span" className="checkion-seo-dash__copy checkion-seo-dash__setup-toggle">
-                  {open ? 'Hide' : 'Next'}
+                  {open ? t('seoMarket.actions.hide') : t('seoMarket.actions.next')}
                 </Text>
               </button>
               {open ? (
@@ -153,7 +154,7 @@ function SetupChecklist({
                     onPreviewNavigate={onPreviewNavigate}
                   >
                     <Button variant="primary" size="sm">
-                      Continue
+                      {t('seoMarket.actions.continue')}
                     </Button>
                   </NavLink>
                 </div>
@@ -180,9 +181,10 @@ function CardFacets({
 }: {
   facets: NonNullable<SeoDashboardCard['facets']>
 }) {
+  const t = useT()
   if (facets.length === 0) return null
   return (
-    <ul className="checkion-seo-dash__facets" aria-label="Card provenance">
+    <ul className="checkion-seo-dash__facets" aria-label={t('seoMarket.search.cardProvenanceAria')}>
       {facets.map((facet) => (
         <li key={`${facet.kind}-${facet.label}`} data-kind={facet.kind}>
           <Text role="label" as="span" className="checkion-seo-dash__facet-label">
@@ -216,6 +218,7 @@ function DashboardCardView({
   firstRow: boolean
   lastRow: boolean
 }) {
+  const t = useT()
   const href = cardHref(projectId, card)
   return (
     <Panel
@@ -240,7 +243,7 @@ function DashboardCardView({
               onPreviewNavigate={onPreviewNavigate}
             >
               <Button variant="ghost" size="sm">
-                More details
+                {t('seoMarket.actions.moreDetails')}
               </Button>
             </NavLink>
           ) : null
@@ -316,7 +319,10 @@ function DashboardCardView({
                 {issue.label}
               </Text>
               <Text role="body" as="span" className="checkion-seo-dash__copy">
-                {issue.count} {issue.count === 1 ? 'page' : 'pages'}
+                {issue.count}{' '}
+                {issue.count === 1
+                  ? t('seoMarket.dashboard.page')
+                  : t('seoMarket.dashboard.pages')}
               </Text>
             </li>
           ))}
@@ -325,7 +331,7 @@ function DashboardCardView({
       {!card.hasData ? (
         <div className="checkion-seo-dash__empty">
           <Text role="body" as="p" className="checkion-seo-dash__copy checkion-seo-dash__empty-copy">
-            {card.emptyMessage ?? 'No data yet.'}
+            {card.emptyMessage ?? t('seoMarket.dashboard.noDataYet')}
           </Text>
           {href && card.emptyCtaLabel ? (
             <NavLink
@@ -358,6 +364,7 @@ export function SeoDashboardView({
   previewMode?: boolean
   onPreviewNavigate?: (href: string) => void
 }) {
+  const t = useT()
   const sortedCards = useMemo(
     () =>
       [...model.cards].sort((a, b) => Number(b.hasData) - Number(a.hasData)),
@@ -372,7 +379,7 @@ export function SeoDashboardView({
     >
       <header className="checkion-seo-dash__mast">
         <Text role="title" as="h1">
-          Dashboard
+          {t('seoMarket.dashboard.title')}
         </Text>
         <Text role="body" as="p" className="checkion-seo-dash__copy">
           {model.projectName} · {model.domain}

@@ -32,6 +32,8 @@ See `seo-market-program.md` + schema: `seo_saved_keywords`, `seo_keyword_metrics
 ## UI
 Project workspace SEO subnav + magazine chapter bodies (`@msqdx/ui`). Numbers always show provenance (`facets` hairline row: source · scope · time · mode). CTA on project magazine: **SEO**.
 
+**Locale:** All Market SEO chrome (nav, dashboard, chapter titles, search band, ledger, empty CTAs) is bilingual via `seoMarket.*` keys in `apps/web/locales/{en,de}.json`. Live shells pass `useT()` into `emptySeoChapter` / `emptySeoDashboard` and chapter maps (`localizeSeoChapter` / `localizeSeoDashboard`). Research `locale` / `location` fields remain job parameters (de/en seed language), not UI language.
+
 ### Dashboard (Overview) — OpenSEO IA
 `/projects/:id/seo` mirrors OpenSEO project dashboard:
 
@@ -70,7 +72,7 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 - **Ranks** = your monitored keyword positions over time.
 - Shared only: a rival host string may appear in Domain research when you refresh that host; never twin the overlap ledger onto Domain.
 
-**Backlinks depth (OpenSEO-parity IA, MSQDX chrome):** DR · UR · Backlinks · Ref. domains → New/Lost + Ref-domain growth charts → TLD distribution → filter strip → referring-page ledger (title/URL, DR/UR, domains/links, anchor→target, type, first/last seen). Dense fixture until live DataForSEO backlink rows land.
+**Backlinks depth (OpenSEO-parity IA, MSQDX chrome):** Search band (domain · Refresh) → KPIs **DR** (DataForSEO `rank` 0–100) · **UR** (avg `page_from_rank` of returned pages) · Backlinks · Ref. domains → charts from timeseries (backlinks + ref domains) + TLD bar from summary → referring-page ledger from `backlinks/backlinks/live` (title/URL, DR/UR, links, anchor→target, type, dofollow, first/last). Capture = summary + pages + timeseries in one refresh; persisted on `seo_backlink_snapshots.details`.
 
 **Rank tracking depth (monitor IA):** Search band (add-to-track · locale · location · Track & check + recent tracked) → KPI (monitored · top 10 · improved · declined) → **split**: main **position ledger** (dual keyword/URL · pos · prev · Δ · device · last check · filters Improved/Declined/Top 10 · pagination) · aside **Visibility over time** `SeriesChart` (invertY) + **Position distribution** + **Biggest movers**. No volume/CPC/intent columns (those live on Research). Track posts rank-configs + refresh; merges `latest` snapshots. Fixture SSOT until live checks land.
 

@@ -168,7 +168,7 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
   if (!shouldRunLiveSeoMarket()) {
     result = fixtureBacklinks({ projectId, domain })
   } else {
-    await assertSeoMarketSoftCap(projectId, 2)
+    await assertSeoMarketSoftCap(projectId, 3)
     try {
       const live = await liveBacklinks({ projectId, domain })
       await recordSeoMarketUsage({
@@ -190,6 +190,18 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
     backlinks: result.backlinks,
     rank: result.rank,
     spamScore: result.spamScore,
+    targetSpamScore: result.targetSpamScore,
+    brokenBacklinks: result.brokenBacklinks,
+    referringPages: result.referringPages,
+    referringPagesNofollow: result.referringPagesNofollow,
+    newBacklinks: result.newBacklinks,
+    lostBacklinks: result.lostBacklinks,
+    newReferringDomains: result.newReferringDomains,
+    lostReferringDomains: result.lostReferringDomains,
+    referringLinksTld: result.referringLinksTld,
+    referringLinksTypes: result.referringLinksTypes,
+    items: result.items,
+    timeseries: result.timeseries,
     source: result.source,
     stubbed: result.stubbed,
     fetchedAt: result.fetchedAt,

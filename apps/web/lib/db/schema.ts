@@ -353,6 +353,8 @@ export const seoBacklinkSnapshots = pgTable('seo_backlink_snapshots', {
   newReferringDomains: integer('new_referring_domains'),
   lostReferringDomains: integer('lost_referring_domains'),
   spamScore: integer('spam_score'),
+  /** Referring pages, TLD/types, timeseries — DataForSEO payload. */
+  details: jsonb('details').$type<Record<string, unknown>>().notNull().default({}),
   source: text('source').notNull().default('fixture'),
   stubbed: integer('stubbed').notNull().default(1),
   capturedAt: text('captured_at').notNull(),

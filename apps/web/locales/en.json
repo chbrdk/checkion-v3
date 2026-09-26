@@ -1001,5 +1001,255 @@
     "invalidCredentials": "Invalid email or password",
     "createFailed": "Create failed",
     "revokeFailed": "Revoke failed"
+  },
+  "seoMarket": {
+    "navAria": "SEO chapters",
+    "workspaceTitle": "{project} · SEO",
+    "nav": {
+      "overview": "Overview",
+      "keywords": "Research",
+      "domain": "Domain",
+      "backlinks": "Backlinks",
+      "rank-tracking": "Ranks",
+      "competitors": "Field",
+      "gsc": "GSC"
+    },
+    "chapters": {
+      "gsc": {
+        "title": "Search performance",
+        "empty": "Connect Search Console or run a refresh to load query performance."
+      },
+      "keywords": {
+        "title": "Keyword research",
+        "empty": "Enter a seed and run Research to load keyword ideas."
+      },
+      "domain": {
+        "title": "Domain overview",
+        "empty": "Refresh the domain to load organic keywords and traffic.",
+        "emptySnapshot": "No organic keywords in this snapshot."
+      },
+      "backlinks": {
+        "title": "Backlinks",
+        "empty": "Refresh backlinks to load referring pages.",
+        "emptySummary": "Summary loaded — no referring pages in this capture."
+      },
+      "rank-tracking": {
+        "title": "Rank monitor",
+        "empty": "Add keywords and Track & check to load positions."
+      },
+      "competitors": {
+        "title": "Competitive field",
+        "empty": "Enter a keyword set and Analyze to load SERP overlap.",
+        "emptyOverlap": "No overlapping rivals for this keyword set."
+      }
+    },
+    "search": {
+      "locale": "Locale",
+      "location": "Location",
+      "recent": "Recent",
+      "recentAria": "Recent seeds",
+      "savedIfEmpty": "{label} (saved if empty)",
+      "provenanceAria": "Chapter provenance",
+      "cardProvenanceAria": "Card provenance",
+      "chartsAria": "Charts",
+      "filtersAria": "Ledger filters",
+      "pagerAria": "Ledger pages",
+      "pagerOf": "{from}–{to} of {total}",
+      "ledgerAria": "{title} ledger",
+      "asideAria": "Chapter aside",
+      "workbenchAria": "Workbench",
+      "noRows": "No rows yet.",
+      "noRowsFilter": "No rows for this filter."
+    },
+    "charts": {
+      "positionDistribution": "Position distribution",
+      "overlapByRival": "Overlap by rival",
+      "newLostBacklinks": "New & lost backlinks",
+      "referringDomains": "Referring domains",
+      "tldDistribution": "Ref. domains by TLD"
+    },
+    "seed": {
+      "seed": "Seed",
+      "domain": "Domain",
+      "keywordSet": "Keyword set",
+      "addToTrack": "Add to track",
+      "keyword": "Keyword"
+    },
+    "actions": {
+      "research": "Research",
+      "refresh": "Refresh",
+      "analyze": "Analyze",
+      "trackCheck": "Track & check",
+      "search": "Search",
+      "track": "Track",
+      "continue": "Continue",
+      "hide": "Hide",
+      "next": "Next",
+      "moreDetails": "More details",
+      "prevPage": "Previous",
+      "nextPage": "Next"
+    },
+    "locations": {
+      "germany": "Germany"
+    },
+    "filters": {
+      "all": "All",
+      "up": "Improved",
+      "down": "Declined",
+      "top10": "Top 10",
+      "mid": "11–20",
+      "deep": "21+",
+      "high": "High threat",
+      "midThreat": "Mid",
+      "low": "Low",
+      "info": "Info",
+      "trans": "Trans",
+      "dofollow": "Dofollow",
+      "nofollow": "Nofollow"
+    },
+    "stats": {
+      "ideas": "Ideas",
+      "avgVolume": "Avg volume",
+      "avgCpc": "Avg CPC",
+      "avgComp": "Avg Comp",
+      "organicKw": "Organic KW",
+      "traffic": "Traffic",
+      "cost": "Cost",
+      "pages": "Pages",
+      "monitored": "Monitored",
+      "top10": "Top 10",
+      "improved": "Improved",
+      "declined": "Declined",
+      "rivals": "Rivals",
+      "avgOverlap": "Avg overlap",
+      "bestAvgRank": "Best avg rank",
+      "highThreats": "High threats",
+      "clicks": "Clicks",
+      "impressions": "Impressions",
+      "ctr": "CTR",
+      "avgPosition": "Avg position",
+      "dr": "DR",
+      "backlinks": "Backlinks",
+      "refDomains": "Ref. domains",
+      "lostLinks": "Lost links"
+    },
+    "columns": {
+      "keyword": "Idea",
+      "tracked": "Tracked",
+      "volume": "Volume",
+      "cpc": "CPC",
+      "comp": "Comp.",
+      "score": "KD",
+      "intent": "Intent",
+      "position": "Pos.",
+      "previous": "Prev.",
+      "change": "Δ",
+      "device": "Device",
+      "checked": "Checked",
+      "traffic": "Traffic",
+      "domain": "Rival",
+      "overlap": "Overlap",
+      "avgRank": "Avg rank",
+      "threat": "Threat",
+      "query": "Query",
+      "page": "Page",
+      "rank": "#",
+      "gap": "Gap"
+    },
+    "ledger": {
+      "ideas": "Ideas · {count}",
+      "topKeywords": "Top keywords · {count}",
+      "monitoredSet": "Monitored set · {count}",
+      "rivalDomains": "Rival domains · {count}",
+      "backlinks": "Referring pages · {count}",
+      "serpSnapshot": "SERP snapshot",
+      "serpMeta": "{count} organic results",
+      "serpEmpty": "No SERP yet",
+      "battles": "Battles they win",
+      "battlesEmpty": "No battles yet",
+      "battlesMeta": "{count} pressure points",
+      "movers": "Biggest movers",
+      "moversEmpty": "No movers yet",
+      "moversMeta": "{count} movers · this check",
+      "noData": "No data yet"
+    },
+    "facets": {
+      "mode": "Mode",
+      "empty": "Empty",
+      "liveResearch": "Live research",
+      "liveSnapshot": "Live snapshot",
+      "liveConfig": "Live config",
+      "liveOverlap": "Live overlap",
+      "job": "Job",
+      "source": "Source",
+      "scope": "Scope",
+      "time": "Time"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "setupTitle": "Set up your workspace",
+      "setupMeta": "Website · Quality crawl · Market tools",
+      "setupLede": "Add your site signals, connect tools, and keep Market SEO under this Collection.",
+      "setupAria": "Setup checklist",
+      "cardsAria": "Market SEO cards",
+      "noDataYet": "No data yet.",
+      "page": "page",
+      "pages": "pages",
+      "emptyCta": {
+        "gsc": "Open GSC",
+        "audit": "Start scan",
+        "backlinks": "Open backlinks",
+        "rank": "Open ranks",
+        "domain": "Open domain",
+        "competitors": "Open field"
+      },
+      "emptyMessage": {
+        "gsc": "Connect GSC — first-party queries & clicks.",
+        "audit": "Start a Quality crawl for on-page issues.",
+        "backlinks": "Refresh backlinks — referring domains & new/lost.",
+        "rank": "Track keywords and check positions.",
+        "domain": "Refresh domain — organic keywords & traffic.",
+        "competitors": "Analyze a keyword set — overlap from Research or a manual set."
+      },
+      "cards": {
+        "gsc": "Search performance",
+        "audit": "Site audit",
+        "backlinks": "Backlink pulse",
+        "rank": "Rank monitor",
+        "domain": "Domain overview",
+        "competitors": "Competitive field"
+      },
+      "steps": {
+        "domain": "Website confirmed",
+        "domainDetail": "{domain} is set as the Collection domain.",
+        "domainDetailMissing": "Set a domain on the Collection project.",
+        "keywords": "Start research",
+        "keywordsDetail": "Seed → save ideas for Ranks and Field.",
+        "rank": "Set up rank monitor",
+        "rankDetail": "Tracked set + Track & check.",
+        "gsc": "Connect Search Console",
+        "gscDetail": "First-party clicks & queries — OAuth follows."
+      }
+    },
+    "workspace": {
+      "saved": "Saved",
+      "savedMeta": "{count} keywords",
+      "savedHint": "Last research auto-saves ideas for this Collection.",
+      "gscConnected": "GSC connected — performance stub until OAuth token store.",
+      "gscDisconnected": "GSC not connected — connect OAuth to load performance.",
+      "seedWwwError": "Seed must be a brand or keyword — check the Collection domain.",
+      "refreshNow": "Refresh now",
+      "workbench": "Workbench",
+      "connection": "Connection",
+      "captureSnapshot": "Capture snapshot",
+      "captureBacklinks": "Capture backlink snapshot",
+      "snapshotsInSession": "{count} live snapshot(s) in session.",
+      "configs": "Configs",
+      "configsMeta": "{count} active",
+      "rankRefresh": "Rank refresh",
+      "rankRefreshDone": "Rank refresh done",
+      "loadingGsc": "Loading GSC status…",
+      "gscFirstParty": "First-party Search Console only — OAuth wiring lands later."
+    }
   }
 }
