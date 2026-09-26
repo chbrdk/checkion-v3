@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, CardActions, Chip, CollectionHubCard, CollectionHubMetric, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
+import { Button, buttonClassName, CardActions, Chip, CollectionHubCard, CollectionHubMetric, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -88,8 +88,11 @@ function ProjectCollectionCard({
       }
       actions={
         <CardActions>
-          <Link href={paths.routes.projectDetail(project.id)}>
-            <Button variant="ghost">{t('common.open')}</Button>
+          <Link
+            href={paths.routes.projectDetail(project.id)}
+            className={buttonClassName({ variant: 'ghost' })}
+          >
+            {t('common.open')}
           </Link>
           <Button variant="ghost" type="button" onClick={() => onEdit(project)}>
             {t('common.edit')}
@@ -156,10 +159,11 @@ function ProjectListRow({
           {capabilityLabel(project.capabilityStatus, t)}
         </span>
         <div className="checkion-projects-list-row__actions">
-          <Link href={paths.routes.projectDetail(project.id)}>
-            <Button variant="ghost" size="sm">
-              {t('common.open')}
-            </Button>
+          <Link
+            href={paths.routes.projectDetail(project.id)}
+            className={buttonClassName({ variant: 'ghost', size: 'sm' })}
+          >
+            {t('common.open')}
           </Link>
           <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
             {t('common.edit')}

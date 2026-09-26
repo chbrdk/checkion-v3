@@ -258,9 +258,26 @@ a { color: inherit; text-decoration: none; }
 
 .checkion-projects-list-row__actions {
   display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 0.15rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   justify-content: flex-end;
+  max-width: min(100%, 22rem);
+}
+
+.checkion-projects-list-row__actions > * {
+  position: relative;
+  z-index: 0;
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.checkion-projects-list-row__actions .ds-btn {
+  overflow: hidden;
+}
+
+.checkion-projects-list-row__actions .ds-btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
