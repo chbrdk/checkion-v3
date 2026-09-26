@@ -1157,6 +1157,180 @@ export interface SeoProjectOverview {
   savedKeywordCount: number
 }
 
+/** OpenSEO-style dashboard view model (overview chapter). */
+export type SeoDashboardSetupStatus = 'done' | 'todo' | 'skipped'
+
+export interface SeoDashboardSetupStep {
+  id: string
+  label: string
+  detail: string
+  status: SeoDashboardSetupStatus
+}
+
+export interface SeoDashboardStat {
+  label: string
+  value: string
+  tone?: 'pos' | 'neg' | 'neutral'
+  delta?: string | null
+}
+
+export interface SeoDashboardIssueRow {
+  label: string
+  severity: 'critical' | 'warning' | 'info'
+  count: number
+}
+
+export interface SeoDashboardFacet {
+  /** Facet kind for hairline accent (source · scope · time · mode …). */
+  kind: string
+  label: string
+  value: string
+}
+
+export interface SeoDashboardCard {
+  key: string
+  title: string
+  /** @deprecated prefer `facets` hairline row */
+  stamp?: string
+  facets?: SeoDashboardFacet[]
+  hasData: boolean
+  href?: string
+  emptyMessage?: string
+  emptyCtaLabel?: string
+  stats?: SeoDashboardStat[]
+  issues?: SeoDashboardIssueRow[]
+}
+
+export interface SeoDashboardViewModel {
+  projectId: string
+  projectName: string
+  domain: string
+  setupSteps: SeoDashboardSetupStep[]
+  cards: SeoDashboardCard[]
+}
+
+/** Magazine report chapter (keywords · domain · backlinks · rank · competitors · gsc). */
+export type SeoChapterId =
+  | 'keywords'
+  | 'domain'
+  | 'backlinks'
+  | 'rank-tracking'
+  | 'competitors'
+  | 'gsc'
+
+export interface SeoChapterColumn {
+  key: string
+  label: string
+  align?: 'start' | 'end'
+  /** Render cell as primary + optional secondary line. */
+  dual?: boolean
+}
+
+export type SeoChapterCellValue =
+  | string
+  | {
+      primary: string
+      secondary?: string
+    }
+
+export interface SeoChapterRow {
+  id: string
+  cells: Record<string, SeoChapterCellValue>
+  /** Filter tags, e.g. dofollow · nofollow · gov · edu */
+  tags?: string[]
+  tone?: 'pos' | 'neg' | 'neutral'
+}
+
+export interface SeoChapterFilter {
+  id: string
+  label: string
+  /** When set, only rows whose tags include this id (except `all`). */
+  tag?: string | null
+}
+
+export interface SeoChapterSeriesPoint {
+  label: string
+  value: number | null
+}
+
+export interface SeoChapterSeries {
+  id: string
+  label: string
+  points: SeoChapterSeriesPoint[]
+}
+
+/** Multi-series line — `@msqdx/ui` SeriesChart. */
+export interface SeoChapterTrendChart {
+  kind: 'series'
+  title?: string
+  invertY?: boolean
+  height?: number
+  series: SeoChapterSeries[]
+}
+
+/** Single-series chart — `@msqdx/ui` Chart (bar / line / area …). */
+export interface SeoChapterPlotChart {
+  kind: 'plot'
+  title?: string
+  variant?: 'bar' | 'bar_horizontal' | 'line' | 'area'
+  height?: number
+  points: Array<{ label: string; value: number }>
+}
+
+export type SeoChapterChart = SeoChapterTrendChart | SeoChapterPlotChart
+
+/** Right rail for research-style chapters (Keywords OpenSEO IA). */
+export interface SeoChapterAsideLedger {
+  title: string
+  meta?: string
+  columns: SeoChapterColumn[]
+  rows: SeoChapterRow[]
+}
+
+export interface SeoChapterAside {
+  charts?: SeoChapterChart[]
+  ledger?: SeoChapterAsideLedger
+}
+
+/** OpenSEO-style research search strip (keywords seed · domain host). */
+export interface SeoChapterSearchBand {
+  seed: string
+  locale: string
+  location: string
+  /** Field label for seed — default "Seed". Domain chapter uses "Domain". */
+  seedLabel?: string
+  /** Primary action label — default "Search". Domain chapter uses "Refresh". */
+  actionLabel?: string
+  /** When true, primary action runs with empty seed (Competitors → saved keyword set). */
+  allowEmptySeed?: boolean
+  recent?: string[]
+  note?: string
+  locales?: Array<{ value: string; label: string }>
+}
+
+export interface SeoChapterViewModel {
+  chapter: SeoChapterId
+  title: string
+  projectId: string
+  projectName: string
+  domain: string
+  lede?: string
+  facets: SeoDashboardFacet[]
+  stats?: SeoDashboardStat[]
+  charts?: SeoChapterChart[]
+  /** When set, main ledger + charts sit left; aside rail right (Keywords research). */
+  aside?: SeoChapterAside
+  searchBand?: SeoChapterSearchBand
+  filters?: SeoChapterFilter[]
+  /** Ledger eyebrow, e.g. "Backlinks · 2.840" */
+  ledgerMeta?: string
+  /** Rows per ledger page (default: show all). */
+  pageSize?: number
+  columns: SeoChapterColumn[]
+  rows: SeoChapterRow[]
+  emptyMessage?: string
+}
+
 export interface SeoMarketUsage {
   projectId: string
   day: string

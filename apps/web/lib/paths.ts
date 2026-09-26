@@ -319,6 +319,8 @@ export const paths = {
       `/api/projects/${encodeURIComponent(id)}/seo/gsc`,
     /** @deprecated transitional soft-cap endpoint */
     apiSeoMarketUsage: '/api/seo-market/usage',
+    apiSeoMarketSerp: '/api/seo-market/serp',
+    apiSeoMarketKeywords: '/api/seo-market/keywords',
     apiShare: '/api/share',
     apiShareDetail: (token: string) => `/api/share/${token}`,
     apiTokens: '/api/tokens',

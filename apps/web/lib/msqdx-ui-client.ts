@@ -13,6 +13,8 @@ export type {
 export { InfoTip } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export type { InfoTipProps } from '../../../../msqdx-ui/packages/ui/src/components/InfoTip'
 export { Select } from '../../../../msqdx-ui/packages/ui/src/components/Select'
+export { Chart } from '../../../../msqdx-ui/packages/ui/src/components/Chart'
+export type { ChartProps, ChartPoint, ChartVariant } from '../../../../msqdx-ui/packages/ui/src/components/Chart'
 export { SeriesChart } from '../../../../msqdx-ui/packages/ui/src/components/SeriesChart'
 export type {
   SeriesChartProps,

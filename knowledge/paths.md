@@ -90,7 +90,8 @@ Contract id: `2026-05-plexon-federation-v3` — live wiring accepted; keep `dumm
 ## SEO Market (DataForSEO) — project workspace
 - Specs: `specs/domain/seo-project-workspace.md` · `seo-market-program.md` · `seo-dataforseo.md` · `specs/api/seo-project.md`
 - UI: `/projects/:id/seo` · `/keywords` · `/domain` · `/backlinks` · `/rank-tracking` · `/competitors` · `/gsc`
-- API: `/api/projects/:id/seo/*` (`paths.routes.apiProjectSeo*`)
+- Dashboard preview (local, fixtures): `apps/seo-dashboard-preview` → `npm run dev` → http://localhost:5179 · hash chapters `#gsc` · `#keywords` · `#domain` · … (More details + depth tiles clickable)
+- API: `/api/projects/:id/seo/*` (`paths.routes.apiProjectSeo*`) · SERP `paths.routes.apiSeoMarketSerp` (`POST /api/seo-market/serp`)
 - Legacy `/seo` redirects to project SEO when `projectId` present
 - Env: `DATAFORSEO_API_KEY` · `CHECKION_LIVE_SEO_MARKET` · soft cap `CHECKION_SEO_MARKET_DAILY_SOFT_CAP`
 - MCP: `checkion_v3.seo_*` → project-scoped APIs

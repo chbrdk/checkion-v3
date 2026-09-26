@@ -1,0 +1,225 @@
+import type {
+  SeoChapterRow,
+  SeoChapterViewModel,
+  SeoCompetitorRow,
+  SeoCompetitorsResult,
+} from '@checkion-v3/contracts'
+import { fixtureSeoChapter } from './chapter-fixtures'
+
+function fmtAvgRank(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return n.toFixed(1).replace('.', ',')
+}
+
+function fmtOverlap(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return String(Math.round(n))
+}
+
+function threatBand(
+  overlap: number,
+  avgRank: number | null,
+): { tag: 'high' | 'mid' | 'low'; label: string } {
+  if (overlap >= 6 || (avgRank != null && avgRank <= 10 && overlap >= 4)) {
+    return { tag: 'high', label: 'High' }
+  }
+  if (overlap >= 3) return { tag: 'mid', label: 'Mid' }
+  return { tag: 'low', label: 'Low' }
+}
+
+function shortHost(host: string): string {
+  return host.replace(/^www\./, '').split('.')[0] || host
+}
+
+export function mapCompetitorRows(
+  items: SeoCompetitorRow[],
+  keywords: string[],
+): SeoChapterRow[] {
+  const sample = keywords.slice(0, 3).join(' · ') || 'shared SERP terms'
+  return items
+    .slice()
+    .sort((a, b) => b.overlapCount - a.overlapCount)
+    .map((item, i) => {
+      const band = threatBand(item.overlapCount, item.avgRank)
+      return {
+        id: `live-comp-${i}-${item.domain}`,
+        tags: [band.tag],
+        tone: band.tag === 'high' ? 'neg' : undefined,
+        cells: {
+          domain: {
+            primary: item.domain,
+            secondary: `${item.overlapCount} KW · ${sample}`,
+          },
+          overlap: fmtOverlap(item.overlapCount),
+          avgRank: fmtAvgRank(item.avgRank),
+          threat: band.label,
+        },
+      }
+    })
+}
+
+function battlesFromRows(rows: SeoChapterRow[]): SeoChapterRow[] {
+  return rows
+    .filter((r) => r.tags?.includes('high') || r.tags?.includes('mid'))
+    .slice(0, 6)
+    .map((r) => {
+      const primary =
+        typeof r.cells.domain === 'object' && r.cells.domain
+          ? r.cells.domain.primary
+          : String(r.cells.domain ?? '')
+      return {
+        id: `battle-${r.id}`,
+        tone: r.tone,
+        cells: {
+          keyword: {
+            primary,
+            secondary: `overlap ${r.cells.overlap ?? '—'} · avg ${r.cells.avgRank ?? '—'}`,
+          },
+          gap: r.cells.threat === 'High' ? '▼ high' : '▼ mid',
+        },
+      }
+    })
+}
+
+function overlapPoints(rows: SeoChapterRow[]) {
+  return rows.slice(0, 5).map((r) => {
+    const label =
+      typeof r.cells.domain === 'object' && r.cells.domain
+        ? shortHost(r.cells.domain.primary)
+        : shortHost(String(r.cells.domain ?? ''))
+    const value = Number.parseInt(String(r.cells.overlap ?? '0'), 10)
+    return { label, value: Number.isFinite(value) ? value : 0 }
+  })
+}
+
+/** Merge live SERP-overlap result into the Competitors chapter shell. */
+export function buildCompetitorsChapterModel(input: {
+  projectId: string
+  projectName: string
+  domain: string
+  seed?: string
+  locale?: string
+  location?: string
+  recent?: string[]
+  result?: SeoCompetitorsResult | null
+}): SeoChapterViewModel {
+  const base = fixtureSeoChapter('competitors', {
+    projectId: input.projectId,
+    projectName: input.projectName,
+    domain: input.domain,
+  })
+  const result = input.result
+  const keywords = result?.keywords?.length
+    ? result.keywords
+    : (input.seed ?? '')
+        .split(/[,;]+/)
+        .map((k) => k.trim())
+        .filter(Boolean)
+  const rows =
+    result?.items?.length
+      ? mapCompetitorRows(result.items, keywords)
+      : base.rows
+  const overlaps = rows
+    .map((r) => Number.parseInt(String(r.cells.overlap ?? ''), 10))
+    .filter((n) => Number.isFinite(n))
+  const ranks = rows
+    .map((r) => Number.parseFloat(String(r.cells.avgRank ?? '').replace(',', '.')))
+    .filter((n) => Number.isFinite(n))
+  const high = rows.filter((r) => r.tags?.includes('high')).length
+  const avg = (xs: number[]) =>
+    xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null
+  const best = ranks.length ? Math.min(...ranks) : null
+  const seed =
+    input.seed ||
+    (keywords.length ? keywords.slice(0, 3).join(', ') : null) ||
+    base.searchBand?.seed ||
+    'brand'
+  const battles = result?.items?.length
+    ? battlesFromRows(rows)
+    : base.aside?.ledger?.rows ?? []
+  const livePoints = result?.items?.length ? overlapPoints(rows) : []
+  const fixturePlot = base.aside?.charts?.find((c) => c.kind === 'plot')
+  const fixturePoints =
+    fixturePlot && fixturePlot.kind === 'plot' ? fixturePlot.points : []
+
+  return {
+    ...base,
+    lede: undefined,
+    facets: base.facets.map((f) => {
+      if (f.kind === 'mode' && result) return { ...f, value: 'Live overlap' }
+      if (f.kind === 'scope') {
+        const n = keywords.length || rows.length
+        const loc = (input.locale ?? 'de').toUpperCase()
+        return { ...f, value: `${n} terms · ${loc}` }
+      }
+      if (f.kind === 'time' && result?.fetchedAt) {
+        return {
+          ...f,
+          value: new Date(result.fetchedAt).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          }),
+        }
+      }
+      return f
+    }),
+    searchBand: {
+      seed,
+      seedLabel: 'Keyword set',
+      actionLabel: 'Analyze',
+      allowEmptySeed: true,
+      locale: input.locale ?? base.searchBand?.locale ?? 'de',
+      location: input.location ?? base.searchBand?.location ?? 'Germany',
+      recent: input.recent ?? base.searchBand?.recent,
+      locales: base.searchBand?.locales,
+    },
+    stats: result
+      ? [
+          { label: 'Rivals', value: String(rows.length) },
+          {
+            label: 'Avg overlap',
+            value:
+              avg(overlaps) != null
+                ? avg(overlaps)!.toFixed(1).replace('.', ',')
+                : '—',
+          },
+          {
+            label: 'Best avg rank',
+            value: best != null ? best.toFixed(1).replace('.', ',') : '—',
+            tone: best != null && best <= 10 ? 'neg' : undefined,
+          },
+          {
+            label: 'High threats',
+            value: String(high),
+            tone: high > 0 ? 'neg' : undefined,
+          },
+        ]
+      : base.stats,
+    ledgerMeta: `Rival domains · ${rows.length}`,
+    pageSize: 5,
+    rows,
+    aside: {
+      charts: [
+        {
+          kind: 'plot',
+          variant: 'bar',
+          title: 'Overlap by rival',
+          height: 168,
+          points: livePoints.length > 0 ? livePoints : fixturePoints,
+        },
+        ...(base.aside?.charts?.filter((c) => c.kind === 'series') ?? []),
+      ],
+      ledger: {
+        title: 'Battles they win',
+        meta: result?.items?.length
+          ? `${battles.length} pressure points`
+          : base.aside?.ledger?.meta,
+        columns: base.aside?.ledger?.columns ?? [
+          { key: 'keyword', label: 'Keyword', dual: true },
+          { key: 'gap', label: 'Gap', align: 'end' },
+        ],
+        rows: battles,
+      },
+    },
+  }
+}

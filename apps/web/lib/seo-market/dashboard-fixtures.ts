@@ -1,0 +1,164 @@
+import type { SeoDashboardViewModel } from '@checkion-v3/contracts'
+
+/** Rich OpenSEO-shaped fixture for dashboard review (no vendor calls). */
+export function fixtureSeoDashboard(input?: {
+  projectId?: string
+  projectName?: string
+  domain?: string
+}): SeoDashboardViewModel {
+  const projectId = input?.projectId ?? 'proj-fixture-seo'
+  const projectName = input?.projectName ?? 'Acme Demo'
+  const domain = input?.domain ?? 'acme.example'
+  const day = new Date().toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+
+  return {
+    projectId,
+    projectName,
+    domain,
+    setupSteps: [
+      {
+        id: 'domain',
+        label: 'Website bestätigt',
+        detail: `${domain} ist als Collection-Domain hinterlegt.`,
+        status: 'done',
+      },
+      {
+        id: 'quality',
+        label: 'Quality-Crawl starten',
+        detail: 'On-page Audit (Broken Links, Tags, Indexability) unter Domain-Scans.',
+        status: 'todo',
+      },
+      {
+        id: 'keywords',
+        label: 'Keywords speichern',
+        detail: 'Research-Ideen persistieren für Rank-Tracking und Competitors.',
+        status: 'todo',
+      },
+      {
+        id: 'rank',
+        label: 'Rank-Tracking einrichten',
+        detail: 'Config mit Keywords + optional daily/weekly Schedule.',
+        status: 'todo',
+      },
+      {
+        id: 'gsc',
+        label: 'Search Console verbinden',
+        detail: 'First-party Clicks & Queries — OAuth folgt; bis dahin Fixture/Stub.',
+        status: 'todo',
+      },
+      {
+        id: 'mcp',
+        label: 'Assistant / MCP',
+        detail: 'checkion_v3.seo_* Tools im Suite-Assistant nutzen.',
+        status: 'skipped',
+      },
+    ],
+    cards: [
+      {
+        key: 'gsc',
+        title: 'Search performance',
+        hasData: true,
+        href: 'gsc',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Google Search Console' },
+          { kind: 'scope', label: 'Range', value: 'Last 28 days' },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        stats: [
+          { label: 'Clicks', value: '1.284', tone: 'pos', delta: '▲ 12%' },
+          { label: 'Impressions', value: '48.2k', tone: 'pos', delta: '▲ 4%' },
+          { label: 'CTR', value: '2,7%' },
+          { label: 'Avg position', value: '14,3' },
+        ],
+      },
+      {
+        key: 'audit',
+        title: 'Site audit',
+        hasData: true,
+        href: 'quality',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Quality crawl' },
+          { kind: 'scope', label: 'Pages', value: '86' },
+          { kind: 'time', label: 'Crawled', value: day },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        issues: [
+          { label: 'Missing meta description', severity: 'warning', count: 12 },
+          { label: 'Thin content', severity: 'warning', count: 7 },
+          { label: 'Broken internal links', severity: 'critical', count: 3 },
+          { label: 'Duplicate title', severity: 'info', count: 2 },
+        ],
+      },
+      {
+        key: 'backlinks',
+        title: 'Backlink pulse',
+        hasData: true,
+        href: 'backlinks',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Backlinks' },
+          { kind: 'time', label: 'Snapshot', value: day },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        stats: [
+          { label: 'DR', value: '68', tone: 'pos', delta: '▲ 2' },
+          { label: 'Backlinks', value: '2.840', tone: 'pos', delta: '▲ 18' },
+          { label: 'Ref. domains', value: '412' },
+          { label: 'Lost links', value: '▼ 5', tone: 'neg' },
+        ],
+      },
+      {
+        key: 'rank',
+        title: 'Rank monitor',
+        hasData: true,
+        href: 'rank-tracking',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Rank configs' },
+          { kind: 'time', label: 'Last check', value: 'Today' },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        stats: [
+          { label: 'Tracked', value: '24' },
+          { label: 'Top 10', value: '9', tone: 'pos' },
+          { label: 'Improved', value: '▲ 6', tone: 'pos' },
+          { label: 'Declined', value: '▼ 3', tone: 'neg' },
+        ],
+      },
+      {
+        key: 'domain',
+        title: 'Domain overview',
+        hasData: true,
+        href: 'domain',
+        facets: [
+          { kind: 'source', label: 'Source', value: 'DataForSEO organic' },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        stats: [
+          { label: 'Organic KW', value: '1.120' },
+          { label: 'Traffic', value: '18.4k' },
+          { label: 'Cost', value: '$4.2k' },
+          { label: 'Saved KW', value: '16' },
+        ],
+      },
+      {
+        key: 'competitors',
+        title: 'Competitive field',
+        hasData: true,
+        href: 'competitors',
+        facets: [
+          { kind: 'source', label: 'Job', value: 'SERP overlap' },
+          { kind: 'scope', label: 'Set', value: '12 terms · DE' },
+          { kind: 'mode', label: 'Mode', value: 'Fixture' },
+        ],
+        stats: [
+          { label: 'Rivals', value: '8' },
+          { label: 'Avg overlap', value: '5,6' },
+          { label: 'Best avg rank', value: '6,2', tone: 'neg' },
+          { label: 'High threats', value: '3', tone: 'neg' },
+        ],
+      },
+    ],
+  }
+}
