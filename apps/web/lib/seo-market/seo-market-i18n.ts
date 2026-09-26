@@ -171,6 +171,9 @@ export function localizeSeoChapter(
           ...model.searchBand,
           seedLabel: seedLabelFor(id, t, model.searchBand.seedLabel),
           actionLabel: actionLabelFor(id, t, model.searchBand.actionLabel),
+          suggestionsLabel: model.searchBand.suggestions?.length
+            ? t('seoMarket.search.suggestions')
+            : model.searchBand.suggestionsLabel,
           location:
             !model.searchBand.location ||
             model.searchBand.location === 'Germany' ||

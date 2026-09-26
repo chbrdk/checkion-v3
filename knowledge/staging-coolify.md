@@ -61,9 +61,11 @@ PLEXON_DEMO_COMPANY_ID=…
 DATAFORSEO_API_KEY=<base64 email:password>   # Market SEO live vendor — runtime-only
 CHECKION_LIVE_SEO_MARKET=1                   # force live Market; unset → live when key + DATABASE_URL
 # CHECKION_SEO_MARKET_DAILY_SOFT_CAP=50       # optional soft cost cap
+OPENROUTER_API_KEY=…                         # Jev + Field smart suggestions (Qwen)
+# CHECKION_SEO_FIELD_SUGGEST_MODEL=qwen/qwen3.7-flash
 ```
 
-**Market SEO (DataForSEO):** same product `DATABASE_URL` (schema `seo_*`). Set `DATAFORSEO_API_KEY` + prefer `CHECKION_LIVE_SEO_MARKET=1` on `checkion-v3:main-app` only (not scan-worker). Spec: `specs/domain/seo-dataforseo.md`.
+**Market SEO (DataForSEO):** same product `DATABASE_URL` (schema `seo_*`). Set `DATAFORSEO_API_KEY` + prefer `CHECKION_LIVE_SEO_MARKET=1` on `checkion-v3:main-app` only (not scan-worker). Spec: `specs/domain/seo-dataforseo.md`. Field keyword suggestions use OpenRouter Qwen (`OPENROUTER_API_KEY`); fail closed when unset.
 
 **Knowledge sync:** with `live` + secret, GEO suggest/create pulls the Collection pack; post-GEO CTA publishes `geo_context` / `competitive`. If `NEXT_PLEXON_BASE_URL` is omitted, runtime uses `PLEXON_AUTH_URL`. See `plexon-v3/knowledge/collection-knowledge-sync.md`.
 

@@ -374,6 +374,57 @@ function ChapterSearchBand({
           </ul>
         </div>
       ) : null}
+      {band.suggestions?.length ? (
+        <div
+          className="checkion-seo-chapter__search-recent"
+          aria-label={band.suggestionsLabel ?? t('seoMarket.search.suggestionsAria')}
+        >
+          <Text role="label" as="span" className="checkion-seo-chapter__search-recent-label">
+            {band.suggestionsLabel ?? t('seoMarket.search.suggestions')}
+          </Text>
+          <ul className="checkion-seo-chapter__search-recent-list">
+            {band.suggestions.map((item) => {
+              const parts = seed
+                .split(/[,;]+/)
+                .map((p) => p.trim())
+                .filter(Boolean)
+              const selected = parts.some((p) => p.toLowerCase() === item.toLowerCase())
+              return (
+                <li key={item}>
+                  <Chip
+                    size="sm"
+                    selected={selected}
+                    disabled={busy}
+                    onClick={() => {
+                      if (selected) {
+                        setSeed(
+                          parts
+                            .filter((p) => p.toLowerCase() !== item.toLowerCase())
+                            .join(', '),
+                        )
+                        return
+                      }
+                      setSeed([...parts, item].join(', '))
+                    }}
+                  >
+                    {item}
+                  </Chip>
+                </li>
+              )
+            })}
+            <li>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => setSeed((band.suggestions ?? []).join(', '))}
+              >
+                {t('seoMarket.actions.useSuggestionSet')}
+              </Button>
+            </li>
+          </ul>
+        </div>
+      ) : null}
     </div>
   )
 }

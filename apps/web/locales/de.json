@@ -1048,6 +1048,8 @@
       "location": "Standort",
       "recent": "Zuletzt",
       "recentAria": "Letzte Seeds",
+      "suggestions": "Vorschläge",
+      "suggestionsAria": "Smart Keyword-Vorschläge",
       "savedIfEmpty": "{label} (gespeichert wenn leer)",
       "provenanceAria": "Kapitel-Provenienz",
       "cardProvenanceAria": "Karten-Provenienz",
@@ -1086,6 +1088,7 @@
       "analyze": "Analysieren",
       "trackCheck": "Track & check",
       "search": "Suchen",
+      "useSuggestionSet": "Set übernehmen",
       "track": "Tracken",
       "continue": "Weiter",
       "hide": "Ausblenden",
@@ -1271,7 +1274,10 @@
       "rankRefresh": "Rank-Aktualisierung",
       "rankRefreshDone": "Rank-Aktualisierung fertig",
       "loadingGsc": "GSC-Status wird geladen…",
-      "gscFirstParty": "Nur First-Party Search Console — OAuth folgt später."
+      "gscFirstParty": "Nur First-Party Search Console — OAuth folgt später.",
+      "fieldSuggest": "Smart Suggestions",
+      "fieldSuggestMeta": "Qwen · OpenRouter",
+      "fieldSuggestHint": "Schlägt 5–8 SERP-Keywords für Field vor. Chips prüfen, Set übernehmen, dann Analysieren."
     }
   }
 }

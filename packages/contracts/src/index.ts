@@ -1081,6 +1081,16 @@ export interface SeoCompetitorsResult extends SeoMarketEnvelope {
   items: SeoCompetitorRow[]
 }
 
+/** Field smart keyword suggestions (OpenRouter Qwen). */
+export interface SeoFieldSuggestResult {
+  projectId: string
+  domain: string
+  keywords: string[]
+  model: string
+  stubbed: boolean
+  fetchedAt: string
+}
+
 export interface SeoBacklinkReferringPage {
   id: string
   title: string | null
@@ -1440,6 +1450,9 @@ export interface SeoChapterSearchBand {
   /** When true, primary action runs with empty seed (Competitors → saved keyword set). */
   allowEmptySeed?: boolean
   recent?: string[]
+  /** AI / smart suggestion chips (Field). Click adds to seed; not auto-Analyze. */
+  suggestions?: string[]
+  suggestionsLabel?: string
   note?: string
   locales?: Array<{ value: string; label: string }>
 }

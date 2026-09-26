@@ -38,7 +38,7 @@ export async function requireProjectSeoApi(
 }
 
 export function projectSeoErrorResponse(e: unknown): NextResponse {
-  const err = e as Error & { code?: string }
+  const err = e as Error & { code?: string; name?: string }
   if (err.message === 'not_found' || err.message === 'project has no domain') {
     return NextResponse.json(
       { error: err.message === 'not_found' ? 'not_found' : 'invalid_body', detail: err.message },
@@ -55,6 +55,16 @@ export function projectSeoErrorResponse(e: unknown): NextResponse {
     return NextResponse.json(
       { error: 'cost_soft_cap', detail: err.message },
       { status: 429 },
+    )
+  }
+  if (err.name === 'FieldSuggestError' || err.code === 'unconfigured') {
+    const status = err.code === 'unconfigured' ? 503 : err.code === 'invalid' ? 502 : 502
+    return NextResponse.json(
+      {
+        error: err.code === 'unconfigured' ? 'unconfigured' : 'vendor_error',
+        detail: err.message || 'Field suggest failed',
+      },
+      { status },
     )
   }
   return NextResponse.json(

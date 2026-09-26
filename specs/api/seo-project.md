@@ -21,6 +21,7 @@ Base: `/api/projects/:projectId/seo`. Auth + Access Model B on project.
 | GET | `/rank-configs/:configId` | Config + keywords + latest run/snapshots |
 | POST | `/rank-configs/:configId/refresh` | Queue/run rank check |
 | POST | `/competitors` | `{ keywords[] }` — SERP overlap (may use saved keywords) |
+| POST | `/competitors/suggest` | Field smart keyword suggestions via OpenRouter Qwen — `{ locale?, seedHint? }` → `{ keywords[], model, stubbed }` |
 | GET | `/gsc` | Status + stub/fixture performance |
 
 Common: responses include `source`, `stubbed`, `fetchedAt` where market data is returned.

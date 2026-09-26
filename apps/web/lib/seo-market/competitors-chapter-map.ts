@@ -109,6 +109,7 @@ export function buildCompetitorsChapterModel(input: {
   locale?: string
   location?: string
   recent?: string[]
+  suggestions?: string[] | null
   result?: SeoCompetitorsResult | null
   /** Optional link competitors from latest backlink snapshot (secondary aside). */
   linkCompetitors?: SeoBacklinkCompetitorRow[] | null
@@ -210,6 +211,8 @@ export function buildCompetitorsChapterModel(input: {
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
       recent: input.recent ?? [],
+      suggestions: input.suggestions?.length ? input.suggestions : undefined,
+      suggestionsLabel: input.suggestions?.length ? 'Suggestions' : undefined,
       locales: base.searchBand?.locales,
     },
     stats: hasLive

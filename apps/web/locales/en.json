@@ -1048,6 +1048,8 @@
       "location": "Location",
       "recent": "Recent",
       "recentAria": "Recent seeds",
+      "suggestions": "Suggestions",
+      "suggestionsAria": "Smart keyword suggestions",
       "savedIfEmpty": "{label} (saved if empty)",
       "provenanceAria": "Chapter provenance",
       "cardProvenanceAria": "Card provenance",
@@ -1086,6 +1088,7 @@
       "analyze": "Analyze",
       "trackCheck": "Track & check",
       "search": "Search",
+      "useSuggestionSet": "Use set",
       "track": "Track",
       "continue": "Continue",
       "hide": "Hide",
@@ -1271,7 +1274,10 @@
       "rankRefresh": "Rank refresh",
       "rankRefreshDone": "Rank refresh done",
       "loadingGsc": "Loading GSC status…",
-      "gscFirstParty": "First-party Search Console only — OAuth wiring lands later."
+      "gscFirstParty": "First-party Search Console only — OAuth wiring lands later.",
+      "fieldSuggest": "Smart suggestions",
+      "fieldSuggestMeta": "Qwen · OpenRouter",
+      "fieldSuggestHint": "Proposes 5–8 SERP keywords for Field. Review chips, use set, then Analyze."
     }
   }
 }

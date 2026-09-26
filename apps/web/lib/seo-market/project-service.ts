@@ -2,6 +2,7 @@ import type {
   SeoBacklinkSnapshot,
   SeoCompetitorsResult,
   SeoDomainSnapshot,
+  SeoFieldSuggestResult,
   SeoKeywordIdea,
   SeoProjectOverview,
   SeoRankConfig,
@@ -23,6 +24,10 @@ import {
   fixtureKeywordsResult,
   fixtureRankSnapshots,
 } from './fixtures'
+import {
+  fixtureFieldSuggestions,
+  suggestFieldKeywordsViaQwen,
+} from './field-suggest'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
 import {
@@ -253,6 +258,51 @@ export async function projectCompetitors(
   } catch (e) {
     if ((e as { code?: string }).code === 'cost_soft_cap') throw e
     throw e
+  }
+}
+
+export async function projectSuggestFieldKeywords(input: {
+  projectId: string
+  locale?: string
+  seedHint?: string
+}): Promise<SeoFieldSuggestResult> {
+  const project = await getProject(input.projectId)
+  if (!project?.domain) throw new Error('project has no domain')
+  const domain = normalizeDomain(project.domain)
+  const saved = (await listSavedKeywords(input.projectId))
+    .slice(0, 8)
+    .map((k) => k.keyword)
+  const fetchedAt = new Date().toISOString()
+
+  if (!shouldRunLiveSeoMarket()) {
+    return {
+      projectId: input.projectId,
+      domain,
+      keywords: fixtureFieldSuggestions({
+        domain,
+        projectName: project.name,
+        locale: input.locale,
+      }),
+      model: 'fixture',
+      stubbed: true,
+      fetchedAt,
+    }
+  }
+
+  const { keywords, model } = await suggestFieldKeywordsViaQwen({
+    domain,
+    projectName: project.name || domain,
+    locale: input.locale,
+    seedHint: input.seedHint,
+    savedKeywords: saved,
+  })
+  return {
+    projectId: input.projectId,
+    domain,
+    keywords,
+    model,
+    stubbed: false,
+    fetchedAt,
   }
 }
 

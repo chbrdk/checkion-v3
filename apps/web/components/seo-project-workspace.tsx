@@ -444,6 +444,7 @@ export function SeoProjectWorkspace({
             locale: query.locale,
             location: query.location,
             recent,
+            suggestions: compModel.searchBand?.suggestions,
             result: data,
             linkCompetitors: backlinks[0]?.competitors ?? null,
             t,
@@ -455,8 +456,51 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [backlinks, compModel.searchBand?.recent, domain, projectId, projectName, t],
+    [backlinks, compModel.searchBand?.recent, compModel.searchBand?.suggestions, domain, projectId, projectName, t],
   )
+
+  const runCompetitorsSuggest = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(paths.routes.apiProjectSeoCompetitorsSuggest(projectId), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          locale: compModel.searchBand?.locale ?? 'de',
+          seedHint: compModel.searchBand?.seed ?? '',
+        }),
+      })
+      const data = (await res.json()) as {
+        keywords?: string[]
+        detail?: string
+        error?: string
+      }
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+      }
+      const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      setCompModel((prev) => ({
+        ...prev,
+        searchBand: {
+          seed: prev.searchBand?.seed ?? '',
+          locale: prev.searchBand?.locale ?? 'de',
+          location: prev.searchBand?.location ?? t('seoMarket.locations.germany'),
+          seedLabel: prev.searchBand?.seedLabel,
+          actionLabel: prev.searchBand?.actionLabel,
+          allowEmptySeed: prev.searchBand?.allowEmptySeed,
+          recent: prev.searchBand?.recent,
+          locales: prev.searchBand?.locales,
+          suggestions: keywords,
+          suggestionsLabel: t('seoMarket.search.suggestions'),
+        },
+      }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'request failed')
+    } finally {
+      setBusy(false)
+    }
+  }, [compModel.searchBand?.locale, compModel.searchBand?.seed, projectId, t])
 
   useEffect(() => {
     void (async () => {
@@ -740,6 +784,25 @@ export function SeoProjectWorkspace({
           model={compModel}
           searchBusy={busy}
           onSearch={runCompetitorsAnalyze}
+          workbench={
+            <div className="checkion-seo-project__stack">
+              <SectionChrome
+                title={t('seoMarket.workspace.workbench')}
+                quiet
+                meta={t('seoMarket.workspace.fieldSuggestMeta')}
+              />
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void runCompetitorsSuggest()}
+              >
+                {t('seoMarket.workspace.fieldSuggest')}
+              </Button>
+              <Text role="meta" as="p">
+                {t('seoMarket.workspace.fieldSuggestHint')}
+              </Text>
+            </div>
+          }
         />
       ) : null}
 

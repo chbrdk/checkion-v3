@@ -81,7 +81,14 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 
 **Keywords depth (research IA):** Search band (seed · locale · location · Research + recent seeds) → KPI (ideas · avg vol · CPC · comp) → **split**: main **idea ledger** (Volume · CPC · Comp · **KD/Score** · Intent chips · intent filters · pagination) · aside **Search demand** `SeriesChart` + **SERP snapshot** dual-line list. KD from Labs bulk difficulty (best-effort). No rank Δ / prev / device columns (those live on Ranks).
 
-**Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors`; merges into the chapter model.
+**Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → optional **Smart suggestions** (Qwen via OpenRouter) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors`; suggestions post `POST /api/projects/:id/seo/competitors/suggest`.
+
+### Field smart suggestions (Qwen)
+- **Purpose:** Propose 5–8 SERP-capable keywords for the Field keyword set (commercial / informational intents). Never pure brand-only stuffing; exclude the Collection domain brand as the sole term.
+- **Inputs (server):** project domain + name, locale, optional saved Research keywords (up to 8), optional current seed hint.
+- **Vendor:** OpenRouter chat completions · default model `qwen/qwen3.7-flash` (override `CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed with `503` when unconfigured — no invented keywords.
+- **Output:** `{ keywords: string[], model, stubbed }` — UI shows suggestion chips under the search band; chip adds to seed; **Use set** fills the seed and leaves Analyze to the user.
+- **Cost:** Not DataForSEO units; no Market soft-cap debit. Bound tokens; JSON-object response validated locally.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 
