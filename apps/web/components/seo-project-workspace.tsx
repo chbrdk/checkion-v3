@@ -684,13 +684,14 @@ export function SeoProjectWorkspace({
           const list = data.configs as SeoRankConfig[]
           setConfigs(list)
           const primary = list[0]
-          if (primary?.latest?.length) {
+          if (primary) {
             setRankModel(
               buildRankChapterModel({
                 projectId,
                 projectName,
                 domain,
                 config: primary,
+                seed: primary.keywords.slice(0, 3).join(', ') || brandSeedFromHost(domain),
                 recent: primary.keywords.slice(0, 6),
                 t,
               }),

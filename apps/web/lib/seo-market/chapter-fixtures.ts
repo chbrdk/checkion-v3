@@ -997,12 +997,17 @@ export function fixtureSeoChapter(
           { kind: 'mode', label: 'Mode', value: 'Fixture' },
         ],
         searchBand: {
-          seed: 'acme platform',
+          seed: brandSeedFromHost(domain),
           seedLabel: 'Add to track',
           actionLabel: 'Track & check',
           locale: 'de',
           location: 'Germany',
-          recent: ['acme platform', 'seo workspace', 'rank tracking', 'backlink pulse'],
+          recent: [
+            brandSeedFromHost(domain),
+            `${brandSeedFromHost(domain)} platform`,
+            'seo workspace',
+            'rank tracking',
+          ],
           locales: [
             { value: 'de', label: 'DE' },
             { value: 'en', label: 'EN' },
@@ -1642,6 +1647,8 @@ export function emptySeoChapter(
   t?: Translator,
 ): SeoChapterViewModel {
   const rich = fixtureSeoChapter(chapter, input)
+  const domain = (input?.domain ?? rich.domain ?? 'example.com').trim()
+  const brandSeed = brandSeedFromHost(domain)
   const stripChart = (
     chart: NonNullable<SeoChapterViewModel['charts']>[number],
   ): NonNullable<SeoChapterViewModel['charts']>[number] => {
@@ -1660,9 +1667,12 @@ export function emptySeoChapter(
   const shell: SeoChapterViewModel = {
     ...rich,
     lede: undefined,
-    facets: rich.facets.map((f) =>
-      f.kind === 'mode' ? { ...f, value: 'Empty' } : f,
-    ),
+    facets: rich.facets.map((f) => {
+      if (f.kind === 'mode') return { ...f, value: 'Empty' }
+      // Never leak fixture Acme scope/time into the live product shell.
+      if (f.kind === 'scope' || f.kind === 'time') return { ...f, value: '—' }
+      return f
+    }),
     stats: rich.stats?.map((s) => ({ label: s.label, value: '—' })),
     charts: undefined,
     rows: [],
@@ -1672,7 +1682,12 @@ export function emptySeoChapter(
     searchBand: rich.searchBand
       ? {
           ...rich.searchBand,
+          // Domain brand — never keep fixture seeds like "acme platform".
+          seed: chapter === 'competitors' ? '' : brandSeed,
           recent: [],
+          suggestions: undefined,
+          suggestionsLabel: undefined,
+          suggestionsMode: undefined,
         }
       : undefined,
     aside: rich.aside

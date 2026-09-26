@@ -6,6 +6,7 @@ import type {
 } from '@checkion-v3/contracts'
 import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
+import { brandSeedFromHost } from './host-utils'
 import { localizeSeoChapter } from './seo-market-i18n'
 
 function pathFromUrl(url: string | null | undefined, domain: string): string {
@@ -18,12 +19,6 @@ function pathFromUrl(url: string | null | undefined, domain: string): string {
   }
 }
 
-function inventPrevious(rank: number | null): number | null {
-  if (rank == null) return null
-  const delta = ((rank * 3) % 7) - 3
-  return Math.max(1, rank - delta)
-}
-
 function fmtChecked(iso: string | null | undefined): string {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -31,13 +26,18 @@ function fmtChecked(iso: string | null | undefined): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+/**
+ * Map live snapshots → ledger rows.
+ * Prev / Δ only from real prior checks (`snapshot.previous`) — never invent movement.
+ */
 export function mapRankSnapshotsToRows(
   snapshots: SeoRankSnapshot[],
   domain: string,
 ): SeoChapterRow[] {
   return snapshots.map((snap, i) => {
     const rank = snap.rank
-    const prev = inventPrevious(rank)
+    const prev =
+      snap.previous === undefined ? null : snap.previous
     let change = '—'
     let tags: string[] = []
     let tone: 'pos' | 'neg' | undefined
@@ -52,8 +52,8 @@ export function mapRankSnapshotsToRows(
         tags = ['down']
         tone = 'neg'
       }
-      if (rank <= 10) tags = [...tags, 'top10']
     }
+    if (rank != null && rank <= 10) tags = [...tags, 'top10']
     return {
       id: `live-rank-${i}-${snap.keyword}`,
       tags,
@@ -145,7 +145,11 @@ export function buildRankChapterModel(input: {
   const declined = rows.filter((r) => r.tags?.includes('down')).length
   const top10 = rows.filter((r) => r.tags?.includes('top10')).length
   const movers = moversFromRows(rows)
-  const seed = input.seed || base.searchBand?.seed || 'brand'
+  const brand = brandSeedFromHost(input.domain)
+  const seed =
+    input.seed?.trim() ||
+    (cfg?.keywords?.length ? cfg.keywords.slice(0, 3).join(', ') : '') ||
+    brand
   const hasLive = snapshots.length > 0
 
   const model: SeoChapterViewModel = {
@@ -174,7 +178,7 @@ export function buildRankChapterModel(input: {
       actionLabel: 'Track & check',
       locale: input.locale ?? base.searchBand?.locale ?? 'de',
       location: input.location ?? base.searchBand?.location ?? 'Germany',
-      recent: input.recent ?? [],
+      recent: input.recent ?? cfg?.keywords?.slice(0, 6) ?? [],
       suggestions: input.suggestions?.length ? input.suggestions : undefined,
       suggestionsLabel: input.suggestions?.length ? 'Suggestions' : undefined,
       suggestionsMode: input.suggestions?.length ? 'toggle-set' : undefined,
@@ -218,14 +222,11 @@ export function buildRankChapterModel(input: {
         title: 'Biggest movers',
         meta: movers.length
           ? `${movers.length} movers · this check`
-          : 'No movers yet',
-        columns: base.aside?.ledger?.columns ?? [
-          { key: 'keyword', label: 'Tracked', dual: true },
-          { key: 'change', label: 'Δ', align: 'end' },
-        ],
+          : 'No movement yet · need a prior check',
         rows: movers,
       },
     },
   }
+
   return input.t ? localizeSeoChapter(model, input.t) : model
 }

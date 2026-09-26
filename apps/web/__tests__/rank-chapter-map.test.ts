@@ -5,7 +5,7 @@ import {
 } from '../lib/seo-market/rank-chapter-map'
 
 describe('rank chapter map', () => {
-  it('maps snapshots into dual rows with movement tags', () => {
+  it('maps snapshots without inventing previous / movement', () => {
     const rows = mapRankSnapshotsToRows(
       [
         {
@@ -27,12 +27,30 @@ describe('rank chapter map', () => {
     )
     expect(rows).toHaveLength(2)
     expect(rows[0]!.cells.position).toBe('4')
+    expect(rows[0]!.cells.previous).toBe('—')
+    expect(rows[0]!.cells.change).toBe('—')
+    expect(rows[0]!.tags).toContain('top10')
+    expect(rows[0]!.tags).not.toContain('up')
     expect(rows[0]!.cells.volume).toBeUndefined()
-    expect(rows[0]!.cells.checked).toBeTruthy()
     expect(typeof rows[0]!.cells.keyword === 'object').toBe(true)
-    expect(rows.some((r) => r.tags?.includes('top10') || r.tags?.includes('up') || r.tags?.includes('down'))).toBe(
-      true,
+  })
+
+  it('tags real improvements from prior check', () => {
+    const rows = mapRankSnapshotsToRows(
+      [
+        {
+          keyword: 'acme platform',
+          rank: 4,
+          previous: 8,
+          url: 'https://acme.example/',
+          fetchedAt: new Date().toISOString(),
+        },
+      ],
+      'acme.example',
     )
+    expect(rows[0]!.cells.previous).toBe('8')
+    expect(rows[0]!.cells.change).toBe('▲ 4')
+    expect(rows[0]!.tags).toEqual(expect.arrayContaining(['up', 'top10']))
   })
 
   it('builds a live-ready rank chapter from a config', () => {
@@ -62,12 +80,14 @@ describe('rank chapter map', () => {
           {
             keyword: 'acme platform',
             rank: 4,
+            previous: 6,
             url: 'https://acme.example/',
             fetchedAt: new Date().toISOString(),
           },
           {
             keyword: 'seo workspace',
             rank: 12,
+            previous: 10,
             url: 'https://acme.example/seo',
             fetchedAt: new Date().toISOString(),
           },

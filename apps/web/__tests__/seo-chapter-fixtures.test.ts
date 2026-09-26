@@ -35,6 +35,16 @@ describe('seo chapter fixtures', () => {
       expect(model.stats?.every((s) => s.value === '—')).toBe(true)
       expect(model.aside?.ledger?.rows ?? []).toEqual([])
       expect(model.facets.some((f) => f.kind === 'mode' && f.value === 'Empty')).toBe(true)
+      expect(model.facets.every((f) => f.kind !== 'scope' || f.value === '—')).toBe(true)
+      if (model.searchBand) {
+        expect(model.searchBand.seed.toLowerCase()).not.toContain('acme')
+        expect(model.searchBand.recent).toEqual([])
+        if (chapter === 'competitors') {
+          expect(model.searchBand.seed).toBe('')
+        } else {
+          expect(model.searchBand.seed).toBe('live')
+        }
+      }
     }
   })
 

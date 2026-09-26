@@ -520,25 +520,8 @@ export async function listRankConfigs(projectId: string): Promise<SeoRankConfig[
     .where(eq(seoRankConfigs.projectId, projectId))
   const out: SeoRankConfig[] = []
   for (const c of configs) {
-    const kws = await db
-      .select()
-      .from(seoRankKeywords)
-      .where(eq(seoRankKeywords.configId, c.id))
-    out.push({
-      id: c.id,
-      projectId: c.projectId,
-      domain: c.domain,
-      locationCode: c.locationCode,
-      languageCode: c.languageCode,
-      schedule: c.schedule as SeoRankSchedule,
-      isActive: Boolean(c.isActive),
-      keywords: kws.map((k) => k.keyword),
-      lastCheckedAt: c.lastCheckedAt,
-      nextCheckAt: c.nextCheckAt,
-      createdAt: c.createdAt.toISOString(),
-      updatedAt: c.updatedAt.toISOString(),
-      latest: [],
-    })
+    const full = await getRankConfig(c.id)
+    if (full) out.push(full)
   }
   return out
 }
@@ -564,9 +547,19 @@ export async function getRankConfig(configId: string): Promise<SeoRankConfig | n
     .from(seoRankRuns)
     .where(eq(seoRankRuns.configId, c.id))
     .orderBy(desc(seoRankRuns.startedAt))
-    .limit(1)
+    .limit(2)
   let latest: SeoRankSnapshot[] = []
   let latestRunStatus = null as SeoRankConfig['latestRunStatus']
+  const previousByKeyword = new Map<string, number | null>()
+  if (runs[1]) {
+    const prevSnaps = await db
+      .select()
+      .from(seoRankSnapshots)
+      .where(eq(seoRankSnapshots.runId, runs[1].id))
+    for (const s of prevSnaps) {
+      previousByKeyword.set(s.keyword, s.position)
+    }
+  }
   if (runs[0]) {
     latestRunStatus = runs[0].status as SeoRankConfig['latestRunStatus']
     const snaps = await db
@@ -579,6 +572,8 @@ export async function getRankConfig(configId: string): Promise<SeoRankConfig | n
       url: s.url,
       fetchedAt: s.checkedAt,
       device: s.device as 'desktop' | 'mobile',
+      previous:
+        previousByKeyword.has(s.keyword) ? previousByKeyword.get(s.keyword)! : null,
     }))
   }
   return {
@@ -616,9 +611,13 @@ export async function completeRankRun(input: {
   if (!isDatabaseConfigured()) {
     const cfg = mem.configs.find((c) => c.id === input.configId)
     if (cfg) {
+      const prior = new Map(cfg.latest.map((s) => [s.keyword, s.rank] as const))
       cfg.lastCheckedAt = now
       cfg.nextCheckAt = nextCheckAt
-      cfg.latest = input.snapshots
+      cfg.latest = input.snapshots.map((s) => ({
+        ...s,
+        previous: prior.has(s.keyword) ? prior.get(s.keyword)! : null,
+      }))
       cfg.latestRunStatus = 'completed'
       cfg.updatedAt = now
     }

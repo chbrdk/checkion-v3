@@ -1257,6 +1257,8 @@ export interface SeoRankSnapshot {
   url: string | null
   fetchedAt: string
   device?: 'desktop' | 'mobile'
+  /** Prior check position for the same keyword (null = first check / unknown). */
+  previous?: number | null
 }
 
 export interface SeoRankConfig {
