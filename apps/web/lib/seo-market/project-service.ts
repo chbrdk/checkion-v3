@@ -351,21 +351,16 @@ async function projectSuggestMarketKeywords(input: {
     }
   }
 
-  // Ranks: only short-circuit on a clean Market pool (never host/URL junk).
-  // Always prefer pack/saved/fixtures over raw domain tops alone.
+  // Ranks: only short-circuit when saved Research already has a real track set.
+  // Never short-circuit on fixture/address noise — call Qwen (or vertical fixtures).
   if (input.surface === 'ranks') {
-    const cleanMarket = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(packSeeds, saved),
-      domain,
-      'ranks',
-      8,
-    )
-    if (cleanMarket.length >= 5) {
+    const cleanSaved = sanitizeSuggestKeywords(saved, domain, 'ranks', 8)
+    if (cleanSaved.length >= 5) {
       return {
         projectId: input.projectId,
         domain,
-        keywords: cleanMarket.slice(0, 8),
-        model: enrichmentHasSignal(knowledge) ? 'market-data+knowledge' : 'market-data',
+        keywords: cleanSaved.slice(0, 8),
+        model: 'saved-research',
         stubbed: false,
         fetchedAt,
         surface: 'ranks',
@@ -383,12 +378,13 @@ async function projectSuggestMarketKeywords(input: {
       locale: input.locale,
       seedHint,
       savedKeywords: saved.slice(0, 8),
-      candidateKeywords: groundedPool,
+      candidateKeywords: mergeKeywordCandidates(packSeeds, saved, domainTops),
       knowledge,
     })
 
+    // Qwen first, then vertical fixtures — pack seeds last (often noisy).
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(keywords, groundedPool, groundedFixtures),
+      mergeKeywordCandidates(keywords, groundedFixtures, packSeeds, saved),
       domain,
       input.surface,
       8,
@@ -399,7 +395,7 @@ async function projectSuggestMarketKeywords(input: {
         projectId: input.projectId,
         domain,
         keywords: groundedFixtures.slice(0, 8),
-        model: 'fixture-fallback',
+        model: 'vertical-fallback',
         stubbed: false,
         fetchedAt,
         surface: input.surface,
@@ -417,7 +413,7 @@ async function projectSuggestMarketKeywords(input: {
     }
   } catch {
     const fallback = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(groundedPool, groundedFixtures),
+      mergeKeywordCandidates(groundedFixtures, packSeeds, saved),
       domain,
       input.surface,
       8,
@@ -427,7 +423,7 @@ async function projectSuggestMarketKeywords(input: {
         projectId: input.projectId,
         domain,
         keywords: fallback,
-        model: 'knowledge-fallback',
+        model: 'vertical-fallback',
         stubbed: false,
         fetchedAt,
         surface: input.surface,

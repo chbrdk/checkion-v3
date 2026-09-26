@@ -94,8 +94,9 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 
 **Grounding (not generic / not `www`):**
 - Always load Collection Knowledge Pack when federation is live (`profile`, `research_brief`, `geo_context`, `competitive`) plus project name/description, saved Research, and latest Domain top keywords.
-- Prefer pack `seedQueries` / `queryThemes` / research `topics` (and domain tops) as candidates before calling Qwen; Qwen only expands/refines with industry + competitors + audience themes.
-- Reject junk tokens (`www`, `http`, bare TLDs). Never emit bare brand alone on Field/Ranks. Domain normalize strips leading `www.`.
+- Infer a vertical seed pool (e.g. Vaillant → Heizung/Wärmepumpe category + brand×product). Prefer that over brand+vergleich filler.
+- Prefer pack `seedQueries` / themes / topics only when they look like search queries; reject addresses, hosts, search-engine names, and weak `brand + vergleich|preis|alternative` templates.
+- Qwen expands/refines with industry context; on failure fall back to vertical seeds — never Acme or address chips. Domain normalize strips leading `www.`.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 

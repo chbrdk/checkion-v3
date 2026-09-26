@@ -2,7 +2,9 @@ import type { GeoKnowledgeEnrichment } from '../plexon-knowledge-pack'
 import { paths } from '../paths'
 import {
   brandSeedFromHost,
+  displayBrandFromHost,
   isJunkKeywordToken,
+  isTrackWorthyKeyword,
   looksLikeSearchQuery,
 } from './host-utils'
 
@@ -37,24 +39,18 @@ function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null
 }
 
-function brandBitsFor(domain: string): Set<string> {
-  const brand = brandSeedFromHost(domain)
-  return new Set(
-    [brand, domain.replace(/^www\./, '').split('.')[0] ?? '']
-      .flatMap((s) => [s, ...s.split(/[-_]/g)])
-      .map((s) => s.trim().toLowerCase())
-      .filter((s) => s.length > 1 && !isJunkKeywordToken(s)),
-  )
-}
-
-/** Drop junk / bare-brand tokens. Research may keep brand once as a seed. */
+/**
+ * Drop junk / addresses / weak brand templates.
+ * Research may keep the bare brand once as a seed.
+ */
 export function sanitizeSuggestKeywords(
   keywords: string[],
   domain: string,
   surface: SeoSuggestSurface,
   max = 8,
 ): string[] {
-  const bits = brandBitsFor(domain)
+  const brand = brandSeedFromHost(domain).toLowerCase()
+  const brandShort = displayBrandFromHost(domain).toLowerCase()
   const host = domain.replace(/^www\./i, '').toLowerCase()
   const out: string[] = []
   const seen = new Set<string>()
@@ -66,11 +62,16 @@ export function sanitizeSuggestKeywords(
     if (!k || k.length > 80) continue
     const lower = k.toLowerCase()
     if (seen.has(lower)) continue
-    if (!looksLikeSearchQuery(k) || lower === host) continue
-    if (bits.has(lower)) {
+    if (lower === host) continue
+    if (lower === brand || lower === brandShort) {
       if (surface !== 'research' || brandKept) continue
       brandKept = true
+      seen.add(lower)
+      out.push(k)
+      if (out.length >= max) break
+      continue
     }
+    if (!isTrackWorthyKeyword(k, domain)) continue
     seen.add(lower)
     out.push(k)
     if (out.length >= max) break
@@ -110,24 +111,135 @@ export function candidatesFromKnowledge(
   )
 }
 
-function nameTokens(projectName: string | undefined): string[] {
-  if (!projectName?.trim()) return []
-  return projectName
-    .trim()
-    .split(/[\s|/·—–-]+/)
-    .map((t) => t.trim())
-    .filter(
-      (t) =>
-        t.length > 2 &&
-        !isJunkKeywordToken(t) &&
-        !/^(gmbh|ag|ltd|inc|the|and|und|seo|group)$/i.test(t),
-    )
-    .slice(0, 3)
+type VerticalSeeds = {
+  label: string
+  category: string[]
+  brandProduct: (brand: string) => string[]
+}
+
+function heatingVertical(locale: 'de' | 'en'): VerticalSeeds {
+  if (locale === 'de') {
+    return {
+      label: 'Heizung / Wärmepumpe',
+      category: [
+        'wärmepumpe',
+        'gastherme',
+        'heizung modernisieren',
+        'durchlauferhitzer',
+        'förderung wärmepumpe',
+        'hybrid heizung',
+        'heizungsaustausch',
+      ],
+      brandProduct: (brand) => [
+        `${brand} wärmepumpe`,
+        `${brand} therme`,
+        `${brand} heizung`,
+      ],
+    }
+  }
+  return {
+    label: 'Heating / heat pump',
+    category: [
+      'heat pump',
+      'boiler replacement',
+      'home heating upgrade',
+      'tankless water heater',
+      'heat pump grants',
+      'hybrid heating',
+    ],
+    brandProduct: (brand) => [
+      `${brand} heat pump`,
+      `${brand} boiler`,
+      `${brand} heating`,
+    ],
+  }
+}
+
+function genericVertical(locale: 'de' | 'en', categoryNoun: string): VerticalSeeds {
+  const noun = categoryNoun.trim() || (locale === 'de' ? 'lösung' : 'software')
+  if (locale === 'de') {
+    return {
+      label: noun,
+      category: [
+        `${noun}`,
+        `${noun} anbieter`,
+        `${noun} kosten`,
+        `beste ${noun}`,
+        `${noun} für unternehmen`,
+      ],
+      brandProduct: (brand) => [`${brand} ${noun}`, `${brand} ${noun} test`],
+    }
+  }
+  return {
+    label: noun,
+    category: [
+      noun,
+      `best ${noun}`,
+      `${noun} pricing`,
+      `${noun} for business`,
+      `${noun} providers`,
+    ],
+    brandProduct: (brand) => [`${brand} ${noun}`, `${brand} ${noun} review`],
+  }
 }
 
 /**
- * Deterministic fixture suggestions when live SEO Market is off / Qwen returns junk.
- * Grounded in domain brand + project name / industry — never heating or search-engine fixtures.
+ * Infer a vertical seed pool from knowledge / domain / project name.
+ * Known heating brands (e.g. Vaillant) map to real category queries — not "brand vergleich".
+ */
+export function inferVerticalSeeds(input: {
+  domain: string
+  projectName?: string
+  locale?: string
+  knowledge?: GeoKnowledgeEnrichment | null
+}): VerticalSeeds {
+  const locale = (input.locale ?? 'de').toLowerCase().startsWith('de') ? 'de' : 'en'
+  const hay = [
+    input.domain,
+    input.projectName ?? '',
+    input.knowledge?.profile?.industry ?? '',
+    input.knowledge?.profile?.tagline ?? '',
+    input.knowledge?.competitive?.category ?? '',
+    ...(input.knowledge?.researchBrief?.topics ?? []),
+    ...(input.knowledge?.geoContext?.queryThemes ?? []),
+  ]
+    .join(' ')
+    .toLowerCase()
+
+  if (
+    /vaillant|wärmepumpe|waermepumpe|heat\s*pump|heizung|therme|boiler|heating|hvac|sanitär|sanitaer/.test(
+      hay,
+    )
+  ) {
+    return heatingVertical(locale)
+  }
+
+  const industry =
+    input.knowledge?.profile?.industry?.trim() ||
+    input.knowledge?.competitive?.category?.trim() ||
+    ''
+  if (industry) return genericVertical(locale, industry)
+
+  // Last resort: project name token that isn't the brand
+  const brandShort = displayBrandFromHost(input.domain).toLowerCase()
+  const token =
+    (input.projectName ?? '')
+      .split(/[\s|/·—–-]+/)
+      .map((t) => t.trim())
+      .find(
+        (t) =>
+          t.length > 3 &&
+          !isJunkKeywordToken(t) &&
+          t.toLowerCase() !== brandShort &&
+          !/^(gmbh|ag|ltd|inc|the|and|und|seo|group|project|projekt)$/i.test(t),
+      ) ?? (locale === 'de' ? 'produkt' : 'product')
+
+  return genericVertical(locale, token)
+}
+
+/**
+ * Deterministic track-worthy suggestions (live off / Qwen fallback).
+ * Category + brand×product — never "Marke vergleich" / addresses.
  */
 export function fixtureFieldSuggestions(input: {
   domain: string
@@ -136,72 +248,46 @@ export function fixtureFieldSuggestions(input: {
   surface?: SeoSuggestSurface
   knowledge?: GeoKnowledgeEnrichment | null
 }): string[] {
-  const brand = brandSeedFromHost(input.domain)
-  const loc = (input.locale ?? 'de').toLowerCase().startsWith('de') ? 'de' : 'en'
+  const brand = displayBrandFromHost(input.domain)
   const surface = input.surface ?? 'field'
-  const industry =
-    input.knowledge?.profile?.industry?.trim() ||
-    input.knowledge?.competitive?.category?.trim() ||
-    ''
+  const vertical = inferVerticalSeeds(input)
   const fromPack = candidatesFromKnowledge(input.knowledge)
-  const tokens = nameTokens(input.projectName)
-  const category = industry || tokens[0] || brand
-
-  const grounded =
-    loc === 'de'
-      ? [
-          surface === 'research' ? brand : null,
-          `${brand} ${category}`.trim(),
-          `${category} vergleich`,
-          `${category} alternative`,
-          `${brand} erfahrung`,
-          `${category} kosten`,
-          `${brand} test`,
-          industry ? `${industry} anbieter` : `${brand} preis`,
-          tokens[1] ? `${tokens[1]} ${brand}` : null,
-        ]
-      : [
-          surface === 'research' ? brand : null,
-          `${brand} ${category}`.trim(),
-          `${category} vs competitors`,
-          `${category} alternative`,
-          `${brand} review`,
-          `${category} pricing`,
-          `${brand} best`,
-          industry ? `${industry} providers` : `${brand} pricing`,
-          tokens[1] ? `${tokens[1]} ${brand}` : null,
-        ]
+  const seeds = [
+    surface === 'research' ? brandSeedFromHost(input.domain) : null,
+    ...vertical.category,
+    ...vertical.brandProduct(brand),
+  ].filter(Boolean) as string[]
 
   return sanitizeSuggestKeywords(
-    mergeKeywordCandidates(fromPack, grounded.filter(Boolean) as string[]),
+    mergeKeywordCandidates(fromPack, seeds),
     input.domain,
     surface,
-    7,
+    8,
   )
 }
 
 function systemPromptFor(surface: SeoSuggestSurface, locale: string): string {
   const lang = locale.startsWith('de') ? 'German' : 'English'
   const ground = [
-    'Ground every keyword in the provided industry, audiences, competitors, and domain — never invent unrelated verticals.',
-    'Never return URLs, hostnames, www, http, google, yahoo, bing, or other search-engine names.',
-    'Never return the brand name alone (except research may include brand once as a seed).',
-    'Keywords must be human search queries a buyer would type — not domains.',
+    'Return real search queries a buyer would type — product/category terms, brand+product, commercial intent.',
+    'Never return URLs, hostnames, www, addresses, street names, or search-engine names.',
+    'Never return weak templates like "brand vergleich", "brand preis", "brand alternative", or "brand brand".',
+    'Prefer mix: ~half category terms WITHOUT brand, ~half brand+product. Not slogans.',
   ].join(' ')
   if (surface === 'research') {
     return [
-      'You suggest SEO research seeds (single queries to expand into keyword ideas).',
+      'You suggest SEO research seeds (queries to expand into keyword ideas).',
       'Return JSON only: {"keywords":["..."]} with 5 to 8 strings.',
-      'Prefer short, searchable seeds (brand+intent, category, problem, audience need). Not slogans.',
       ground,
+      'Bare brand at most once.',
       `Language of keywords: ${lang}.`,
     ].join(' ')
   }
   if (surface === 'ranks') {
     return [
-      'You suggest keywords worth monitoring in a rank tracker.',
+      'You suggest keywords worth MONITORING in a rank tracker for this brand.',
       'Return JSON only: {"keywords":["..."]} with 5 to 8 strings.',
-      'Prefer stable commercial/informational queries with ranking potential — not one-off news.',
+      'Only suggest queries where ranking movement would matter commercially.',
       ground,
       `Language of keywords: ${lang}.`,
     ].join(' ')
@@ -209,8 +295,7 @@ function systemPromptFor(surface: SeoSuggestSurface, locale: string): string {
   return [
     'You suggest SEO keywords for competitive SERP-overlap analysis (Field).',
     'Return JSON only: {"keywords":["..."]} with 5 to 8 strings.',
-    'Keywords must be searchable queries (commercial or informational), not slogans.',
-    'Prefer intents that reveal rivals in organic SERPs for this industry and audiences.',
+    'Prefer intents that reveal rivals in organic SERPs for this industry.',
     ground,
     `Language of keywords: ${lang}.`,
   ].join(' ')
@@ -272,8 +357,14 @@ export async function suggestMarketKeywordsViaQwen(input: {
     )
   }
   const model = suggestModel()
-  const brand = brandSeedFromHost(input.domain)
+  const brand = displayBrandFromHost(input.domain)
   const locale = input.locale ?? 'de'
+  const vertical = inferVerticalSeeds({
+    domain: input.domain,
+    projectName: input.projectName,
+    locale,
+    knowledge: input.knowledge,
+  })
   const saved = sanitizeSuggestKeywords(
     input.savedKeywords ?? [],
     input.domain,
@@ -281,18 +372,21 @@ export async function suggestMarketKeywordsViaQwen(input: {
     8,
   )
   const candidates = sanitizeSuggestKeywords(
-    mergeKeywordCandidates(input.candidateKeywords, candidatesFromKnowledge(input.knowledge)),
+    mergeKeywordCandidates(
+      input.candidateKeywords,
+      candidatesFromKnowledge(input.knowledge),
+      vertical.category,
+      vertical.brandProduct(brand),
+    ),
     input.domain,
     input.surface,
     20,
   )
   const system = systemPromptFor(input.surface, locale)
   const hint =
-    input.seedHint?.trim() && looksLikeSearchQuery(input.seedHint)
+    input.seedHint?.trim() && isTrackWorthyKeyword(input.seedHint, input.domain)
       ? input.seedHint.trim()
       : null
-  const seedHintForPrompt =
-    hint && !brandBitsFor(input.domain).has(hint.toLowerCase()) ? hint : null
   const user = [
     `Surface: ${input.surface}`,
     `Domain: ${input.domain.replace(/^www\./i, '')}`,
@@ -300,15 +394,16 @@ export async function suggestMarketKeywordsViaQwen(input: {
     input.projectDescription?.trim()
       ? `Project description: ${input.projectDescription.trim().slice(0, 400)}`
       : null,
-    `Brand hint: ${brand}`,
+    `Brand: ${brand}`,
+    `Inferred vertical: ${vertical.label}`,
     ...knowledgePromptBits(input.knowledge),
-    seedHintForPrompt ? `Seed hint: ${seedHintForPrompt}` : null,
+    hint ? `Seed hint: ${hint}` : null,
     saved.length ? `Saved research keywords: ${saved.join(', ')}` : null,
     candidates.length
-      ? `Prioritize / refine these grounded candidates: ${candidates.join(', ')}`
+      ? `Grounded candidates to prioritize (already filtered): ${candidates.join(', ')}`
       : null,
-    'If industry or audience context is present, keywords must reflect that vertical — do not invent unrelated categories.',
-    'Do not return any URL, hostname, or search-engine name as a keyword.',
+    'Do not invent addresses or office locations as keywords.',
+    'Do not return brand+vergleich / brand+preis style filler.',
   ]
     .filter(Boolean)
     .join('\n')
@@ -324,7 +419,7 @@ export async function suggestMarketKeywordsViaQwen(input: {
     },
     body: JSON.stringify({
       model,
-      temperature: 0.35,
+      temperature: 0.3,
       max_tokens: 400,
       response_format: { type: 'json_object' },
       messages: [
@@ -352,7 +447,12 @@ export async function suggestMarketKeywordsViaQwen(input: {
     throw new FieldSuggestError('Model returned non-JSON suggestions', 'invalid')
   }
   const keywords = sanitizeSuggestKeywords(
-    mergeKeywordCandidates(candidatesFromKnowledge(input.knowledge), parseKeywords(parsed)),
+    mergeKeywordCandidates(
+      parseKeywords(parsed),
+      candidatesFromKnowledge(input.knowledge),
+      vertical.category,
+      vertical.brandProduct(brand),
+    ),
     input.domain,
     input.surface,
   )
@@ -382,7 +482,7 @@ export function mergeKeywordCandidates(
   for (const list of lists) {
     for (const raw of list ?? []) {
       const k = raw.trim().replace(/\s+/g, ' ')
-      if (!k || !looksLikeSearchQuery(k)) continue
+      if (!k || isJunkKeywordToken(k)) continue
       const key = k.toLowerCase()
       if (seen.has(key)) continue
       seen.add(key)
