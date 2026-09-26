@@ -71,14 +71,18 @@ agent?: {
 
 Endpoints unchanged: `POST …/competitors/suggest` · `…/keywords/suggest` · `…/rank-configs/suggest`.
 
-## Phase 2 — Plexon hook
+## Phase 2 — Plexon hook (implemented)
 
-When Collection has a real `platformProjectId` and federation is live:
+When Collection has a real `platformProjectId`, federation is live, and `KNOWLEDGE_PACK_AUTOSYNC` is not off:
 
-- Optional publish of `brief` → Knowledge Pack `research_brief` / `profile` distillate (provenance `productId: checkion`, note `market-suggest-agent`).
-- Or call Plexon `POST …/knowledge/suggest` for facet drafts, then generate keywords from drafts (session vs service auth TBD).
+- After a successful agent run, CHECKION **merges** a distillate into the Knowledge Pack:
+  - `research_brief` — summary, topics (products/services/audiences), section `market-suggest`
+  - `profile` — `industry` from brief.category when present (merge)
+  - `geo_context` — `seedQueries` / `queryThemes` from keywords + products (merge)
+- Provenance: `actorType: service`, `productId: checkion`, `note: market-suggest-agent`, `runId: suggest-{projectId}-{surface}-{ts}`
+- Soft-fail: suggest response still returns keywords if publish fails; `agent.publishedToPack` / `agent.publishError` report status.
 
-v1 does **not** write the pack — only returns `brief` so UI/ops can inspect quality.
+Plexon ownership: `research_brief` publish allowlist includes `checkion` (alongside `audion` / `plexon`).
 
 ## Offline / stub
 

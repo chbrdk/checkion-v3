@@ -96,7 +96,8 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 - Not a one-shot title/meta call. Agent gathers Collection Knowledge + homepage + up to 4 same-origin deep pages (about/products/services…), distills a company brief (who / products / services / audiences), then emits surface keywords.
 - Same agent for Field, Research, Ranks. No hardcoded industry packs.
 - Reject addresses, hosts, search-engine names, weak `brand + vergleich|preis` templates.
-- Response may include `brief` + `agent` provenance. Phase 2: optional publish distillate → Plexon Knowledge Pack.
+- Response may include `brief` + `agent` provenance (`publishedToPack` when Phase-2 merge succeeds).
+- Phase 2: merges distillate into Plexon Knowledge Pack (`research_brief` · `profile` · `geo_context`) when Collection is real + federation live.
 - Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).

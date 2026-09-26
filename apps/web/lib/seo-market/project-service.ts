@@ -35,8 +35,10 @@ import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
 import {
   enrichmentHasSignal,
+  publishMarketSuggestBriefToPack,
   resolveKnowledgeEnrichment,
 } from '../plexon-knowledge-pack'
+import { isRealPlatformProjectId } from '../plexon-platform-id'
 import { fetchUrlSuggestContext } from './url-suggest-context'
 import { runMarketSuggestResearchAgent } from './suggest-research-agent'
 import {
@@ -411,6 +413,32 @@ async function projectSuggestMarketKeywords(input: {
       throw new FieldSuggestError('Agent returned too few usable keywords', 'invalid')
     }
 
+    const agentMeta = { ...agentResult.agent }
+    const autosyncOff = ['0', 'false', 'off'].includes(
+      (process.env.KNOWLEDGE_PACK_AUTOSYNC ?? '').trim().toLowerCase(),
+    )
+    if (
+      !autosyncOff &&
+      isRealPlatformProjectId(project.platformProjectId) &&
+      agentResult.brief.summary.trim().length >= 40
+    ) {
+      const runId = `suggest-${input.projectId}-${input.surface}-${Date.now().toString(36)}`
+      const published = await publishMarketSuggestBriefToPack({
+        platformProjectId: project.platformProjectId,
+        runId,
+        projectId: input.projectId,
+        brief: agentResult.brief,
+        keywords: finalKeywords,
+      })
+      if (published.ok) {
+        agentMeta.publishedToPack = true
+        agentMeta.steps = [...agentMeta.steps, 'publish_knowledge_pack']
+      } else {
+        agentMeta.publishedToPack = false
+        agentMeta.publishError = published.error
+      }
+    }
+
     return {
       projectId: input.projectId,
       domain,
@@ -420,7 +448,7 @@ async function projectSuggestMarketKeywords(input: {
       fetchedAt,
       surface: input.surface,
       brief: agentResult.brief,
-      agent: agentResult.agent,
+      agent: agentMeta,
     }
   } catch (err) {
     const fallback = sanitizeSuggestKeywords(

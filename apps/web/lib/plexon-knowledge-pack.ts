@@ -357,6 +357,178 @@ export async function publishCompetitiveMergeToPack(opts: {
   }
 }
 
+type FacetPublishResult =
+  | { ok: true; revision: number }
+  | { ok: false; status: number; error: string }
+
+async function publishFacetMerge(opts: {
+  platformProjectId: string
+  facetId: 'research_brief' | 'profile' | 'geo_context'
+  expectedRevision: number
+  runId: string
+  note: string
+  data: Record<string, unknown>
+}): Promise<FacetPublishResult> {
+  if (getFederationMode() !== 'live' || !isPlexonFederationConfigured()) {
+    return { ok: false, status: 503, error: 'federation_not_live' }
+  }
+  const secret = getPlexonServiceSecret()
+  let expectedRevision = opts.expectedRevision
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await fetch(facetPublishPath(opts.platformProjectId, opts.facetId), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getPlexonContractHeaders(secret),
+        },
+        body: JSON.stringify({
+          mode: 'merge',
+          expectedRevision,
+          provenance: {
+            actorType: 'service',
+            productId: 'checkion',
+            runId: opts.runId,
+            note: opts.note,
+          },
+          data: opts.data,
+        }),
+      })
+      if (res.ok) {
+        const body = (await res.json()) as { revision?: number }
+        return { ok: true, revision: body.revision ?? expectedRevision + 1 }
+      }
+      if (res.status === 409 && attempt === 0) {
+        const fresh = await fetchCollectionKnowledgePack(opts.platformProjectId)
+        if (fresh) {
+          expectedRevision = fresh.revision
+          continue
+        }
+      }
+      const text = await res.text().catch(() => '')
+      return { ok: false, status: res.status, error: text || res.statusText }
+    }
+    return { ok: false, status: 409, error: 'revision_conflict' }
+  } catch (e) {
+    return {
+      ok: false,
+      status: 502,
+      error: e instanceof Error ? e.message : 'publish_failed',
+    }
+  }
+}
+
+/**
+ * Publish Market Suggest Research Agent distillate → Collection Knowledge Pack.
+ * Spec: specs/domain/seo-market-suggest-agent.md § Phase 2.
+ */
+export async function publishMarketSuggestBriefToPack(opts: {
+  platformProjectId: string
+  runId: string
+  projectId: string
+  brief: {
+    summary: string
+    category: string | null
+    products: string[]
+    services: string[]
+    audiences: string[]
+  }
+  keywords: string[]
+}): Promise<
+  | { ok: true; revision: number; facets: string[] }
+  | { ok: false; status: number; error: string }
+> {
+  if (getFederationMode() !== 'live' || !isPlexonFederationConfigured()) {
+    return { ok: false, status: 503, error: 'federation_not_live' }
+  }
+  const pack = await fetchCollectionKnowledgePack(opts.platformProjectId)
+  if (!pack) {
+    return { ok: false, status: 502, error: 'knowledge_pack_unavailable' }
+  }
+  let revision = pack.revision
+  const facets: string[] = []
+  const topics = [
+    ...opts.brief.products,
+    ...opts.brief.services,
+    ...opts.brief.audiences,
+    opts.brief.category ?? '',
+  ]
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 24)
+
+  const briefPub = await publishFacetMerge({
+    platformProjectId: opts.platformProjectId,
+    facetId: 'research_brief',
+    expectedRevision: revision,
+    runId: opts.runId,
+    note: 'market-suggest-agent',
+    data: {
+      summary: opts.brief.summary.slice(0, 2000),
+      topics,
+      sections: [
+        {
+          id: 'market-suggest',
+          title: 'Market Suggest brief',
+          plainText: opts.brief.summary.slice(0, 2000),
+          bullets: [...opts.brief.products, ...opts.brief.services].slice(0, 12),
+        },
+      ],
+      sourceRunId: opts.runId,
+      sourceProjectId: opts.projectId,
+    },
+  })
+  if (!briefPub.ok) return briefPub
+  revision = briefPub.revision
+  facets.push('research_brief')
+
+  if (opts.brief.category?.trim()) {
+    const profilePub = await publishFacetMerge({
+      platformProjectId: opts.platformProjectId,
+      facetId: 'profile',
+      expectedRevision: revision,
+      runId: opts.runId,
+      note: 'market-suggest-agent profile',
+      data: {
+        industry: opts.brief.category.trim().slice(0, 120),
+        tagline: opts.brief.summary.slice(0, 200),
+      },
+    })
+    if (profilePub.ok) {
+      revision = profilePub.revision
+      facets.push('profile')
+    }
+  }
+
+  const seeds = [...opts.keywords, ...opts.brief.products].filter(Boolean).slice(0, 24)
+  const themes = [
+    opts.brief.category,
+    ...opts.brief.audiences,
+    ...opts.brief.products.slice(0, 6),
+  ]
+    .filter((t): t is string => Boolean(t?.trim()))
+    .slice(0, 24)
+  if (seeds.length || themes.length) {
+    const geoPub = await publishFacetMerge({
+      platformProjectId: opts.platformProjectId,
+      facetId: 'geo_context',
+      expectedRevision: revision,
+      runId: opts.runId,
+      note: 'market-suggest-agent geo seeds',
+      data: {
+        seedQueries: seeds,
+        queryThemes: themes,
+      },
+    })
+    if (geoPub.ok) {
+      revision = geoPub.revision
+      facets.push('geo_context')
+    }
+  }
+
+  return { ok: true, revision, facets }
+}
+
 /** Path helper for docs / tests. */
 export function plexonKnowledgeApiPath(platformProjectId: string): string {
   return `${paths.envPlexonBase} → /api/platform/projects/${platformProjectId}/knowledge`

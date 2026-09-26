@@ -1099,11 +1099,14 @@ export interface SeoFieldSuggestResult {
     services: string[]
     audiences: string[]
   }
-  /** Agent provenance for ops / Phase-2 Knowledge Pack publish. */
+  /** Agent provenance for ops / Knowledge Pack publish. */
   agent?: {
     steps: string[]
     pagesFetched: string[]
     usedKnowledge: boolean
+    /** True when distillate was merged into Plexon Knowledge Pack. */
+    publishedToPack?: boolean
+    publishError?: string
   }
 }
 
