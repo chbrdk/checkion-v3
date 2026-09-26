@@ -13,6 +13,7 @@ import {
   CLIENT_ROOM_SLOT_CHECKION_OVERVIEW,
   putClientRoomSlot,
 } from '../../../../../../lib/plexon-client-room'
+import { scheduleUpsertShareLink } from '../../../../../../lib/plexon-share-links'
 import { paths } from '../../../../../../lib/paths'
 import { checkionPublicUrl } from '../../../../../../lib/runtime-config'
 
@@ -101,6 +102,21 @@ export async function POST(
       { status: 502 },
     )
   }
+
+  scheduleUpsertShareLink({
+    platformProjectId,
+    productId: paths.productId,
+    shareId: subjectRef,
+    kind: 'scan_overview',
+    title,
+    href,
+    actorUserId,
+    meta: {
+      slotId: CLIENT_ROOM_SLOT_CHECKION_OVERVIEW,
+      projectId,
+      source: 'checkion_client_room',
+    },
+  })
 
   return NextResponse.json({
     success: true,

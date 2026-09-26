@@ -8,6 +8,7 @@ import {
   clientRoomSlotApiPath,
   putClientRoomSlot,
 } from '../lib/plexon-client-room'
+import { shareLinksApiPath, upsertShareLink } from '../lib/plexon-share-links'
 import { postSuiteAuditEvent, suiteAuditApiPath } from '../lib/plexon-suite-audit'
 
 describe('plexon suite enterprise clients (checkion)', () => {
@@ -201,5 +202,37 @@ describe('plexon suite enterprise clients (checkion)', () => {
       }),
     ).toBe(false)
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('builds share-links path and POSTs scan_overview projection', async () => {
+    vi.stubEnv('NEXT_PLEXON_BASE_URL', 'https://plexon.test')
+    vi.stubEnv('PLEXON_SERVICE_SECRET', 'sec-test')
+    vi.stubEnv('CHECKION_FEDERATION_MODE', 'live')
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(shareLinksApiPath('pp-share')).toBe(
+      'https://plexon.test/api/platform/provisioning/collections/pp-share/share-links',
+    )
+    expect(
+      await upsertShareLink({
+        platformProjectId: 'pp-share',
+        productId: 'checkion',
+        shareId: 'sh_abc',
+        kind: 'scan_overview',
+        title: 'Acme — Share',
+        href: 'https://checkion.test/share/sh_abc',
+        actorUserId: 'user-9',
+        meta: { source: 'checkion_share' },
+      }),
+    ).toBe(true)
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/share-links')
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      productId: 'checkion',
+      shareId: 'sh_abc',
+      kind: 'scan_overview',
+      actorUserId: 'user-9',
+    })
   })
 })

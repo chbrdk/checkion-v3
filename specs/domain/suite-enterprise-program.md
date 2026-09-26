@@ -1,6 +1,6 @@
 # CHECKION — Suite Enterprise Program
 
-**Status:** Accepted (program) — 2026-09-25. E2 slot publish client landed (`plexon-client-room` + `POST /api/projects/:id/client-room/publish`); E3 Gegentest delta APIs landed; E4/E1 Plexon-Clients (`plexon-suite-audit`, `plexon-collection-activity`) feuern bei GEO-Job `completed` (Audit nur mit Session-Actor). Magazine chrome und Flow `retest` remain open.  
+**Status:** Accepted (program) — 2026-09-25. E2 slot publish client landed (`plexon-client-room` + `POST /api/projects/:id/client-room/publish`); Share-Links Hub dual-write (`plexon-share-links`, public `/api/share` + freigabe); E3 Gegentest delta APIs landed; E4/E1 Plexon-Clients (`plexon-suite-audit`, `plexon-collection-activity`) feuern bei GEO-Job `completed` (Audit nur mit Session-Actor). Magazine chrome und Flow `retest` remain open.  
 **Programm:** `plexon-v3/specs/domain/suite-enterprise-program.md`  
 **Federation:** `2026-05-plexon-federation-v3`
 
@@ -9,7 +9,7 @@
 | Welle | CHECKION liefert |
 |---|---|
 | E1 | Destillat des letzten Single-, Domain- und GEO-Laufs für das Collection-Lagebild (Art, Status, Zeit, Deep-Link). |
-| E2 | Ein freigegebener Overview-Stand als Slot `checkion_overview`. Freigabe ist explizit, nicht „Lauf fertig“. |
+| E2 | Ein freigegebener Overview-Stand als Slot `checkion_overview` **und** Projection in den Collection Share-Links Hub (`scan_overview`). Freigabe ist explizit, nicht „Lauf fertig“. Public Shares (`/api/share`) schreiben denselben Hub. |
 | E3 | Vergleich Lauf gegen Vorlauf derselben Art und URL-Menge: neu, weg, gleich, Score-Delta. GEO nur innerhalb derselben Mess-Schicht. `retest` ohne Vorlauf ist ein Fehler. Spec: `scan-run-delta.md`. |
 | E4 | Audit-Ereignis `run_started` / `run_finished` mit `actorUserId`. |
 | E5 | Quality-Gate liest den bestehenden Score. Kein zweites Scoring. |

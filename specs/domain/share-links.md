@@ -27,3 +27,6 @@ Result toolbar: Share (`Dialog` copy link), Re-run (`ConfirmDialog`), Delete (`C
 
 ## Deferred
 Password, expiry, journey shares, video/screenshot access tokens (v2 parity later).
+
+## Suite Share-Links Hub
+Create/revoke projects into Plexon Collection Share Links (`scan_overview`) when the scan’s project is Collection-bound and an actor session is present. Spec: `plexon-v3/specs/domain/collection-share-links.md` · client `lib/plexon-share-links.ts`.
