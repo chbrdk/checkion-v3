@@ -506,6 +506,9 @@ export function SeoProjectWorkspace({
             result:
               prev.rows.length > 0
                 ? {
+                    source: 'dataforseo' as const,
+                    stubbed: false,
+                    projectId,
                     domain,
                     keywords: (prev.searchBand?.seed ?? '')
                       .split(/[,;]+/)
@@ -526,7 +529,6 @@ export function SeoProjectWorkspace({
                       }
                     }),
                     fetchedAt: new Date().toISOString(),
-                    unitsUsed: 0,
                   }
                 : null,
             linkCompetitors,

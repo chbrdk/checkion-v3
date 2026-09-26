@@ -9,6 +9,9 @@ describe('competitors-chapter-map', () => {
       domain: 'acme.example',
       seed: 'brand, tool',
       result: {
+        source: 'dataforseo',
+        stubbed: false,
+        projectId: 'p1',
         domain: 'acme.example',
         keywords: ['brand', 'tool'],
         items: [
@@ -16,7 +19,6 @@ describe('competitors-chapter-map', () => {
           { domain: 'other.example', overlapCount: 3, avgRank: 12 },
         ],
         fetchedAt: new Date().toISOString(),
-        unitsUsed: 2,
       },
       linkCompetitors: [
         {
