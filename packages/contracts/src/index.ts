@@ -1081,6 +1081,12 @@ export interface SeoCompetitorsResult extends SeoMarketEnvelope {
   items: SeoCompetitorRow[]
 }
 
+/** Persisted Field (SERP-overlap) analyze snapshot. */
+export interface SeoCompetitorSnapshot extends SeoCompetitorsResult {
+  id: string
+  capturedAt: string
+}
+
 /** Field / Research / Ranks smart keyword suggestions (Market Suggest Research Agent). */
 export interface SeoFieldSuggestResult {
   projectId: string
@@ -1315,6 +1321,7 @@ export interface SeoProjectOverview {
   domain: string
   domainSnapshot: SeoDomainSnapshot | null
   backlinkSnapshot: SeoBacklinkSnapshot | null
+  competitorSnapshot: SeoCompetitorSnapshot | null
   rankConfigs: Array<{
     id: string
     domain: string

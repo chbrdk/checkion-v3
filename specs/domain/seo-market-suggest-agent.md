@@ -98,6 +98,12 @@ After a successful suggest on Field · Research · Ranks, the workbench MUST sur
 - Overview MAY show deterministic **seed hints** (brand ∪ domain top keywords) without calling OpenRouter or DataForSEO. Smart Agent remains user-initiated on chapter workbenches.
 - Field workbench MUST offer **Refresh suggestions** after an Analyze run (same suggest endpoint); label may switch from first-run copy when chips already exist.
 
+## Phase 5 — Persist Field Analyze
+
+- Successful Field Analyze (`POST …/competitors`) MUST persist a `seo_competitor_snapshots` row (keywords + rival items + provenance).
+- `GET …/competitors` returns `{ latest }` for chapter reload.
+- Overview `competitorSnapshot` fills the Competitive field card KPIs (rivals · avg overlap · best avg rank · high threats). Soft-fail if table missing until drizzle push.
+
 ## Offline / stub
 
 When live SEO Market is off: knowledge seeds ∪ homepage title crumbs (existing fixture path). No agent loop.

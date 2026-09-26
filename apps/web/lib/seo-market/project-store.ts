@@ -2,6 +2,7 @@ import { and, desc, eq } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
 import type {
   SeoBacklinkSnapshot,
+  SeoCompetitorSnapshot,
   SeoDomainSnapshot,
   SeoKeywordIdea,
   SeoRankConfig,
@@ -13,6 +14,7 @@ import { isDatabaseConfigured } from '../db/config'
 import { getDb } from '../db/client'
 import {
   seoBacklinkSnapshots,
+  seoCompetitorSnapshots,
   seoDomainSnapshots,
   seoKeywordMetrics,
   seoRankConfigs,
@@ -27,6 +29,7 @@ type MemState = {
   metrics: Array<SeoKeywordIdea & { projectId: string; locationCode: number; languageCode: string; fetchedAt: string }>
   domainSnaps: SeoDomainSnapshot[]
   backlinkSnaps: SeoBacklinkSnapshot[]
+  competitorSnaps: SeoCompetitorSnapshot[]
   configs: SeoRankConfig[]
   runs: Array<{
     id: string
@@ -42,6 +45,7 @@ const mem: MemState = {
   metrics: [],
   domainSnaps: [],
   backlinkSnaps: [],
+  competitorSnaps: [],
   configs: [],
   runs: [],
 }
@@ -309,6 +313,60 @@ export async function latestDomainSnapshot(
     organicCost: r.organicCost,
     topKeywords: (r.topKeywords as unknown as SeoKeywordIdea[]) ?? [],
     source: r.source as SeoDomainSnapshot['source'],
+    stubbed: Boolean(r.stubbed),
+    fetchedAt: r.capturedAt,
+    capturedAt: r.capturedAt,
+  }
+}
+
+export async function insertCompetitorSnapshot(
+  snap: Omit<SeoCompetitorSnapshot, 'id' | 'capturedAt'> & { capturedAt?: string },
+): Promise<SeoCompetitorSnapshot> {
+  const row: SeoCompetitorSnapshot = {
+    ...snap,
+    id: randomUUID(),
+    capturedAt: snap.capturedAt ?? new Date().toISOString(),
+  }
+  if (!isDatabaseConfigured()) {
+    mem.competitorSnaps.unshift(row)
+    return row
+  }
+  const db = getDb()
+  await db.insert(seoCompetitorSnapshots).values({
+    id: row.id,
+    projectId: row.projectId,
+    domain: row.domain,
+    keywords: row.keywords,
+    items: row.items as unknown as Array<Record<string, unknown>>,
+    source: row.source,
+    stubbed: row.stubbed ? 1 : 0,
+    capturedAt: row.capturedAt,
+  })
+  return row
+}
+
+export async function latestCompetitorSnapshot(
+  projectId: string,
+): Promise<SeoCompetitorSnapshot | null> {
+  if (!isDatabaseConfigured()) {
+    return mem.competitorSnaps.find((s) => s.projectId === projectId) ?? null
+  }
+  const db = getDb()
+  const rows = await db
+    .select()
+    .from(seoCompetitorSnapshots)
+    .where(eq(seoCompetitorSnapshots.projectId, projectId))
+    .orderBy(desc(seoCompetitorSnapshots.capturedAt))
+    .limit(1)
+  const r = rows[0]
+  if (!r) return null
+  return {
+    id: r.id,
+    projectId: r.projectId,
+    domain: r.domain,
+    keywords: (r.keywords as string[]) ?? [],
+    items: (r.items as SeoCompetitorSnapshot['items']) ?? [],
+    source: r.source as SeoCompetitorSnapshot['source'],
     stubbed: Boolean(r.stubbed),
     fetchedAt: r.capturedAt,
     capturedAt: r.capturedAt,

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   createRankConfig,
   insertBacklinkSnapshot,
+  insertCompetitorSnapshot,
+  latestCompetitorSnapshot,
   listBacklinkSnapshots,
   listDueRankConfigs,
   listSavedKeywords,
@@ -10,6 +12,7 @@ import {
 } from '../lib/seo-market/project-store'
 import {
   getSeoProjectOverview,
+  projectCompetitors,
   projectResearchKeywords,
 } from '../lib/seo-market/project-service'
 import { paths } from '../lib/paths'
@@ -44,6 +47,21 @@ describe('seo project store (memory)', () => {
     expect(snap.id).toBeTruthy()
     const history = await listBacklinkSnapshots(projectId, 5)
     expect(history[0]?.id).toBe(snap.id)
+  })
+
+  it('persists Field competitor snapshots', async () => {
+    const snap = await insertCompetitorSnapshot({
+      projectId,
+      domain: 'example.com',
+      keywords: ['brand', 'product'],
+      items: [{ domain: 'rival.example', overlapCount: 4, avgRank: 8 }],
+      source: 'fixture',
+      stubbed: true,
+      fetchedAt: new Date().toISOString(),
+    })
+    const latest = await latestCompetitorSnapshot(projectId)
+    expect(latest?.id).toBe(snap.id)
+    expect(latest?.items[0]?.domain).toBe('rival.example')
   })
 
   it('creates rank config and completes a run', async () => {
@@ -91,6 +109,18 @@ describe('seo project service fixtures', () => {
     const overview = await getSeoProjectOverview(projectId)
     expect(overview.projectId).toBe(projectId)
     expect(overview.savedKeywordCount).toBe(0)
+    expect(overview.competitorSnapshot).toBeNull()
+  })
+
+  it('analyze competitors persists snapshot into overview', async () => {
+    const projectId = `seo-field-${Date.now()}`
+    // Memory project store has no project — fixture path still needs domain via getProject.
+    // projectCompetitors falls back to example.com when project missing.
+    const snap = await projectCompetitors(projectId, ['heat pump', 'boiler'])
+    expect(snap.id).toBeTruthy()
+    expect(snap.items.length).toBeGreaterThan(0)
+    const overview = await getSeoProjectOverview(projectId)
+    expect(overview.competitorSnapshot?.id).toBe(snap.id)
   })
 })
 

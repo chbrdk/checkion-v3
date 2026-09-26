@@ -174,4 +174,4 @@ Profile prefs: `GET`/`PATCH` `/api/prefs/profile` (Plexon `locale` + `themePrefe
 Sibling `file:../../../msqdx-ui/packages/{ui,ui-tokens}` + barrels `lib/msqdx-ui*.ts` (deep `src/` re-exports, not package `dist`). Docker build pins the same sibling tree via `MSQDX_UI_REF` (see `Dockerfile`).
 
 - Jev System One (shadow): `specs/domain/jev-decisions.md` · `apps/web/lib/jev/` · env `OPENROUTER_API_KEY` · `JEV_SHADOW_ENABLED` · `JEV_ACT_*` · model `typesafe/jev-1.13`
-- Field smart suggestions (Market SEO): `POST /api/projects/:id/seo/competitors/suggest` · OpenRouter `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`) · same `OPENROUTER_API_KEY` · also Research `…/keywords/suggest` · Ranks `…/rank-configs/suggest` · spec `seo-project-workspace.md`
+- Field smart suggestions (Market SEO): `POST /api/projects/:id/seo/competitors/suggest` · OpenRouter `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`) · same `OPENROUTER_API_KEY` · also Research `…/keywords/suggest` · Ranks `…/rank-configs/suggest` · Field Analyze persists `seo_competitor_snapshots` (`GET|POST …/competitors`) · spec `seo-project-workspace.md`

@@ -11,6 +11,7 @@ function baseOverview(partial: Partial<SeoProjectOverview> = {}): SeoProjectOver
     domain: 'vaillant.de',
     domainSnapshot: null,
     backlinkSnapshot: null,
+    competitorSnapshot: null,
     rankConfigs: [],
     savedKeywordCount: 0,
     ...partial,
@@ -78,6 +79,32 @@ describe('dashboard-from-overview', () => {
     expect(model.cards.find((c) => c.key === 'rank')?.hasData).toBe(true)
     expect(model.seedHints?.[0]).toBe('vaillant')
     expect(model.seedHints).toContain('wärmepumpe')
+  })
+
+  it('fills competitors card from Field snapshot', () => {
+    const model = buildSeoDashboardFromOverview({
+      projectName: 'Vaillant',
+      overview: baseOverview({
+        competitorSnapshot: {
+          id: 'cs1',
+          projectId: 'proj-1',
+          domain: 'vaillant.de',
+          keywords: ['wärmepumpe', 'heizung'],
+          items: [
+            { domain: 'bosch.de', overlapCount: 7, avgRank: 4.2 },
+            { domain: 'viessmann.de', overlapCount: 3, avgRank: 12 },
+          ],
+          source: 'fixture',
+          stubbed: true,
+          fetchedAt: '2026-09-26T10:00:00.000Z',
+          capturedAt: '2026-09-26T10:00:00.000Z',
+        },
+      }),
+    })
+    const card = model.cards.find((c) => c.key === 'competitors')
+    expect(card?.hasData).toBe(true)
+    expect(card?.stats?.find((s) => s.label === 'Rivals')?.value).toBe('2')
+    expect(card?.stats?.find((s) => s.label === 'High threats')?.value).toBe('1')
   })
 
   it('keeps empty cards when no snapshots', () => {

@@ -687,11 +687,29 @@ export function SeoProjectWorkspace({
         }
       }
       if (chapter === 'competitors') {
+        const latestRes = await api(paths.routes.apiProjectSeoCompetitors(projectId))
+        const latest = (latestRes as { latest?: SeoCompetitorsResult & { id?: string; capturedAt?: string } | null } | null)
+          ?.latest
         const bl = await api(paths.routes.apiProjectSeoBacklinks(projectId))
         const history = (bl?.history as SeoBacklinkSnapshot[] | undefined) ?? []
-        if (!history.length) return
-        setBacklinks(history)
+        if (history.length) setBacklinks(history)
         const linkCompetitors = history[0]?.competitors ?? []
+        if (latest?.items?.length) {
+          setFieldAnalyzed(true)
+          setCompModel(
+            buildCompetitorsChapterModel({
+              projectId,
+              projectName,
+              domain,
+              seed: (latest.keywords ?? []).slice(0, 6).join(', '),
+              recent: (latest.keywords ?? []).slice(0, 6),
+              result: latest,
+              linkCompetitors: linkCompetitors.length ? linkCompetitors : null,
+              t,
+            }),
+          )
+          return
+        }
         if (!linkCompetitors.length) return
         setCompModel((prev) =>
           buildCompetitorsChapterModel({

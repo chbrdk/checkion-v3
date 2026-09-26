@@ -22,7 +22,8 @@ Base: `/api/projects/:projectId/seo`. Auth + Access Model B on project.
 | POST | `/rank-configs/suggest` | Rank track-set via Research Agent (saved Research short-circuit if ≥5 clean) |
 | GET | `/rank-configs/:configId` | Config + keywords + latest run/snapshots |
 | POST | `/rank-configs/:configId/refresh` | Queue/run rank check |
-| POST | `/competitors` | `{ keywords[] }` — SERP overlap (may use saved keywords) |
+| GET | `/competitors` | Latest Field SERP-overlap snapshot (`latest`) |
+| POST | `/competitors` | `{ keywords[] }` — SERP overlap → persist snapshot |
 | POST | `/competitors/suggest` | Field keywords via Market Suggest Research Agent — `{ locale?, seedHint? }` → `{ keywords[], brief?, agent?, model, stubbed }` |
 | GET | `/gsc` | Status + stub/fixture performance |
 

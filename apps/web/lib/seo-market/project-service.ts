@@ -1,5 +1,6 @@
 import type {
   SeoBacklinkSnapshot,
+  SeoCompetitorSnapshot,
   SeoCompetitorsResult,
   SeoDomainSnapshot,
   SeoFieldSuggestResult,
@@ -50,7 +51,9 @@ import {
   createRankConfig,
   getRankConfig,
   insertBacklinkSnapshot,
+  insertCompetitorSnapshot,
   insertDomainSnapshot,
+  latestCompetitorSnapshot,
   latestDomainSnapshot,
   listBacklinkSnapshots,
   listRankConfigs,
@@ -64,9 +67,10 @@ import { gscPerformance, gscStatus } from './service'
 export async function getSeoProjectOverview(projectId: string): Promise<SeoProjectOverview> {
   const project = await getProject(projectId)
   const domain = project?.domain ? normalizeDomain(project.domain) : ''
-  const [domainSnapshot, backlinks, configs, saved] = await Promise.all([
+  const [domainSnapshot, backlinks, competitorSnapshot, configs, saved] = await Promise.all([
     latestDomainSnapshot(projectId),
     listBacklinkSnapshots(projectId, 1),
+    latestCompetitorSnapshot(projectId),
     listRankConfigs(projectId),
     listSavedKeywords(projectId),
   ])
@@ -75,6 +79,7 @@ export async function getSeoProjectOverview(projectId: string): Promise<SeoProje
     domain,
     domainSnapshot,
     backlinkSnapshot: backlinks[0] ?? null,
+    competitorSnapshot,
     rankConfigs: configs.map((c) => ({
       id: c.id,
       domain: c.domain,
@@ -210,18 +215,19 @@ export async function projectRefreshBacklinks(projectId: string): Promise<SeoBac
 export async function projectCompetitors(
   projectId: string,
   keywords: string[],
-): Promise<SeoCompetitorsResult> {
+): Promise<SeoCompetitorSnapshot> {
   const project = await getProject(projectId)
   const domain = project?.domain ? normalizeDomain(project.domain) : 'example.com'
   const kw =
     keywords.length > 0
       ? keywords
       : (await listSavedKeywords(projectId)).slice(0, 5).map((k) => k.keyword)
+
+  let result: SeoCompetitorsResult
   if (!shouldRunLiveSeoMarket()) {
-    return fixtureCompetitors({ projectId, domain, keywords: kw })
-  }
-  if (kw.length === 0) {
-    return {
+    result = fixtureCompetitors({ projectId, domain, keywords: kw })
+  } else if (kw.length === 0) {
+    result = {
       source: 'dataforseo',
       stubbed: false,
       fetchedAt: new Date().toISOString(),
@@ -230,46 +236,54 @@ export async function projectCompetitors(
       keywords: [],
       items: [],
     }
-  }
-  await assertSeoMarketSoftCap(projectId, kw.length)
-  const counts = new Map<string, { overlap: number; rankSum: number; n: number }>()
-  let units = 0
-  try {
-    for (const keyword of kw.slice(0, 10)) {
-      const { result, units: u } = await liveSerp({ projectId, keyword })
-      units += u
-      for (const item of result.items) {
-        const d = item.domain.toLowerCase()
-        const brand = brandSeedFromHost(domain)
-        if (!d || d === domain || (brand !== 'brand' && d.includes(brand))) continue
-        const cur = counts.get(d) ?? { overlap: 0, rankSum: 0, n: 0 }
-        cur.overlap += 1
-        cur.rankSum += item.rank
-        cur.n += 1
-        counts.set(d, cur)
+  } else {
+    await assertSeoMarketSoftCap(projectId, kw.length)
+    const counts = new Map<string, { overlap: number; rankSum: number; n: number }>()
+    let units = 0
+    try {
+      for (const keyword of kw.slice(0, 10)) {
+        const { result: serp, units: u } = await liveSerp({ projectId, keyword })
+        units += u
+        for (const item of serp.items) {
+          const d = item.domain.toLowerCase()
+          const brand = brandSeedFromHost(domain)
+          if (!d || d === domain || (brand !== 'brand' && d.includes(brand))) continue
+          const cur = counts.get(d) ?? { overlap: 0, rankSum: 0, n: 0 }
+          cur.overlap += 1
+          cur.rankSum += item.rank
+          cur.n += 1
+          counts.set(d, cur)
+        }
       }
+      await recordSeoMarketUsage({ projectId, endpoint: 'competitors', units })
+      result = {
+        source: 'dataforseo',
+        stubbed: false,
+        fetchedAt: new Date().toISOString(),
+        projectId,
+        domain,
+        keywords: kw,
+        items: [...counts.entries()]
+          .map(([d, v]) => ({
+            domain: d,
+            overlapCount: v.overlap,
+            avgRank: v.n ? Number((v.rankSum / v.n).toFixed(1)) : null,
+          }))
+          .sort((a, b) => b.overlapCount - a.overlapCount)
+          .slice(0, 15),
+      }
+    } catch (e) {
+      if ((e as { code?: string }).code === 'cost_soft_cap') throw e
+      throw e
     }
-    await recordSeoMarketUsage({ projectId, endpoint: 'competitors', units })
-    return {
-      source: 'dataforseo',
-      stubbed: false,
-      fetchedAt: new Date().toISOString(),
-      projectId,
-      domain,
-      keywords: kw,
-      items: [...counts.entries()]
-        .map(([d, v]) => ({
-          domain: d,
-          overlapCount: v.overlap,
-          avgRank: v.n ? Number((v.rankSum / v.n).toFixed(1)) : null,
-        }))
-        .sort((a, b) => b.overlapCount - a.overlapCount)
-        .slice(0, 15),
-    }
-  } catch (e) {
-    if ((e as { code?: string }).code === 'cost_soft_cap') throw e
-    throw e
   }
+
+  return insertCompetitorSnapshot({
+    ...result,
+    projectId,
+    domain: result.domain,
+    fetchedAt: result.fetchedAt,
+  })
 }
 
 export async function projectSuggestFieldKeywords(input: {
@@ -537,6 +551,7 @@ export {
   listBacklinkSnapshots,
   listRankConfigs,
   getRankConfig,
+  latestCompetitorSnapshot,
   latestDomainSnapshot,
   listDueRankConfigs,
 } from './project-store'

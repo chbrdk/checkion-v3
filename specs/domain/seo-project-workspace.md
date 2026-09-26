@@ -24,7 +24,7 @@ Legacy `/seo` and `/seo/*` **redirect** to project picker or `/projects/:id/seo`
 `/scan` SEO → **Quality crawl** (domain scan) or **Market** → `/projects/:projectId/seo` (requires project).
 
 ## Persistence (Postgres)
-See `seo-market-program.md` + schema: `seo_saved_keywords`, `seo_keyword_metrics`, `seo_rank_configs`, `seo_rank_keywords`, `seo_rank_runs`, `seo_rank_snapshots`, `seo_backlink_snapshots`, `seo_domain_snapshots`. Access Model B via `projectId`.
+See `seo-market-program.md` + schema: `seo_saved_keywords`, `seo_keyword_metrics`, `seo_rank_configs`, `seo_rank_keywords`, `seo_rank_runs`, `seo_rank_snapshots`, `seo_backlink_snapshots`, `seo_domain_snapshots`, `seo_competitor_snapshots`. Access Model B via `projectId`.
 
 ## APIs
 `/api/projects/:id/seo/*` — `specs/api/seo-project.md`.
@@ -82,7 +82,7 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 
 **Rank tracking depth (monitor IA):** Search band (add-to-track · locale · location · Track & check + recent tracked) → optional **Track-set suggestions** (saved Research ∪ Domain top keywords ∪ Knowledge Pack, Qwen fill-in when thin) → KPI (monitored · top 10 · improved · declined) → **split**: main **position ledger** (dual keyword/URL · pos · prev · Δ · device · last check · filters Improved/Declined/Top 10 · pagination) · aside **Visibility over time** `SeriesChart` (invertY) + **Position distribution** + **Biggest movers**. Prev/Δ only from a real prior run — never invent movement. Empty shell seed = domain brand (never Acme fixture seeds). Track posts rank-configs + refresh (seed may be comma-separated set). Suggestions: `POST /api/projects/:id/seo/rank-configs/suggest`.
 
-**Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → optional **Smart suggestions** (Qwen via OpenRouter) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors`; suggestions post `POST /api/projects/:id/seo/competitors/suggest`.
+**Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → optional **Smart suggestions** (Qwen via OpenRouter) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors` and **persists** a Field snapshot (`seo_competitor_snapshots`); chapter reload and Overview card read the latest via `GET …/competitors`. Suggestions post `POST /api/projects/:id/seo/competitors/suggest`.
 
 ### Market smart suggestions (Research Agent + OpenRouter)
 Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed `503`. Not DataForSEO units.
@@ -101,6 +101,7 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 - Phase 2: merges distillate into Plexon Knowledge Pack (`research_brief` · `profile` · `geo_context`) when Collection is real + federation live.
 - Phase 3: workbench shows company brief + pack publish status after suggest (chips alone are not enough).
 - Phase 4: Overview loads live `GET /overview` into dashboard cards/setup; deterministic seed hints (no vendor force); Field offers Refresh suggestions after Analyze.
+- Phase 5: Field Analyze persists `seo_competitor_snapshots`; Overview competitors card + Field chapter reload from latest snapshot.
 - Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).

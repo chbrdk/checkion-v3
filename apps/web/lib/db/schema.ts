@@ -377,6 +377,19 @@ export const seoDomainSnapshots = pgTable('seo_domain_snapshots', {
 
 export type SeoDomainSnapshotRow = typeof seoDomainSnapshots.$inferSelect
 
+export const seoCompetitorSnapshots = pgTable('seo_competitor_snapshots', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  domain: text('domain').notNull(),
+  keywords: jsonb('keywords').$type<string[]>().notNull().default([]),
+  items: jsonb('items').$type<Array<Record<string, unknown>>>().notNull().default([]),
+  source: text('source').notNull().default('fixture'),
+  stubbed: integer('stubbed').notNull().default(1),
+  capturedAt: text('captured_at').notNull(),
+})
+
+export type SeoCompetitorSnapshotRow = typeof seoCompetitorSnapshots.$inferSelect
+
 /** @deprecated legacy blob tracker — prefer seo_rank_configs */
 export type SeoRankTrackerPayload = {
   keywords: string[]

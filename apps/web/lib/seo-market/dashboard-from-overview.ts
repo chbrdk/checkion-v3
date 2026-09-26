@@ -167,6 +167,57 @@ export function buildSeoDashboardFromOverview(input: {
         ],
       }
     }
+    if (card.key === 'competitors' && overview.competitorSnapshot) {
+      const snap = overview.competitorSnapshot
+      const items = snap.items ?? []
+      const avgOverlap =
+        items.length > 0
+          ? items.reduce((s, i) => s + i.overlapCount, 0) / items.length
+          : 0
+      const bestAvg = items
+        .map((i) => i.avgRank)
+        .filter((n): n is number => n != null && Number.isFinite(n))
+        .sort((a, b) => a - b)[0]
+      const highThreats = items.filter((i) => {
+        const o = i.overlapCount
+        const r = i.avgRank
+        return o >= 6 || (r != null && r <= 10 && o >= 4)
+      }).length
+      return {
+        ...card,
+        hasData: true,
+        emptyMessage: undefined,
+        emptyCtaLabel: undefined,
+        facets: [
+          { kind: 'source', label: 'Job', value: 'SERP overlap' },
+          {
+            kind: 'scope',
+            label: 'Set',
+            value: `${snap.keywords.length} terms`,
+          },
+          {
+            kind: 'time',
+            label: 'Snapshot',
+            value: new Date(snap.capturedAt).toLocaleDateString(),
+          },
+          { kind: 'mode', label: 'Mode', value: snap.stubbed ? 'Stub' : 'Live' },
+        ],
+        stats: [
+          { label: 'Rivals', value: String(items.length) },
+          { label: 'Avg overlap', value: avgOverlap ? avgOverlap.toFixed(1) : '—' },
+          {
+            label: 'Best avg rank',
+            value: bestAvg != null ? bestAvg.toFixed(1) : '—',
+            tone: bestAvg != null && bestAvg <= 10 ? 'neg' : 'neutral',
+          },
+          {
+            label: 'High threats',
+            value: String(highThreats),
+            tone: highThreats > 0 ? 'neg' : 'neutral',
+          },
+        ],
+      }
+    }
     if (card.key === 'competitors' && saved) {
       return {
         ...card,

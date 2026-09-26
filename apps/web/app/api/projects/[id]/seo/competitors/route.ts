@@ -1,8 +1,29 @@
 import { NextResponse } from 'next/server'
-import { projectCompetitors } from '../../../../../../lib/seo-market/project-service'
+import {
+  latestCompetitorSnapshot,
+  projectCompetitors,
+} from '../../../../../../lib/seo-market/project-service'
 import { projectSeoErrorResponse, requireProjectSeoApi } from '../_shared'
 
 export const runtime = 'nodejs'
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params
+  const auth = await requireProjectSeoApi(_request, id)
+  if (!auth.ok) return auth.response
+  try {
+    const latest = await latestCompetitorSnapshot(auth.projectId)
+    return NextResponse.json({
+      projectId: auth.projectId,
+      latest,
+    })
+  } catch (e) {
+    return projectSeoErrorResponse(e)
+  }
+}
 
 export async function POST(
   request: Request,
