@@ -365,7 +365,7 @@ export async function latestCompetitorSnapshot(
     projectId: r.projectId,
     domain: r.domain,
     keywords: (r.keywords as string[]) ?? [],
-    items: (r.items as SeoCompetitorSnapshot['items']) ?? [],
+    items: (r.items as unknown as SeoCompetitorSnapshot['items']) ?? [],
     source: r.source as SeoCompetitorSnapshot['source'],
     stubbed: Boolean(r.stubbed),
     fetchedAt: r.capturedAt,
