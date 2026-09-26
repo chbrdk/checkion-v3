@@ -1,4 +1,5 @@
 import type {
+  SeoBacklinkCompetitorRow,
   SeoChapterRow,
   SeoChapterViewModel,
   SeoCompetitorRow,
@@ -7,6 +8,11 @@ import type {
 import type { Translator } from '../i18n'
 import { emptySeoChapter } from './chapter-fixtures'
 import { localizeSeoChapter } from './seo-market-i18n'
+
+function fmtInt(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return Math.round(n).toLocaleString('de-DE')
+}
 
 function fmtAvgRank(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -104,6 +110,8 @@ export function buildCompetitorsChapterModel(input: {
   location?: string
   recent?: string[]
   result?: SeoCompetitorsResult | null
+  /** Optional link competitors from latest backlink snapshot (secondary aside). */
+  linkCompetitors?: SeoBacklinkCompetitorRow[] | null
   t?: Translator
 }): SeoChapterViewModel {
   const base = emptySeoChapter('competitors', {
@@ -139,6 +147,33 @@ export function buildCompetitorsChapterModel(input: {
   const battles = result?.items?.length ? battlesFromRows(rows) : []
   const livePoints = result?.items?.length ? overlapPoints(rows) : []
   const hasLive = Boolean(result)
+  const linkCompetitors = (input.linkCompetitors ?? []).slice(0, 8)
+  const linkLedger =
+    linkCompetitors.length > 0
+      ? {
+          title: 'Link competitors',
+          meta: `${linkCompetitors.length} rivals`,
+          columns: [
+            { key: 'domain', label: 'Rival', dual: true as const },
+            { key: 'overlap', label: 'Intersect', align: 'end' as const },
+            { key: 'score', label: 'DR', align: 'end' as const },
+          ],
+          rows: linkCompetitors.map((c) => ({
+            id: c.id,
+            cells: {
+              domain: {
+                primary: c.domain,
+                secondary:
+                  fmtInt(c.backlinks) !== '—'
+                    ? `${fmtInt(c.backlinks)} links`
+                    : '—',
+              },
+              overlap: fmtInt(c.intersections),
+              score: fmtInt(c.rank),
+            },
+          })),
+        }
+      : undefined
 
   const model: SeoChapterViewModel = {
     ...base,
@@ -224,6 +259,7 @@ export function buildCompetitorsChapterModel(input: {
         ],
         rows: battles,
       },
+      ledgers: linkLedger ? [linkLedger] : undefined,
     },
   }
   return input.t ? localizeSeoChapter(model, input.t) : model

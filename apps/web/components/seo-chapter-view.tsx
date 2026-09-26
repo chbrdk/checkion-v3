@@ -536,7 +536,11 @@ export function SeoChapterView({
   searchBusy?: boolean
 }) {
   const t = useT()
-  const hasAside = Boolean(model.aside?.charts?.length || model.aside?.ledger)
+  const hasAside = Boolean(
+    model.aside?.charts?.length ||
+      model.aside?.ledger ||
+      (model.aside?.ledgers?.length ?? 0) > 0,
+  )
   const mainLedger =
     model.rows.length === 0 && !model.emptyMessage ? null : model.rows.length === 0 ? (
       <Text role="body" as="p" className="checkion-seo-dash__copy checkion-seo-dash__empty-copy">
@@ -553,28 +557,33 @@ export function SeoChapterView({
       />
     )
 
+  const asideLedgers = [
+    ...(model.aside?.ledger ? [model.aside.ledger] : []),
+    ...(model.aside?.ledgers ?? []),
+  ]
+
   const asideRail = hasAside ? (
     <aside className="checkion-seo-chapter__aside" aria-label={t('seoMarket.search.asideAria')}>
       {model.aside?.charts?.length ? (
         <ChapterCharts charts={model.aside.charts} />
       ) : null}
-      {model.aside?.ledger ? (
-        <div className="checkion-seo-chapter__aside-ledger">
+      {asideLedgers.map((ledger) => (
+        <div key={ledger.title} className="checkion-seo-chapter__aside-ledger">
           <Text role="label" as="h2" className="checkion-seo-chapter__aside-title">
-            {model.aside.ledger.title}
+            {ledger.title}
           </Text>
-          {model.aside.ledger.meta ? (
+          {ledger.meta ? (
             <Text role="meta" as="p" className="checkion-seo-chapter__aside-meta">
-              {model.aside.ledger.meta}
+              {ledger.meta}
             </Text>
           ) : null}
           <ChapterLedger
-            title={model.aside.ledger.title}
-            columns={model.aside.ledger.columns}
-            rows={model.aside.ledger.rows}
+            title={ledger.title}
+            columns={ledger.columns}
+            rows={ledger.rows}
           />
         </div>
-      ) : null}
+      ))}
     </aside>
   ) : null
 

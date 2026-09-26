@@ -1099,10 +1099,16 @@ export interface SeoBacklinkReferringPage {
   firstSeen: string | null
   lastSeen: string | null
   spamScore: number | null
+  country?: string | null
 }
 
 export interface SeoBacklinkTldBucket {
   tld: string
+  count: number
+}
+
+export interface SeoBacklinkCountBucket {
+  key: string
   count: number
 }
 
@@ -1112,29 +1118,112 @@ export interface SeoBacklinkTimeseriesPoint {
   referringDomains: number | null
 }
 
+export interface SeoBacklinkNewLostPoint {
+  date: string
+  newBacklinks: number | null
+  lostBacklinks: number | null
+  newReferringDomains: number | null
+  lostReferringDomains: number | null
+}
+
+export interface SeoBacklinkAnchorRow {
+  id: string
+  anchor: string
+  backlinks: number | null
+  referringDomains: number | null
+  rank: number | null
+  firstSeen: string | null
+}
+
+export interface SeoBacklinkReferringDomainRow {
+  id: string
+  domain: string
+  rank: number | null
+  backlinks: number | null
+  dofollow: boolean | null
+  firstSeen: string | null
+  country: string | null
+}
+
+export interface SeoBacklinkDomainPageRow {
+  id: string
+  page: string
+  backlinks: number | null
+  referringDomains: number | null
+  rank: number | null
+}
+
+export interface SeoBacklinkNetworkRow {
+  id: string
+  network: string
+  /** `ip` | `subnet` */
+  kind: 'ip' | 'subnet'
+  referringDomains: number | null
+  backlinks: number | null
+}
+
+export interface SeoBacklinkCompetitorRow {
+  id: string
+  domain: string
+  intersections: number | null
+  rank: number | null
+  backlinks: number | null
+}
+
+export interface SeoBacklinkHistoryPoint {
+  date: string
+  rank: number | null
+  backlinks: number | null
+  referringDomains: number | null
+  newBacklinks: number | null
+  lostBacklinks: number | null
+  newReferringDomains: number | null
+  lostReferringDomains: number | null
+}
+
+export interface SeoBacklinkTargetInfo {
+  server: string | null
+  cms: string | null
+  ipAddress: string | null
+  country: string | null
+  platformTypes: string[]
+}
+
 export interface SeoBacklinksResult extends SeoMarketEnvelope {
   domain: string
   referringDomains: number | null
   backlinks: number | null
   rank: number | null
   spamScore: number | null
-  /** Target-page spam (summary `target_spam_score`). */
   targetSpamScore?: number | null
   brokenBacklinks?: number | null
+  brokenPages?: number | null
   referringPages?: number | null
   referringPagesNofollow?: number | null
+  referringMainDomains?: number | null
+  referringIps?: number | null
+  referringSubnets?: number | null
+  crawledPages?: number | null
   newBacklinks?: number | null
   lostBacklinks?: number | null
   newReferringDomains?: number | null
   lostReferringDomains?: number | null
-  /** Top referring TLDs from summary `referring_links_tld`. */
   referringLinksTld?: SeoBacklinkTldBucket[]
-  /** Link type counts from summary `referring_links_types`. */
   referringLinksTypes?: Record<string, number>
-  /** Referring pages from `backlinks/backlinks/live`. */
+  referringLinksAttributes?: SeoBacklinkCountBucket[]
+  referringLinksPlatforms?: SeoBacklinkCountBucket[]
+  referringLinksLocations?: SeoBacklinkCountBucket[]
+  referringLinksCountries?: SeoBacklinkCountBucket[]
+  targetInfo?: SeoBacklinkTargetInfo | null
   items?: SeoBacklinkReferringPage[]
-  /** Weekly points from `backlinks/timeseries_summary/live`. */
   timeseries?: SeoBacklinkTimeseriesPoint[]
+  timeseriesNewLost?: SeoBacklinkNewLostPoint[]
+  anchors?: SeoBacklinkAnchorRow[]
+  referringDomainsList?: SeoBacklinkReferringDomainRow[]
+  domainPages?: SeoBacklinkDomainPageRow[]
+  networks?: SeoBacklinkNetworkRow[]
+  competitors?: SeoBacklinkCompetitorRow[]
+  history?: SeoBacklinkHistoryPoint[]
 }
 
 export interface SeoBacklinkSnapshot extends SeoBacklinksResult {
@@ -1333,7 +1422,10 @@ export interface SeoChapterAsideLedger {
 
 export interface SeoChapterAside {
   charts?: SeoChapterChart[]
+  /** Primary aside ledger (SERP / movers / battles / anchors). */
   ledger?: SeoChapterAsideLedger
+  /** Extra aside ledgers (referring domains, linked pages, …). */
+  ledgers?: SeoChapterAsideLedger[]
 }
 
 /** OpenSEO-style research search strip (keywords seed · domain host). */

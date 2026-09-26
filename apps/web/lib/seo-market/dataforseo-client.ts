@@ -2,9 +2,6 @@ import { paths } from '../paths'
 import { requireDataForSeoKey } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
 import type {
-  SeoBacklinkReferringPage,
-  SeoBacklinkTimeseriesPoint,
-  SeoBacklinkTldBucket,
   SeoBacklinksResult,
   SeoDomainOverviewResult,
   SeoKeywordIdea,
@@ -12,6 +9,7 @@ import type {
   SeoSerpOrganicItem,
   SeoSerpResult,
 } from '@checkion-v3/contracts'
+import { fetchLiveBacklinksPack } from './dataforseo-backlinks'
 
 type DataForSeoTask = {
   status_code?: number
@@ -96,8 +94,43 @@ export async function liveKeywords(input: {
     }
   }).filter((k) => k.keyword)
 
+  let unitsTotal = units
+  const keywords = items.map((i) => i.keyword).filter(Boolean).slice(0, limit)
+  if (keywords.length > 0) {
+    try {
+      const kd = await dataForSeoPost(
+        '/dataforseo_labs/google/bulk_keyword_difficulty/live',
+        [{ keywords, location_code: input.locationCode ?? 2840, language_code: input.languageCode ?? 'en' }],
+      )
+      unitsTotal += kd.units
+      const kdResult = kd.envelope.tasks?.[0]?.result
+      const kdFirst = Array.isArray(kdResult) ? asRecord(kdResult[0]) : null
+      const kdItems =
+        kdFirst && Array.isArray(kdFirst.items) ? kdFirst.items : Array.isArray(kdResult) ? kdResult : []
+      const byKw = new Map<string, number>()
+      for (const row of kdItems) {
+        const r = asRecord(row)
+        if (!r) continue
+        const kw = String(r.keyword ?? '')
+        const diff =
+          typeof r.keyword_difficulty === 'number'
+            ? r.keyword_difficulty
+            : typeof r.difficulty === 'number'
+              ? r.difficulty
+              : null
+        if (kw && diff != null) byKw.set(kw.toLowerCase(), diff)
+      }
+      for (const item of items) {
+        const d = byKw.get(item.keyword.toLowerCase())
+        if (d != null) item.difficulty = d
+      }
+    } catch {
+      /* best-effort KD */
+    }
+  }
+
   return {
-    units,
+    units: unitsTotal,
     result: {
       source: 'dataforseo',
       stubbed: false,
@@ -170,13 +203,13 @@ export async function liveDomainOverview(input: {
   try {
     const ranked = await dataForSeoPost(
       '/dataforseo_labs/google/ranked_keywords/live',
-      [{ target: domain, limit: 5 }],
+      [{ target: domain, limit: 40 }],
     )
     kwUnits = ranked.units
     const kwResult = ranked.envelope.tasks?.[0]?.result
     const kwFirst = Array.isArray(kwResult) ? asRecord(kwResult[0]) : null
     const items = kwFirst && Array.isArray(kwFirst.items) ? kwFirst.items : []
-    topKeywords = items.slice(0, 5).map((row) => {
+    topKeywords = items.slice(0, 40).map((row) => {
       const r = asRecord(row) ?? {}
       const kd = asRecord(r.keyword_data) ?? {}
       const ki = asRecord(kd.keyword_info) ?? {}
@@ -217,197 +250,7 @@ export async function liveBacklinks(input: {
   /** Max referring pages to pull (default 25, max 50). */
   limit?: number
 }): Promise<{ result: SeoBacklinksResult; units: number }> {
-  const domain = input.domain.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/^www\./, '')
-  const limit = Math.min(Math.max(input.limit ?? 25, 1), 50)
-
-  const to = new Date()
-  const from = new Date(to)
-  from.setUTCDate(from.getUTCDate() - 28)
-  const dateTo = to.toISOString().slice(0, 10)
-  const dateFrom = from.toISOString().slice(0, 10)
-
-  const [summaryCall, pagesCall, seriesCall] = await Promise.all([
-    dataForSeoPost('/backlinks/summary/live', [
-      {
-        target: domain,
-        include_subdomains: true,
-        internal_list_limit: 10,
-        backlinks_status_type: 'live',
-        rank_scale: 'one_hundred',
-      },
-    ]),
-    dataForSeoPost('/backlinks/backlinks/live', [
-      {
-        target: domain,
-        mode: 'as_is',
-        limit,
-        order_by: ['rank,desc'],
-        backlinks_status_type: 'live',
-        rank_scale: 'one_hundred',
-      },
-    ]).catch(() => null),
-    dataForSeoPost('/backlinks/timeseries_summary/live', [
-      {
-        target: domain,
-        date_from: dateFrom,
-        date_to: dateTo,
-        group_range: 'week',
-        include_subdomains: true,
-        rank_scale: 'one_hundred',
-      },
-    ]).catch(() => null),
-  ])
-
-  let units = summaryCall.units
-  if (pagesCall) units += pagesCall.units
-  if (seriesCall) units += seriesCall.units
-
-  const taskResult = summaryCall.envelope.tasks?.[0]?.result
-  const first = Array.isArray(taskResult) ? asRecord(taskResult[0]) : null
-
-  const tldRaw = first ? asRecord(first.referring_links_tld) : null
-  const referringLinksTld: SeoBacklinkTldBucket[] = tldRaw
-    ? Object.entries(tldRaw)
-        .map(([tld, count]) => ({
-          tld: tld.startsWith('.') ? tld : `.${tld}`,
-          count: typeof count === 'number' ? count : 0,
-        }))
-        .filter((b) => b.count > 0)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 8)
-    : []
-
-  const typesRaw = first ? asRecord(first.referring_links_types) : null
-  const referringLinksTypes: Record<string, number> = {}
-  if (typesRaw) {
-    for (const [k, v] of Object.entries(typesRaw)) {
-      if (typeof v === 'number') referringLinksTypes[k] = v
-    }
-  }
-
-  const items: SeoBacklinkReferringPage[] = []
-  if (pagesCall) {
-    const pagesResult = pagesCall.envelope.tasks?.[0]?.result
-    const pagesFirst = Array.isArray(pagesResult) ? asRecord(pagesResult[0]) : null
-    const rawItems =
-      pagesFirst && Array.isArray(pagesFirst.items) ? pagesFirst.items : []
-    rawItems.forEach((row, i) => {
-      const r = asRecord(row)
-      if (!r) return
-      const urlFrom = String(r.url_from ?? '')
-      if (!urlFrom) return
-      items.push({
-        id: `bl-${i}-${urlFrom.slice(0, 48)}`,
-        title: typeof r.page_from_title === 'string' ? r.page_from_title : null,
-        urlFrom,
-        domainFrom: String(r.domain_from ?? ''),
-        domainFromRank:
-          typeof r.domain_from_rank === 'number' ? r.domain_from_rank : null,
-        pageFromRank:
-          typeof r.page_from_rank === 'number' ? r.page_from_rank : null,
-        linksCount: typeof r.links_count === 'number' ? r.links_count : null,
-        anchor: typeof r.anchor === 'string' ? r.anchor : null,
-        urlTo: typeof r.url_to === 'string' ? r.url_to : null,
-        itemType: typeof r.item_type === 'string' ? r.item_type : null,
-        dofollow: Boolean(r.dofollow),
-        isNew: Boolean(r.is_new),
-        isLost: Boolean(r.is_lost),
-        isBroken: Boolean(r.is_broken),
-        firstSeen: typeof r.first_seen === 'string' ? r.first_seen : null,
-        lastSeen: typeof r.last_seen === 'string' ? r.last_seen : null,
-        spamScore:
-          typeof r.backlink_spam_score === 'number' ? r.backlink_spam_score : null,
-      })
-    })
-  }
-
-  const timeseries: SeoBacklinkTimeseriesPoint[] = []
-  if (seriesCall) {
-    const seriesResult = seriesCall.envelope.tasks?.[0]?.result
-    const seriesFirst = Array.isArray(seriesResult) ? asRecord(seriesResult[0]) : null
-    const seriesItems =
-      seriesFirst && Array.isArray(seriesFirst.items) ? seriesFirst.items : []
-    for (const row of seriesItems) {
-      const r = asRecord(row)
-      if (!r) continue
-      timeseries.push({
-        date: String(r.date ?? ''),
-        backlinks: typeof r.backlinks === 'number' ? r.backlinks : null,
-        referringDomains:
-          typeof r.referring_domains === 'number' ? r.referring_domains : null,
-      })
-    }
-  }
-
-  // Derive new/lost from last two timeseries points when available.
-  let newBacklinks: number | null = null
-  let lostBacklinks: number | null = null
-  let newReferringDomains: number | null = null
-  let lostReferringDomains: number | null = null
-  if (timeseries.length >= 2) {
-    const prev = timeseries[timeseries.length - 2]!
-    const cur = timeseries[timeseries.length - 1]!
-    if (prev.backlinks != null && cur.backlinks != null) {
-      const delta = cur.backlinks - prev.backlinks
-      if (delta >= 0) newBacklinks = delta
-      else lostBacklinks = Math.abs(delta)
-    }
-    if (prev.referringDomains != null && cur.referringDomains != null) {
-      const delta = cur.referringDomains - prev.referringDomains
-      if (delta >= 0) newReferringDomains = delta
-      else lostReferringDomains = Math.abs(delta)
-    }
-  }
-
-  return {
-    units,
-    result: {
-      source: 'dataforseo',
-      stubbed: false,
-      fetchedAt: new Date().toISOString(),
-      projectId: input.projectId,
-      domain,
-      referringDomains:
-        first && typeof first.referring_domains === 'number'
-          ? first.referring_domains
-          : null,
-      backlinks: first && typeof first.backlinks === 'number' ? first.backlinks : null,
-      rank: first && typeof first.rank === 'number' ? first.rank : null,
-      spamScore:
-        first && typeof first.backlinks_spam_score === 'number'
-          ? first.backlinks_spam_score
-          : null,
-      targetSpamScore:
-        first && typeof first.info === 'object' && first.info
-          ? (() => {
-              const info = asRecord(first.info)
-              return info && typeof info.target_spam_score === 'number'
-                ? info.target_spam_score
-                : null
-            })()
-          : null,
-      brokenBacklinks:
-        first && typeof first.broken_backlinks === 'number'
-          ? first.broken_backlinks
-          : null,
-      referringPages:
-        first && typeof first.referring_pages === 'number'
-          ? first.referring_pages
-          : null,
-      referringPagesNofollow:
-        first && typeof first.referring_pages_nofollow === 'number'
-          ? first.referring_pages_nofollow
-          : null,
-      newBacklinks,
-      lostBacklinks,
-      newReferringDomains,
-      lostReferringDomains,
-      referringLinksTld,
-      referringLinksTypes,
-      items,
-      timeseries,
-    },
-  }
+  return fetchLiveBacklinksPack(dataForSeoPost, input)
 }
 
 export async function liveKeywordPositions(input: {

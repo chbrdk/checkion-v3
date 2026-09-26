@@ -101,7 +101,7 @@ export const paths = {
   envDataForSeoApiKey: 'DATAFORSEO_API_KEY',
   /** Soft billable units per Collection per day (default 50). */
   envSeoMarketDailySoftCap: 'CHECKION_SEO_MARKET_DAILY_SOFT_CAP',
-  seoMarketDailySoftCapDefault: 50,
+  seoMarketDailySoftCapDefault: 80,
   dataForSeoApiBase: 'https://api.dataforseo.com/v3',
   /** `inline` (web executes) or `external` (scan-worker claims DB jobs). */
   envScanWorkerMode: 'CHECKION_SCAN_WORKER_MODE',

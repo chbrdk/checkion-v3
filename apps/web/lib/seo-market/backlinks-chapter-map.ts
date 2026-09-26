@@ -1,6 +1,8 @@
 import type {
   SeoBacklinkReferringPage,
   SeoBacklinkSnapshot,
+  SeoChapterAsideLedger,
+  SeoChapterChart,
   SeoChapterRow,
   SeoChapterViewModel,
 } from '@checkion-v3/contracts'
@@ -36,7 +38,7 @@ function weekLabel(iso: string): string {
 
 function hostPath(url: string): string {
   try {
-    const u = new URL(url)
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`)
     const path = u.pathname === '/' ? '' : u.pathname
     return `${u.host}${path}`
   } catch {
@@ -59,9 +61,11 @@ export function mapBacklinkPagesToRows(
     const tags: string[] = []
     if (item.dofollow) tags.push('dofollow')
     else tags.push('nofollow')
+    if (item.isNew) tags.push('new')
+    if (item.isLost) tags.push('lost')
     const domain = item.domainFrom.toLowerCase()
-    if (/\.gov(\.|$)/i.test(domain) || domain.includes('.gov')) tags.push('gov')
-    if (/\.edu(\.|$)/i.test(domain) || domain.includes('.edu')) tags.push('edu')
+    if (domain.includes('.gov')) tags.push('gov')
+    if (domain.includes('.edu')) tags.push('edu')
     return {
       id: item.id,
       tags,
@@ -69,11 +73,17 @@ export function mapBacklinkPagesToRows(
       cells: {
         page: {
           primary: item.title || hostPath(item.urlFrom),
-          secondary: hostPath(item.urlFrom),
+          secondary: [
+            hostPath(item.urlFrom),
+            item.country ? item.country : null,
+            item.spamScore != null ? `spam ${item.spamScore}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · '),
         },
         dr: fmtInt(item.domainFromRank),
         ur: fmtInt(item.pageFromRank),
-        domains: '—',
+        domains: item.country ?? '—',
         links: fmtInt(item.linksCount),
         anchor: {
           primary: item.anchor || '—',
@@ -84,9 +94,13 @@ export function mapBacklinkPagesToRows(
           : '—',
         status: item.isBroken
           ? 'Broken'
-          : item.dofollow
-            ? 'Dofollow'
-            : 'Nofollow',
+          : item.isLost
+            ? 'Lost'
+            : item.isNew
+              ? 'New'
+              : item.dofollow
+                ? 'Dofollow'
+                : 'Nofollow',
         seen: {
           primary: fmtWhen(item.firstSeen),
           secondary: fmtWhen(item.lastSeen),
@@ -96,7 +110,7 @@ export function mapBacklinkPagesToRows(
   })
 }
 
-/** @deprecated Prefer mapBacklinkPagesToRows — history is no longer the ledger. */
+/** @deprecated Prefer mapBacklinkPagesToRows */
 export function mapBacklinkSnapshotsToRows(
   history: SeoBacklinkSnapshot[],
 ): SeoChapterRow[] {
@@ -104,7 +118,251 @@ export function mapBacklinkSnapshotsToRows(
   return latest?.items?.length ? mapBacklinkPagesToRows(latest.items) : []
 }
 
-/** Merge DataForSEO backlink summary + referring pages into the chapter shell. */
+function buildAside(snap: SeoBacklinkSnapshot): {
+  ledger?: SeoChapterAsideLedger
+  ledgers?: SeoChapterAsideLedger[]
+} {
+  const ledgers: SeoChapterAsideLedger[] = []
+
+  if (snap.anchors?.length) {
+    ledgers.push({
+      title: 'Top anchors',
+      meta: `${snap.anchors.length} anchors`,
+      columns: [
+        { key: 'keyword', label: 'Anchor', dual: true },
+        { key: 'volume', label: 'Links', align: 'end' },
+        { key: 'score', label: 'DR', align: 'end' },
+      ],
+      rows: snap.anchors.slice(0, 12).map((a) => ({
+        id: a.id,
+        cells: {
+          keyword: {
+            primary: a.anchor,
+            secondary: a.firstSeen ? fmtWhen(a.firstSeen) : '—',
+          },
+          volume: fmtInt(a.backlinks),
+          score: fmtInt(a.rank),
+        },
+      })),
+    })
+  }
+
+  if (snap.referringDomainsList?.length) {
+    ledgers.push({
+      title: 'Referring domains',
+      meta: `${snap.referringDomainsList.length} domains`,
+      columns: [
+        { key: 'domain', label: 'Domain', dual: true },
+        { key: 'score', label: 'DR', align: 'end' },
+        { key: 'links', label: 'Links', align: 'end' },
+      ],
+      rows: snap.referringDomainsList.slice(0, 12).map((d) => ({
+        id: d.id,
+        tags: d.dofollow === false ? ['nofollow'] : ['dofollow'],
+        cells: {
+          domain: {
+            primary: d.domain,
+            secondary: [d.country, d.firstSeen ? fmtWhen(d.firstSeen) : null]
+              .filter(Boolean)
+              .join(' · ') || '—',
+          },
+          score: fmtInt(d.rank),
+          links: fmtInt(d.backlinks),
+        },
+      })),
+    })
+  }
+
+  if (snap.domainPages?.length) {
+    ledgers.push({
+      title: 'Linked pages',
+      meta: `${snap.domainPages.length} pages`,
+      columns: [
+        { key: 'page', label: 'Page', dual: true },
+        { key: 'links', label: 'Links', align: 'end' },
+        { key: 'domains', label: 'Domains', align: 'end' },
+      ],
+      rows: snap.domainPages.slice(0, 12).map((p) => ({
+        id: p.id,
+        cells: {
+          page: {
+            primary: hostPath(p.page),
+            secondary: fmtInt(p.rank) !== '—' ? `DR ${fmtInt(p.rank)}` : '—',
+          },
+          links: fmtInt(p.backlinks),
+          domains: fmtInt(p.referringDomains),
+        },
+      })),
+    })
+  }
+
+  if (snap.competitors?.length) {
+    ledgers.push({
+      title: 'Link competitors',
+      meta: `${snap.competitors.length} rivals`,
+      columns: [
+        { key: 'domain', label: 'Rival', dual: true },
+        { key: 'overlap', label: 'Intersect', align: 'end' },
+        { key: 'score', label: 'DR', align: 'end' },
+      ],
+      rows: snap.competitors.slice(0, 10).map((c) => ({
+        id: c.id,
+        cells: {
+          domain: {
+            primary: c.domain,
+            secondary: fmtInt(c.backlinks) !== '—' ? `${fmtInt(c.backlinks)} links` : '—',
+          },
+          overlap: fmtInt(c.intersections),
+          score: fmtInt(c.rank),
+        },
+      })),
+    })
+  }
+
+  const [ledger, ...rest] = ledgers
+  return { ledger, ledgers: rest.length ? rest : undefined }
+}
+
+function buildCharts(snap: SeoBacklinkSnapshot): SeoChapterChart[] {
+  const charts: SeoChapterChart[] = []
+  const series = snap.timeseries ?? []
+  const nl = snap.timeseriesNewLost ?? []
+  const hist = snap.history ?? []
+
+  if (nl.length >= 2) {
+    charts.push({
+      kind: 'series',
+      title: 'New & lost backlinks',
+      height: 180,
+      series: [
+        {
+          id: 'new',
+          label: 'New',
+          points: nl.map((p) => ({
+            label: weekLabel(p.date),
+            value: p.newBacklinks ?? 0,
+          })),
+        },
+        {
+          id: 'lost',
+          label: 'Lost',
+          points: nl.map((p) => ({
+            label: weekLabel(p.date),
+            value: p.lostBacklinks ?? 0,
+          })),
+        },
+      ],
+    })
+  } else if (series.length >= 2) {
+    charts.push({
+      kind: 'series',
+      title: 'New & lost backlinks',
+      height: 180,
+      series: [
+        {
+          id: 'backlinks',
+          label: 'Backlinks',
+          points: series.map((p) => ({
+            label: weekLabel(p.date),
+            value: p.backlinks ?? 0,
+          })),
+        },
+      ],
+    })
+  }
+
+  if (series.length >= 2) {
+    charts.push({
+      kind: 'series',
+      title: 'Referring domains',
+      height: 180,
+      series: [
+        {
+          id: 'ref',
+          label: 'Ref. domains',
+          points: series.map((p) => ({
+            label: weekLabel(p.date),
+            value: p.referringDomains ?? 0,
+          })),
+        },
+      ],
+    })
+  }
+
+  if (hist.length >= 3) {
+    charts.push({
+      kind: 'series',
+      title: 'Backlink history',
+      height: 180,
+      series: [
+        {
+          id: 'hist-bl',
+          label: 'Backlinks',
+          points: hist.slice(-12).map((p) => ({
+            label: weekLabel(p.date),
+            value: p.backlinks ?? 0,
+          })),
+        },
+      ],
+    })
+  }
+
+  if (snap.referringLinksTld?.length) {
+    charts.push({
+      kind: 'plot',
+      title: 'Ref. domains by TLD',
+      variant: 'bar_horizontal',
+      height: 180,
+      points: snap.referringLinksTld.slice(0, 6).map((b) => ({
+        label: b.tld,
+        value: b.count,
+      })),
+    })
+  }
+
+  if (snap.referringLinksPlatforms?.length) {
+    charts.push({
+      kind: 'plot',
+      title: 'Referring platforms',
+      variant: 'bar',
+      height: 160,
+      points: snap.referringLinksPlatforms.slice(0, 6).map((b) => ({
+        label: b.key,
+        value: b.count,
+      })),
+    })
+  }
+
+  if (snap.referringLinksCountries?.length) {
+    charts.push({
+      kind: 'plot',
+      title: 'Referring countries',
+      variant: 'bar_horizontal',
+      height: 160,
+      points: snap.referringLinksCountries
+        .filter((b) => b.key && b.key !== '(empty)')
+        .slice(0, 6)
+        .map((b) => ({ label: b.key, value: b.count })),
+    })
+  }
+
+  if (snap.networks?.length) {
+    charts.push({
+      kind: 'plot',
+      title: 'Referring networks',
+      variant: 'bar_horizontal',
+      height: 160,
+      points: snap.networks.slice(0, 6).map((n) => ({
+        label: n.network,
+        value: n.backlinks ?? n.referringDomains ?? 0,
+      })),
+    })
+  }
+
+  return charts
+}
+
+/** Merge DataForSEO backlink pack into the chapter shell. */
 export function buildBacklinksChapterModel(input: {
   projectId: string
   projectName: string
@@ -134,63 +392,16 @@ export function buildBacklinksChapterModel(input: {
   const rows = mapBacklinkPagesToRows(items)
   const hasLive = Boolean(snap)
   const ur = avgPageRank(items)
-  const series = snap?.timeseries ?? []
+  const aside = snap ? buildAside(snap) : {}
+  const charts = snap ? buildCharts(snap) : []
 
-  const newLostChart =
-    series.length >= 2
-      ? {
-          kind: 'series' as const,
-          title: 'New & lost backlinks',
-          height: 180,
-          series: [
-            {
-              id: 'backlinks',
-              label: 'Backlinks',
-              points: series.map((p) => ({
-                label: weekLabel(p.date),
-                value: p.backlinks ?? 0,
-              })),
-            },
-          ],
-        }
-      : null
-
-  const refDomainChart =
-    series.length >= 2
-      ? {
-          kind: 'series' as const,
-          title: 'Referring domains',
-          height: 180,
-          series: [
-            {
-              id: 'ref',
-              label: 'Ref. domains',
-              points: series.map((p) => ({
-                label: weekLabel(p.date),
-                value: p.referringDomains ?? 0,
-              })),
-            },
-          ],
-        }
-      : null
-
-  const tldChart =
-    snap?.referringLinksTld?.length
-      ? {
-          kind: 'plot' as const,
-          title: 'Ref. domains by TLD',
-          variant: 'bar_horizontal' as const,
-          height: 180,
-          points: snap.referringLinksTld.slice(0, 6).map((b) => ({
-            label: b.tld,
-            value: b.count,
-          })),
-        }
-      : null
-
-  const charts = [newLostChart, refDomainChart, tldChart].filter(
-    (c): c is NonNullable<typeof c> => Boolean(c),
-  )
+  const infoBits = [
+    snap?.targetInfo?.cms,
+    snap?.targetInfo?.server,
+    snap?.targetInfo?.country,
+    snap?.brokenBacklinks != null ? `${fmtInt(snap.brokenBacklinks)} broken` : null,
+    snap?.referringIps != null ? `${fmtInt(snap.referringIps)} IPs` : null,
+  ].filter(Boolean)
 
   const model: SeoChapterViewModel = {
     ...base,
@@ -208,8 +419,8 @@ export function buildBacklinksChapterModel(input: {
         return {
           ...f,
           value: snap.stubbed
-            ? 'Fixture · summary + pages'
-            : `DataForSEO · ${items.length} pages`,
+            ? 'Fixture pack'
+            : `DataForSEO · ${items.length} pages · ${snap.anchors?.length ?? 0} anchors`,
         }
       }
       if (f.kind === 'time' && snap?.capturedAt) {
@@ -222,7 +433,14 @@ export function buildBacklinksChapterModel(input: {
         }
       }
       if (f.kind === 'source' && snap) {
-        return { ...f, value: snap.stubbed ? 'Fixture' : 'DataForSEO' }
+        return {
+          ...f,
+          value: infoBits.length
+            ? `${snap.stubbed ? 'Fixture' : 'DataForSEO'} · ${infoBits.join(' · ')}`
+            : snap.stubbed
+              ? 'Fixture'
+              : 'DataForSEO',
+        }
       }
       return f
     }),
@@ -238,6 +456,15 @@ export function buildBacklinksChapterModel(input: {
         { value: 'en', label: 'EN' },
       ],
     },
+    filters: [
+      { id: 'all', label: 'All', tag: null },
+      { id: 'dofollow', label: 'Dofollow', tag: 'dofollow' },
+      { id: 'nofollow', label: 'Nofollow', tag: 'nofollow' },
+      { id: 'new', label: 'New', tag: 'new' },
+      { id: 'lost', label: 'Lost', tag: 'lost' },
+      { id: 'gov', label: 'Government', tag: 'gov' },
+      { id: 'edu', label: 'Educational', tag: 'edu' },
+    ],
     stats: snap
       ? [
           {
@@ -275,10 +502,13 @@ export function buildBacklinksChapterModel(input: {
         ]
       : base.stats,
     ledgerMeta: `Backlinks · ${fmtInt(snap?.backlinks ?? rows.length)}`,
-    pageSize: 8,
+    pageSize: 10,
     rows,
     charts: charts.length ? charts : undefined,
-    aside: undefined,
+    aside:
+      aside.ledger || aside.ledgers
+        ? { ledger: aside.ledger, ledgers: aside.ledgers }
+        : undefined,
   }
   return input.t ? localizeSeoChapter(model, input.t) : model
 }

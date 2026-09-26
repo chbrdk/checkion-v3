@@ -42,6 +42,11 @@ describe('backlinks-chapter-map', () => {
     expect(model.stats?.find((s) => s.label === 'UR')?.value).not.toBe('—')
     expect(model.rows.length).toBeGreaterThan(0)
     expect(model.charts?.length).toBeGreaterThanOrEqual(2)
+    expect(model.filters?.some((f) => f.id === 'new')).toBe(true)
+    expect(model.aside?.ledger?.title).toBe('Top anchors')
+    expect(model.aside?.ledgers?.some((l) => l.title === 'Link competitors')).toBe(
+      true,
+    )
     expect(model.emptyMessage).toBeUndefined()
   })
 

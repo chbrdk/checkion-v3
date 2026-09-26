@@ -1066,7 +1066,11 @@
       "overlapByRival": "Overlap by rival",
       "newLostBacklinks": "New & lost backlinks",
       "referringDomains": "Referring domains",
-      "tldDistribution": "Ref. domains by TLD"
+      "tldDistribution": "Ref. domains by TLD",
+      "backlinkHistory": "Backlink history",
+      "referringPlatforms": "Referring platforms",
+      "referringCountries": "Referring countries",
+      "referringNetworks": "Referring networks"
     },
     "seed": {
       "seed": "Seed",
@@ -1105,7 +1109,11 @@
       "info": "Info",
       "trans": "Trans",
       "dofollow": "Dofollow",
-      "nofollow": "Nofollow"
+      "nofollow": "Nofollow",
+      "new": "New",
+      "lost": "Lost",
+      "gov": "Gov",
+      "edu": "Edu"
     },
     "stats": {
       "ideas": "Ideas",
@@ -1154,7 +1162,15 @@
       "query": "Query",
       "page": "Page",
       "rank": "#",
-      "gap": "Gap"
+      "gap": "Gap",
+      "dr": "DR",
+      "ur": "UR",
+      "domains": "Domains",
+      "links": "Links",
+      "anchor": "Anchor",
+      "type": "Type",
+      "status": "Status",
+      "seen": "Seen"
     },
     "ledger": {
       "ideas": "Ideas · {count}",
@@ -1171,7 +1187,11 @@
       "movers": "Biggest movers",
       "moversEmpty": "No movers yet",
       "moversMeta": "{count} movers · this check",
-      "noData": "No data yet"
+      "noData": "No data yet",
+      "topAnchors": "Top anchors",
+      "referringDomainsAside": "Referring domains",
+      "linkedPages": "Linked pages",
+      "linkCompetitors": "Link competitors"
     },
     "facets": {
       "mode": "Mode",

@@ -445,6 +445,7 @@ export function SeoProjectWorkspace({
             location: query.location,
             recent,
             result: data,
+            linkCompetitors: backlinks[0]?.competitors ?? null,
             t,
           }),
         )
@@ -454,7 +455,7 @@ export function SeoProjectWorkspace({
         setBusy(false)
       }
     },
-    [compModel.searchBand?.recent, domain, projectId, projectName, t],
+    [backlinks, compModel.searchBand?.recent, domain, projectId, projectName, t],
   )
 
   useEffect(() => {
@@ -483,6 +484,55 @@ export function SeoProjectWorkspace({
         if (data?.history) {
           applyBacklinksHistory(data.history as SeoBacklinkSnapshot[])
         }
+      }
+      if (chapter === 'competitors') {
+        const bl = await api(paths.routes.apiProjectSeoBacklinks(projectId))
+        const history = (bl?.history as SeoBacklinkSnapshot[] | undefined) ?? []
+        if (!history.length) return
+        setBacklinks(history)
+        const linkCompetitors = history[0]?.competitors ?? []
+        if (!linkCompetitors.length) return
+        setCompModel((prev) =>
+          buildCompetitorsChapterModel({
+            projectId,
+            projectName,
+            domain,
+            seed: prev.searchBand?.seed,
+            locale: prev.searchBand?.locale,
+            location: prev.searchBand?.location,
+            recent: prev.searchBand?.recent,
+            // Preserve in-session SERP overlap rows by re-mapping from current model
+            // only when empty; otherwise enrich aside with link competitors.
+            result:
+              prev.rows.length > 0
+                ? {
+                    domain,
+                    keywords: (prev.searchBand?.seed ?? '')
+                      .split(/[,;]+/)
+                      .map((k) => k.trim())
+                      .filter(Boolean),
+                    items: prev.rows.map((r) => {
+                      const domainCell = r.cells.domain
+                      const host =
+                        typeof domainCell === 'object' && domainCell
+                          ? domainCell.primary
+                          : String(domainCell ?? '')
+                      return {
+                        domain: host,
+                        overlapCount: Number.parseInt(String(r.cells.overlap ?? '0'), 10) || 0,
+                        avgRank: Number.parseFloat(
+                          String(r.cells.avgRank ?? '').replace(',', '.'),
+                        ) || null,
+                      }
+                    }),
+                    fetchedAt: new Date().toISOString(),
+                    unitsUsed: 0,
+                  }
+                : null,
+            linkCompetitors,
+            t,
+          }),
+        )
       }
       if (chapter === 'rank-tracking') {
         const data = await api(paths.routes.apiProjectSeoRankConfigs(projectId))

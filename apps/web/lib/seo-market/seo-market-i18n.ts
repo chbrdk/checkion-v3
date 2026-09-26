@@ -27,6 +27,14 @@ const COLUMN_I18N: Record<string, string> = {
   page: 'seoMarket.columns.page',
   rank: 'seoMarket.columns.rank',
   gap: 'seoMarket.columns.gap',
+  dr: 'seoMarket.columns.dr',
+  ur: 'seoMarket.columns.ur',
+  domains: 'seoMarket.columns.domains',
+  links: 'seoMarket.columns.links',
+  anchor: 'seoMarket.columns.anchor',
+  type: 'seoMarket.columns.type',
+  status: 'seoMarket.columns.status',
+  seen: 'seoMarket.columns.seen',
 }
 
 const FILTER_I18N: Record<string, string> = {
@@ -42,6 +50,10 @@ const FILTER_I18N: Record<string, string> = {
   trans: 'seoMarket.filters.trans',
   dofollow: 'seoMarket.filters.dofollow',
   nofollow: 'seoMarket.filters.nofollow',
+  new: 'seoMarket.filters.new',
+  lost: 'seoMarket.filters.lost',
+  gov: 'seoMarket.filters.gov',
+  edu: 'seoMarket.filters.edu',
 }
 
 const STAT_I18N: Record<string, string> = {
@@ -80,6 +92,10 @@ const CHART_I18N: Record<string, string> = {
   'New & lost backlinks': 'seoMarket.charts.newLostBacklinks',
   'Referring domains': 'seoMarket.charts.referringDomains',
   'Ref. domains by TLD': 'seoMarket.charts.tldDistribution',
+  'Backlink history': 'seoMarket.charts.backlinkHistory',
+  'Referring platforms': 'seoMarket.charts.referringPlatforms',
+  'Referring countries': 'seoMarket.charts.referringCountries',
+  'Referring networks': 'seoMarket.charts.referringNetworks',
   Positionsverteilung: 'seoMarket.charts.positionDistribution',
   'Overlap nach Rivale': 'seoMarket.charts.overlapByRival',
 }
@@ -178,6 +194,15 @@ export function localizeSeoChapter(
                 })),
               }
             : undefined,
+          ledgers: model.aside.ledgers?.map((ledger) => ({
+            ...ledger,
+            title: asideTitleFor(id, ledger.title, t),
+            meta: asideMetaFor(id, ledger, t),
+            columns: ledger.columns.map((col) => ({
+              ...col,
+              label: COLUMN_I18N[col.key] ? t(COLUMN_I18N[col.key]!) : col.label,
+            })),
+          })),
         }
       : undefined,
   }
@@ -315,8 +340,17 @@ function actionLabelFor(id: SeoChapterId, t: Translator, fallback?: string): str
 
 function asideTitleFor(id: SeoChapterId, current: string, t: Translator): string {
   if (id === 'keywords' || /serp/i.test(current)) return t('seoMarket.ledger.serpSnapshot')
-  if (id === 'competitors' || /battle/i.test(current)) return t('seoMarket.ledger.battles')
+  if (id === 'competitors' || /battle/i.test(current)) {
+    if (/link competitor/i.test(current)) return t('seoMarket.ledger.linkCompetitors')
+    return t('seoMarket.ledger.battles')
+  }
   if (id === 'rank-tracking' || /mover|Bewegung/i.test(current)) return t('seoMarket.ledger.movers')
+  if (id === 'backlinks') {
+    if (/anchor/i.test(current)) return t('seoMarket.ledger.topAnchors')
+    if (/referring domain/i.test(current)) return t('seoMarket.ledger.referringDomainsAside')
+    if (/linked page/i.test(current)) return t('seoMarket.ledger.linkedPages')
+    if (/link competitor/i.test(current)) return t('seoMarket.ledger.linkCompetitors')
+  }
   return current
 }
 

@@ -339,12 +339,29 @@ export async function insertBacklinkSnapshot(
     spamScore: row.spamScore,
     details: {
       targetSpamScore: row.targetSpamScore ?? null,
+      brokenPages: row.brokenPages ?? null,
       referringPages: row.referringPages ?? null,
       referringPagesNofollow: row.referringPagesNofollow ?? null,
+      referringMainDomains: row.referringMainDomains ?? null,
+      referringIps: row.referringIps ?? null,
+      referringSubnets: row.referringSubnets ?? null,
+      crawledPages: row.crawledPages ?? null,
       referringLinksTld: row.referringLinksTld ?? [],
       referringLinksTypes: row.referringLinksTypes ?? {},
+      referringLinksAttributes: row.referringLinksAttributes ?? [],
+      referringLinksPlatforms: row.referringLinksPlatforms ?? [],
+      referringLinksLocations: row.referringLinksLocations ?? [],
+      referringLinksCountries: row.referringLinksCountries ?? [],
+      targetInfo: row.targetInfo ?? null,
       items: row.items ?? [],
       timeseries: row.timeseries ?? [],
+      timeseriesNewLost: row.timeseriesNewLost ?? [],
+      anchors: row.anchors ?? [],
+      referringDomainsList: row.referringDomainsList ?? [],
+      domainPages: row.domainPages ?? [],
+      networks: row.networks ?? [],
+      competitors: row.competitors ?? [],
+      history: row.history ?? [],
     },
     source: row.source,
     stubbed: row.stubbed ? 1 : 0,
@@ -369,6 +386,8 @@ export async function listBacklinkSnapshots(
     .limit(limit)
   return rows.map((r) => {
     const details = (r.details ?? {}) as Record<string, unknown>
+    const arr = <T>(key: string): T[] =>
+      Array.isArray(details[key]) ? (details[key] as T[]) : []
     return {
       id: r.id,
       projectId: r.projectId,
@@ -384,27 +403,50 @@ export async function listBacklinkSnapshots(
       lostReferringDomains: r.lostReferringDomains,
       targetSpamScore:
         typeof details.targetSpamScore === 'number' ? details.targetSpamScore : null,
+      brokenPages:
+        typeof details.brokenPages === 'number' ? details.brokenPages : null,
       referringPages:
         typeof details.referringPages === 'number' ? details.referringPages : null,
       referringPagesNofollow:
         typeof details.referringPagesNofollow === 'number'
           ? details.referringPagesNofollow
           : null,
-      referringLinksTld: Array.isArray(details.referringLinksTld)
-        ? (details.referringLinksTld as SeoBacklinkSnapshot['referringLinksTld'])
-        : [],
+      referringMainDomains:
+        typeof details.referringMainDomains === 'number'
+          ? details.referringMainDomains
+          : null,
+      referringIps:
+        typeof details.referringIps === 'number' ? details.referringIps : null,
+      referringSubnets:
+        typeof details.referringSubnets === 'number'
+          ? details.referringSubnets
+          : null,
+      crawledPages:
+        typeof details.crawledPages === 'number' ? details.crawledPages : null,
+      referringLinksTld: arr('referringLinksTld'),
       referringLinksTypes:
         details.referringLinksTypes &&
         typeof details.referringLinksTypes === 'object' &&
         !Array.isArray(details.referringLinksTypes)
           ? (details.referringLinksTypes as Record<string, number>)
           : {},
-      items: Array.isArray(details.items)
-        ? (details.items as NonNullable<SeoBacklinkSnapshot['items']>)
-        : [],
-      timeseries: Array.isArray(details.timeseries)
-        ? (details.timeseries as NonNullable<SeoBacklinkSnapshot['timeseries']>)
-        : [],
+      referringLinksAttributes: arr('referringLinksAttributes'),
+      referringLinksPlatforms: arr('referringLinksPlatforms'),
+      referringLinksLocations: arr('referringLinksLocations'),
+      referringLinksCountries: arr('referringLinksCountries'),
+      targetInfo:
+        details.targetInfo && typeof details.targetInfo === 'object'
+          ? (details.targetInfo as SeoBacklinkSnapshot['targetInfo'])
+          : null,
+      items: arr('items'),
+      timeseries: arr('timeseries'),
+      timeseriesNewLost: arr('timeseriesNewLost'),
+      anchors: arr('anchors'),
+      referringDomainsList: arr('referringDomainsList'),
+      domainPages: arr('domainPages'),
+      networks: arr('networks'),
+      competitors: arr('competitors'),
+      history: arr('history'),
       source: r.source as SeoBacklinkSnapshot['source'],
       stubbed: Boolean(r.stubbed),
       fetchedAt: r.capturedAt,
