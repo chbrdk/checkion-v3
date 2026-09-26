@@ -1081,7 +1081,7 @@ export interface SeoCompetitorsResult extends SeoMarketEnvelope {
   items: SeoCompetitorRow[]
 }
 
-/** Field / Research / Ranks smart keyword suggestions (OpenRouter Qwen). */
+/** Field / Research / Ranks smart keyword suggestions (Market Suggest Research Agent). */
 export interface SeoFieldSuggestResult {
   projectId: string
   domain: string
@@ -1091,6 +1091,20 @@ export interface SeoFieldSuggestResult {
   fetchedAt: string
   /** Which Market surface requested the suggestions. */
   surface?: 'field' | 'research' | 'ranks'
+  /** Distilled company brief from the research agent (when live). */
+  brief?: {
+    summary: string
+    category: string | null
+    products: string[]
+    services: string[]
+    audiences: string[]
+  }
+  /** Agent provenance for ops / Phase-2 Knowledge Pack publish. */
+  agent?: {
+    steps: string[]
+    pagesFetched: string[]
+    usedKnowledge: boolean
+  }
 }
 
 /** @deprecated alias — prefer SeoFieldSuggestResult */

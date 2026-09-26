@@ -83,21 +83,21 @@ Each `/projects/:id/seo/:chapter` (except overview) is a **report chapter**, not
 
 **Competitors depth (SERP-overlap IA):** Search band (keyword set · locale · location · Analyze + recent sets) → optional **Smart suggestions** (Qwen via OpenRouter) → KPI (rivals · avg overlap · best avg rank · high threats) → **split**: main **rival ledger** (dual domain/shared-KW · overlap · avg rank · threat chips · High/Mid/Low filters · pagination) · aside **Overlap** bar `Chart` + **Competitive pressure** `SeriesChart` + **Battles they win** (+ optional **Link competitors** from latest backlink snapshot). Analyze posts `POST /api/projects/:id/seo/competitors`; suggestions post `POST /api/projects/:id/seo/competitors/suggest`.
 
-### Market smart suggestions (Qwen / OpenRouter)
+### Market smart suggestions (Research Agent + OpenRouter)
 Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FIELD_SUGGEST_MODEL`). Requires `OPENROUTER_API_KEY`. Fail closed `503`. Not DataForSEO units.
 
 | Surface | Endpoint | Purpose | UI |
 |---------|----------|---------|-----|
 | Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze |
 | Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research |
-| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords from saved ∪ domain tops (Qwen if &lt;5) | chips toggle · Use set · Track & check (comma-set OK) |
+| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords (saved Research short-circuit if ≥5 clean) | chips toggle · Use set · Track & check |
 
-**Grounding (Knowledge + URL + Qwen — any vertical):**
-- Primary: Collection Knowledge Pack (`profile`, `research_brief`, `geo_context`, `competitive`) + project name/description + saved Research.
-- When knowledge is thin: best-effort homepage fetch (title / meta description / H1) for the project domain; Qwen infers vertical from URL + page chrome.
-- No hardcoded industry packs (heating etc.). Same pipeline for Field, Research, and Ranks.
-- Reject addresses, hosts, search-engine names, and weak `brand + vergleich|preis|alternative` templates.
-- Offline/stub only: knowledge seeds ∪ title crumbs. Live fail → soft URL-stub fallback, else `503`. Domain normalize strips leading `www.`.
+**Grounding — Market Suggest Research Agent** (`specs/domain/seo-market-suggest-agent.md`):
+- Not a one-shot title/meta call. Agent gathers Collection Knowledge + homepage + up to 4 same-origin deep pages (about/products/services…), distills a company brief (who / products / services / audiences), then emits surface keywords.
+- Same agent for Field, Research, Ranks. No hardcoded industry packs.
+- Reject addresses, hosts, search-engine names, weak `brand + vergleich|preis` templates.
+- Response may include `brief` + `agent` provenance. Phase 2: optional publish distillate → Plexon Knowledge Pack.
+- Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 

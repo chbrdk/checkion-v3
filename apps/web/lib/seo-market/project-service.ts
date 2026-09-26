@@ -29,7 +29,7 @@ import {
   mergeKeywordCandidates,
   candidatesFromKnowledge,
   sanitizeSuggestKeywords,
-  suggestMarketKeywordsViaQwen,
+  FieldSuggestError,
 } from './field-suggest'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
@@ -38,6 +38,7 @@ import {
   resolveKnowledgeEnrichment,
 } from '../plexon-knowledge-pack'
 import { fetchUrlSuggestContext } from './url-suggest-context'
+import { runMarketSuggestResearchAgent } from './suggest-research-agent'
 import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
@@ -375,7 +376,7 @@ async function projectSuggestMarketKeywords(input: {
   }
 
   try {
-    const { keywords, model } = await suggestMarketKeywordsViaQwen({
+    const agentResult = await runMarketSuggestResearchAgent({
       surface: input.surface,
       domain,
       projectName:
@@ -384,13 +385,11 @@ async function projectSuggestMarketKeywords(input: {
       locale: input.locale,
       seedHint,
       savedKeywords: saved.slice(0, 8),
-      candidateKeywords: groundedPool,
       knowledge,
-      urlContext,
     })
 
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(keywords, packSeeds, saved),
+      mergeKeywordCandidates(agentResult.keywords, packSeeds, saved),
       domain,
       input.surface,
       8,
@@ -409,16 +408,19 @@ async function projectSuggestMarketKeywords(input: {
           surface: input.surface,
         }
       }
+      throw new FieldSuggestError('Agent returned too few usable keywords', 'invalid')
     }
 
     return {
       projectId: input.projectId,
       domain,
       keywords: finalKeywords,
-      model,
+      model: agentResult.model,
       stubbed: false,
       fetchedAt,
       surface: input.surface,
+      brief: agentResult.brief,
+      agent: agentResult.agent,
     }
   } catch (err) {
     const fallback = sanitizeSuggestKeywords(
