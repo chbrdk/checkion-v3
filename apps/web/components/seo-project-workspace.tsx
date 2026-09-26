@@ -24,6 +24,7 @@ import { buildKeywordsChapterModel } from '../lib/seo-market/keywords-chapter-ma
 import { buildDomainChapterModel } from '../lib/seo-market/domain-chapter-map'
 import { buildRankChapterModel } from '../lib/seo-market/rank-chapter-map'
 import { buildCompetitorsChapterModel } from '../lib/seo-market/competitors-chapter-map'
+import { brandSeedFromHost } from '../lib/seo-market/host-utils'
 import { useJobNotifications } from './job-notification-center'
 import { SeoDashboardView } from './seo-dashboard-view'
 import { SeoChapterView, type SeoChapterSearchQuery } from './seo-chapter-view'
@@ -114,6 +115,16 @@ export function SeoProjectWorkspace({
     async (query: SeoChapterSearchQuery) => {
       setBusy(true)
       setError(null)
+      const seedRaw = query.seed.trim()
+      const seed =
+        !seedRaw || seedRaw.toLowerCase() === 'www'
+          ? brandSeedFromHost(domain)
+          : seedRaw
+      if (!seed || seed.toLowerCase() === 'www') {
+        setError('Seed must be a brand or keyword — check the Collection domain.')
+        setBusy(false)
+        return
+      }
       const locationCode = locationCodeFor(query.location)
       const languageCode = query.locale || 'de'
       try {
@@ -123,7 +134,7 @@ export function SeoProjectWorkspace({
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
               action: 'research',
-              seed: query.seed,
+              seed,
               save: true,
               limit: 40,
             }),
@@ -133,7 +144,7 @@ export function SeoProjectWorkspace({
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
               projectId,
-              keyword: query.seed,
+              keyword: seed,
               locationCode,
               languageCode,
             }),
@@ -159,15 +170,15 @@ export function SeoProjectWorkspace({
         if (researchData.keywords) setSaved(researchData.keywords)
         const prevRecent = kwModel.searchBand?.recent ?? []
         const recent = [
-          query.seed,
-          ...prevRecent.filter((r) => r.toLowerCase() !== query.seed.toLowerCase()),
+          seed,
+          ...prevRecent.filter((r) => r.toLowerCase() !== seed.toLowerCase()),
         ].slice(0, 6)
         setKwModel(
           buildKeywordsChapterModel({
             projectId,
             projectName,
             domain,
-            seed: query.seed,
+            seed,
             locale: query.locale,
             location: query.location,
             recent,
@@ -366,7 +377,7 @@ export function SeoProjectWorkspace({
             projectId,
             projectName,
             domain,
-            seed: seed || domain.split('.')[0] || 'brand',
+            seed: seed || brandSeedFromHost(domain),
             locale: query.locale,
             location: query.location,
             recent,

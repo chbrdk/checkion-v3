@@ -2,6 +2,7 @@ import type {
   SeoChapterId,
   SeoChapterViewModel,
 } from '@checkion-v3/contracts'
+import { brandSeedFromHost } from './host-utils'
 
 type ChapterInput = {
   projectId?: string
@@ -158,7 +159,7 @@ export function fixtureSeoChapter(
           { kind: 'mode', label: 'Mode', value: 'Fixture' },
         ],
         searchBand: {
-          seed: domain.split('.')[0] || 'acme',
+          seed: brandSeedFromHost(domain),
           seedLabel: 'Seed',
           actionLabel: 'Research',
           locale: 'de',

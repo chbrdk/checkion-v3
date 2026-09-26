@@ -1,5 +1,6 @@
 import { paths } from '../paths'
 import { requireDataForSeoKey } from './live-seo-market-gate'
+import { brandSeedFromHost } from './host-utils'
 import type {
   SeoBacklinksResult,
   SeoDomainOverviewResult,
@@ -262,8 +263,11 @@ export async function liveKeywordPositions(input: {
       languageCode: input.languageCode,
     })
     units += serp.units
-    const hit = serp.result.items.find((i) => i.domain.toLowerCase().includes(domain.split('.')[0]!))
-      ?? serp.result.items.find((i) => i.domain.toLowerCase() === domain)
+    const brand = brandSeedFromHost(domain)
+    const hit =
+      serp.result.items.find(
+        (i) => brand !== 'brand' && i.domain.toLowerCase().includes(brand),
+      ) ?? serp.result.items.find((i) => i.domain.toLowerCase() === domain)
     snapshots.push({
       keyword,
       rank: hit?.rank ?? null,

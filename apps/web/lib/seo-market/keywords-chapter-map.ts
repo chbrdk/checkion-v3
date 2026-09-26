@@ -5,6 +5,7 @@ import type {
   SeoSerpResult,
 } from '@checkion-v3/contracts'
 import { emptySeoChapter } from './chapter-fixtures'
+import { brandSeedFromHost } from './host-utils'
 
 function fmtVol(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—'
@@ -114,7 +115,7 @@ export function buildKeywordsChapterModel(input: {
         : f,
     ),
     searchBand: {
-      seed: input.seed || base.searchBand?.seed || input.domain.split('.')[0] || 'brand',
+      seed: input.seed || base.searchBand?.seed || brandSeedFromHost(input.domain),
       seedLabel: 'Seed',
       actionLabel: 'Research',
       locale: input.locale ?? base.searchBand?.locale ?? 'de',

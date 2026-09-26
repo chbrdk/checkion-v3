@@ -24,6 +24,7 @@ import {
   fixtureRankSnapshots,
 } from './fixtures'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
+import { brandSeedFromHost } from './host-utils'
 import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
@@ -228,7 +229,8 @@ export async function projectCompetitors(
       units += u
       for (const item of result.items) {
         const d = item.domain.toLowerCase()
-        if (!d || d === domain || d.includes(domain.split('.')[0]!)) continue
+        const brand = brandSeedFromHost(domain)
+        if (!d || d === domain || (brand !== 'brand' && d.includes(brand))) continue
         const cur = counts.get(d) ?? { overlap: 0, rankSum: 0, n: 0 }
         cur.overlap += 1
         cur.rankSum += item.rank

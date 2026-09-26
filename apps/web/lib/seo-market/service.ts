@@ -24,6 +24,7 @@ import {
   fixtureSerpResult,
 } from './fixtures'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
+import { brandSeedFromHost } from './host-utils'
 import {
   assertSeoMarketSoftCap,
   getSeoMarketCache,
@@ -196,7 +197,13 @@ export async function researchCompetitors(input: {
       units += u
       for (const item of result.items) {
         const d = item.domain.toLowerCase()
-        if (!d || d === domain || domain.includes(d) || d.includes(domain.split('.')[0]!)) {
+        const brand = brandSeedFromHost(domain)
+        if (
+          !d ||
+          d === domain ||
+          domain.includes(d) ||
+          (brand !== 'brand' && d.includes(brand))
+        ) {
           continue
         }
         const cur = counts.get(d) ?? { overlap: 0, rankSum: 0, n: 0 }
