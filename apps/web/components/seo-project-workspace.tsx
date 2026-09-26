@@ -26,6 +26,7 @@ import { buildRankChapterModel } from '../lib/seo-market/rank-chapter-map'
 import { buildCompetitorsChapterModel } from '../lib/seo-market/competitors-chapter-map'
 import { buildBacklinksChapterModel } from '../lib/seo-market/backlinks-chapter-map'
 import { brandSeedFromHost, isJunkKeywordToken } from '../lib/seo-market/host-utils'
+import { sanitizeSuggestKeywords } from '../lib/seo-market/field-suggest'
 import { useT } from '../lib/user-prefs'
 import { useJobNotifications } from './job-notification-center'
 import { SeoDashboardView } from './seo-dashboard-view'
@@ -479,7 +480,15 @@ export function SeoProjectWorkspace({
       if (!res.ok) {
         throw new Error(data.detail || data.error || `HTTP ${res.status}`)
       }
-      const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      const keywords = sanitizeSuggestKeywords(
+        Array.isArray(data.keywords) ? data.keywords : [],
+        domain,
+        'ranks',
+        8,
+      )
+      if (!keywords.length) {
+        throw new Error('No usable suggestions')
+      }
       setRankModel((prev) => ({
         ...prev,
         searchBand: {
@@ -500,7 +509,7 @@ export function SeoProjectWorkspace({
     } finally {
       setBusy(false)
     }
-  }, [projectId, rankModel.searchBand?.locale, rankModel.searchBand?.seed, t])
+  }, [domain, projectId, rankModel.searchBand?.locale, rankModel.searchBand?.seed, t])
 
   const runCompetitorsAnalyze = useCallback(
     async (query: SeoChapterSearchQuery) => {

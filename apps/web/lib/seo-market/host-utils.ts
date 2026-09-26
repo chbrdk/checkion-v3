@@ -35,14 +35,48 @@ const JUNK_TOKENS = new Set([
   'co',
   'uk',
   'brand',
+  'google',
+  'yahoo',
+  'bing',
+  'duckduckgo',
+  'facebook',
+  'instagram',
+  'youtube',
+  'twitter',
+  'linkedin',
 ])
 
-/** True for bare junk tokens that must never surface as keyword chips. */
+const SEARCH_ENGINE_RE =
+  /\b(google|yahoo|bing|duckduckgo|baidu|yandex|ecosia)\b/i
+
+/** Hostname / URL shaped strings — never trackable SEO keywords. */
+const HOST_OR_URL_RE =
+  /(?:https?:\/\/)|(?:\bwww\b)|(?:\b[a-z0-9-]+(?:\s+[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|de|info|app|ai)\b)/i
+
+/**
+ * True for tokens that must never surface as Market suggestion chips
+ * (www / URLs / TLDs / search-engine hosts / bare junk).
+ */
 export function isJunkKeywordToken(raw: string | null | undefined): boolean {
-  const t = (raw ?? '').trim().toLowerCase()
+  const t = (raw ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
   if (!t) return true
+  if (t.length < 2) return true
   if (JUNK_TOKENS.has(t)) return true
-  if (/^www(\.|$)/.test(t)) return true
-  if (/^https?:\/\//.test(t)) return true
+  // Any www fragment (www.google.com, "www goo", "http www.google.com")
+  if (/\bwww\b/.test(t)) return true
+  if (/\bhttps?\b/.test(t)) return true
+  if (HOST_OR_URL_RE.test(t)) return true
+  if (SEARCH_ENGINE_RE.test(t)) return true
+  // Truncated junk like "www.go" / "goo" alone already covered; also drop pure TLD-y crumbs
+  if (/^[a-z0-9-]{1,3}$/.test(t) && !/^(seo|b2b|crm|erp|kpi)$/.test(t)) return true
   return false
+}
+
+/** True when a string looks like a real searchable query (not a host/URL). */
+export function looksLikeSearchQuery(raw: string | null | undefined): boolean {
+  const t = (raw ?? '').trim()
+  if (!t || isJunkKeywordToken(t)) return false
+  // Must contain a letter
+  if (!/[a-zäöüß]/i.test(t)) return false
+  return true
 }

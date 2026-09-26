@@ -313,8 +313,16 @@ async function projectSuggestMarketKeywords(input: {
     platformProjectId: project.platformProjectId,
   })
   const packSeeds = candidatesFromKnowledge(knowledge)
+  const groundedFixtures = fixtureFieldSuggestions({
+    domain,
+    projectName: project.name,
+    locale: input.locale,
+    surface: input.surface,
+    knowledge,
+  })
+  // Prefer pack + saved research; domain tops last (often polluted with host-like noise).
   const groundedPool = sanitizeSuggestKeywords(
-    mergeKeywordCandidates(packSeeds, saved, domainTops),
+    mergeKeywordCandidates(packSeeds, saved, groundedFixtures, domainTops),
     domain,
     input.surface,
     12,
@@ -326,15 +334,8 @@ async function projectSuggestMarketKeywords(input: {
       : undefined
 
   if (!shouldRunLiveSeoMarket()) {
-    const base = fixtureFieldSuggestions({
-      domain,
-      projectName: project.name,
-      locale: input.locale,
-      surface: input.surface,
-      knowledge,
-    })
     const merged = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(groundedPool, base),
+      mergeKeywordCandidates(groundedPool, groundedFixtures),
       domain,
       input.surface,
       8,
@@ -350,15 +351,20 @@ async function projectSuggestMarketKeywords(input: {
     }
   }
 
-  // Prefer Collection / Market data when the pool is already rich enough.
-  if (groundedPool.length >= 5) {
-    // Still ask Qwen to refine when Field/Research and we have industry signal —
-    // but skip the call when Ranks already has a full track set from saved ∪ tops ∪ pack.
-    if (input.surface === 'ranks') {
+  // Ranks: only short-circuit on a clean Market pool (never host/URL junk).
+  // Always prefer pack/saved/fixtures over raw domain tops alone.
+  if (input.surface === 'ranks') {
+    const cleanMarket = sanitizeSuggestKeywords(
+      mergeKeywordCandidates(packSeeds, saved),
+      domain,
+      'ranks',
+      8,
+    )
+    if (cleanMarket.length >= 5) {
       return {
         projectId: input.projectId,
         domain,
-        keywords: groundedPool.slice(0, 8),
+        keywords: cleanMarket.slice(0, 8),
         model: enrichmentHasSignal(knowledge) ? 'market-data+knowledge' : 'market-data',
         stubbed: false,
         fetchedAt,
@@ -382,11 +388,23 @@ async function projectSuggestMarketKeywords(input: {
     })
 
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(groundedPool, keywords),
+      mergeKeywordCandidates(keywords, groundedPool, groundedFixtures),
       domain,
       input.surface,
       8,
     )
+
+    if (finalKeywords.length < 3) {
+      return {
+        projectId: input.projectId,
+        domain,
+        keywords: groundedFixtures.slice(0, 8),
+        model: 'fixture-fallback',
+        stubbed: false,
+        fetchedAt,
+        surface: input.surface,
+      }
+    }
 
     return {
       projectId: input.projectId,
@@ -397,21 +415,25 @@ async function projectSuggestMarketKeywords(input: {
       fetchedAt,
       surface: input.surface,
     }
-  } catch (err) {
-    // Soft fallback: grounded pack/domain/project fixtures beat empty 503 when model fails
-    // after we already have Collection knowledge or domain tops.
-    if (groundedPool.length >= 3) {
+  } catch {
+    const fallback = sanitizeSuggestKeywords(
+      mergeKeywordCandidates(groundedPool, groundedFixtures),
+      domain,
+      input.surface,
+      8,
+    )
+    if (fallback.length >= 3) {
       return {
         projectId: input.projectId,
         domain,
-        keywords: groundedPool.slice(0, 8),
+        keywords: fallback,
         model: 'knowledge-fallback',
         stubbed: false,
         fetchedAt,
         surface: input.surface,
       }
     }
-    throw err
+    throw new Error('Market suggestions unavailable')
   }
 }
 

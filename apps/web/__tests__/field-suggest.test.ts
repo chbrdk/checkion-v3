@@ -6,7 +6,11 @@ import {
   suggestFieldKeywordsViaQwen,
   FieldSuggestError,
 } from '../lib/seo-market/field-suggest'
-import { brandSeedFromHost, isJunkKeywordToken } from '../lib/seo-market/host-utils'
+import {
+  brandSeedFromHost,
+  isJunkKeywordToken,
+  looksLikeSearchQuery,
+} from '../lib/seo-market/host-utils'
 
 describe('field-suggest', () => {
   afterEach(() => {
@@ -57,22 +61,40 @@ describe('field-suggest', () => {
     expect(kw.every((k) => k.toLowerCase() !== 'www')).toBe(true)
   })
 
-  it('rejects junk tokens including www', () => {
+  it('rejects www / URL / search-engine junk from Rank suggestions', () => {
     expect(isJunkKeywordToken('www')).toBe(true)
     expect(isJunkKeywordToken('HTTPS')).toBe(true)
+    expect(isJunkKeywordToken('www.google.com')).toBe(true)
+    expect(isJunkKeywordToken('http www.google.com')).toBe(true)
+    expect(isJunkKeywordToken('google.com')).toBe(true)
+    expect(isJunkKeywordToken('yahoo')).toBe(true)
+    expect(looksLikeSearchQuery('wärmepumpe vergleich')).toBe(true)
+    expect(looksLikeSearchQuery('www.google.com')).toBe(false)
     expect(brandSeedFromHost('www.acme.example')).toBe('acme')
     const cleaned = sanitizeSuggestKeywords(
-      ['www', 'acme', 'acme pricing', 'http', 'com'],
+      [
+        'www.google.com',
+        'www.yahoo.com',
+        'www.google search web',
+        'www.google',
+        'www.goo',
+        'http www.google.com',
+        'www.google.com search',
+        'www.go',
+        'acme',
+        'acme pricing',
+        'wärmepumpe vergleich',
+      ],
       'acme.example',
-      'field',
+      'ranks',
     )
-    expect(cleaned).toEqual(['acme pricing'])
+    expect(cleaned).toEqual(['acme pricing', 'wärmepumpe vergleich'])
   })
 
   it('extracts candidates from knowledge pack', () => {
     const c = candidatesFromKnowledge({
       geoContext: {
-        seedQueries: ['seed a', 'www'],
+        seedQueries: ['seed a', 'www.google.com'],
         queryThemes: ['theme b'],
         knownCompetitors: [],
       },
@@ -103,7 +125,8 @@ describe('field-suggest', () => {
               message: {
                 content: JSON.stringify({
                   keywords: [
-                    'www',
+                    'www.google.com',
+                    'www.yahoo.com',
                     'wärmepumpe vergleich',
                     'heizung modernisieren',
                     'vaillant',
@@ -126,7 +149,8 @@ describe('field-suggest', () => {
     expect(model).toBe('qwen/qwen3.7-flash')
     expect(keywords).toContain('wärmepumpe vergleich')
     expect(keywords).not.toContain('vaillant')
-    expect(keywords).not.toContain('www')
+    expect(keywords).not.toContain('www.google.com')
+    expect(keywords.every((k) => !/\bwww\b|\bgoogle\b|\byahoo\b/i.test(k))).toBe(true)
     expect(keywords.length).toBeGreaterThanOrEqual(3)
   })
 })

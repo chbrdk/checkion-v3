@@ -1,6 +1,10 @@
 import type { GeoKnowledgeEnrichment } from '../plexon-knowledge-pack'
 import { paths } from '../paths'
-import { brandSeedFromHost, isJunkKeywordToken } from './host-utils'
+import {
+  brandSeedFromHost,
+  isJunkKeywordToken,
+  looksLikeSearchQuery,
+} from './host-utils'
 
 export type SeoSuggestSurface = 'field' | 'research' | 'ranks'
 
@@ -62,7 +66,7 @@ export function sanitizeSuggestKeywords(
     if (!k || k.length > 80) continue
     const lower = k.toLowerCase()
     if (seen.has(lower)) continue
-    if (isJunkKeywordToken(lower) || lower === host) continue
+    if (!looksLikeSearchQuery(k) || lower === host) continue
     if (bits.has(lower)) {
       if (surface !== 'research' || brandKept) continue
       brandKept = true
@@ -86,7 +90,7 @@ function parseKeywords(raw: unknown, max = 8): string[] {
       .replace(/\s+/g, ' ')
     if (!k || k.length > 80) continue
     const key = k.toLowerCase()
-    if (seen.has(key) || isJunkKeywordToken(key)) continue
+    if (seen.has(key) || !looksLikeSearchQuery(k)) continue
     seen.add(key)
     out.push(k)
     if (out.length >= max) break
@@ -112,13 +116,18 @@ function nameTokens(projectName: string | undefined): string[] {
     .trim()
     .split(/[\s|/·—–-]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length > 2 && !isJunkKeywordToken(t) && !/^(gmbh|ag|ltd|inc|the|and|und)$/i.test(t))
+    .filter(
+      (t) =>
+        t.length > 2 &&
+        !isJunkKeywordToken(t) &&
+        !/^(gmbh|ag|ltd|inc|the|and|und|seo|group)$/i.test(t),
+    )
     .slice(0, 3)
 }
 
 /**
- * Deterministic fixture suggestions when live SEO Market is off.
- * Grounded in domain brand + project name / industry — never heating fixtures.
+ * Deterministic fixture suggestions when live SEO Market is off / Qwen returns junk.
+ * Grounded in domain brand + project name / industry — never heating or search-engine fixtures.
  */
 export function fixtureFieldSuggestions(input: {
   domain: string
@@ -175,7 +184,9 @@ function systemPromptFor(surface: SeoSuggestSurface, locale: string): string {
   const lang = locale.startsWith('de') ? 'German' : 'English'
   const ground = [
     'Ground every keyword in the provided industry, audiences, competitors, and domain — never invent unrelated verticals.',
-    'Never return www, http, bare TLDs, or the brand name alone (except research may include brand once as a seed).',
+    'Never return URLs, hostnames, www, http, google, yahoo, bing, or other search-engine names.',
+    'Never return the brand name alone (except research may include brand once as a seed).',
+    'Keywords must be human search queries a buyer would type — not domains.',
   ].join(' ')
   if (surface === 'research') {
     return [
@@ -214,7 +225,9 @@ function knowledgePromptBits(knowledge: GeoKnowledgeEnrichment | null | undefine
   if (knowledge.profile?.primaryDomain) bits.push(`Primary domain: ${knowledge.profile.primaryDomain}`)
   if (knowledge.competitive?.category) bits.push(`Category: ${knowledge.competitive.category}`)
   if (knowledge.competitive?.hosts?.length) {
-    bits.push(`Known rivals: ${knowledge.competitive.hosts.slice(0, 12).join(', ')}`)
+    bits.push(
+      `Known rival hosts (context only, do NOT return as keywords): ${knowledge.competitive.hosts.slice(0, 12).join(', ')}`,
+    )
   }
   if (knowledge.researchBrief?.summary) {
     bits.push(`Audience / research brief: ${knowledge.researchBrief.summary.slice(0, 500)}`)
@@ -229,7 +242,9 @@ function knowledgePromptBits(knowledge: GeoKnowledgeEnrichment | null | undefine
     bits.push(`Prior seed queries: ${knowledge.geoContext.seedQueries.slice(0, 12).join(', ')}`)
   }
   if (knowledge.geoContext?.knownCompetitors?.length) {
-    bits.push(`GEO rivals: ${knowledge.geoContext.knownCompetitors.slice(0, 12).join(', ')}`)
+    bits.push(
+      `GEO rival hosts (context only, do NOT return as keywords): ${knowledge.geoContext.knownCompetitors.slice(0, 12).join(', ')}`,
+    )
   }
   return bits
 }
@@ -272,6 +287,12 @@ export async function suggestMarketKeywordsViaQwen(input: {
     20,
   )
   const system = systemPromptFor(input.surface, locale)
+  const hint =
+    input.seedHint?.trim() && looksLikeSearchQuery(input.seedHint)
+      ? input.seedHint.trim()
+      : null
+  const seedHintForPrompt =
+    hint && !brandBitsFor(input.domain).has(hint.toLowerCase()) ? hint : null
   const user = [
     `Surface: ${input.surface}`,
     `Domain: ${input.domain.replace(/^www\./i, '')}`,
@@ -281,14 +302,13 @@ export async function suggestMarketKeywordsViaQwen(input: {
       : null,
     `Brand hint: ${brand}`,
     ...knowledgePromptBits(input.knowledge),
-    input.seedHint?.trim() && !isJunkKeywordToken(input.seedHint)
-      ? `Seed hint: ${input.seedHint.trim()}`
-      : null,
+    seedHintForPrompt ? `Seed hint: ${seedHintForPrompt}` : null,
     saved.length ? `Saved research keywords: ${saved.join(', ')}` : null,
     candidates.length
       ? `Prioritize / refine these grounded candidates: ${candidates.join(', ')}`
       : null,
     'If industry or audience context is present, keywords must reflect that vertical — do not invent unrelated categories.',
+    'Do not return any URL, hostname, or search-engine name as a keyword.',
   ]
     .filter(Boolean)
     .join('\n')
@@ -362,7 +382,7 @@ export function mergeKeywordCandidates(
   for (const list of lists) {
     for (const raw of list ?? []) {
       const k = raw.trim().replace(/\s+/g, ' ')
-      if (!k || isJunkKeywordToken(k)) continue
+      if (!k || !looksLikeSearchQuery(k)) continue
       const key = k.toLowerCase()
       if (seen.has(key)) continue
       seen.add(key)
