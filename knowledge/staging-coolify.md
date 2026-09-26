@@ -58,7 +58,12 @@ OPENAI_MODEL=gpt-5.6-luna        # optional single-model fallback
 CHECKION_FEDERATION_MODE=live
 PLEXON_DEMO_OWNER_USER_ID=…      # optional when no session on create
 PLEXON_DEMO_COMPANY_ID=…
+DATAFORSEO_API_KEY=<base64 email:password>   # Market SEO live vendor — runtime-only
+CHECKION_LIVE_SEO_MARKET=1                   # force live Market; unset → live when key + DATABASE_URL
+# CHECKION_SEO_MARKET_DAILY_SOFT_CAP=50       # optional soft cost cap
 ```
+
+**Market SEO (DataForSEO):** same product `DATABASE_URL` (schema `seo_*`). Set `DATAFORSEO_API_KEY` + prefer `CHECKION_LIVE_SEO_MARKET=1` on `checkion-v3:main-app` only (not scan-worker). Spec: `specs/domain/seo-dataforseo.md`.
 
 **Knowledge sync:** with `live` + secret, GEO suggest/create pulls the Collection pack; post-GEO CTA publishes `geo_context` / `competitive`. If `NEXT_PLEXON_BASE_URL` is omitted, runtime uses `PLEXON_AUTH_URL`. See `plexon-v3/knowledge/collection-knowledge-sync.md`.
 
