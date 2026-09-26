@@ -160,3 +160,5 @@ Profile prefs: `GET`/`PATCH` `/api/prefs/profile` (Plexon `locale` + `themePrefe
 
 ## DS
 Sibling `file:../../../msqdx-ui/packages/{ui,ui-tokens}` + barrels `lib/msqdx-ui*.ts` (deep `src/` re-exports, not package `dist`). Docker build pins the same sibling tree via `MSQDX_UI_REF` (see `Dockerfile`).
+
+- Jev System One (shadow): `specs/domain/jev-decisions.md` · `apps/web/lib/jev/` · env `OPENROUTER_API_KEY` · `JEV_SHADOW_ENABLED` · `JEV_ACT_*` · model `typesafe/jev-1.13`

@@ -3,6 +3,9 @@
  * YMYL pages have stricter E-E-A-T requirements.
  */
 
+import { scheduleJevShadow } from '@/lib/jev/schedule'
+import type { JevQuestions } from '@/lib/jev/types'
+
 const YMYL_KEYWORDS_DE = [
     'invest', 'geld', 'anlage', 'versicherung', 'kredit', 'darlehen', 'rente',
     'steuer', 'finanz', 'kauf', 'rechtsberatung', 'anwalt', 'arzt', 'medizin',
@@ -62,5 +65,20 @@ export function detectYmyl(url: string, title: string | null, bodyTextLower: str
     if (score >= 4) confidence = 'high';
     else if (score >= 2) confidence = 'medium';
 
-    return { isYmyl, confidence, signals: [...new Set(signals)].slice(0, 5) };
+    const result = { isYmyl, confidence, signals: [...new Set(signals)].slice(0, 5) };
+    const questions: JevQuestions = {
+      is_ymyl: { type: 'noul', description: 'Is this a YMYL page?' },
+      confidence: {
+        type: 'choice',
+        options: ['high', 'medium', 'low'],
+      },
+    }
+    scheduleJevShadow({
+      useCaseId: 'checkion.ymyl_gate',
+      state: { url, title, metaDesc, score },
+      questions,
+      baseline: isYmyl,
+      extractNoulKey: 'is_ymyl',
+    })
+    return result;
 }
