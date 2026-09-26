@@ -90,9 +90,12 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 |---------|----------|---------|-----|
 | Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze |
 | Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research |
-| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords from saved ∪ domain tops (Qwen if &lt;3) | chips toggle · Use set · Track & check (comma-set OK) |
+| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords from saved ∪ domain tops (Qwen if &lt;5) | chips toggle · Use set · Track & check (comma-set OK) |
 
-Inputs always: domain + project name + locale + optional seed hint + saved Research (≤8). Ranks also merges latest domain `topKeywords` when present.
+**Grounding (not generic / not `www`):**
+- Always load Collection Knowledge Pack when federation is live (`profile`, `research_brief`, `geo_context`, `competitive`) plus project name/description, saved Research, and latest Domain top keywords.
+- Prefer pack `seedQueries` / `queryThemes` / research `topics` (and domain tops) as candidates before calling Qwen; Qwen only expands/refines with industry + competitors + audience themes.
+- Reject junk tokens (`www`, `http`, bare TLDs). Never emit bare brand alone on Field/Ranks. Domain normalize strips leading `www.`.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 

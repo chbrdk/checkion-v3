@@ -34,7 +34,11 @@ import {
 } from './store'
 
 function normalizeDomain(raw: string): string {
-  return raw.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+  return raw
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '')
+    .toLowerCase()
 }
 
 export async function researchKeywords(input: {

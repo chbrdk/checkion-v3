@@ -47,7 +47,11 @@ const mem: MemState = {
 }
 
 function normalizeDomain(raw: string): string {
-  return raw.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+  return raw
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '')
+    .toLowerCase()
 }
 
 export async function listSavedKeywords(projectId: string): Promise<SeoSavedKeywordRow[]> {

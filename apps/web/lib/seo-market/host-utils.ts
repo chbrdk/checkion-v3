@@ -9,15 +9,40 @@ export function brandSeedFromHost(raw: string | null | undefined): string {
   host = host.split('/')[0] ?? host
   host = host.split(':')[0] ?? host
   host = host.replace(/\.$/, '')
-  // Drop leading www. (and common language/www-style subdomains of length ≤3 when followed by more parts)
+  host = host.replace(/^www\./, '')
+  // Drop common language / mobile subdomains when followed by more parts
   const parts = host.split('.').filter(Boolean)
   while (parts.length > 2 && (parts[0] === 'www' || parts[0] === 'm' || parts[0]!.length <= 2)) {
     parts.shift()
   }
   if (parts[0] === 'www' && parts.length > 1) parts.shift()
   const label = parts[0]?.trim() || ''
-  if (!label || label === 'www' || label === 'http' || label === 'https') {
-    return parts[1]?.trim() || 'brand'
+  if (!label || isJunkKeywordToken(label)) {
+    return parts[1]?.trim() && !isJunkKeywordToken(parts[1]!) ? parts[1]! : 'brand'
   }
   return label
+}
+
+const JUNK_TOKENS = new Set([
+  'www',
+  'http',
+  'https',
+  'com',
+  'net',
+  'org',
+  'de',
+  'io',
+  'co',
+  'uk',
+  'brand',
+])
+
+/** True for bare junk tokens that must never surface as keyword chips. */
+export function isJunkKeywordToken(raw: string | null | undefined): boolean {
+  const t = (raw ?? '').trim().toLowerCase()
+  if (!t) return true
+  if (JUNK_TOKENS.has(t)) return true
+  if (/^www(\.|$)/.test(t)) return true
+  if (/^https?:\/\//.test(t)) return true
+  return false
 }

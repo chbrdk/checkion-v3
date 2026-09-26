@@ -27,10 +27,16 @@ import {
 import {
   fixtureFieldSuggestions,
   mergeKeywordCandidates,
+  candidatesFromKnowledge,
+  sanitizeSuggestKeywords,
   suggestMarketKeywordsViaQwen,
 } from './field-suggest'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
+import {
+  enrichmentHasSignal,
+  resolveKnowledgeEnrichment,
+} from '../plexon-knowledge-pack'
 import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
@@ -303,7 +309,21 @@ async function projectSuggestMarketKeywords(input: {
     .map((k) => k.keyword)
     .filter(Boolean)
     .slice(0, 12)
+  const knowledge = await resolveKnowledgeEnrichment({
+    platformProjectId: project.platformProjectId,
+  })
+  const packSeeds = candidatesFromKnowledge(knowledge)
+  const groundedPool = sanitizeSuggestKeywords(
+    mergeKeywordCandidates(packSeeds, saved, domainTops),
+    domain,
+    input.surface,
+    12,
+  )
   const fetchedAt = new Date().toISOString()
+  const seedHint =
+    input.seedHint?.trim() && input.seedHint.trim().toLowerCase() !== 'www'
+      ? input.seedHint.trim()
+      : undefined
 
   if (!shouldRunLiveSeoMarket()) {
     const base = fixtureFieldSuggestions({
@@ -311,31 +331,35 @@ async function projectSuggestMarketKeywords(input: {
       projectName: project.name,
       locale: input.locale,
       surface: input.surface,
+      knowledge,
     })
-    const merged =
-      input.surface === 'ranks'
-        ? mergeKeywordCandidates(saved, domainTops, base).slice(0, 8)
-        : base
+    const merged = sanitizeSuggestKeywords(
+      mergeKeywordCandidates(groundedPool, base),
+      domain,
+      input.surface,
+      8,
+    )
     return {
       projectId: input.projectId,
       domain,
       keywords: merged,
-      model: 'fixture',
+      model: enrichmentHasSignal(knowledge) ? 'fixture+knowledge' : 'fixture',
       stubbed: true,
       fetchedAt,
       surface: input.surface,
     }
   }
 
-  // Ranks: prefer existing Market data; only call Qwen when the pool is thin.
-  if (input.surface === 'ranks') {
-    const pool = mergeKeywordCandidates(saved, domainTops)
-    if (pool.length >= 5) {
+  // Prefer Collection / Market data when the pool is already rich enough.
+  if (groundedPool.length >= 5) {
+    // Still ask Qwen to refine when Field/Research and we have industry signal —
+    // but skip the call when Ranks already has a full track set from saved ∪ tops ∪ pack.
+    if (input.surface === 'ranks') {
       return {
         projectId: input.projectId,
         domain,
-        keywords: pool.slice(0, 8),
-        model: 'market-data',
+        keywords: groundedPool.slice(0, 8),
+        model: enrichmentHasSignal(knowledge) ? 'market-data+knowledge' : 'market-data',
         stubbed: false,
         fetchedAt,
         surface: 'ranks',
@@ -343,32 +367,51 @@ async function projectSuggestMarketKeywords(input: {
     }
   }
 
-  const { keywords, model } = await suggestMarketKeywordsViaQwen({
-    surface: input.surface,
-    domain,
-    projectName: project.name || domain,
-    locale: input.locale,
-    seedHint: input.seedHint,
-    savedKeywords: saved.slice(0, 8),
-    candidateKeywords:
-      input.surface === 'ranks'
-        ? mergeKeywordCandidates(saved, domainTops)
-        : undefined,
-  })
+  try {
+    const { keywords, model } = await suggestMarketKeywordsViaQwen({
+      surface: input.surface,
+      domain,
+      projectName:
+        knowledge?.profile?.displayName?.trim() || project.name || domain,
+      projectDescription: project.description || undefined,
+      locale: input.locale,
+      seedHint,
+      savedKeywords: saved.slice(0, 8),
+      candidateKeywords: groundedPool,
+      knowledge,
+    })
 
-  const finalKeywords =
-    input.surface === 'ranks'
-      ? mergeKeywordCandidates(saved, domainTops, keywords).slice(0, 8)
-      : keywords
+    const finalKeywords = sanitizeSuggestKeywords(
+      mergeKeywordCandidates(groundedPool, keywords),
+      domain,
+      input.surface,
+      8,
+    )
 
-  return {
-    projectId: input.projectId,
-    domain,
-    keywords: finalKeywords,
-    model,
-    stubbed: false,
-    fetchedAt,
-    surface: input.surface,
+    return {
+      projectId: input.projectId,
+      domain,
+      keywords: finalKeywords,
+      model,
+      stubbed: false,
+      fetchedAt,
+      surface: input.surface,
+    }
+  } catch (err) {
+    // Soft fallback: grounded pack/domain/project fixtures beat empty 503 when model fails
+    // after we already have Collection knowledge or domain tops.
+    if (groundedPool.length >= 3) {
+      return {
+        projectId: input.projectId,
+        domain,
+        keywords: groundedPool.slice(0, 8),
+        model: 'knowledge-fallback',
+        stubbed: false,
+        fetchedAt,
+        surface: input.surface,
+      }
+    }
+    throw err
   }
 }
 

@@ -11,6 +11,7 @@ describe('brandSeedFromHost', () => {
   it('never returns bare www', () => {
     expect(brandSeedFromHost('www')).toBe('brand')
     expect(brandSeedFromHost('WWW.example.com')).toBe('example')
+    expect(brandSeedFromHost('www.')).toBe('brand')
   })
 
   it('handles empty and simple hosts', () => {

@@ -25,7 +25,7 @@ import { buildDomainChapterModel } from '../lib/seo-market/domain-chapter-map'
 import { buildRankChapterModel } from '../lib/seo-market/rank-chapter-map'
 import { buildCompetitorsChapterModel } from '../lib/seo-market/competitors-chapter-map'
 import { buildBacklinksChapterModel } from '../lib/seo-market/backlinks-chapter-map'
-import { brandSeedFromHost } from '../lib/seo-market/host-utils'
+import { brandSeedFromHost, isJunkKeywordToken } from '../lib/seo-market/host-utils'
 import { useT } from '../lib/user-prefs'
 import { useJobNotifications } from './job-notification-center'
 import { SeoDashboardView } from './seo-dashboard-view'
@@ -208,12 +208,14 @@ export function SeoProjectWorkspace({
     setBusy(true)
     setError(null)
     try {
+      const rawHint = (kwModel.searchBand?.seed ?? '').trim()
+      const seedHint = !rawHint || isJunkKeywordToken(rawHint) ? undefined : rawHint
       const res = await fetch(paths.routes.apiProjectSeoKeywordsSuggest(projectId), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           locale: kwModel.searchBand?.locale ?? 'de',
-          seedHint: kwModel.searchBand?.seed ?? '',
+          ...(seedHint ? { seedHint } : {}),
         }),
       })
       const data = (await res.json()) as {
@@ -459,12 +461,14 @@ export function SeoProjectWorkspace({
     setBusy(true)
     setError(null)
     try {
+      const rawHint = (rankModel.searchBand?.seed ?? '').trim()
+      const seedHint = !rawHint || isJunkKeywordToken(rawHint) ? undefined : rawHint
       const res = await fetch(paths.routes.apiProjectSeoRankConfigsSuggest(projectId), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           locale: rankModel.searchBand?.locale ?? 'de',
-          seedHint: rankModel.searchBand?.seed ?? '',
+          ...(seedHint ? { seedHint } : {}),
         }),
       })
       const data = (await res.json()) as {
@@ -555,12 +559,14 @@ export function SeoProjectWorkspace({
     setBusy(true)
     setError(null)
     try {
+      const rawHint = (compModel.searchBand?.seed ?? '').trim()
+      const seedHint = !rawHint || isJunkKeywordToken(rawHint) ? undefined : rawHint
       const res = await fetch(paths.routes.apiProjectSeoCompetitorsSuggest(projectId), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           locale: compModel.searchBand?.locale ?? 'de',
-          seedHint: compModel.searchBand?.seed ?? '',
+          ...(seedHint ? { seedHint } : {}),
         }),
       })
       const data = (await res.json()) as {
