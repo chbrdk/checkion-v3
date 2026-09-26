@@ -113,7 +113,7 @@ describe('seo chapter fixtures', () => {
     expect(model.filters?.some((f) => f.id === 'up')).toBe(true)
     expect(
       model.aside?.charts?.some(
-        (c) => c.kind === 'series' && c.invertY && /Visibility/i.test(c.title),
+        (c) => c.kind === 'series' && c.invertY && /Visibility/i.test(c.title ?? ''),
       ),
     ).toBe(true)
     expect(model.aside?.charts?.some((c) => c.kind === 'plot')).toBe(true)

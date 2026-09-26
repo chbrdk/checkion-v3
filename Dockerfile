@@ -103,12 +103,16 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/MarkdownProse.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/LabTile.tsx \
     && test -f /workspace/msqdx-ui/packages/ui/src/components/SeriesChart.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/KpiMetric.tsx \
+    && test -f /workspace/msqdx-ui/packages/ui/src/components/WidgetGrid.tsx \
     && grep -q "export { CardActions }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { InfoTip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { ChatOverlay }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { BrandCornerProductMenu }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { LabTile, LabTileStrip }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { SeriesChart, collectSeriesLabels }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "export { KpiMetric }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "export { WidgetGrid }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && rm -rf /workspace/msqdx-ui/node_modules \
     && ln -s /workspace/checkion-v3/node_modules /workspace/msqdx-ui/node_modules \
     && test -d /workspace/msqdx-ui/node_modules/@types/react
