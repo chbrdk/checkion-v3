@@ -24,7 +24,11 @@ export function shouldRunLiveGeo(): boolean {
   const questions: JevQuestions = {
     run_live: {
       type: 'noul',
-      description: 'Should live GEO LLM pipeline run for this job?',
+      instructions: 'Should live GEO LLM pipeline run for this job?',
+      criteria: {
+        true: 'Live OpenAI GEO stages should run for this scan.',
+        false: 'Use fixture / offline GEO results instead.',
+      },
     },
   }
   scheduleJevShadow({

@@ -67,10 +67,22 @@ export function detectYmyl(url: string, title: string | null, bodyTextLower: str
 
     const result = { isYmyl, confidence, signals: [...new Set(signals)].slice(0, 5) };
     const questions: JevQuestions = {
-      is_ymyl: { type: 'noul', description: 'Is this a YMYL page?' },
+      is_ymyl: {
+        type: 'noul',
+        instructions: 'Is this a YMYL page?',
+        criteria: {
+          true: 'Page content affects health, money, safety, or legal decisions.',
+          false: 'Page is general informational content without YMYL stakes.',
+        },
+      },
       confidence: {
         type: 'choice',
-        options: ['high', 'medium', 'low'],
+        instructions: 'Confidence in the YMYL classification',
+        criteria: {
+          high: 'Strong YMYL signals',
+          medium: 'Some YMYL signals',
+          low: 'Weak or ambiguous signals',
+        },
       },
     }
     scheduleJevShadow({

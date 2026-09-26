@@ -53,13 +53,15 @@ function parseNoul(raw: unknown): JevNoulAnswer | null {
   }
   const o = asRecord(raw)
   const probability =
-    typeof o.probability === 'number'
-      ? o.probability
-      : typeof o.p === 'number'
-        ? o.p
-        : typeof o.yes === 'number'
-          ? o.yes
-          : null
+    typeof o.noul === 'number'
+      ? o.noul
+      : typeof o.probability === 'number'
+        ? o.probability
+        : typeof o.p === 'number'
+          ? o.p
+          : typeof o.yes === 'number'
+            ? o.yes
+            : null
   if (probability == null) return null
   return {
     probability,
@@ -120,16 +122,32 @@ export function parseDecisionsResponse(
     if (s) scores[k] = s
   }
 
-  // Flat answers map: infer by shape
+  // OpenRouter Decisions returns a flat `answers` map with typed entries
   for (const [k, v] of Object.entries(answers)) {
     if (choices[k] || nouls[k] || scores[k]) continue
+    const typed = asRecord(v).type
+    if (typed === 'choice') {
+      const c = parseChoice(v)
+      if (c) choices[k] = c
+      continue
+    }
+    if (typed === 'noul') {
+      const n = parseNoul(v)
+      if (n) nouls[k] = n
+      continue
+    }
+    if (typed === 'score') {
+      const s = parseScore(v)
+      if (s) scores[k] = s
+      continue
+    }
     const c = parseChoice(v)
     if (c) {
       choices[k] = c
       continue
     }
     const n = parseNoul(v)
-    if (n && typeof asRecord(v).probability === 'number') {
+    if (n) {
       nouls[k] = n
       continue
     }
@@ -145,11 +163,13 @@ export function parseDecisionsResponse(
         ? root.cost
         : undefined
   const promptTokens =
-    typeof usageRoot.prompt_tokens === 'number'
-      ? usageRoot.prompt_tokens
-      : typeof usageRoot.promptTokens === 'number'
-        ? usageRoot.promptTokens
-        : undefined
+    typeof usageRoot.input_tokens === 'number'
+      ? usageRoot.input_tokens
+      : typeof usageRoot.prompt_tokens === 'number'
+        ? usageRoot.prompt_tokens
+        : typeof usageRoot.promptTokens === 'number'
+          ? usageRoot.promptTokens
+          : undefined
 
   return {
     model,
@@ -198,7 +218,7 @@ export async function createJevDecisions(
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://plexon.local',
+        'HTTP-Referer': 'https://checkion.local',
         'X-Title': 'CHECKION Jev shadow',
       },
       body: JSON.stringify({
