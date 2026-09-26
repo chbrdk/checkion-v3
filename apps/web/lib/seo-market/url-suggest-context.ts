@@ -92,12 +92,12 @@ export function hostFromDomain(domain: string): string {
 }
 
 const DEEP_PATH_RE =
-  /\/(about|about-us|unternehmen|company|produkte|products|product|solutions?|leistungen|services?|service|wir|marke|brand|technology|technolog|innovation|portfolio|angebot|solutions-overview)(\/|$)/i
+  /\/(about|about-us|unternehmen|company|produkte|products|product|solutions?|leistungen|services?|service|wir|marke|brand|technology|technolog|innovation|portfolio|angebot|solutions-overview|blog|wissen|faq|hilfe|support|karriere)(\/|$)/i
 
 /**
  * Same-origin internal links from homepage HTML, ranked for research value.
  */
-export function discoverDeepLinks(html: string, domain: string, max = 4): string[] {
+export function discoverDeepLinks(html: string, domain: string, max = 6): string[] {
   const host = hostFromDomain(domain)
   const base = `https://${host}`
   const seen = new Set<string>()
@@ -183,7 +183,7 @@ export async function gatherSiteCorpus(domain: string): Promise<{
   if (homeHtml) {
     const home = parseHtmlSuggestContext(homeHtml, homeUrl)
     pages.push({ ...home, kind: 'home' })
-    const deep = discoverDeepLinks(homeHtml, domain, 4)
+    const deep = discoverDeepLinks(homeHtml, domain, 6)
     for (const url of deep) {
       const html = await fetchHtml(url)
       if (!html) continue

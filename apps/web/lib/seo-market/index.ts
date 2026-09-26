@@ -18,7 +18,15 @@ export {
   listRankConfigs,
   getRankConfig,
   latestDomainSnapshot,
+  latestGscSnapshot,
   listDueRankConfigs,
+  projectGscStatus,
+  projectGscAuthorizeUrl,
+  projectGscOAuthCallback,
+  projectRefreshGsc,
+  projectDisconnectGsc,
+  gscStatus,
+  gscPerformance,
 } from './project-service'
 export {
   getSeoMarketUsage,

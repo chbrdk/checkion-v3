@@ -28,6 +28,23 @@ export function buildSeedHintsFromOverview(overview: SeoProjectOverview): string
   const hints: string[] = []
   const brand = displayBrandFromHost(overview.domain || brandSeedFromHost(overview.domain))
   if (brand && brand !== 'brand') hints.push(brand)
+  const gsc = [...(overview.gscSnapshot?.items ?? [])]
+    .sort((a, b) => (b.clicks ?? 0) - (a.clicks ?? 0))
+    .map((r) => r.query?.trim())
+    .filter(Boolean) as string[]
+  for (const q of gsc) {
+    if (hints.some((h) => h.toLowerCase() === q.toLowerCase())) continue
+    hints.push(q)
+    if (hints.length >= 5) break
+  }
+  const fieldKws = overview.competitorSnapshot?.keywords ?? []
+  for (const kw of fieldKws) {
+    const t = kw.trim()
+    if (!t) continue
+    if (hints.some((h) => h.toLowerCase() === t.toLowerCase())) continue
+    hints.push(t)
+    if (hints.length >= 5) break
+  }
   const tops = overview.domainSnapshot?.topKeywords ?? []
   for (const idea of tops) {
     const kw = idea.keyword?.trim()
@@ -57,6 +74,7 @@ export function buildSeoDashboardFromOverview(input: {
   const domainDone = hasRealDomain(domain)
   const domainSnap = overview.domainSnapshot
   const backlinks = overview.backlinkSnapshot
+  const gscDone = Boolean(overview.gscConnected || overview.gscSnapshot)
 
   const setupSteps = base.setupSteps.map((step) => {
     if (step.id === 'domain') {
@@ -81,6 +99,12 @@ export function buildSeoDashboardFromOverview(input: {
           : step.detail,
       }
     }
+    if (step.id === 'gsc') {
+      return {
+        ...step,
+        status: gscDone ? ('done' as const) : ('todo' as const),
+      }
+    }
     return step
   })
 
@@ -88,6 +112,35 @@ export function buildSeoDashboardFromOverview(input: {
   const seedHints = buildSeedHintsFromOverview(overview)
 
   const cards: SeoDashboardCard[] = base.cards.map((card) => {
+    if (card.key === 'gsc' && overview.gscSnapshot) {
+      const snap = overview.gscSnapshot
+      const clicks = snap.items.reduce((s, i) => s + (i.clicks ?? 0), 0)
+      const impressions = snap.items.reduce((s, i) => s + (i.impressions ?? 0), 0)
+      const avgPos =
+        snap.items.length > 0
+          ? snap.items.reduce((s, i) => s + (i.position ?? 0), 0) / snap.items.length
+          : null
+      return {
+        ...card,
+        hasData: true,
+        emptyMessage: undefined,
+        emptyCtaLabel: undefined,
+        facets: [
+          { kind: 'source', label: 'Source', value: 'Google Search Console' },
+          { kind: 'scope', label: 'Range', value: `${snap.startDate} → ${snap.endDate}` },
+          { kind: 'mode', label: 'Mode', value: snap.stubbed ? 'Stub' : 'Live' },
+        ],
+        stats: [
+          { label: 'Clicks', value: fmtCount(clicks) },
+          { label: 'Impressions', value: fmtCount(impressions) },
+          { label: 'Queries', value: String(snap.items.length) },
+          {
+            label: 'Avg position',
+            value: avgPos != null ? avgPos.toFixed(1) : '—',
+          },
+        ],
+      }
+    }
     if (card.key === 'backlinks' && backlinks) {
       return {
         ...card,

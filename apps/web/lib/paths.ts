@@ -331,6 +331,12 @@ export const paths = {
       `/api/projects/${encodeURIComponent(id)}/seo/competitors/suggest`,
     apiProjectSeoGsc: (id: string) =>
       `/api/projects/${encodeURIComponent(id)}/seo/gsc`,
+    apiProjectSeoGscOAuthStart: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/gsc/oauth/start`,
+    apiProjectSeoGscOAuthCallback: (id: string) =>
+      `/api/projects/${encodeURIComponent(id)}/seo/gsc/oauth/callback`,
+    envGoogleClientId: 'GOOGLE_CLIENT_ID',
+    envGoogleClientSecret: 'GOOGLE_CLIENT_SECRET',
     /** @deprecated transitional soft-cap endpoint */
     apiSeoMarketUsage: '/api/seo-market/usage',
     apiSeoMarketSerp: '/api/seo-market/serp',

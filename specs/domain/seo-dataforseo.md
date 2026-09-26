@@ -74,5 +74,10 @@ Usage events → `seo_market_usage`. Cache → `seo_market_cache` (TTL).
 ## Soft cost cap
 Default soft cap: **80** billable units / Collection / calendar day. Exceeding returns `429 cost_soft_cap`.
 
-## GSC (optional, Phase 4)
-`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `BETTER_AUTH_SECRET` or suite OAuth — see workspace GSC route. Not required for MVP Market.
+## GSC (Phase 6 — live)
+
+- Env: `GOOGLE_CLIENT_ID` · `GOOGLE_CLIENT_SECRET` · `AUTH_SECRET` (token encryption) · redirect via `paths` (`/api/projects/:id/seo/gsc/oauth/callback`).
+- Scope: `https://www.googleapis.com/auth/webmasters.readonly` only (project-bound connection, not suite login).
+- Persist: `seo_gsc_connections` + `seo_gsc_snapshots` (top queries last 28d).
+- Suggest Evidence reads latest GSC snapshot. Without credentials / connection → Suggest omits GSC block (fail soft).
+- Offline/stub Market: fixture performance only when explicitly stubbed.

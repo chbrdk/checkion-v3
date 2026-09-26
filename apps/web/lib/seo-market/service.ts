@@ -2,8 +2,6 @@ import type {
   SeoBacklinksResult,
   SeoCompetitorsResult,
   SeoDomainOverviewResult,
-  SeoGscPerformanceResult,
-  SeoGscStatus,
   SeoKeywordsResult,
   SeoSerpResult,
 } from '@checkion-v3/contracts'
@@ -18,7 +16,6 @@ import {
   fixtureBacklinks,
   fixtureCompetitors,
   fixtureDomainOverview,
-  fixtureGscPerformance,
   fixtureKeywordsResult,
   fixtureRankSnapshots,
   fixtureSerpResult,
@@ -326,33 +323,3 @@ export async function refreshRankTracker(id: string): Promise<void> {
   }
 }
 
-export function gscStatus(projectId: string): SeoGscStatus {
-  const connected = Boolean(
-    process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim(),
-  )
-  return {
-    projectId,
-    connected,
-    siteUrl: null,
-    stubbed: !connected,
-  }
-}
-
-export async function gscPerformance(input: {
-  projectId: string
-  siteUrl: string
-  startDate?: string
-  endDate?: string
-}): Promise<SeoGscPerformanceResult> {
-  const end = input.endDate ?? new Date().toISOString().slice(0, 10)
-  const start =
-    input.startDate ??
-    new Date(Date.now() - 28 * 86400000).toISOString().slice(0, 10)
-  // OAuth token store deferred — fixture / stub until suite OAuth lands.
-  return fixtureGscPerformance({
-    projectId: input.projectId,
-    siteUrl: input.siteUrl,
-    startDate: start,
-    endDate: end,
-  })
-}

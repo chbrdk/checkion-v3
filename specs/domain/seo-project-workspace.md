@@ -39,7 +39,7 @@ Project workspace SEO subnav + magazine chapter bodies (`@msqdx/ui`). Numbers al
 
 1. Masthead **Dashboard**
 2. Full-width **Set up your workspace** checklist (remaining steps; done as chips). Steps reflect **live** `GET /overview` persistence (saved keywords · rank configs · domain present) — not a static empty shell.
-3. Optional **next-step + seed hints** band (no DataForSEO call): first remaining setup step + deterministic Research starters (domain brand ∪ domain-snapshot top keywords when present). Chips deep-link to Keywords with `?seed=`. Smart Agent suggest stays on chapter workbenches (user-initiated).
+3. Optional **next-step + seed hints** band (no DataForSEO/LLM call): first remaining setup step + deterministic Research starters from Suggest Evidence (brand ∪ GSC queries ∪ domain tops ∪ Field KWs). Chips deep-link to Keywords with `?seed=`. Smart Agent suggest stays on chapter workbenches (user-initiated).
 4. **2-column card grid**, data-first sort:
    - Search performance (GSC stats)
    - Site audit (Quality crawl top issues)
@@ -102,6 +102,7 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 - Phase 3: workbench shows company brief + pack publish status after suggest (chips alone are not enough).
 - Phase 4: Overview loads live `GET /overview` into dashboard cards/setup; deterministic seed hints (no vendor force); Field offers Refresh suggestions after Analyze.
 - Phase 5: Field Analyze persists `seo_competitor_snapshots`; Overview competitors card + Field chapter reload from latest snapshot.
+- Phase 6: Suggest Evidence (Field · Ranks · Domain · Quality gaps · GSC) + site corpus ≤6 deep; GSC OAuth connect + snapshots; Overview seed hints from evidence.
 - Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).

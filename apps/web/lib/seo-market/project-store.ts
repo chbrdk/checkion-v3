@@ -1,9 +1,11 @@
 import { and, desc, eq } from 'drizzle-orm'
-import { randomUUID } from 'crypto'
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from 'crypto'
 import type {
   SeoBacklinkSnapshot,
   SeoCompetitorSnapshot,
   SeoDomainSnapshot,
+  SeoGscPerformanceRow,
+  SeoGscSnapshot,
   SeoKeywordIdea,
   SeoRankConfig,
   SeoRankSchedule,
@@ -16,6 +18,8 @@ import {
   seoBacklinkSnapshots,
   seoCompetitorSnapshots,
   seoDomainSnapshots,
+  seoGscConnections,
+  seoGscSnapshots,
   seoKeywordMetrics,
   seoRankConfigs,
   seoRankKeywords,
@@ -24,12 +28,24 @@ import {
   seoSavedKeywords,
 } from '../db/schema'
 
+type GscConnectionMem = {
+  id: string
+  projectId: string
+  siteUrl: string
+  refreshToken: string
+  scopes: string
+  updatedAt: string
+  createdAt: string
+}
+
 type MemState = {
   saved: SeoSavedKeywordRow[]
   metrics: Array<SeoKeywordIdea & { projectId: string; locationCode: number; languageCode: string; fetchedAt: string }>
   domainSnaps: SeoDomainSnapshot[]
   backlinkSnaps: SeoBacklinkSnapshot[]
   competitorSnaps: SeoCompetitorSnapshot[]
+  gscSnaps: SeoGscSnapshot[]
+  gscConnections: GscConnectionMem[]
   configs: SeoRankConfig[]
   runs: Array<{
     id: string
@@ -46,6 +62,8 @@ const mem: MemState = {
   domainSnaps: [],
   backlinkSnaps: [],
   competitorSnaps: [],
+  gscSnaps: [],
+  gscConnections: [],
   configs: [],
   runs: [],
 }
@@ -367,6 +385,175 @@ export async function latestCompetitorSnapshot(
     keywords: (r.keywords as string[]) ?? [],
     items: (r.items as unknown as SeoCompetitorSnapshot['items']) ?? [],
     source: r.source as SeoCompetitorSnapshot['source'],
+    stubbed: Boolean(r.stubbed),
+    fetchedAt: r.capturedAt,
+    capturedAt: r.capturedAt,
+  }
+}
+
+function deriveGscKey(): Buffer {
+  const secret = (process.env.AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET ?? 'checkion-dev-gsc').trim()
+  return createHash('sha256').update(secret).digest()
+}
+
+export function encryptGscToken(plain: string): string {
+  const iv = randomBytes(12)
+  const cipher = createCipheriv('aes-256-gcm', deriveGscKey(), iv)
+  const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([iv, tag, enc]).toString('base64')
+}
+
+export function decryptGscToken(payload: string): string {
+  const buf = Buffer.from(payload, 'base64')
+  const iv = buf.subarray(0, 12)
+  const tag = buf.subarray(12, 28)
+  const data = buf.subarray(28)
+  const decipher = createDecipheriv('aes-256-gcm', deriveGscKey(), iv)
+  decipher.setAuthTag(tag)
+  return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8')
+}
+
+export async function upsertGscConnection(input: {
+  projectId: string
+  siteUrl: string
+  refreshToken: string
+  scopes?: string
+}): Promise<{ projectId: string; siteUrl: string; connected: true; updatedAt: string }> {
+  const now = new Date().toISOString()
+  const scopes = input.scopes ?? 'https://www.googleapis.com/auth/webmasters.readonly'
+  if (!isDatabaseConfigured()) {
+    mem.gscConnections = mem.gscConnections.filter((c) => c.projectId !== input.projectId)
+    mem.gscConnections.push({
+      id: randomUUID(),
+      projectId: input.projectId,
+      siteUrl: input.siteUrl,
+      refreshToken: input.refreshToken,
+      scopes,
+      updatedAt: now,
+      createdAt: now,
+    })
+    return { projectId: input.projectId, siteUrl: input.siteUrl, connected: true, updatedAt: now }
+  }
+  const db = getDb()
+  const existing = await db
+    .select()
+    .from(seoGscConnections)
+    .where(eq(seoGscConnections.projectId, input.projectId))
+    .limit(1)
+  const enc = encryptGscToken(input.refreshToken)
+  if (existing[0]) {
+    await db
+      .update(seoGscConnections)
+      .set({
+        siteUrl: input.siteUrl,
+        refreshTokenEnc: enc,
+        scopes,
+        updatedAt: now,
+      })
+      .where(eq(seoGscConnections.id, existing[0].id))
+  } else {
+    await db.insert(seoGscConnections).values({
+      id: randomUUID(),
+      projectId: input.projectId,
+      siteUrl: input.siteUrl,
+      refreshTokenEnc: enc,
+      scopes,
+      updatedAt: now,
+      createdAt: now,
+    })
+  }
+  return { projectId: input.projectId, siteUrl: input.siteUrl, connected: true, updatedAt: now }
+}
+
+export async function getGscConnection(
+  projectId: string,
+): Promise<{ projectId: string; siteUrl: string; refreshToken: string; scopes: string } | null> {
+  if (!isDatabaseConfigured()) {
+    const row = mem.gscConnections.find((c) => c.projectId === projectId)
+    if (!row) return null
+    return {
+      projectId: row.projectId,
+      siteUrl: row.siteUrl,
+      refreshToken: row.refreshToken,
+      scopes: row.scopes,
+    }
+  }
+  const db = getDb()
+  const rows = await db
+    .select()
+    .from(seoGscConnections)
+    .where(eq(seoGscConnections.projectId, projectId))
+    .limit(1)
+  const r = rows[0]
+  if (!r) return null
+  return {
+    projectId: r.projectId,
+    siteUrl: r.siteUrl,
+    refreshToken: decryptGscToken(r.refreshTokenEnc),
+    scopes: r.scopes,
+  }
+}
+
+export async function deleteGscConnection(projectId: string): Promise<boolean> {
+  if (!isDatabaseConfigured()) {
+    const before = mem.gscConnections.length
+    mem.gscConnections = mem.gscConnections.filter((c) => c.projectId !== projectId)
+    return mem.gscConnections.length < before
+  }
+  const db = getDb()
+  await db.delete(seoGscConnections).where(eq(seoGscConnections.projectId, projectId))
+  return true
+}
+
+export async function insertGscSnapshot(
+  snap: Omit<SeoGscSnapshot, 'id' | 'capturedAt'> & { capturedAt?: string },
+): Promise<SeoGscSnapshot> {
+  const row: SeoGscSnapshot = {
+    ...snap,
+    id: randomUUID(),
+    capturedAt: snap.capturedAt ?? new Date().toISOString(),
+  }
+  if (!isDatabaseConfigured()) {
+    mem.gscSnaps.unshift(row)
+    return row
+  }
+  const db = getDb()
+  await db.insert(seoGscSnapshots).values({
+    id: row.id,
+    projectId: row.projectId,
+    siteUrl: row.siteUrl,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    items: row.items as unknown as Array<Record<string, unknown>>,
+    source: row.source,
+    stubbed: row.stubbed ? 1 : 0,
+    capturedAt: row.capturedAt,
+  })
+  return row
+}
+
+export async function latestGscSnapshot(projectId: string): Promise<SeoGscSnapshot | null> {
+  if (!isDatabaseConfigured()) {
+    return mem.gscSnaps.find((s) => s.projectId === projectId) ?? null
+  }
+  const db = getDb()
+  const rows = await db
+    .select()
+    .from(seoGscSnapshots)
+    .where(eq(seoGscSnapshots.projectId, projectId))
+    .orderBy(desc(seoGscSnapshots.capturedAt))
+    .limit(1)
+  const r = rows[0]
+  if (!r) return null
+  return {
+    id: r.id,
+    projectId: r.projectId,
+    siteUrl: r.siteUrl,
+    startDate: r.startDate,
+    endDate: r.endDate,
+    items: (r.items as unknown as SeoGscPerformanceRow[]) ?? [],
+    source: r.source as SeoGscSnapshot['source'],
     stubbed: Boolean(r.stubbed),
     fetchedAt: r.capturedAt,
     capturedAt: r.capturedAt,

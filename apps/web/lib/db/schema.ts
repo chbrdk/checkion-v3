@@ -390,6 +390,33 @@ export const seoCompetitorSnapshots = pgTable('seo_competitor_snapshots', {
 
 export type SeoCompetitorSnapshotRow = typeof seoCompetitorSnapshots.$inferSelect
 
+export const seoGscConnections = pgTable('seo_gsc_connections', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  siteUrl: text('site_url').notNull(),
+  /** AES-GCM ciphertext (base64) of refresh token — key derived from AUTH_SECRET. */
+  refreshTokenEnc: text('refresh_token_enc').notNull(),
+  scopes: text('scopes').notNull().default('https://www.googleapis.com/auth/webmasters.readonly'),
+  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull(),
+})
+
+export type SeoGscConnectionRow = typeof seoGscConnections.$inferSelect
+
+export const seoGscSnapshots = pgTable('seo_gsc_snapshots', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id').notNull(),
+  siteUrl: text('site_url').notNull(),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
+  items: jsonb('items').$type<Array<Record<string, unknown>>>().notNull().default([]),
+  source: text('source').notNull().default('fixture'),
+  stubbed: integer('stubbed').notNull().default(1),
+  capturedAt: text('captured_at').notNull(),
+})
+
+export type SeoGscSnapshotRow = typeof seoGscSnapshots.$inferSelect
+
 /** @deprecated legacy blob tracker — prefer seo_rank_configs */
 export type SeoRankTrackerPayload = {
   keywords: string[]

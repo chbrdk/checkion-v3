@@ -13,5 +13,5 @@ export async function GET(request: Request) {
   const projectId = new URL(request.url).searchParams.get('projectId') ?? undefined
   const denied = await requireSeoProjectAccess(auth.viewerId, projectId)
   if (denied) return denied
-  return NextResponse.json(gscStatus(projectId!.trim()))
+  return NextResponse.json(await gscStatus(projectId!.trim()))
 }

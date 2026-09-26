@@ -15,9 +15,11 @@ import {
 } from './field-suggest'
 import { displayBrandFromHost } from './host-utils'
 import {
-  gatherSiteCorpus,
-  type SitePageCorpus,
-} from './url-suggest-context'
+  evidenceKeywordPool,
+  formatEvidenceForPrompt,
+  type SuggestEvidence,
+} from './suggest-evidence'
+import { gatherSiteCorpus, type SitePageCorpus } from './url-suggest-context'
 
 export type SuggestCompanyBrief = {
   summary: string
@@ -35,6 +37,9 @@ export type SuggestAgentResult = {
     steps: string[]
     pagesFetched: string[]
     usedKnowledge: boolean
+    usedField?: boolean
+    usedGsc?: boolean
+    usedQuality?: boolean
     publishedToPack?: boolean
     publishError?: string
   }
@@ -99,102 +104,89 @@ async function openRouterJson(input: {
         { role: 'user', content: input.user },
       ],
     }),
-    signal: AbortSignal.timeout(55_000),
   })
-  const raw = (await res.json()) as Record<string, unknown>
   if (!res.ok) {
-    const msg =
-      typeof raw.error === 'object' && raw.error && 'message' in (raw.error as object)
-        ? String((raw.error as { message?: string }).message)
-        : `OpenRouter HTTP ${res.status}`
-    throw new FieldSuggestError(msg, 'upstream')
+    throw new FieldSuggestError(`OpenRouter HTTP ${res.status}`, 'upstream')
   }
-  const choice = Array.isArray(raw.choices) ? asRecord(raw.choices[0]) : null
-  const message = choice ? asRecord(choice.message) : null
-  const content = typeof message?.content === 'string' ? message.content : ''
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>
+  }
+  const content = json.choices?.[0]?.message?.content ?? '{}'
+  let parsed: unknown = {}
   try {
-    return { parsed: JSON.parse(content), model }
+    parsed = JSON.parse(content)
   } catch {
-    throw new FieldSuggestError('Model returned non-JSON', 'invalid')
+    const m = content.match(/\{[\s\S]*\}/)
+    if (m) {
+      try {
+        parsed = JSON.parse(m[0])
+      } catch {
+        parsed = {}
+      }
+    }
   }
+  return { parsed, model }
 }
 
-function knowledgeBlock(knowledge: GeoKnowledgeEnrichment | null | undefined): string {
-  if (!enrichmentHasSignal(knowledge)) return 'Collection knowledge: (none or empty)'
-  const bits: string[] = ['Collection knowledge:']
-  if (knowledge?.profile?.displayName) bits.push(`- displayName: ${knowledge.profile.displayName}`)
-  if (knowledge?.profile?.industry) bits.push(`- industry: ${knowledge.profile.industry}`)
-  if (knowledge?.profile?.tagline) bits.push(`- tagline: ${knowledge.profile.tagline}`)
-  if (knowledge?.competitive?.category) bits.push(`- category: ${knowledge.competitive.category}`)
+function knowledgeBlock(knowledge: GeoKnowledgeEnrichment | null | undefined): string | null {
+  if (!enrichmentHasSignal(knowledge)) return null
+  const bits: string[] = []
+  if (knowledge?.profile?.industry) bits.push(`Industry: ${knowledge.profile.industry}`)
+  if (knowledge?.profile?.tagline) bits.push(`Tagline: ${knowledge.profile.tagline}`)
   if (knowledge?.researchBrief?.summary) {
-    bits.push(`- research summary: ${knowledge.researchBrief.summary.slice(0, 600)}`)
+    bits.push(`Research brief: ${knowledge.researchBrief.summary.slice(0, 600)}`)
   }
-  if (knowledge?.researchBrief?.topics?.length) {
-    bits.push(`- topics: ${knowledge.researchBrief.topics.slice(0, 12).join(', ')}`)
-  }
-  if (knowledge?.geoContext?.queryThemes?.length) {
-    bits.push(`- GEO themes: ${knowledge.geoContext.queryThemes.slice(0, 12).join(', ')}`)
-  }
-  if (knowledge?.geoContext?.seedQueries?.length) {
-    bits.push(`- GEO seeds: ${knowledge.geoContext.seedQueries.slice(0, 12).join(', ')}`)
-  }
-  return bits.join('\n')
+  const topics = candidatesFromKnowledge(knowledge)
+  if (topics.length) bits.push(`Pack topics: ${topics.slice(0, 12).join(', ')}`)
+  return bits.length ? bits.join('\n') : null
 }
 
 function pagesBlock(pages: SitePageCorpus[]): string {
-  if (!pages.length) return 'Site pages: (fetch failed — use domain name + knowledge only)'
   return pages
     .map((p, i) => {
-      const lines = [
-        `### Page ${i + 1} (${p.kind}): ${p.url}`,
+      const bits = [
+        `[${p.kind} ${i + 1}] ${p.url}`,
         p.title ? `Title: ${p.title}` : null,
-        p.description ? `Description: ${p.description}` : null,
+        p.description ? `Meta: ${p.description}` : null,
         p.h1 ? `H1: ${p.h1}` : null,
-        p.bodyExcerpt ? `Body excerpt: ${p.bodyExcerpt.slice(0, 2800)}` : null,
-      ]
-      return lines.filter(Boolean).join('\n')
+        p.bodyExcerpt ? `Excerpt: ${p.bodyExcerpt.slice(0, 1200)}` : null,
+      ].filter(Boolean)
+      return bits.join('\n')
     })
     .join('\n\n')
 }
 
-function parseBrief(raw: unknown, fallbackSummary: string): SuggestCompanyBrief {
-  const o = asRecord(raw) ?? {}
-  const summary =
-    typeof o.summary === 'string' && o.summary.trim()
-      ? o.summary.trim().slice(0, 800)
-      : fallbackSummary
+function parseBrief(parsed: unknown, fallbackSummary: string): SuggestCompanyBrief {
+  const o = asRecord(parsed) ?? {}
   return {
-    summary,
-    category: typeof o.category === 'string' && o.category.trim() ? o.category.trim().slice(0, 120) : null,
+    summary: String(o.summary ?? fallbackSummary).trim().slice(0, 800) || fallbackSummary,
+    category: o.category == null || o.category === '' ? null : String(o.category).trim().slice(0, 120),
     products: asStringArray(o.products, 12),
     services: asStringArray(o.services, 12),
-    audiences: asStringArray(o.audiences, 8),
+    audiences: asStringArray(o.audiences, 12),
   }
 }
 
-function parseKeywordList(raw: unknown): string[] {
-  const o = asRecord(raw)
-  const list = o && Array.isArray(o.keywords) ? o.keywords : Array.isArray(raw) ? raw : []
-  return list.map((x) => String(x ?? '').trim()).filter(Boolean)
+function parseKeywordList(parsed: unknown): string[] {
+  const o = asRecord(parsed)
+  if (!o) return []
+  return asStringArray(o.keywords ?? o.seeds ?? o.queries, 16)
 }
 
 function surfaceKeywordSystem(surface: SeoSuggestSurface, locale: string): string {
-  const lang = locale.startsWith('de') ? 'German' : 'English'
   const common = [
-    'Use ONLY the company brief and page evidence. Do not invent unrelated verticals.',
-    'Never return URLs, hostnames, www, street addresses, executive names, or search-engine names.',
-    'Never return weak templates like "brand vergleich" / "brand preis" / "brand GmbH".',
-    'Mix category terms WITHOUT brand and brand+product queries.',
-    `Language: ${lang}.`,
-    'Return JSON only: {"keywords":["..."]} with 5 to 8 strings.',
+    `Locale: ${locale}.`,
+    'Return JSON: {"keywords":["..."]} with 5–8 track-worthy search queries.',
+    'No www/hosts/addresses/legal names. Prefer buyer-intent product/service queries.',
+    'Use ONLY the company brief and evidence. Do not invent unrelated verticals.',
   ].join(' ')
   if (surface === 'research') {
-    return `You suggest SEO research seeds from a distilled company brief. ${common} Bare brand at most once.`
+    return `You suggest SEO research seeds from a distilled company brief + evidence (GSC, quality gaps, products). ${common} Bare brand at most once.`
   }
   if (surface === 'ranks') {
-    return `You suggest rank-tracker keywords worth monitoring commercially for this company. ${common}`
+    return `You suggest rank-tracker keywords worth monitoring. Prefer GSC queries and domain tops that are not already tracked. ${common}`
   }
-  return `You suggest competitive SERP-overlap keywords for Field analysis. ${common}`
+  return `You suggest competitive SERP-overlap keywords for Field. Prefer queries where rivals already appear in Field evidence. ${common}`
 }
 
 /**
@@ -209,13 +201,16 @@ export async function runMarketSuggestResearchAgent(input: {
   seedHint?: string
   savedKeywords?: string[]
   knowledge?: GeoKnowledgeEnrichment | null
+  evidence?: SuggestEvidence | null
 }): Promise<SuggestAgentResult> {
   const steps: string[] = []
   const locale = input.locale ?? 'de'
   const brand = displayBrandFromHost(input.domain)
   const usedKnowledge = enrichmentHasSignal(input.knowledge)
+  const evidence = input.evidence ?? null
 
   steps.push('gather_knowledge')
+  steps.push('gather_evidence')
   steps.push('gather_site_corpus')
   const { pages } = await gatherSiteCorpus(input.domain)
   const pagesFetched = pages.map((p) => p.url)
@@ -228,6 +223,7 @@ export async function runMarketSuggestResearchAgent(input: {
       ? `Project description: ${input.projectDescription.trim().slice(0, 400)}`
       : null,
     knowledgeBlock(input.knowledge),
+    evidence ? formatEvidenceForPrompt(evidence, input.surface) : null,
     pagesBlock(pages),
     'Task: Research what this company is and does. Extract products, services, category, and audiences from the evidence.',
   ]
@@ -238,7 +234,7 @@ export async function runMarketSuggestResearchAgent(input: {
   const distill = await openRouterJson({
     system: [
       'You are a company research analyst for SEO Market suggestions.',
-      'Read the site excerpts and Collection knowledge. Infer what the company actually offers.',
+      'Read the site excerpts, Collection knowledge, and market evidence. Infer what the company actually offers.',
       'Do NOT treat legal footer crumbs (GmbH, address, Geschäftsführer) as the product.',
       'Prefer concrete products/services a buyer would search for.',
       'Return JSON only:',
@@ -255,7 +251,6 @@ export async function runMarketSuggestResearchAgent(input: {
     `${input.projectName} (${input.domain})`
   const brief = parseBrief(distill.parsed, fallbackSummary)
   if (!brief.products.length && !brief.services.length && !brief.category) {
-    // Still usable if summary is rich
     if (brief.summary.length < 40) {
       throw new FieldSuggestError('Research brief too thin', 'invalid')
     }
@@ -274,6 +269,7 @@ export async function runMarketSuggestResearchAgent(input: {
     brief.services.length ? `Services: ${brief.services.join(', ')}` : null,
     brief.audiences.length ? `Audiences: ${brief.audiences.join(', ')}` : null,
     knowledgeBlock(input.knowledge),
+    evidence ? formatEvidenceForPrompt(evidence, input.surface) : null,
     candidatesFromKnowledge(input.knowledge).length
       ? `Prior seed candidates: ${candidatesFromKnowledge(input.knowledge).slice(0, 12).join(', ')}`
       : null,
@@ -296,6 +292,7 @@ export async function runMarketSuggestResearchAgent(input: {
     mergeKeywordCandidates(
       parseKeywordList(gen.parsed),
       candidatesFromKnowledge(input.knowledge),
+      evidence ? evidenceKeywordPool(evidence) : [],
       brief.products,
       brief.services,
       brief.category ? [brief.category] : [],
@@ -318,6 +315,9 @@ export async function runMarketSuggestResearchAgent(input: {
       steps,
       pagesFetched,
       usedKnowledge,
+      usedField: evidence?.usedField ?? false,
+      usedGsc: evidence?.usedGsc ?? false,
+      usedQuality: evidence?.usedQuality ?? false,
     },
   }
 }

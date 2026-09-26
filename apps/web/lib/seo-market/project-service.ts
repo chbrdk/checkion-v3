@@ -4,6 +4,9 @@ import type {
   SeoCompetitorsResult,
   SeoDomainSnapshot,
   SeoFieldSuggestResult,
+  SeoGscPerformanceResult,
+  SeoGscSnapshot,
+  SeoGscStatus,
   SeoKeywordIdea,
   SeoProjectOverview,
   SeoRankConfig,
@@ -18,13 +21,7 @@ import {
   liveKeywords,
   liveSerp,
 } from './dataforseo-client'
-import {
-  fixtureBacklinks,
-  fixtureCompetitors,
-  fixtureDomainOverview,
-  fixtureKeywordsResult,
-  fixtureRankSnapshots,
-} from './fixtures'
+import { fixtureBacklinks, fixtureCompetitors, fixtureDomainOverview, fixtureGscPerformance, fixtureKeywordsResult, fixtureRankSnapshots } from './fixtures'
 import {
   fixtureFieldSuggestions,
   mergeKeywordCandidates,
@@ -43,6 +40,10 @@ import { isRealPlatformProjectId } from '../plexon-platform-id'
 import { fetchUrlSuggestContext } from './url-suggest-context'
 import { runMarketSuggestResearchAgent } from './suggest-research-agent'
 import {
+  evidenceKeywordPool,
+  gatherSuggestEvidence,
+} from './suggest-evidence'
+import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
 } from './store'
@@ -53,33 +54,49 @@ import {
   insertBacklinkSnapshot,
   insertCompetitorSnapshot,
   insertDomainSnapshot,
+  insertGscSnapshot,
   latestCompetitorSnapshot,
   latestDomainSnapshot,
+  latestGscSnapshot,
   listBacklinkSnapshots,
   listRankConfigs,
   listSavedKeywords,
   normalizeDomain,
   saveKeywords,
   upsertKeywordMetrics,
+  getGscConnection,
+  upsertGscConnection,
+  deleteGscConnection,
 } from './project-store'
-import { gscPerformance, gscStatus } from './service'
+import {
+  buildGscAuthorizeUrl,
+  exchangeGscCode,
+  gscOAuthConfigured,
+  liveGscPerformance,
+  listGscSites,
+} from './gsc-client'
 
 export async function getSeoProjectOverview(projectId: string): Promise<SeoProjectOverview> {
   const project = await getProject(projectId)
   const domain = project?.domain ? normalizeDomain(project.domain) : ''
-  const [domainSnapshot, backlinks, competitorSnapshot, configs, saved] = await Promise.all([
-    latestDomainSnapshot(projectId),
-    listBacklinkSnapshots(projectId, 1),
-    latestCompetitorSnapshot(projectId),
-    listRankConfigs(projectId),
-    listSavedKeywords(projectId),
-  ])
+  const [domainSnapshot, backlinks, competitorSnapshot, gscSnapshot, gscConn, configs, saved] =
+    await Promise.all([
+      latestDomainSnapshot(projectId),
+      listBacklinkSnapshots(projectId, 1),
+      latestCompetitorSnapshot(projectId),
+      latestGscSnapshot(projectId),
+      getGscConnection(projectId),
+      listRankConfigs(projectId),
+      listSavedKeywords(projectId),
+    ])
   return {
     projectId,
     domain,
     domainSnapshot,
     backlinkSnapshot: backlinks[0] ?? null,
     competitorSnapshot,
+    gscSnapshot,
+    gscConnected: Boolean(gscConn),
     rankConfigs: configs.map((c) => ({
       id: c.id,
       domain: c.domain,
@@ -319,20 +336,17 @@ async function projectSuggestMarketKeywords(input: {
   const project = await getProject(input.projectId)
   if (!project?.domain) throw new Error('project has no domain')
   const domain = normalizeDomain(project.domain)
-  const saved = (await listSavedKeywords(input.projectId))
-    .slice(0, 12)
-    .map((k) => k.keyword)
-  const domainSnap = await latestDomainSnapshot(input.projectId)
-  const domainTops = (domainSnap?.topKeywords ?? [])
-    .map((k) => k.keyword)
-    .filter(Boolean)
-    .slice(0, 12)
   const knowledge = await resolveKnowledgeEnrichment({
     platformProjectId: project.platformProjectId,
+  })
+  const evidence = await gatherSuggestEvidence({
+    projectId: input.projectId,
+    domain,
   })
   // Homepage chrome when knowledge is thin (or always — cheap, fail-soft).
   const urlContext = await fetchUrlSuggestContext(domain)
   const packSeeds = candidatesFromKnowledge(knowledge)
+  const evidenceSeeds = evidenceKeywordPool(evidence)
   const stubFixtures = fixtureFieldSuggestions({
     domain,
     projectName: project.name,
@@ -342,7 +356,7 @@ async function projectSuggestMarketKeywords(input: {
     urlContext,
   })
   const groundedPool = sanitizeSuggestKeywords(
-    mergeKeywordCandidates(packSeeds, saved, domainTops),
+    mergeKeywordCandidates(packSeeds, evidence.savedKeywords, evidence.domainTops, evidenceSeeds),
     domain,
     input.surface,
     12,
@@ -372,12 +386,20 @@ async function projectSuggestMarketKeywords(input: {
       stubbed: true,
       fetchedAt,
       surface: input.surface,
+      agent: {
+        steps: ['stub'],
+        pagesFetched: [],
+        usedKnowledge: enrichmentHasSignal(knowledge),
+        usedField: evidence.usedField,
+        usedGsc: evidence.usedGsc,
+        usedQuality: evidence.usedQuality,
+      },
     }
   }
 
   // Ranks: reuse a rich saved Research set; otherwise always Qwen (knowledge + URL).
   if (input.surface === 'ranks') {
-    const cleanSaved = sanitizeSuggestKeywords(saved, domain, 'ranks', 8)
+    const cleanSaved = sanitizeSuggestKeywords(evidence.savedKeywords, domain, 'ranks', 8)
     if (cleanSaved.length >= 5) {
       return {
         projectId: input.projectId,
@@ -387,6 +409,14 @@ async function projectSuggestMarketKeywords(input: {
         stubbed: false,
         fetchedAt,
         surface: 'ranks',
+        agent: {
+          steps: ['saved-research'],
+          pagesFetched: [],
+          usedKnowledge: enrichmentHasSignal(knowledge),
+          usedField: evidence.usedField,
+          usedGsc: evidence.usedGsc,
+          usedQuality: evidence.usedQuality,
+        },
       }
     }
   }
@@ -400,12 +430,13 @@ async function projectSuggestMarketKeywords(input: {
       projectDescription: project.description || undefined,
       locale: input.locale,
       seedHint,
-      savedKeywords: saved.slice(0, 8),
+      savedKeywords: evidence.savedKeywords.slice(0, 8),
       knowledge,
+      evidence,
     })
 
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(agentResult.keywords, packSeeds, saved),
+      mergeKeywordCandidates(agentResult.keywords, packSeeds, evidenceSeeds, evidence.savedKeywords),
       domain,
       input.surface,
       8,
@@ -553,7 +584,125 @@ export {
   getRankConfig,
   latestCompetitorSnapshot,
   latestDomainSnapshot,
+  latestGscSnapshot,
   listDueRankConfigs,
 } from './project-store'
 
-export { gscStatus, gscPerformance }
+export async function projectGscStatus(projectId: string): Promise<SeoGscStatus> {
+  const conn = await getGscConnection(projectId)
+  const oauthReady = gscOAuthConfigured()
+  return {
+    projectId,
+    connected: Boolean(conn),
+    siteUrl: conn?.siteUrl ?? null,
+    stubbed: !conn,
+    oauthConfigured: oauthReady,
+  }
+}
+
+export function projectGscAuthorizeUrl(input: {
+  projectId: string
+  origin: string
+  state: string
+}): string {
+  if (!gscOAuthConfigured()) throw new Error('gsc_oauth_unconfigured')
+  return buildGscAuthorizeUrl(input)
+}
+
+export async function projectGscOAuthCallback(input: {
+  projectId: string
+  code: string
+  origin: string
+  siteUrl?: string
+}): Promise<{ siteUrl: string }> {
+  const tokens = await exchangeGscCode({
+    code: input.code,
+    projectId: input.projectId,
+    origin: input.origin,
+  })
+  let siteUrl = input.siteUrl?.trim()
+  if (!siteUrl) {
+    const sites = await listGscSites(tokens.accessToken)
+    siteUrl = sites[0]
+  }
+  if (!siteUrl) throw new Error('gsc_no_sites')
+  await upsertGscConnection({
+    projectId: input.projectId,
+    siteUrl,
+    refreshToken: tokens.refreshToken,
+  })
+  return { siteUrl }
+}
+
+export async function projectRefreshGsc(projectId: string): Promise<SeoGscSnapshot> {
+  const conn = await getGscConnection(projectId)
+  const end = new Date().toISOString().slice(0, 10)
+  const start = new Date(Date.now() - 28 * 86400000).toISOString().slice(0, 10)
+  let result: SeoGscPerformanceResult
+  if (!conn || !gscOAuthConfigured() || !shouldRunLiveSeoMarket()) {
+    const project = await getProject(projectId)
+    const siteUrl =
+      conn?.siteUrl ||
+      (project?.domain ? `https://${normalizeDomain(project.domain)}/` : 'https://example.com/')
+    result = fixtureGscPerformance({
+      projectId,
+      siteUrl,
+      startDate: start,
+      endDate: end,
+    })
+  } else {
+    result = await liveGscPerformance({
+      projectId,
+      siteUrl: conn.siteUrl,
+      refreshToken: conn.refreshToken,
+      startDate: start,
+      endDate: end,
+    })
+  }
+  return insertGscSnapshot({
+    ...result,
+    projectId,
+    fetchedAt: result.fetchedAt,
+  })
+}
+
+export async function projectDisconnectGsc(projectId: string): Promise<void> {
+  await deleteGscConnection(projectId)
+}
+
+/** @deprecated prefer projectGscStatus / projectRefreshGsc */
+export async function gscStatus(projectId: string): Promise<SeoGscStatus> {
+  return projectGscStatus(projectId)
+}
+
+/** @deprecated prefer projectRefreshGsc */
+export async function gscPerformance(input: {
+  projectId: string
+  siteUrl: string
+  startDate?: string
+  endDate?: string
+}): Promise<SeoGscPerformanceResult> {
+  const end = input.endDate ?? new Date().toISOString().slice(0, 10)
+  const start =
+    input.startDate ??
+    new Date(Date.now() - 28 * 86400000).toISOString().slice(0, 10)
+  const snap = await latestGscSnapshot(input.projectId)
+  if (snap) {
+    return {
+      source: snap.source,
+      stubbed: snap.stubbed,
+      fetchedAt: snap.fetchedAt,
+      projectId: snap.projectId,
+      siteUrl: snap.siteUrl,
+      startDate: snap.startDate,
+      endDate: snap.endDate,
+      items: snap.items,
+    }
+  }
+  return fixtureGscPerformance({
+    projectId: input.projectId,
+    siteUrl: input.siteUrl,
+    startDate: start,
+    endDate: end,
+  })
+}

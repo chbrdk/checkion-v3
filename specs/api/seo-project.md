@@ -25,7 +25,10 @@ Base: `/api/projects/:projectId/seo`. Auth + Access Model B on project.
 | GET | `/competitors` | Latest Field SERP-overlap snapshot (`latest`) |
 | POST | `/competitors` | `{ keywords[] }` — SERP overlap → persist snapshot |
 | POST | `/competitors/suggest` | Field keywords via Market Suggest Research Agent — `{ locale?, seedHint? }` → `{ keywords[], brief?, agent?, model, stubbed }` |
-| GET | `/gsc` | Status + stub/fixture performance |
+| GET | `/gsc` | Status + latest performance snapshot (live when OAuth connected) |
+| POST | `/gsc` | `{ action: 'refresh'\|'disconnect', siteUrl? }` — refresh Search Analytics → snapshot; or disconnect |
+| GET | `/gsc/oauth/start` | Redirect URL / `{ authorizeUrl }` for Google `webmasters.readonly` |
+| GET | `/gsc/oauth/callback` | OAuth code exchange → store connection (project-bound) |
 
 Common: responses include `source`, `stubbed`, `fetchedAt` where market data is returned.
 

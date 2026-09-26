@@ -98,6 +98,9 @@ export function SeoProjectWorkspace({
   const [backlinks, setBacklinks] = useState<SeoBacklinkSnapshot[]>([])
   const [configs, setConfigs] = useState<SeoRankConfig[]>([])
   const [gscNote, setGscNote] = useState<string | null>(null)
+  const [gscConnected, setGscConnected] = useState(false)
+  const [gscSiteUrl, setGscSiteUrl] = useState<string | null>(null)
+  const [gscOauthReady, setGscOauthReady] = useState(false)
   const [suggestBrief, setSuggestBrief] = useState<SuggestBriefView | null>(null)
 
   const api = useCallback(
@@ -779,9 +782,17 @@ export function SeoProjectWorkspace({
       if (chapter === 'gsc') {
         const data = await api(paths.routes.apiProjectSeoGsc(projectId))
         if (data?.status) {
+          const connected = Boolean(data.status.connected)
+          setGscConnected(connected)
+          setGscSiteUrl(
+            typeof data.status.siteUrl === 'string' ? data.status.siteUrl : null,
+          )
+          setGscOauthReady(Boolean(data.status.oauthConfigured))
           setGscNote(
-            data.status.connected
-              ? t('seoMarket.workspace.gscConnected')
+            connected
+              ? t('seoMarket.workspace.gscConnectedSite', {
+                  site: data.status.siteUrl || domain,
+                })
               : t('seoMarket.workspace.gscDisconnected'),
           )
         }
@@ -1029,8 +1040,101 @@ export function SeoProjectWorkspace({
                 {gscNote ?? t('seoMarket.workspace.loadingGsc')}
               </Text>
               <Text role="meta" as="p">
-                {t('seoMarket.workspace.gscFirstParty')}
+                {t('seoMarket.workspace.gscRefreshHint')}
               </Text>
+              <div className="checkion-seo-project__row">
+                {!gscConnected ? (
+                  <Button
+                    variant="primary"
+                    disabled={busy || !gscOauthReady}
+                    onClick={async () => {
+                      if (!gscOauthReady) {
+                        setError(t('seoMarket.workspace.gscOauthMissing'))
+                        return
+                      }
+                      setBusy(true)
+                      try {
+                        const res = await fetch(
+                          paths.routes.apiProjectSeoGscOAuthStart(projectId),
+                        )
+                        const data = (await res.json()) as {
+                          authorizeUrl?: string
+                          detail?: string
+                        }
+                        if (!res.ok || !data.authorizeUrl) {
+                          throw new Error(data.detail || `HTTP ${res.status}`)
+                        }
+                        window.location.href = data.authorizeUrl
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : 'oauth start failed')
+                        setBusy(false)
+                      }
+                    }}
+                  >
+                    {t('seoMarket.workspace.gscConnect')}
+                  </Button>
+                ) : null}
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true)
+                    setError(null)
+                    try {
+                      const res = await fetch(paths.routes.apiProjectSeoGsc(projectId), {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ action: 'refresh' }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) {
+                        throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+                      }
+                      setGscConnected(Boolean(data.status?.connected))
+                      setGscSiteUrl(data.status?.siteUrl ?? gscSiteUrl)
+                      setGscNote(
+                        t('seoMarket.workspace.gscConnectedSite', {
+                          site: data.status?.siteUrl || gscSiteUrl || domain,
+                        }),
+                      )
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : 'refresh failed')
+                    } finally {
+                      setBusy(false)
+                    }
+                  }}
+                >
+                  {t('seoMarket.workspace.gscRefresh')}
+                </Button>
+                {gscConnected ? (
+                  <Button
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true)
+                      try {
+                        await fetch(paths.routes.apiProjectSeoGsc(projectId), {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify({ action: 'disconnect' }),
+                        })
+                        setGscConnected(false)
+                        setGscSiteUrl(null)
+                        setGscNote(t('seoMarket.workspace.gscDisconnected'))
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : 'disconnect failed')
+                      } finally {
+                        setBusy(false)
+                      }
+                    }}
+                  >
+                    {t('seoMarket.workspace.gscDisconnect')}
+                  </Button>
+                ) : null}
+              </div>
+              {!gscOauthReady ? (
+                <Alert tone="info">{t('seoMarket.workspace.gscOauthMissing')}</Alert>
+              ) : null}
             </div>
           }
         />

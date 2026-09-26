@@ -1010,7 +1010,7 @@ export type FetchPageResponse = {
 }
 
 /** SEO Market — DataForSEO / fixture envelopes. Spec: specs/api/seo-market.md */
-export type SeoMarketSource = 'dataforseo' | 'fixture'
+export type SeoMarketSource = 'dataforseo' | 'fixture' | 'gsc'
 
 export interface SeoMarketEnvelope {
   source: SeoMarketSource
@@ -1110,6 +1110,9 @@ export interface SeoFieldSuggestResult {
     steps: string[]
     pagesFetched: string[]
     usedKnowledge: boolean
+    usedField?: boolean
+    usedGsc?: boolean
+    usedQuality?: boolean
     /** True when distillate was merged into Plexon Knowledge Pack. */
     publishedToPack?: boolean
     publishError?: string
@@ -1322,6 +1325,8 @@ export interface SeoProjectOverview {
   domainSnapshot: SeoDomainSnapshot | null
   backlinkSnapshot: SeoBacklinkSnapshot | null
   competitorSnapshot: SeoCompetitorSnapshot | null
+  gscSnapshot?: SeoGscSnapshot | null
+  gscConnected?: boolean
   rankConfigs: Array<{
     id: string
     domain: string
@@ -1532,6 +1537,8 @@ export interface SeoGscStatus {
   connected: boolean
   siteUrl: string | null
   stubbed: boolean
+  /** True when GOOGLE_CLIENT_ID/SECRET are set (OAuth possible). */
+  oauthConfigured?: boolean
 }
 
 export interface SeoGscPerformanceRow {
@@ -1547,4 +1554,17 @@ export interface SeoGscPerformanceResult extends SeoMarketEnvelope {
   startDate: string
   endDate: string
   items: SeoGscPerformanceRow[]
+}
+
+/** Persisted GSC Search Analytics snapshot for Suggest Evidence. */
+export interface SeoGscSnapshot extends SeoGscPerformanceResult {
+  id: string
+  capturedAt: string
+}
+
+export interface SeoGscConnectionPublic {
+  projectId: string
+  siteUrl: string
+  connected: boolean
+  updatedAt: string
 }
