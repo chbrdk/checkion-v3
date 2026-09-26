@@ -369,7 +369,7 @@ export function localizeSeoDashboard(
         title: t(titleKey),
         emptyMessage: card.emptyMessage ? t(emptyKey) : card.emptyMessage,
         emptyCtaLabel: card.emptyCtaLabel ? t(ctaKey) : card.emptyCtaLabel,
-        facets: card.facets.map((f) =>
+        facets: (card.facets ?? []).map((f) =>
           f.kind === 'mode'
             ? {
                 ...f,
