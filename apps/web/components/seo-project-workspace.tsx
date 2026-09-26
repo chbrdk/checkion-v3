@@ -12,6 +12,7 @@ import type {
   SeoChapterViewModel,
   SeoCompetitorsResult,
   SeoDomainSnapshot,
+  SeoFieldSuggestResult,
   SeoKeywordIdea,
   SeoRankConfig,
   SeoSavedKeywordRow,
@@ -27,11 +28,16 @@ import { buildCompetitorsChapterModel } from '../lib/seo-market/competitors-chap
 import { buildBacklinksChapterModel } from '../lib/seo-market/backlinks-chapter-map'
 import { brandSeedFromHost, isJunkKeywordToken } from '../lib/seo-market/host-utils'
 import { sanitizeSuggestKeywords } from '../lib/seo-market/field-suggest'
+import {
+  parseSuggestBriefPayload,
+  type SuggestBriefView,
+} from '../lib/seo-market/suggest-brief-ui'
 import { useT } from '../lib/user-prefs'
 import { useJobNotifications } from './job-notification-center'
 import { SeoDashboardView } from './seo-dashboard-view'
 import { SeoChapterView, type SeoChapterSearchQuery } from './seo-chapter-view'
 import { SeoChapterNav } from './seo-chapter-nav'
+import { SeoSuggestBriefPanel } from './seo-suggest-brief-panel'
 
 const LOCATION_CODES: Record<string, number> = {
   germany: 2276,
@@ -83,6 +89,7 @@ export function SeoProjectWorkspace({
   const [backlinks, setBacklinks] = useState<SeoBacklinkSnapshot[]>([])
   const [configs, setConfigs] = useState<SeoRankConfig[]>([])
   const [gscNote, setGscNote] = useState<string | null>(null)
+  const [suggestBrief, setSuggestBrief] = useState<SuggestBriefView | null>(null)
 
   const api = useCallback(
     async (path: string, init?: RequestInit) => {
@@ -219,8 +226,7 @@ export function SeoProjectWorkspace({
           ...(seedHint ? { seedHint } : {}),
         }),
       })
-      const data = (await res.json()) as {
-        keywords?: string[]
+      const data = (await res.json()) as SeoFieldSuggestResult & {
         detail?: string
         error?: string
       }
@@ -228,6 +234,7 @@ export function SeoProjectWorkspace({
         throw new Error(data.detail || data.error || `HTTP ${res.status}`)
       }
       const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      setSuggestBrief(parseSuggestBriefPayload(data))
       setKwModel((prev) => ({
         ...prev,
         searchBand: {
@@ -472,8 +479,7 @@ export function SeoProjectWorkspace({
           ...(seedHint ? { seedHint } : {}),
         }),
       })
-      const data = (await res.json()) as {
-        keywords?: string[]
+      const data = (await res.json()) as SeoFieldSuggestResult & {
         detail?: string
         error?: string
       }
@@ -489,6 +495,7 @@ export function SeoProjectWorkspace({
       if (!keywords.length) {
         throw new Error('No usable suggestions')
       }
+      setSuggestBrief(parseSuggestBriefPayload(data))
       setRankModel((prev) => ({
         ...prev,
         searchBand: {
@@ -578,8 +585,7 @@ export function SeoProjectWorkspace({
           ...(seedHint ? { seedHint } : {}),
         }),
       })
-      const data = (await res.json()) as {
-        keywords?: string[]
+      const data = (await res.json()) as SeoFieldSuggestResult & {
         detail?: string
         error?: string
       }
@@ -587,6 +593,7 @@ export function SeoProjectWorkspace({
         throw new Error(data.detail || data.error || `HTTP ${res.status}`)
       }
       const keywords = Array.isArray(data.keywords) ? data.keywords : []
+      setSuggestBrief(parseSuggestBriefPayload(data))
       setCompModel((prev) => ({
         ...prev,
         searchBand: {
@@ -766,6 +773,7 @@ export function SeoProjectWorkspace({
               <Text role="meta" as="p">
                 {t('seoMarket.workspace.researchSuggestHint')}
               </Text>
+              {suggestBrief ? <SeoSuggestBriefPanel view={suggestBrief} /> : null}
               {saved.length > 0 ? (
                 <>
                   <SectionChrome
@@ -851,6 +859,7 @@ export function SeoProjectWorkspace({
               <Text role="meta" as="p">
                 {t('seoMarket.workspace.ranksSuggestHint')}
               </Text>
+              {suggestBrief ? <SeoSuggestBriefPanel view={suggestBrief} /> : null}
               {configs.length > 0 ? (
                 <>
                   <SectionChrome
@@ -944,6 +953,7 @@ export function SeoProjectWorkspace({
               <Text role="meta" as="p">
                 {t('seoMarket.workspace.fieldSuggestHint')}
               </Text>
+              {suggestBrief ? <SeoSuggestBriefPanel view={suggestBrief} /> : null}
             </div>
           }
         />

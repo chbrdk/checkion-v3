@@ -88,9 +88,9 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 
 | Surface | Endpoint | Purpose | UI |
 |---------|----------|---------|-----|
-| Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze |
-| Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research |
-| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords (saved Research short-circuit if ≥5 clean) | chips toggle · Use set · Track & check |
+| Field | `POST …/competitors/suggest` | 5–8 SERP-overlap keywords | chips toggle into set · Use set · Analyze · **brief panel** |
+| Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research · **brief panel** |
+| Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords (saved Research short-circuit if ≥5 clean) | chips toggle · Use set · Track & check · **brief panel** |
 
 **Grounding — Market Suggest Research Agent** (`specs/domain/seo-market-suggest-agent.md`):
 - Not a one-shot title/meta call. Agent gathers Collection Knowledge + homepage + up to 4 same-origin deep pages (about/products/services…), distills a company brief (who / products / services / audiences), then emits surface keywords.
@@ -98,6 +98,7 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 - Reject addresses, hosts, search-engine names, weak `brand + vergleich|preis` templates.
 - Response may include `brief` + `agent` provenance (`publishedToPack` when Phase-2 merge succeeds).
 - Phase 2: merges distillate into Plexon Knowledge Pack (`research_brief` · `profile` · `geo_context`) when Collection is real + federation live.
+- Phase 3: workbench shows company brief + pack publish status after suggest (chips alone are not enough).
 - Offline/stub: knowledge ∪ homepage crumbs only.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).

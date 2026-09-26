@@ -84,6 +84,14 @@ When Collection has a real `platformProjectId`, federation is live, and `KNOWLED
 
 Plexon ownership: `research_brief` publish allowlist includes `checkion` (alongside `audion` / `plexon`).
 
+## Phase 3 — Suggest workbench brief (UI)
+
+After a successful suggest on Field · Research · Ranks, the workbench MUST surface the agent distillate (not only chips):
+
+- **Company brief** — summary; optional category; compact product / service / audience chips (cap ~8 visible).
+- **Pack status** — `publishedToPack` → ok status; missing Collection / autosync off → quiet info; `publishError` → soft error (keywords still usable).
+- Clear or replace on the next suggest for that surface; no separate persistence in CHECKION UI (Pack is SSOT).
+
 ## Offline / stub
 
 When live SEO Market is off: knowledge seeds ∪ homepage title crumbs (existing fixture path). No agent loop.

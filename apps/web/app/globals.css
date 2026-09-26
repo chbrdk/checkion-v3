@@ -7312,6 +7312,24 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   gap: 1rem;
 }
 
+.checkion-seo-suggest-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.checkion-seo-suggest-brief__summary {
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+.checkion-seo-suggest-brief__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
 .checkion-seo-project__row {
   display: flex;
   flex-wrap: wrap;

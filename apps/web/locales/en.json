@@ -1276,14 +1276,20 @@
       "loadingGsc": "Loading GSC status…",
       "gscFirstParty": "First-party Search Console only — OAuth wiring lands later.",
       "fieldSuggest": "Smart suggestions",
-      "fieldSuggestMeta": "Qwen · OpenRouter",
+      "fieldSuggestMeta": "Research agent · Qwen",
       "fieldSuggestHint": "Proposes 5–8 SERP keywords for Field. Review chips, use set, then Analyze.",
       "researchSuggest": "Seed suggestions",
-      "researchSuggestMeta": "Qwen · OpenRouter",
+      "researchSuggestMeta": "Research agent · Qwen",
       "researchSuggestHint": "Proposes Research seeds. Pick one chip, then Research.",
       "ranksSuggest": "Track-set suggestions",
-      "ranksSuggestMeta": "Saved ∪ Domain · Qwen if thin",
-      "ranksSuggestHint": "Proposes keywords to monitor. Use set, then Track & check."
+      "ranksSuggestMeta": "Research agent · Saved ∪ Domain",
+      "ranksSuggestHint": "Proposes keywords to monitor. Use set, then Track & check.",
+      "suggestBriefTitle": "Company brief",
+      "suggestBriefPages": "{count} pages read",
+      "suggestBriefKnowledge": "Knowledge pack",
+      "suggestPackPublished": "Brief merged into the Collection Knowledge Pack.",
+      "suggestPackSkipped": "No pack publish (no Collection or autosync off).",
+      "suggestPackError": "Pack publish failed — keywords remain usable. ({detail})"
     }
   }
 }
