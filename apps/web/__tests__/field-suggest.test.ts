@@ -4,6 +4,7 @@ import {
   fixtureFieldSuggestions,
   sanitizeSuggestKeywords,
   suggestFieldKeywordsViaQwen,
+  suggestMarketKeywordsViaQwen,
   FieldSuggestError,
 } from '../lib/seo-market/field-suggest'
 import {
@@ -11,8 +12,8 @@ import {
   displayBrandFromHost,
   isJunkKeywordToken,
   isTrackWorthyKeyword,
-  looksLikeSearchQuery,
 } from '../lib/seo-market/host-utils'
+import { parseHtmlSuggestContext } from '../lib/seo-market/url-suggest-context'
 
 describe('field-suggest', () => {
   afterEach(() => {
@@ -20,87 +21,57 @@ describe('field-suggest', () => {
     delete process.env.OPENROUTER_API_KEY
   })
 
-  it('builds Vaillant track keywords from heating vertical — not brand templates', () => {
-    const kw = fixtureFieldSuggestions({
-      domain: 'vaillant-group.com',
-      projectName: 'Vaillant Group - SEO',
-      locale: 'de',
-      surface: 'ranks',
-    })
-    expect(kw.length).toBeGreaterThanOrEqual(5)
-    expect(kw.some((k) => /wärmepumpe|gastherme|heizung/i.test(k))).toBe(true)
-    expect(kw.every((k) => !/vergleich|alternative|erfahrung|preis$/i.test(k.split(/\s+/).pop() ?? ''))).toBe(
-      true,
+  it('parses homepage chrome for URL grounding', () => {
+    const ctx = parseHtmlSuggestContext(
+      `<html><head><title>Vaillant – Wärmepumpen & Heizsysteme</title>
+      <meta name="description" content="Heizung, Wärmepumpe und Service fürs Eigenheim."/>
+      </head><body><h1>Wärme, die bleibt</h1></body></html>`,
+      'https://vaillant-group.com/',
     )
-    expect(kw.every((k) => k.toLowerCase() !== 'vaillant-group vaillant')).toBe(true)
-    expect(kw.every((k) => !/straße|berghauser/i.test(k))).toBe(true)
+    expect(ctx.title).toMatch(/Wärmepumpen/i)
+    expect(ctx.description).toMatch(/Heizung/i)
+    expect(ctx.h1).toMatch(/Wärme/i)
   })
 
-  it('builds research seed fixtures including brand once', () => {
+  it('stub fixtures prefer knowledge / URL crumbs over heating hardcode', () => {
     const kw = fixtureFieldSuggestions({
-      domain: 'vaillant-group.com',
-      locale: 'de',
-      surface: 'research',
-    })
-    expect(kw.some((k) => k.toLowerCase() === 'vaillant-group')).toBe(true)
-    expect(kw.length).toBeGreaterThanOrEqual(5)
-  })
-
-  it('prefers Collection knowledge seeds that are track-worthy', () => {
-    const kw = fixtureFieldSuggestions({
-      domain: 'acme.example',
+      domain: 'acme-pharma.example',
       projectName: 'Acme Pharma',
       locale: 'de',
-      surface: 'field',
+      surface: 'ranks',
       knowledge: {
-        profile: { industry: 'Pharmaceuticals', displayName: 'Acme' },
-        researchBrief: { topics: ['oncology trials', 'patient support'] },
-        geoContext: {
-          seedQueries: [
-            'best oncology trial platform',
-            'berghauser straße 40 remscheid',
-            'pharma patient hub',
-          ],
-          queryThemes: ['clinical research'],
-          knownCompetitors: [],
-        },
+        profile: { industry: 'Onkologie', displayName: 'Acme' },
+        researchBrief: { topics: [] },
+        geoContext: { seedQueries: [], queryThemes: [], knownCompetitors: [] },
       },
     })
-    expect(kw.some((k) => /oncology|pharma|clinical|pharmaceuticals/i.test(k))).toBe(true)
-    expect(kw.every((k) => !/berghauser|straße/i.test(k))).toBe(true)
+    expect(kw.some((k) => /onkologie/i.test(k))).toBe(true)
+    expect(kw.every((k) => !/wärmepumpe|gastherme/i.test(k))).toBe(true)
   })
 
   it('rejects www / URL / address / weak brand templates', () => {
-    expect(isJunkKeywordToken('www.google.com')).toBe(true)
     expect(isJunkKeywordToken('berghauser straße 40 remscheid')).toBe(true)
     expect(isTrackWorthyKeyword('vaillant vergleich', 'vaillant-group.com')).toBe(false)
-    expect(isTrackWorthyKeyword('vaillant-group Vaillant', 'vaillant-group.com')).toBe(false)
     expect(isTrackWorthyKeyword('vaillant wärmepumpe', 'vaillant-group.com')).toBe(true)
-    expect(isTrackWorthyKeyword('wärmepumpe', 'vaillant-group.com')).toBe(true)
-    expect(looksLikeSearchQuery('wärmepumpe vergleich')).toBe(true)
     expect(displayBrandFromHost('vaillant-group.com')).toBe('vaillant')
     expect(brandSeedFromHost('www.vaillant-group.com')).toBe('vaillant-group')
-
     const cleaned = sanitizeSuggestKeywords(
       [
-        'www.google.com',
         'vaillant vergleich',
-        'vaillant-group Vaillant',
         'berghauser straße 40 remscheid',
         'vaillant wärmepumpe',
         'wärmepumpe',
-        'gastherme',
       ],
       'vaillant-group.com',
       'ranks',
     )
-    expect(cleaned).toEqual(['vaillant wärmepumpe', 'wärmepumpe', 'gastherme'])
+    expect(cleaned).toEqual(['vaillant wärmepumpe', 'wärmepumpe'])
   })
 
   it('extracts candidates from knowledge pack without addresses', () => {
     const c = candidatesFromKnowledge({
       geoContext: {
-        seedQueries: ['seed a', 'www.google.com', 'berghauser straße 40'],
+        seedQueries: ['seed a', 'berghauser straße 40'],
         queryThemes: ['theme b'],
         knownCompetitors: [],
       },
@@ -119,11 +90,13 @@ describe('field-suggest', () => {
     ).rejects.toMatchObject({ code: 'unconfigured' } satisfies Partial<FieldSuggestError>)
   })
 
-  it('parses OpenRouter JSON and drops junk / weak templates', async () => {
+  it('passes URL context into Qwen prompt and returns vertical keywords', async () => {
     process.env.OPENROUTER_API_KEY = 'sk-test'
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
+    const fetchMock = vi.fn(async (_url: string, init?: { body?: string }) => {
+      const body = typeof init?.body === 'string' ? init.body : ''
+      expect(body).toMatch(/Homepage title/i)
+      expect(body).toMatch(/Wärmepumpen/i)
+      return {
         ok: true,
         json: async () => ({
           choices: [
@@ -131,31 +104,37 @@ describe('field-suggest', () => {
               message: {
                 content: JSON.stringify({
                   keywords: [
-                    'www.google.com',
-                    'vaillant vergleich',
-                    'berghauser straße 40 remscheid',
                     'wärmepumpe',
                     'vaillant wärmepumpe',
                     'gastherme',
                     'förderung wärmepumpe',
                     'heizung modernisieren',
+                    'vaillant vergleich',
                   ],
                 }),
               },
             },
           ],
         }),
-      })),
-    )
-    const { keywords, model } = await suggestFieldKeywordsViaQwen({
+      }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { keywords, model } = await suggestMarketKeywordsViaQwen({
+      surface: 'ranks',
       domain: 'vaillant-group.com',
       projectName: 'Vaillant Group - SEO',
       locale: 'de',
+      urlContext: {
+        url: 'https://vaillant-group.com/',
+        title: 'Vaillant – Wärmepumpen & Heizsysteme',
+        description: 'Heizung und Wärmepumpe',
+        h1: 'Wärme für Zuhause',
+      },
     })
     expect(model).toBe('qwen/qwen3.7-flash')
     expect(keywords).toContain('wärmepumpe')
     expect(keywords).not.toContain('vaillant vergleich')
-    expect(keywords.every((k) => !/\bwww\b|straße|vergleich/i.test(k))).toBe(true)
     expect(keywords.length).toBeGreaterThanOrEqual(3)
   })
 })

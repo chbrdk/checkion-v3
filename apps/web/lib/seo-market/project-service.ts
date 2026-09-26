@@ -37,6 +37,7 @@ import {
   enrichmentHasSignal,
   resolveKnowledgeEnrichment,
 } from '../plexon-knowledge-pack'
+import { fetchUrlSuggestContext } from './url-suggest-context'
 import {
   assertSeoMarketSoftCap,
   recordSeoMarketUsage,
@@ -312,17 +313,19 @@ async function projectSuggestMarketKeywords(input: {
   const knowledge = await resolveKnowledgeEnrichment({
     platformProjectId: project.platformProjectId,
   })
+  // Homepage chrome when knowledge is thin (or always — cheap, fail-soft).
+  const urlContext = await fetchUrlSuggestContext(domain)
   const packSeeds = candidatesFromKnowledge(knowledge)
-  const groundedFixtures = fixtureFieldSuggestions({
+  const stubFixtures = fixtureFieldSuggestions({
     domain,
     projectName: project.name,
     locale: input.locale,
     surface: input.surface,
     knowledge,
+    urlContext,
   })
-  // Prefer pack + saved research; domain tops last (often polluted with host-like noise).
   const groundedPool = sanitizeSuggestKeywords(
-    mergeKeywordCandidates(packSeeds, saved, groundedFixtures, domainTops),
+    mergeKeywordCandidates(packSeeds, saved, domainTops),
     domain,
     input.surface,
     12,
@@ -335,7 +338,7 @@ async function projectSuggestMarketKeywords(input: {
 
   if (!shouldRunLiveSeoMarket()) {
     const merged = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(groundedPool, groundedFixtures),
+      mergeKeywordCandidates(groundedPool, stubFixtures),
       domain,
       input.surface,
       8,
@@ -344,15 +347,18 @@ async function projectSuggestMarketKeywords(input: {
       projectId: input.projectId,
       domain,
       keywords: merged,
-      model: enrichmentHasSignal(knowledge) ? 'fixture+knowledge' : 'fixture',
+      model: enrichmentHasSignal(knowledge)
+        ? 'fixture+knowledge'
+        : urlContext
+          ? 'fixture+url'
+          : 'fixture',
       stubbed: true,
       fetchedAt,
       surface: input.surface,
     }
   }
 
-  // Ranks: only short-circuit when saved Research already has a real track set.
-  // Never short-circuit on fixture/address noise — call Qwen (or vertical fixtures).
+  // Ranks: reuse a rich saved Research set; otherwise always Qwen (knowledge + URL).
   if (input.surface === 'ranks') {
     const cleanSaved = sanitizeSuggestKeywords(saved, domain, 'ranks', 8)
     if (cleanSaved.length >= 5) {
@@ -378,27 +384,30 @@ async function projectSuggestMarketKeywords(input: {
       locale: input.locale,
       seedHint,
       savedKeywords: saved.slice(0, 8),
-      candidateKeywords: mergeKeywordCandidates(packSeeds, saved, domainTops),
+      candidateKeywords: groundedPool,
       knowledge,
+      urlContext,
     })
 
-    // Qwen first, then vertical fixtures — pack seeds last (often noisy).
     const finalKeywords = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(keywords, groundedFixtures, packSeeds, saved),
+      mergeKeywordCandidates(keywords, packSeeds, saved),
       domain,
       input.surface,
       8,
     )
 
     if (finalKeywords.length < 3) {
-      return {
-        projectId: input.projectId,
-        domain,
-        keywords: groundedFixtures.slice(0, 8),
-        model: 'vertical-fallback',
-        stubbed: false,
-        fetchedAt,
-        surface: input.surface,
+      const fb = sanitizeSuggestKeywords(stubFixtures, domain, input.surface, 8)
+      if (fb.length >= 3) {
+        return {
+          projectId: input.projectId,
+          domain,
+          keywords: fb,
+          model: 'url-stub-fallback',
+          stubbed: false,
+          fetchedAt,
+          surface: input.surface,
+        }
       }
     }
 
@@ -411,9 +420,9 @@ async function projectSuggestMarketKeywords(input: {
       fetchedAt,
       surface: input.surface,
     }
-  } catch {
+  } catch (err) {
     const fallback = sanitizeSuggestKeywords(
-      mergeKeywordCandidates(groundedFixtures, packSeeds, saved),
+      mergeKeywordCandidates(groundedPool, stubFixtures),
       domain,
       input.surface,
       8,
@@ -423,13 +432,13 @@ async function projectSuggestMarketKeywords(input: {
         projectId: input.projectId,
         domain,
         keywords: fallback,
-        model: 'vertical-fallback',
+        model: 'url-stub-fallback',
         stubbed: false,
         fetchedAt,
         surface: input.surface,
       }
     }
-    throw new Error('Market suggestions unavailable')
+    throw err
   }
 }
 

@@ -92,11 +92,12 @@ Shared vendor: OpenRouter chat · default `qwen/qwen3.7-flash` (`CHECKION_SEO_FI
 | Research | `POST …/keywords/suggest` | 5–8 Research **seeds** | chip picks one seed · Research |
 | Ranks | `POST …/rank-configs/suggest` | 5–8 track keywords from saved ∪ domain tops (Qwen if &lt;5) | chips toggle · Use set · Track & check (comma-set OK) |
 
-**Grounding (not generic / not `www`):**
-- Always load Collection Knowledge Pack when federation is live (`profile`, `research_brief`, `geo_context`, `competitive`) plus project name/description, saved Research, and latest Domain top keywords.
-- Infer a vertical seed pool (e.g. Vaillant → Heizung/Wärmepumpe category + brand×product). Prefer that over brand+vergleich filler.
-- Prefer pack `seedQueries` / themes / topics only when they look like search queries; reject addresses, hosts, search-engine names, and weak `brand + vergleich|preis|alternative` templates.
-- Qwen expands/refines with industry context; on failure fall back to vertical seeds — never Acme or address chips. Domain normalize strips leading `www.`.
+**Grounding (Knowledge + URL + Qwen — any vertical):**
+- Primary: Collection Knowledge Pack (`profile`, `research_brief`, `geo_context`, `competitive`) + project name/description + saved Research.
+- When knowledge is thin: best-effort homepage fetch (title / meta description / H1) for the project domain; Qwen infers vertical from URL + page chrome.
+- No hardcoded industry packs (heating etc.). Same pipeline for Field, Research, and Ranks.
+- Reject addresses, hosts, search-engine names, and weak `brand + vergleich|preis|alternative` templates.
+- Offline/stub only: knowledge seeds ∪ title crumbs. Live fail → soft URL-stub fallback, else `503`. Domain normalize strips leading `www.`.
 
 Card **More details** deep-links: `gsc` · `backlinks` · `rank-tracking` · `domain` · `competitors` · `keywords`. Site audit → Quality scan launch (not a Market chapter).
 
