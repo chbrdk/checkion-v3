@@ -12,9 +12,11 @@ Full stage width (no 52rem cap). Spine — not stacked `Panel` dashboards:
 1. **Cover** — large **CHECKION** wordmark only (no lede, no cover CTAs)
 2. **01 · Launch** — three CTA tiles (`checkion-capability-tile` look): **Single** · **Deep** · **GEO** → `scanLaunch({ mode })`
 3. **02 · Runs** — three equal columns (`checkion-home-run-columns`), each a numbered `checkion-project-run-list` with score `data-tone`:
-   - **Singles** — recent completed/failed page scans (`ScanSummary`), ~6–8; link `/results/:id/overview`
+   - **Singles** — recent completed/failed page scans (`ScanSummary`); link `/results/:id/overview`
    - **Deep scans** — domain corpus jobs; link `/domain/:id/overview`
    - **GEO runs** — always show the column; EmptyState when empty; link `/geo/:id/overview`
+   - **Paging** — each column shows **6** rows first (`RUN_COLUMN_PAGE_SIZE`); **Show more** reveals the next 6 up to a **24**-row window (`RUN_COLUMN_WINDOW`). Server fetch stays a short teaser window (≤40), not the full scan corpus.
+   - **URL titles** — run list titles (`checkion-project-run-list__title`) MUST stay within the column: wrap long host/path strings (`overflow-wrap: anywhere`) and scale type with the column (`cqi`), never overflow horizontally.
 4. **03 · Projects** — five most recent collections (`lastScanAt`, then name) as read-only `checkion-collection-card` tiles (Open only — no edit/delete on home)
 
 ## Score bands

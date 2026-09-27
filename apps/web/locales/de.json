@@ -154,7 +154,8 @@
     "projectsDeck": "Collections, die diese Capability liest.",
     "projectsAria": "Aktuelle Projekte",
     "emptyProjects": "Noch keine Projekte.",
-    "emptyProjectsCta": "Projekte öffnen"
+    "emptyProjectsCta": "Projekte öffnen",
+    "showMoreRuns": "Mehr anzeigen ({n})"
   },
   "projects": {
     "searchPlaceholder": "Name oder Domain suchen",
@@ -235,6 +236,7 @@
     "emptyDeepCta": "Deep-Scan starten",
     "emptyGeo": "Noch keine GEO-Magazine.",
     "emptyGeoCta": "GEO starten",
+    "showMoreRuns": "Mehr anzeigen ({n})",
     "fromAudion": "Von Audion",
     "pagesIssues": "{pages} Seiten · {issues} Issues",
     "geoMeta": "{status} · {queries} Queries · {cited}% zitiert",

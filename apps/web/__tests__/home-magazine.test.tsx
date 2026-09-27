@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import type { DomainScanLight, ProjectSummary, ScanSummary } from '@checkion-v3/contracts'
 import {
   buildHomeRecentProjects,
@@ -134,5 +134,22 @@ describe('HomeMagazine', () => {
     expect(screen.getByLabelText('Recent projects')).toBeTruthy()
     expect(screen.getByRole('heading', { level: 3, name: 'North' })).toBeTruthy()
     expect(document.querySelector('[data-section="home-magazine"]')).toBeTruthy()
+  })
+
+  it('pages singles to 6 with Show more for the remainder', () => {
+    const scans = Array.from({ length: 10 }, (_, i) =>
+      baseScan({
+        id: `s${i}`,
+        completedAt: `2026-08-${String(22 - i).padStart(2, '0')}T12:00:00.000Z`,
+        overallScore: 70,
+      }),
+    )
+    render(<HomeMagazine projects={[]} scans={scans} domains={[]} geoJobs={[]} />)
+    const singles = screen.getByLabelText('Single scans')
+    expect(singles.querySelectorAll('li')).toHaveLength(6)
+    const more = screen.getByRole('button', { name: /Show more \(4\)/i })
+    fireEvent.click(more)
+    expect(singles.querySelectorAll('li')).toHaveLength(10)
+    expect(screen.queryByRole('button', { name: /Show more/i })).toBeNull()
   })
 })

@@ -38,6 +38,8 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
    - **Singles** → `/results/:id/overview`
    - **Deep scans** → `/domain/:id/overview`
    - **GEO runs** — always show the column; EmptyState when empty → `/geo/:id/overview`
+   - Same in-column paging as home: **6** visible, **Show more** (+6) up to **24** (`RUN_COLUMN_PAGE_SIZE` / `RUN_COLUMN_WINDOW`)
+   - URL titles wrap/scale inside the column (same `checkion-project-run-list__title` rules as home)
 5. **GEO History** — per-query position timelines across completed GEO jobs (soft match by measurement + normalized query text). Model filter + `SeriesChart` cards. Deep-link `?chapter=geo-history`. Spec: [`geo-position-history.md`](./geo-position-history.md).
 6. **SEO Market** — OpenSEO-style workspace at `/projects/:id/seo/*` (keywords, domain, backlinks, rank tracking, competitors, GSC). Spec: [`seo-project-workspace.md`](./seo-project-workspace.md).
 
