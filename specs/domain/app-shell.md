@@ -22,7 +22,7 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 
 **Dropped:** Results index (`/results` list) — singles live via Home / Projects / job notifications → `/results/:id/overview`. Bare `/results` redirects home.
 
-The **Jobs** control lives in the NavRail footer (above Settings). It opens the global notification center panel beside the rail — not in the topbar.
+The **Notifications** control lives in the NavRail footer (above Settings). It opens the global notification center panel beside the rail — not in the topbar.
 
 Authenticated shell MUST mount `PlatformAssistantHost` (FAB + `ChatOverlay` → Plexon `/assistant/embed`). Plexon base from `paths` / runtime-config — never hardcode. Spec: `plexon-v3/specs/domain/central-assistant-flyout.md`.
 

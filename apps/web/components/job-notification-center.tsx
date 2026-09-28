@@ -12,12 +12,12 @@ import {
   type ReactNode,
 } from 'react'
 import { Button, Chip, Text } from '../lib/msqdx-ui'
+import { IconBell } from '@msqdx/ui'
 import { useToast } from '../lib/msqdx-ui-client'
 import type { DomainScanControlAction, ScanStatus } from '@checkion-v3/contracts'
 import type { TipId } from '../lib/help-tips'
 import { paths } from '../lib/paths'
 import { LabelWithTip } from './help-tip'
-import { NavIconJobs } from './nav-icons'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
 
@@ -365,7 +365,7 @@ export function useJobNotifications() {
   return useContext(JobNotificationsContext)
 }
 
-/** Badge overlaid on the rail Jobs icon when work is active or failed. */
+/** Badge overlaid on the rail notification icon when work is active or failed. */
 export function JobsRailIcon({
   runningCount,
   failedCount,
@@ -380,7 +380,7 @@ export function JobsRailIcon({
       className="checkion-job-center__rail-icon"
       data-tone={runningCount > 0 ? 'live' : failedCount > 0 ? 'fail' : undefined}
     >
-      <NavIconJobs />
+      <IconBell size={20} className="ui-icon" />
       {badge ? <span className="checkion-job-center__rail-badge">{badge}</span> : null}
     </span>
   )

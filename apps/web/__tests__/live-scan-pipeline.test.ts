@@ -185,6 +185,36 @@ describe('adaptScanResultToContracts', () => {
     expect(adapted.scores.some((s) => s.kind === 'accessibility')).toBe(true)
     expect(adapted.overview.scan.id).toBe('scan-x')
   })
+
+  it('maps detected CMS/platforms and tracking from geoAudit', () => {
+    const result = stubScanResult('https://cms.example/')
+    result.geo = {
+      serverIp: '1.2.3.4',
+      location: { city: 'Berlin', country: 'DE', continent: 'EU' },
+      cdn: { detected: true, provider: 'cloudflare' },
+      languages: { htmlLang: 'de', hreflangs: [{ lang: 'de', href: 'https://cms.example/' }] },
+      detectedPlatforms: ['TYPO3', 'Bootstrap'],
+      detectedTracking: [{ id: 'gtm', name: 'Google Tag Manager' }],
+      hostingHints: { server: 'nginx', poweredBy: null },
+    }
+    result.technicalInsights = {
+      thirdPartyDomains: ['cdn.example.com'],
+      manifest: { present: false, hasName: false, hasIcons: false },
+      themeColor: null,
+      appleTouchIcon: null,
+      serviceWorkerRegistered: false,
+      redirectCount: 0,
+    }
+    const adapted = adaptScanResultToContracts(result, {
+      id: 'scan-cms',
+      projectId: 'proj-1',
+      mode: 'single',
+    })
+    expect(adapted.overview.infra?.platforms).toEqual(['TYPO3', 'Bootstrap'])
+    expect(adapted.overview.infra?.tracking).toEqual(['Google Tag Manager'])
+    expect(adapted.overview.infra?.cdnProvider).toBe('cloudflare')
+    expect(adapted.overview.infra?.hostingServer).toBe('nginx')
+  })
 })
 
 describe('getScan after fixture create', () => {

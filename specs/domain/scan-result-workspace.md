@@ -69,5 +69,5 @@ Data from existing `ScanOverview` light snapshots. Visual overlays live on Issue
 | **Shield** | `securityPrivacy` | Core booleans + header matrix, SRI, cookies, privacy URL, CMP |
 | **Freshness** | `freshness` | ageDays, confidence, source(s), bestAsOf |
 | **GEO** | `generative` | Score axes + schema/llms/bots/FAQ/HowTo/Breadcrumb/YMYL |
-| **Infra** | `infra` | IP, location, CDN, lang/hreflang, platforms, tracking |
+| **Infra** | `infra` | IP, location, CDN, lang/hreflang, **CMS/stack (`platforms`)**, tracking — mapped from scanner `geo.detectedPlatforms` / `detectedTracking` |
 | **Class / cleared** | `classification`, `passedChecks`, `deviceSiblings` | Tags/tiers, full cleared list, sibling devices |

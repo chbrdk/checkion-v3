@@ -16,6 +16,7 @@ import type {
   IssueStats,
   IssueSummary,
   LinkSnapshot,
+  InfraSnapshot,
   ScanOverview,
   ScanSummary,
   ScoreCard,
@@ -131,6 +132,31 @@ function estimatePerfScore(result: ScanResult): number {
   if (p.fcp > 3000) s -= 10
   if (p.ttfb > 800) s -= 10
   return Math.max(0, Math.min(100, s))
+}
+
+/** Map scanner geoAudit + technicalInsights → magazine Infra band. */
+export function mapInfraSnapshot(result: ScanResult): InfraSnapshot | undefined {
+  const geo = result.geo
+  const ti = result.technicalInsights
+  if (!geo && !ti) return undefined
+
+  const platforms = geo?.detectedPlatforms?.length ? [...geo.detectedPlatforms] : []
+  const trackingFromGeo = geo?.detectedTracking?.map((t) => t.name) ?? []
+  const trackingHosts = ti?.thirdPartyDomains?.slice(0, 12) ?? []
+  const tracking = trackingFromGeo.length > 0 ? trackingFromGeo : trackingHosts
+
+  return {
+    serverIp: geo?.serverIp ?? null,
+    city: geo?.location?.city ?? null,
+    country: geo?.location?.country ?? geo?.location?.countryCode ?? null,
+    cdnProvider: geo?.cdn?.provider ?? null,
+    htmlLang: geo?.languages?.htmlLang ?? null,
+    hreflangCount: geo?.languages?.hreflangs?.length ?? 0,
+    platforms,
+    tracking,
+    hostingServer: geo?.hostingHints?.server ?? null,
+    hostingPoweredBy: geo?.hostingHints?.poweredBy ?? null,
+  }
 }
 
 function mapIssueStats(result: ScanResult): IssueStats {
@@ -352,13 +378,7 @@ export function buildOverviewFromResult(
           ymylConfidence: result.ymyl?.confidence ?? null,
         }
       : undefined,
-    infra: result.technicalInsights
-      ? {
-          htmlLang: null,
-          platforms: [],
-          tracking: result.technicalInsights.thirdPartyDomains?.slice(0, 12),
-        }
-      : undefined,
+    infra: mapInfraSnapshot(result),
     classification: result.pageClassification
       ? {
           shortSummary: result.pageClassification.shortSummary ?? '',
@@ -635,6 +655,28 @@ function buildDomainSecurityPrivacy(pages: ScanResult[]): SecurityPrivacySnapsho
   }
 }
 
+/** Union CMS/stack + tracking across corpus pages; keep representative hosting/CDN. */
+function buildDomainInfra(pages: ScanResult[]): InfraSnapshot | undefined {
+  const snaps = pages.map(mapInfraSnapshot).filter((s): s is InfraSnapshot => Boolean(s))
+  if (!snaps.length) return undefined
+  const platforms = [...new Set(snaps.flatMap((s) => s.platforms ?? []))]
+  const tracking = [...new Set(snaps.flatMap((s) => s.tracking ?? []))].slice(0, 24)
+  const seed =
+    snaps.find((s) => s.serverIp || s.cdnProvider || s.hostingServer || s.platforms?.length) ?? snaps[0]!
+  return {
+    serverIp: seed.serverIp ?? null,
+    city: seed.city ?? null,
+    country: seed.country ?? null,
+    cdnProvider: seed.cdnProvider ?? null,
+    htmlLang: seed.htmlLang ?? null,
+    hreflangCount: Math.max(0, ...snaps.map((s) => s.hreflangCount ?? 0)),
+    platforms,
+    tracking,
+    hostingServer: seed.hostingServer ?? null,
+    hostingPoweredBy: seed.hostingPoweredBy ?? null,
+  }
+}
+
 /** Corpus chapters for the deep-scan magazine Overview. */
 export function buildDomainOverviewAggregates(
   pages: ScanResult[],
@@ -649,6 +691,7 @@ export function buildDomainOverviewAggregates(
   | 'eco'
   | 'links'
   | 'securityPrivacy'
+  | 'infra'
 > {
   return {
     seoCoverage: buildDomainSeoCoverage(pages),
@@ -659,6 +702,7 @@ export function buildDomainOverviewAggregates(
     eco: buildDomainEco(pages),
     links: buildDomainLinks(pages),
     securityPrivacy: buildDomainSecurityPrivacy(pages),
+    infra: buildDomainInfra(pages),
   }
 }
 
