@@ -445,9 +445,9 @@ a { color: inherit; text-decoration: none; }
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.35rem;
-  margin: 0;
+  margin: 0.85rem 0 0;
 }
 
 .checkion-project-cover__actions .ds-btn {
@@ -1667,8 +1667,8 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   padding: 1rem 1.05rem 1.15rem;
   min-width: 0;
   border: 1px solid color-mix(in oklab, var(--line, var(--border, #444)) 70%, transparent);
-  border-radius: var(--radius-tile, 0.85rem);
-  background: color-mix(in oklab, var(--surface-2, var(--surface, #151515)) 92%, transparent);
+  border-radius: 0;
+  background: transparent;
 }
 
 .ds-lab-tile__k {
@@ -1949,8 +1949,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   gap: 0.65rem;
   margin: 0;
   padding: 1rem 0 0;
-  /* Opaque underlay — translucent + blur reads as a duplicated tab row while stuck. */
-  background: var(--bg0, var(--bg, #fff));
+  background: transparent;
   border-bottom: 1px solid var(--line);
   isolation: isolate;
   transition:
@@ -1971,7 +1970,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   gap: 0.2rem;
   padding: 0.45rem 0 0;
   border-top: 1px solid var(--line);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--bg0, #fff) 70%, transparent);
+  box-shadow: none;
 }
 
 .checkion-contents--compact .checkion-contents__label {
@@ -4280,6 +4279,83 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   margin-top: 1.75rem;
 }
 
+.checkion-domain-corpus-signal__banner {
+  margin: 0;
+  max-width: 42rem;
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-weight: var(--weight-light, 300);
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  color: var(--ink, var(--fg));
+  text-wrap: pretty;
+}
+
+.checkion-domain-corpus-signal[data-level='warn'] .checkion-domain-corpus-signal__banner {
+  text-decoration: underline;
+  text-decoration-color: var(--warn, #c9a227);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-domain-corpus-signal[data-level='critical'] .checkion-domain-corpus-signal__banner {
+  text-decoration: underline;
+  text-decoration-color: var(--danger, #d46a6a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-domain-corpus-signal[data-level='ok'] .checkion-domain-corpus-signal__banner {
+  text-decoration: underline;
+  text-decoration-color: var(--ok, #7dcea0);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.checkion-domain-meter-list.checkion-domain-corpus-signal__meters {
+  max-width: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.checkion-domain-corpus-signal__meters > .checkion-domain-meter {
+  padding: 1rem 1.1rem 1.15rem 0;
+  border-right: 1px solid var(--line);
+}
+
+.checkion-domain-corpus-signal__meters > .checkion-domain-meter:not(:first-child) {
+  padding-left: 1.1rem;
+}
+
+.checkion-domain-corpus-signal__meters > .checkion-domain-meter:last-child {
+  border-right: 0;
+}
+
+.checkion-domain-meter__meta {
+  margin: 0.45rem 0 0;
+}
+
+@media (max-width: 720px) {
+  .checkion-domain-meter-list.checkion-domain-corpus-signal__meters {
+    grid-template-columns: 1fr;
+  }
+
+  .checkion-domain-corpus-signal__meters > .checkion-domain-meter {
+    border-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .checkion-domain-corpus-signal__meters > .checkion-domain-meter:not(:first-child) {
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+  }
+}
+
 .checkion-domain-overview .checkion-spread__open {
   grid-template-columns: minmax(0, 1fr) minmax(11rem, 15rem);
   gap: 1.25rem;
@@ -4347,7 +4423,9 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 }
 
 .checkion-domain-grid--dist {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  /* Stretch present cards across the full magazine measure (not empty 4th tracks). */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
 }
 
 .checkion-domain-grid > .checkion-domain-card {
@@ -4371,7 +4449,7 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 
 @media (max-width: 1100px) {
   .checkion-domain-grid--dist {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   }
 
   .checkion-domain-grid--dist > .checkion-domain-card:nth-child(2n + 1) {

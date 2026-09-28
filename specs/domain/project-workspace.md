@@ -32,7 +32,7 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
 - Comfortable **top padding** under the rail (same breath as projects hub / home)
 
 1. **Topbar** — breadcrumb `Projects / {name}` only (no primary CTAs — launch actions live in chapter footers / SEO · GEO chapter heads)
-2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · right aside: compact ghost **Edit** · **Archive** (`size="sm"`) + **Team** panel. Client-room publish is **not** on the cover (suite freigabe stays on overview/share flows).
+2. **Cover** — project name as hero brand signal · domain as host · lede · facets (capability sync · collection id · last activity) · compact ghost **Edit** · **Archive** (`size="sm"`) under the facets · right aside: **Team** panel. Client-room publish is **not** on the cover (suite freigabe stays on overview/share flows).
 3. **Corpus pulse** — full-width magazine chapter band (single / deep scan / GEO counts · latest score) as hairline editorial meters — not a dense boxed dashboard
 4. **Latest runs** — three equal columns (same composition as home `checkion-home-run-columns`):
    - **Singles** → `/results/:id/overview`

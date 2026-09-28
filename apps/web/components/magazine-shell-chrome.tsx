@@ -163,7 +163,6 @@ export function DomainMagazineChrome({
   errors,
   host,
   title,
-  deck,
   tags,
   variant,
   actions,
@@ -179,14 +178,12 @@ export function DomainMagazineChrome({
   host: string
   /** Operator title or host fallback */
   title: string
-  deck: string | null | undefined
   tags?: string[]
   variant: 'cover' | 'folio'
   actions?: ReactNode
 }) {
   const t = useT()
   const scoreDisplay = overallScore ?? t('domain.scoreNone')
-  const displayDeck = localizeDeck(deck, t)
 
   return (
     <>
@@ -245,19 +242,14 @@ export function DomainMagazineChrome({
               fieldAriaLabel="Domain scan name"
               variant={variant}
             />
-            {variant === 'cover' ? (
-              <>
-                {displayDeck ? <p className="checkion-cover__deck">{displayDeck}</p> : null}
-                {tags?.length ? (
-                  <div className="checkion-chip-row checkion-cover__tags">
-                    {tags.slice(0, 6).map((tag) => (
-                      <Chip key={tag} static size="sm">
-                        {tag}
-                      </Chip>
-                    ))}
-                  </div>
-                ) : null}
-              </>
+            {variant === 'cover' && tags?.length ? (
+              <div className="checkion-chip-row checkion-cover__tags">
+                {tags.slice(0, 6).map((tag) => (
+                  <Chip key={tag} static size="sm">
+                    {tag}
+                  </Chip>
+                ))}
+              </div>
             ) : null}
           </div>
         </div>

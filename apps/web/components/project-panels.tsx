@@ -365,13 +365,6 @@ export function ProjectWorkspace({
               <span>{formatScanInstant(project.lastScanAt)}</span>
             </li>
           </ul>
-          {syncHint ? (
-            <Text role="meta" as="p" className="checkion-project-cover__hint">
-              {syncHint}
-            </Text>
-          ) : null}
-        </div>
-        <aside className="checkion-project-cover__aside">
           <div className="checkion-project-cover__actions">
             <Button type="button" size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
               {t('common.edit')}
@@ -380,6 +373,13 @@ export function ProjectWorkspace({
               {t('projects.archiveConfirm')}
             </Button>
           </div>
+          {syncHint ? (
+            <Text role="meta" as="p" className="checkion-project-cover__hint">
+              {syncHint}
+            </Text>
+          ) : null}
+        </div>
+        <aside className="checkion-project-cover__aside">
           <ProjectTeamPanel
             projectId={project.id}
             platformProjectId={project.platformProjectId}

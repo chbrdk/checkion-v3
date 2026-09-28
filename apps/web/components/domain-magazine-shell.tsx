@@ -13,7 +13,7 @@ function hostFromUrl(url: string): string {
   }
 }
 
-/** Domain-corpus magazine chrome — cover is host + page count, not a page screenshot. */
+/** Domain-corpus magazine chrome — cover is host + metrics, no deck/lede. */
 export async function DomainMagazineShell({
   overview,
   actions,
@@ -32,7 +32,6 @@ export async function DomainMagazineShell({
   const host = hostFromUrl(scan.rootUrl)
   const customTitle = typeof scan.title === 'string' ? scan.title.trim() : ''
   const title = customTitle || host
-  const deck = overview.classification?.shortSummary ?? overview.lede
   const tone = scoreTone(scan.overallScore)
   const stats = scan.issueStats
 
@@ -52,7 +51,6 @@ export async function DomainMagazineShell({
         errors={stats?.errors ?? null}
         host={host}
         title={title}
-        deck={deck}
         tags={overview.classification?.tags}
         variant={variant}
         actions={actions}

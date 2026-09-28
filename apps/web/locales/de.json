@@ -760,6 +760,8 @@
     "scoreSnapshotAria": "Corpus-Score-Snapshot",
     "overallScore": "Gesamt",
     "corpusSignal": "Corpus-Signal",
+    "corpusSignalEyebrow": "Signal",
+    "corpusSignalMeta": "{pages} Seiten in diesem Deep-Scan",
     "systemicEyebrow": "Systemisch",
     "systemicHeadline": "Findings, die über Seiten wiederkehren",
     "systemicHint": "Nach betroffenen Seiten gerankt — dieselbe Regel auf vielen Single-Scans.",

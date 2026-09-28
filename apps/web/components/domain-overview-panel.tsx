@@ -9,7 +9,6 @@ import {
   LabTileStrip,
   RankedList,
   RankedRow,
-  StatusMeterPanel,
   Text,
 } from '@msqdx/ui'
 import type {
@@ -56,10 +55,12 @@ function ReadoutMeter({
   label,
   valueLabel,
   pct,
+  meta,
 }: {
   label: ReactNode
   valueLabel: ReactNode
   pct: number
+  meta?: ReactNode
 }) {
   const fill = Math.max(0, Math.min(100, pct))
   const tone = scoreTone(fill)
@@ -72,19 +73,29 @@ function ReadoutMeter({
       <div className="checkion-domain-meter__track" aria-hidden>
         <span style={{ width: `${Math.max(fill > 0 ? 4 : 0, fill)}%` }} />
       </div>
+      {meta != null ? (
+        <Text role="meta" as="p" className="checkion-domain-meter__meta">
+          {meta}
+        </Text>
+      ) : null}
     </li>
   )
 }
 
 function ReadoutMeterList({
   children,
+  className,
   'aria-label': ariaLabel,
 }: {
   children: ReactNode
+  className?: string
   'aria-label'?: string
 }) {
   return (
-    <ul className="checkion-domain-meter-list" aria-label={ariaLabel}>
+    <ul
+      className={['checkion-domain-meter-list', className].filter(Boolean).join(' ')}
+      aria-label={ariaLabel}
+    >
       {children}
     </ul>
   )
@@ -336,14 +347,40 @@ export function DomainOverviewPanel({
         </aside>
       </section>
 
-      <StatusMeterPanel
-        className="checkion-domain-corpus-signal"
-        title={t('domain.corpusSignal')}
-        meta={`${overview.scan.pageCount.toLocaleString()} pages`}
-        level={corpusLevel(overview.scores)}
-        banner={corpusBanner(overview)}
-        meters={weakMeters}
-      />
+      <section
+        className="checkion-domain-chapter checkion-domain-corpus-signal"
+        data-level={corpusLevel(overview.scores)}
+        aria-labelledby="corpus-signal-heading"
+      >
+        <header className="checkion-domain-chapter__head">
+          <p className="checkion-spread__eyebrow">{t('domain.corpusSignalEyebrow')}</p>
+          <h3 id="corpus-signal-heading" className="checkion-spread__headline">
+            {t('domain.corpusSignal')}
+          </h3>
+          <Hint>
+            {t('domain.corpusSignalMeta', {
+              pages: overview.scan.pageCount.toLocaleString(),
+            })}
+          </Hint>
+        </header>
+        <p className="checkion-domain-corpus-signal__banner" role="status">
+          {corpusBanner(overview)}
+        </p>
+        <ReadoutMeterList
+          className="checkion-domain-corpus-signal__meters"
+          aria-label={t('domain.corpusSignal')}
+        >
+          {weakMeters.map((meter) => (
+            <ReadoutMeter
+              key={meter.id}
+              label={meter.label}
+              valueLabel={meter.value}
+              pct={meter.fillPct}
+              meta={meter.meta}
+            />
+          ))}
+        </ReadoutMeterList>
+      </section>
 
       {systemicTop.length > 0 ? (
         <section className="checkion-domain-chapter" aria-labelledby="systemic-heading">
