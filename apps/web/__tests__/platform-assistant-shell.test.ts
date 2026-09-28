@@ -14,6 +14,7 @@ describe('checkion platform assistant shell mount', () => {
     expect(shell).not.toContain('topbar={')
     expect(appLayout).toContain('AppShell')
     expect(host).toContain('postPlatformAssistantTheme')
+    expect(host).toContain('IconChat')
     expect(host).toContain('embedSrcLockedRef')
     expect(host).toContain('headerActions')
     expect(paths).toContain('envPlexonPublicUrl')

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Button } from '../lib/msqdx-ui'
+import { IconChat } from '@msqdx/ui'
 import { ChatOverlay } from '../lib/msqdx-ui-client'
-import { NavIconScan } from './nav-icons'
 import {
   ASSISTANT_EMBED_PRODUCT,
   buildPlatformAssistantEmbedUrl,
@@ -140,7 +140,7 @@ export function PlatformAssistantHost({
         aria-label={open ? 'Close assistant' : 'Open assistant'}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        icon={<NavIconScan />}
+        icon={<IconChat size={20} className="ui-icon" />}
       />
       <ChatOverlay
         open={open}
