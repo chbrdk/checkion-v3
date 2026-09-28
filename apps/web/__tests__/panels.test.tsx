@@ -58,6 +58,12 @@ describe('panels smoke', () => {
     expect(screen.getByText('example.com')).toBeTruthy()
     expect(document.querySelector('.ds-collection-hub-card__badge[data-status="in_sync"]')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/projects/p1')
+    expect(screen.getByLabelText('Project metrics').textContent).toMatch(/Singles/i)
+    expect(screen.getByLabelText('Project metrics').textContent).toMatch(/Deep/i)
+    expect(screen.getByLabelText('Project metrics').textContent).toMatch(/GEO/i)
+    expect(screen.getByLabelText('Project metrics').textContent).toMatch(/SEO/i)
+    expect(screen.queryByRole('button', { name: /^Edit$/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Archive$/i })).toBeNull()
     expect(screen.getByRole('button', { name: /New project/i })).toBeTruthy()
   })
 

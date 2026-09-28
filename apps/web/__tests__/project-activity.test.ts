@@ -54,5 +54,23 @@ describe('project activity metrics', () => {
     expect(metrics.scanCount).toBe(3)
     expect(metrics.lastScanAt).toBe('2026-08-21T13:00:00.000Z')
     expect(metrics.recentScanIds[0]).toBe('dom-1')
+    expect(metrics.singles).toEqual({ count: 1, lastAt: '2026-08-20T12:00:00.000Z' })
+    expect(metrics.deep).toEqual({ count: 1, lastAt: '2026-08-21T13:00:00.000Z' })
+    expect(metrics.geo).toEqual({ count: 1, lastAt: '2026-08-19T12:00:00.000Z' })
+    expect(metrics.seo).toEqual({ count: 0, lastAt: null })
+  })
+
+  it('tracks SEO lane independently of scan rollups', () => {
+    const metrics = computeProjectActivityMetrics('proj-1', {
+      scans: [],
+      domains: [],
+      geoJobs: [],
+      seo: [
+        { id: 'seo-1', projectId: 'proj-1', lastAt: '2026-08-24T10:00:00.000Z' },
+        { id: 'seo-2', projectId: 'proj-2', lastAt: '2026-08-25T10:00:00.000Z' },
+      ],
+    })
+    expect(metrics.scanCount).toBe(0)
+    expect(metrics.seo).toEqual({ count: 1, lastAt: '2026-08-24T10:00:00.000Z' })
   })
 })

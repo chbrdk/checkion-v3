@@ -45,6 +45,16 @@ export interface ProjectSummary {
    * (excludes deep crawl page-scan rows to avoid double-counting).
    */
   scanCount: number
+  /**
+   * Per-capability hub lanes (singles / deep / GEO / SEO).
+   * Prefer these on collection cards; `scanCount` / `lastScanAt` stay as rollups.
+   */
+  activity?: {
+    singles: { count: number; lastAt: string | null }
+    deep: { count: number; lastAt: string | null }
+    geo: { count: number; lastAt: string | null }
+    seo: { count: number; lastAt: string | null }
+  }
   /** Creator / owner for access model B (list ACL). */
   ownerPlexonUserId?: string | null
 }

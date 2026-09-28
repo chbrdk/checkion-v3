@@ -253,9 +253,11 @@ function memoryArchiveProject(id: string): ProjectDetail | null {
 /** Visible capability projects (excludes the system unassigned bucket). Unfiltered — prefer {@link listProjectsForViewer}. */
 export async function listProjects(): Promise<ProjectSummary[]> {
   if (isDatabaseConfigured()) {
-    // Postgres rows already store scanCount/lastScanAt — do not reload every scan payload
-    // just to recompute hub badges (was multi-second on Staging with large corpora).
-    return (await dbApi()).dbListProjects()
+    const base = await (await dbApi()).dbListProjects()
+    const { dbLoadProjectActivityInput } = await import('../db/project-activity')
+    const { enrichProjectSummariesWithActivity } = await import('../project-activity')
+    const input = await dbLoadProjectActivityInput()
+    return enrichProjectSummariesWithActivity(base, input)
   }
   const base = memoryListProjects()
   const [{ listScans, listDomainScans }, { listGeoJobs }] = await Promise.all([
@@ -293,13 +295,46 @@ export async function getProject(id: string): Promise<ProjectDetail | null> {
     listDomainScans(id),
     listGeoJobs({ projectId: id }),
   ])
+  let seo: Array<{ projectId: string; id: string; lastAt: string | null }> = []
+  if (isDatabaseConfigured()) {
+    try {
+      const { getDb } = await import('../db/client')
+      const { seoRankConfigs } = await import('../db/schema')
+      const { eq } = await import('drizzle-orm')
+      const db = getDb()
+      const rows = await db
+        .select({
+          id: seoRankConfigs.id,
+          projectId: seoRankConfigs.projectId,
+          lastCheckedAt: seoRankConfigs.lastCheckedAt,
+          updatedAt: seoRankConfigs.updatedAt,
+        })
+        .from(seoRankConfigs)
+        .where(eq(seoRankConfigs.projectId, id))
+      seo = rows.map((r) => ({
+        id: r.id,
+        projectId: r.projectId,
+        lastAt:
+          (typeof r.lastCheckedAt === 'string' && r.lastCheckedAt.trim()) ||
+          (r.updatedAt instanceof Date ? r.updatedAt.toISOString() : null),
+      }))
+    } catch {
+      seo = []
+    }
+  }
   const { computeProjectActivityMetrics } = await import('../project-activity')
-  const metrics = computeProjectActivityMetrics(id, { scans, domains, geoJobs })
+  const metrics = computeProjectActivityMetrics(id, { scans, domains, geoJobs, seo })
   return {
     ...base,
     scanCount: metrics.scanCount,
     lastScanAt: metrics.lastScanAt,
     recentScanIds: metrics.recentScanIds,
+    activity: {
+      singles: metrics.singles,
+      deep: metrics.deep,
+      geo: metrics.geo,
+      seo: metrics.seo,
+    },
   }
 }
 

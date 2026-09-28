@@ -18,9 +18,9 @@ Magazine collection hub (same composition as plexon-v3 Collection cards — rebu
 
 - Comfortable **top padding** under the rail (same breath as home / launch covers)
 - Hairline **collection grid** (default) **or** numbered **magazine list** — view toggle in the band (Tiles · List)
-- Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (scans · last scan) · **ghost actions** (Open · Edit · Archive)
-- **Stats** `scanCount` / `lastScanAt` are computed on read: standalone singles + deep domain jobs + GEO jobs (deep page-scan rows are not double-counted)
-- List anatomy: numbered row · name + domain · capability badge · scans / last scan · ghost actions; create as first list control
+- Tile anatomy: **kicker** (domain) · **headline** (name) · optional **hint** · capability **badge** · **stats** (Singles / Deep / GEO / SEO — each last activity date + count) · **ghost action** (**Open** only — Edit / Archive live on the project workspace cover)
+- **Stats** are computed on read via `project-activity` (DB: light column selects in `dbLoadProjectActivityInput`; fixtures: scan/domain/geo lists). Never trust stale denormalized `scanCount` / `lastScanAt` alone on the hub. SEO lane uses rank-config `lastCheckedAt` (else config `updatedAt`).
+- List anatomy: numbered row · name + domain · capability badge · activity lane summary · **Open** only; create as first list control
 - Magazine band: search + capability filters (All · In sync · Pending · Error) + view toggle — not a Panel table
 - Create via dashed create card (tiles) or list “New project” control → `Dialog`: name, domain, description
 - Deep-link: `/projects?platformProjectId=` → detail when bound; otherwise opens create with that collection id

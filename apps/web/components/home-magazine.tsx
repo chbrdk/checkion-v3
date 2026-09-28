@@ -8,12 +8,13 @@ import type {
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
-import { Button, CollectionHubCard, CollectionHubMetric, EmptyState, Text } from '@msqdx/ui'
-import { formatScanInstant, formatScanShort, scoreTone } from '../lib/scan-display'
+import { Button, CollectionHubCard, EmptyState, Text } from '@msqdx/ui'
+import { formatScanInstant, scoreTone } from '../lib/scan-display'
 import { paths } from '../lib/paths'
 import { RUN_COLUMN_WINDOW, usePagedItems } from '../lib/run-column-paging'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
+import { ProjectActivityStats } from './project-activity-stats'
 
 export type HomeSingleRun = {
   id: string
@@ -165,19 +166,7 @@ function HomeProjectCard({ project }: { project: ProjectSummary }) {
       }
       badgeStatus={project.capabilityStatus}
       title={project.name}
-      stats={
-        <div aria-label={t('projects.metricsAria')}>
-          <CollectionHubMetric
-            value={String(project.scanCount)}
-            label={t('common.scans')}
-          />
-          <CollectionHubMetric
-            value={formatScanShort(project.lastScanAt)}
-            label={t('common.lastScan')}
-            linked={project.lastScanAt != null}
-          />
-        </div>
-      }
+      stats={<ProjectActivityStats project={project} />}
       actions={
         <Link href={paths.routes.projectDetail(project.id)}>
           <Button variant="ghost">{t('common.open')}</Button>

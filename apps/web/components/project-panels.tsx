@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Button, buttonClassName, CardActions, Chip, CollectionHubCard, CollectionHubMetric, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
+import { Button, buttonClassName, CardActions, Chip, CollectionHubCard, EmptyState, FilterRow, Input, StatusDot, Text } from '@msqdx/ui'
 import type {
   CapabilitySyncStatus,
   DomainScanLight,
@@ -16,8 +16,8 @@ import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
 import { PublishClientRoomCta } from './publish-client-room-cta'
+import { formatActivityListMeta, ProjectActivityStats } from './project-activity-stats'
 import { isRealPlatformProjectId } from '../lib/plexon-platform-id'
-import { MetricIconLastScan, MetricIconScans } from './nav-icons'
 import { HubIndexLayoutSwitch, useHubIndexLayout } from '../lib/hub-index-layout'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
@@ -47,15 +47,7 @@ function capabilityHint(status: CapabilitySyncStatus, t: Translator): string | n
 
 type CapFilter = 'all' | CapabilitySyncStatus
 
-function ProjectCollectionCard({
-  project,
-  onEdit,
-  onDelete,
-}: {
-  project: ProjectSummary
-  onEdit: (project: ProjectSummary) => void
-  onDelete: (project: ProjectSummary) => void
-}) {
+function ProjectCollectionCard({ project }: { project: ProjectSummary }) {
   const t = useT()
   const hint = capabilityHint(project.capabilityStatus, t)
   const domain = project.domain?.trim() || null
@@ -72,21 +64,7 @@ function ProjectCollectionCard({
       badgeStatus={project.capabilityStatus}
       title={project.name}
       hint={hint}
-      stats={
-        <div aria-label={t('projects.metricsAria')}>
-          <CollectionHubMetric
-            icon={<MetricIconScans />}
-            value={String(project.scanCount)}
-            label={t('common.scans')}
-          />
-          <CollectionHubMetric
-            icon={<MetricIconLastScan />}
-            value={formatScanShort(project.lastScanAt)}
-            label={t('common.lastScan')}
-            linked={project.lastScanAt != null}
-          />
-        </div>
-      }
+      stats={<ProjectActivityStats project={project} />}
       actions={
         <CardActions>
           <Link
@@ -95,12 +73,6 @@ function ProjectCollectionCard({
           >
             {t('common.open')}
           </Link>
-          <Button variant="ghost" type="button" onClick={() => onEdit(project)}>
-            {t('common.edit')}
-          </Button>
-          <Button variant="ghost" type="button" onClick={() => onDelete(project)}>
-            {t('projects.archiveConfirm')}
-          </Button>
         </CardActions>
       }
     />
@@ -122,13 +94,9 @@ function CreateProjectCard({ onClick }: { onClick: () => void }) {
 function ProjectListRow({
   project,
   index,
-  onEdit,
-  onDelete,
 }: {
   project: ProjectSummary
   index: number
-  onEdit: (project: ProjectSummary) => void
-  onDelete: (project: ProjectSummary) => void
 }) {
   const t = useT()
   const domain = project.domain?.trim() || null
@@ -147,9 +115,7 @@ function ProjectListRow({
         <p className="ds-collection-hub-list-meta" aria-label={t('projects.metricsAria')}>
           <span>{domain ?? t('projects.noDomain')}</span>
           <span aria-hidden> · </span>
-          <span>{t('projects.scanCount', { count: project.scanCount.toLocaleString() })}</span>
-          <span aria-hidden> · </span>
-          <span>{formatScanShort(project.lastScanAt)}</span>
+          <span>{formatActivityListMeta(project, t)}</span>
         </p>
       </div>
       <div className="ds-collection-hub-list-row__trail">
@@ -166,12 +132,6 @@ function ProjectListRow({
           >
             {t('common.open')}
           </Link>
-          <Button variant="ghost" size="sm" type="button" onClick={() => onEdit(project)}>
-            {t('common.edit')}
-          </Button>
-          <Button variant="ghost" size="sm" type="button" onClick={() => onDelete(project)}>
-            {t('projects.archiveConfirm')}
-          </Button>
         </div>
       </div>
     </li>
@@ -190,8 +150,6 @@ export function ProjectListPanel({
   const [capFilter, setCapFilter] = useState<CapFilter>('all')
   const { layout, setLayout } = useHubIndexLayout()
   const [createOpen, setCreateOpen] = useState(Boolean(bindPlatformProjectId))
-  const [editTarget, setEditTarget] = useState<ProjectDetail | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null)
   const t = useT()
 
   const filtered = useMemo(() => {
@@ -206,21 +164,6 @@ export function ProjectListPanel({
       )
     })
   }, [projects, query, capFilter])
-
-  async function openEdit(project: ProjectSummary) {
-    try {
-      const res = await fetch(paths.routes.apiProjectDetail(project.id), { cache: 'no-store' })
-      if (!res.ok) throw new Error('load_failed')
-      const detail = (await res.json()) as ProjectDetail
-      setEditTarget(detail)
-    } catch {
-      setEditTarget({
-        ...project,
-        description: '',
-        recentScanIds: [],
-      })
-    }
-  }
 
   return (
     <div className="checkion-magazine checkion-projects" data-section="projects-hub">
@@ -258,12 +201,7 @@ export function ProjectListPanel({
           <div className="ds-collection-hub-grid" aria-label={t('projects.listAria')}>
             <CreateProjectCard onClick={() => setCreateOpen(true)} />
             {filtered.map((project) => (
-              <ProjectCollectionCard
-                key={project.id}
-                project={project}
-                onEdit={(p) => void openEdit(p)}
-                onDelete={setDeleteTarget}
-              />
+              <ProjectCollectionCard key={project.id} project={project} />
             ))}
           </div>
         ) : (
@@ -281,13 +219,7 @@ export function ProjectListPanel({
             {filtered.length > 0 ? (
               <ol className="ds-collection-hub-list" aria-label={t('projects.listAria')}>
                 {filtered.map((project, index) => (
-                  <ProjectListRow
-                    key={project.id}
-                    project={project}
-                    index={index}
-                    onEdit={(p) => void openEdit(p)}
-                    onDelete={setDeleteTarget}
-                  />
+                  <ProjectListRow key={project.id} project={project} index={index} />
                 ))}
               </ol>
             ) : null}
@@ -306,17 +238,6 @@ export function ProjectListPanel({
         mode="create"
         platformProjectId={bindPlatformProjectId}
         onClose={() => setCreateOpen(false)}
-      />
-      <ProjectFormDialog
-        open={editTarget != null}
-        mode="edit"
-        initial={editTarget ?? undefined}
-        onClose={() => setEditTarget(null)}
-      />
-      <ProjectDeleteConfirm
-        open={deleteTarget != null}
-        project={deleteTarget}
-        onClose={() => setDeleteTarget(null)}
       />
     </div>
   )
