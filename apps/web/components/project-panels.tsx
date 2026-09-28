@@ -319,6 +319,16 @@ export function ProjectWorkspace({
         mode: 'geo',
         url: project.domain.startsWith('http') ? project.domain : `https://${project.domain}`,
       })
+  const projectUrl = project.domain.startsWith('http')
+    ? project.domain
+    : `https://${project.domain}`
+  const singleLaunchHref = paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })
+  const deepLaunchHref = paths.routes.scanLaunch({ projectId: project.id, mode: 'deep' })
+  const geoLaunchHref = paths.routes.scanLaunch({
+    projectId: project.id,
+    mode: 'geo',
+    url: projectUrl,
+  })
   const syncLabel = capabilityLabel(project.capabilityStatus, t)
   const syncHint = capabilityHint(project.capabilityStatus, t)
 
@@ -443,10 +453,7 @@ export function ProjectWorkspace({
             {singlesWindow.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
                 {t('projects.emptySingles')}{' '}
-                <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
-                  {t('projects.emptySinglesCta')}
-                </Link>
-                .
+                <Link href={singleLaunchHref}>{t('projects.emptySinglesCta')}</Link>.
               </EmptyState>
             ) : (
               <>
@@ -500,10 +507,7 @@ export function ProjectWorkspace({
             {domainsWindow.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
                 {t('projects.emptyDeep')}{' '}
-                <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'deep' })}>
-                  {t('projects.emptyDeepCta')}
-                </Link>
-                .
+                <Link href={deepLaunchHref}>{t('projects.emptyDeepCta')}</Link>.
               </EmptyState>
             ) : (
               <>
@@ -563,18 +567,7 @@ export function ProjectWorkspace({
             {geoWindow.length === 0 ? (
               <EmptyState className="checkion-project-chapter__empty">
                 {t('projects.emptyGeo')}{' '}
-                <Link
-                  href={paths.routes.scanLaunch({
-                    projectId: project.id,
-                    mode: 'geo',
-                    url: project.domain.startsWith('http')
-                      ? project.domain
-                      : `https://${project.domain}`,
-                  })}
-                >
-                  {t('projects.emptyGeoCta')}
-                </Link>
-                .
+                <Link href={geoLaunchHref}>{t('projects.emptyGeoCta')}</Link>.
               </EmptyState>
             ) : (
               <>
@@ -625,6 +618,27 @@ export function ProjectWorkspace({
               </>
             )}
           </div>
+        </div>
+        <div
+          className="checkion-project-chapter__actions"
+          role="group"
+          aria-label={t('projects.runsActionsAria')}
+        >
+          <Link href={singleLaunchHref}>
+            <Button variant="ghost" size="sm">
+              {t('projects.runsNewSingle')}
+            </Button>
+          </Link>
+          <Link href={deepLaunchHref}>
+            <Button variant="ghost" size="sm">
+              {t('projects.runsNewDeep')}
+            </Button>
+          </Link>
+          <Link href={geoLaunchHref}>
+            <Button variant="ghost" size="sm">
+              {t('projects.runsNewGeo')}
+            </Button>
+          </Link>
         </div>
       </WorkspaceChapter>
 

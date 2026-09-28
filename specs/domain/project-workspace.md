@@ -40,8 +40,9 @@ One editorial magazine composition (Audion project magazine / GEO cover / launch
    - **GEO runs** — always show the column; EmptyState when empty → `/geo/:id/overview`
    - Same in-column paging as home: **6** visible, **Show more** (+6) up to **24** (`RUN_COLUMN_PAGE_SIZE` / `RUN_COLUMN_WINDOW`)
    - URL titles wrap/scale inside the column (same `checkion-project-run-list__title` rules as home)
+   - Chapter footer CTAs (ghost `sm`, same language as SEO pulse **Open SEO**): **New single** · **New deep** · **Start GEO** → `scanLaunch` for each mode
 5. **SEO pulse** — magazine teaser chapter (Corpus-pulse meter language): **Tracked** keywords · **Ref. domains** · **Organic KW** · **GSC clicks**. Built from `GET`/`getSeoProjectOverview` (no client fetch on the magazine). EmptyState + CTA → `/projects/:id/seo` when no Market data yet. **Not** the nested OpenSEO dashboard (no setup checklist / suggest agent / card grid).
-6. **GEO History** — per-query position timelines across completed GEO jobs (soft match by measurement + normalized query text). Model filter + `SeriesChart` cards. Deep-link `?chapter=geo-history`. Spec: [`geo-position-history.md`](./geo-position-history.md).
+6. **GEO History** — same magazine chapter chrome as Latest runs / SEO pulse (`checkion-project-chapter` + spread eyebrow/headline + ghost CTA). Per-query position timelines across completed GEO jobs (soft match by measurement + normalized query text). Model filter + `SeriesChart` cards. Deep-link `?chapter=geo-history`. Spec: [`geo-position-history.md`](./geo-position-history.md).
 7. **SEO Market** — OpenSEO-style workspace at `/projects/:id/seo/*` (keywords, domain, backlinks, rank tracking, competitors, GSC). Spec: [`seo-project-workspace.md`](./seo-project-workspace.md).
 
 Federation fields (`platformProjectId`, `capabilityStatus`) stay visible on the cover. No multi-tab hub (SEO deep work stays on the nested route tree; the magazine only teases via **SEO pulse**).

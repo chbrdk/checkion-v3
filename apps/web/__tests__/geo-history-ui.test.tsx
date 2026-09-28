@@ -42,8 +42,11 @@ describe('GeoHistoryChapter', () => {
     })
     render(<GeoHistoryChapter projectId="proj-demo-1" history={history} />)
 
+    expect(document.querySelector('.checkion-project-chapter.checkion-geo-history-chapter')).toBeTruthy()
+    expect(document.querySelector('.checkion-spread__eyebrow')).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Citation position over time/i })).toBeTruthy()
     expect(screen.getByLabelText(/GEO citation position history/i)).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Start GEO$/i })).toBeTruthy()
     expect(document.querySelectorAll('[data-testid="series-chart"]').length).toBeGreaterThanOrEqual(
       1,
     )
@@ -57,6 +60,7 @@ describe('GeoHistoryChapter', () => {
       overviews: GEO_OVERVIEWS.filter((o) => o.job.id === 'geo-1'),
     })
     render(<GeoHistoryChapter projectId="proj-demo-1" history={history} />)
+    expect(document.querySelector('.checkion-project-chapter__head')).toBeTruthy()
     expect(screen.getByText(/Need at least two completed runs/i)).toBeTruthy()
     expect(screen.getByRole('link', { name: /Re-run or launch GEO/i })).toBeTruthy()
     expect(document.querySelector('[data-testid="series-chart"]')).toBeNull()

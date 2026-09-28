@@ -7,7 +7,7 @@ import type {
   GeoPositionHistoryResult,
   GeoQuestionHistorySeries,
 } from '@checkion-v3/contracts'
-import { Chip, EmptyState, Hint, Panel, SectionChrome, Text } from '@msqdx/ui'
+import { Button, Chip, EmptyState, Hint, Panel, SectionChrome, Text } from '@msqdx/ui'
 import { SeriesChart } from '../lib/msqdx-ui-client'
 import { geoMeasurementLabel } from '../lib/geo/measurement'
 import { paths } from '../lib/paths'
@@ -44,6 +44,11 @@ export function GeoHistoryChapter({
 }) {
   const t = useT()
   const [modelId, setModelId] = useState<string | 'avg'>('avg')
+  const launchHref = paths.routes.scanLaunch({
+    projectId,
+    mode: 'geo',
+    measurement,
+  })
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -87,31 +92,32 @@ export function GeoHistoryChapter({
   return (
     <section
       id="geo-history"
-      className="checkion-workspace-chapter checkion-geo-history-chapter"
+      className="checkion-project-chapter checkion-geo-history-chapter"
+      data-section="geo-history"
       aria-label={t('projects.geoHistoryAria')}
     >
-      <p className="checkion-workspace-chapter__eyebrow">{t('projects.geoHistoryEyebrow')}</p>
-      <h2 className="checkion-workspace-chapter__title">{t('projects.geoHistoryTitle')}</h2>
-      <p className="checkion-workspace-chapter__deck">
-        {t('projects.geoHistoryDeck', {
-          layer: geoMeasurementLabel(measurement),
-          host: history.targetHost || projectId,
-        })}
-      </p>
+      <header className="checkion-project-chapter__head">
+        <div>
+          <p className="checkion-spread__eyebrow">{t('projects.geoHistoryEyebrow')}</p>
+          <h2 className="checkion-spread__headline">{t('projects.geoHistoryTitle')}</h2>
+          <p className="checkion-project-chapter__deck">
+            {t('projects.geoHistoryDeck', {
+              layer: geoMeasurementLabel(measurement),
+              host: history.targetHost || projectId,
+            })}
+          </p>
+        </div>
+        <Link href={launchHref}>
+          <Button variant="ghost" size="sm">
+            {t('projects.geoHistoryCta')}
+          </Button>
+        </Link>
+      </header>
 
       {withTimeline.length === 0 ? (
         <EmptyState className="checkion-project-chapter__empty">
           {t('projects.geoHistoryEmpty')}{' '}
-          <Link
-            href={paths.routes.scanLaunch({
-              projectId,
-              mode: 'geo',
-              measurement,
-            })}
-          >
-            {t('projects.geoHistoryEmptyCta')}
-          </Link>
-          .
+          <Link href={launchHref}>{t('projects.geoHistoryEmptyCta')}</Link>.
         </EmptyState>
       ) : (
         <>

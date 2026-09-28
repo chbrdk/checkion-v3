@@ -220,6 +220,22 @@ describe('panels smoke', () => {
     expect(screen.getByRole('heading', { name: /Citation position over time/i })).toBeTruthy()
     expect(screen.getByLabelText(/GEO citation position history/i)).toBeTruthy()
     expect(screen.getByLabelText('Latest runs by mode')).toBeTruthy()
+    expect(screen.getByRole('link', { name: /New single/i })).toHaveAttribute(
+      'href',
+      '/scan?projectId=p1&mode=single',
+    )
+    expect(screen.getByRole('link', { name: /New deep/i })).toHaveAttribute(
+      'href',
+      '/scan?projectId=p1&mode=deep',
+    )
+    const startGeoLinks = screen.getAllByRole('link', { name: /^Start GEO$/i })
+    expect(startGeoLinks.map((el) => el.getAttribute('href'))).toEqual(
+      expect.arrayContaining([
+        '/scan?projectId=p1&mode=geo&url=https%3A%2F%2Fexample.com',
+        '/scan?projectId=p1&mode=geo&measurement=recall',
+      ]),
+    )
+    expect(document.querySelector('#geo-history.checkion-project-chapter')).toBeTruthy()
     expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
       'href',
       '/scan?projectId=p1&mode=single',

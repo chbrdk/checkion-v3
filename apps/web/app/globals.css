@@ -541,6 +541,17 @@ a { color: inherit; text-decoration: none; }
   color: var(--accent, var(--ink));
 }
 
+.checkion-project-chapter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
 .checkion-project-pulse {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3382,10 +3393,6 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 .checkion-geo-title-editor__rename.ds-btn,
 .checkion-job-title-editor__rename.ds-btn {
   flex-shrink: 0;
-}
-
-.checkion-geo-history-chapter {
-  margin-top: 2.5rem;
 }
 
 .checkion-geo-history-filters {
