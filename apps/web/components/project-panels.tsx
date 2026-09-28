@@ -15,9 +15,9 @@ import type {
 import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
-import { PublishClientRoomCta } from './publish-client-room-cta'
+import { SeoPulseChapter } from './seo-pulse-chapter'
 import { formatActivityListMeta, ProjectActivityStats } from './project-activity-stats'
-import { isRealPlatformProjectId } from '../lib/plexon-platform-id'
+import type { ProjectSeoPulse } from '../lib/seo-market/project-seo-pulse'
 import { HubIndexLayoutSwitch, useHubIndexLayout } from '../lib/hub-index-layout'
 import { paths } from '../lib/paths'
 import { formatScanInstant, formatScanShort, scoreTone, displayRunTitle } from '../lib/scan-display'
@@ -281,12 +281,14 @@ export function ProjectWorkspace({
   domains,
   geoJobs = [],
   geoHistory = null,
+  seoPulse = null,
 }: {
   project: ProjectDetail
   recentScans: ScanSummary[]
   domains: DomainScanLight[]
   geoJobs?: GeoJobSummary[]
   geoHistory?: GeoPositionHistoryResult | null
+  seoPulse?: ProjectSeoPulse | null
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -384,14 +386,10 @@ export function ProjectWorkspace({
           ) : null}
         </div>
         <div className="checkion-project-cover__actions">
-          <PublishClientRoomCta
-            projectId={project.id}
-            canPublish={isRealPlatformProjectId(project.platformProjectId)}
-          />
-          <Button type="button" size="lg" variant="ghost" onClick={() => setEditOpen(true)}>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
             {t('common.edit')}
           </Button>
-          <Button type="button" size="lg" variant="ghost" onClick={() => setDeleteOpen(true)}>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteOpen(true)}>
             {t('projects.archiveConfirm')}
           </Button>
         </div>
@@ -629,6 +627,8 @@ export function ProjectWorkspace({
           </div>
         </div>
       </WorkspaceChapter>
+
+      {seoPulse ? <SeoPulseChapter pulse={seoPulse} /> : null}
 
       {geoHistory ? (
         <GeoHistoryChapter

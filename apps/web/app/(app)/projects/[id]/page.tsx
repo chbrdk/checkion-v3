@@ -10,6 +10,8 @@ import {
   listGeoJobsForViewer,
   listScansForViewer,
 } from '../../../../lib/resource-access'
+import { getSeoProjectOverview } from '../../../../lib/seo-market'
+import { buildProjectSeoPulse } from '../../../../lib/seo-market/project-seo-pulse'
 
 /** Avoid SSG hitting Postgres when Coolify injects DATABASE_URL at build time. */
 export const dynamic = 'force-dynamic'
@@ -28,11 +30,12 @@ export default async function ProjectDetailPage({
   const project = await getProject(id)
   if (!project || !(await viewerCanAccessProject(project, viewerId))) notFound()
 
-  const [recentScans, domains, geoJobs, overviews] = await Promise.all([
+  const [recentScans, domains, geoJobs, overviews, seoOverview] = await Promise.all([
     listScansForViewer(viewerId, id),
     listDomainScansForViewer(viewerId, id),
     listGeoJobsForViewer(viewerId, id),
     listGeoOverviewsForProject(id),
+    getSeoProjectOverview(id),
   ])
 
   const measurement =
@@ -42,6 +45,7 @@ export default async function ProjectDetailPage({
     measurement,
     overviews,
   })
+  const seoPulse = buildProjectSeoPulse(seoOverview)
 
   return (
     <ProjectWorkspace
@@ -50,6 +54,7 @@ export default async function ProjectDetailPage({
       domains={domains}
       geoJobs={geoJobs}
       geoHistory={geoHistory}
+      seoPulse={seoPulse}
     />
   )
 }

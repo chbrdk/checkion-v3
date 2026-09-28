@@ -6,7 +6,6 @@ import {
   emptyActivityLane,
   type ProjectActivityLane,
 } from '../lib/project-activity'
-import { formatScanShort } from '../lib/scan-display'
 import { useT } from '../lib/user-prefs'
 import type { Translator } from '../lib/i18n'
 
@@ -29,22 +28,22 @@ export function formatActivityListMeta(project: ProjectSummary, t: Translator): 
   const lanes = projectActivityLanes(project)
   const parts: string[] = []
   if (lanes.singles.count > 0) {
-    parts.push(`${t('projects.metricSingles')} ${formatScanShort(lanes.singles.lastAt)}`)
+    parts.push(`${lanes.singles.count} ${t('projects.metricSingles')}`)
   }
   if (lanes.deep.count > 0) {
-    parts.push(`${t('projects.metricDeep')} ${formatScanShort(lanes.deep.lastAt)}`)
+    parts.push(`${lanes.deep.count} ${t('projects.metricDeep')}`)
   }
   if (lanes.geo.count > 0) {
-    parts.push(`${t('projects.metricGeo')} ${formatScanShort(lanes.geo.lastAt)}`)
+    parts.push(`${lanes.geo.count} ${t('projects.metricGeo')}`)
   }
   if (lanes.seo.count > 0) {
-    parts.push(`${t('projects.metricSeo')} ${formatScanShort(lanes.seo.lastAt)}`)
+    parts.push(`${lanes.seo.count} ${t('projects.metricSeo')}`)
   }
   if (parts.length === 0) return t('projects.metricNone')
   return parts.join(' · ')
 }
 
-/** Hub / home collection-card stats: last activity per capability lane. */
+/** Hub / home collection-card stats: count per capability lane (no dates). */
 export function ProjectActivityStats({ project }: { project: ProjectSummary }) {
   const t = useT()
   const lanes = projectActivityLanes(project)
@@ -56,21 +55,14 @@ export function ProjectActivityStats({ project }: { project: ProjectSummary }) {
   ]
   return (
     <div className="checkion-project-activity-stats" aria-label={t('projects.metricsAria')}>
-      {cells.map(({ key, lane, label }) => {
-        const has = lane.count > 0 || lane.lastAt != null
-        return (
-          <CollectionHubMetric
-            key={key}
-            value={has ? formatScanShort(lane.lastAt) : '—'}
-            label={
-              lane.count > 0
-                ? t('projects.metricLaneWithCount', { label, count: lane.count })
-                : label
-            }
-            linked={has}
-          />
-        )
-      })}
+      {cells.map(({ key, lane, label }) => (
+        <CollectionHubMetric
+          key={key}
+          value={String(lane.count)}
+          label={label}
+          linked={lane.count > 0}
+        />
+      ))}
     </div>
   )
 }

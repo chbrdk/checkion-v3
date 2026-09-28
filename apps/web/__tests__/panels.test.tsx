@@ -186,6 +186,17 @@ describe('panels smoke', () => {
             },
           ],
         }}
+        seoPulse={{
+          projectId: 'p1',
+          href: '/projects/p1/seo',
+          hasData: false,
+          meters: [
+            { id: 'tracked', value: '—', linked: false },
+            { id: 'refDomains', value: '—', linked: false },
+            { id: 'organicKw', value: '—', linked: false },
+            { id: 'gscClicks', value: '—', linked: false },
+          ],
+        }}
       />,
     )
     expect(document.querySelector('.checkion-project-workspace')).toBeTruthy()
@@ -200,6 +211,12 @@ describe('panels smoke', () => {
     expect(screen.getByRole('heading', { name: /^Singles$/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Deep scans/i })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /GEO runs/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /SEO pulse/i })).toBeTruthy()
+    expect(screen.getByLabelText(/^SEO pulse$/i)).toBeTruthy()
+    expect(screen.getByText(/No SEO Market data yet/i)).toBeTruthy()
+    const openSeoLinks = screen.getAllByRole('link', { name: /^Open SEO$/i })
+    expect(openSeoLinks.length).toBeGreaterThanOrEqual(1)
+    expect(openSeoLinks.every((el) => el.getAttribute('href') === '/projects/p1/seo')).toBe(true)
     expect(screen.getByRole('heading', { name: /Citation position over time/i })).toBeTruthy()
     expect(screen.getByLabelText(/GEO citation position history/i)).toBeTruthy()
     expect(screen.getByLabelText('Latest runs by mode')).toBeTruthy()
