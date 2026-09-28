@@ -8,7 +8,7 @@ import {
 } from './issue-capture-overlay'
 import { IssueRail } from './issue-rail'
 
-/** Chapter 02: full-width capture stage + compact findings rail (≈80/20). */
+/** Chapter 02: capture stage + findings rail (≈70/30). */
 export function IssuesWorkspace({
   issues,
   screenshotUrl,

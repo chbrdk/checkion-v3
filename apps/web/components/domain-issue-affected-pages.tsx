@@ -6,6 +6,7 @@ import { Button, Chip, FilterRow } from '@msqdx/ui'
 import type { IssueAffectedPagesResult } from '@checkion-v3/contracts'
 import { paths } from '../lib/paths'
 import { scoreTone } from '../lib/scan-display'
+import { useT } from '../lib/user-prefs'
 
 const AFFECTED_PAGE_SIZE = 25
 
@@ -46,6 +47,7 @@ export function DomainIssueAffectedPages({
   issueId: string
   totalHint: number
 }) {
+  const t = useT()
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState<SortMode>('issues-desc')
   const [density, setDensity] = useState<DensityFilter>('all')
@@ -107,35 +109,35 @@ export function DomainIssueAffectedPages({
   const rangeStart = total === 0 ? 0 : (page - 1) * AFFECTED_PAGE_SIZE + 1
   const rangeEnd = Math.min(page * AFFECTED_PAGE_SIZE, total)
 
+  const densityChips: Array<{ id: DensityFilter; label: string }> = [
+    { id: 'all', label: t('domain.affectedDensityAll') },
+    { id: 'heavy', label: t('domain.affectedDensityHeavy') },
+    { id: 'medium', label: t('domain.affectedDensityMedium') },
+    { id: 'light', label: t('domain.affectedDensityLight') },
+  ]
+
   return (
     <div className="checkion-domain-issues__affected">
       <div className="checkion-domain-issues__affected-toolbar">
-        <p className="checkion-domain-issues__affected-label">Affected pages</p>
-        <FilterRow role="group" aria-label="Sort affected pages">
+        <p className="checkion-domain-issues__affected-label">{t('domain.affectedPages')}</p>
+        <FilterRow role="group" aria-label={t('domain.affectedPagesSortAria')}>
           <Chip
             size="sm"
             selected={sort === 'issues-desc'}
             onClick={() => setSort('issues-desc')}
           >
-            Most issues
+            {t('domain.affectedSortMost')}
           </Chip>
           <Chip
             size="sm"
             selected={sort === 'issues-asc'}
             onClick={() => setSort('issues-asc')}
           >
-            Fewest issues
+            {t('domain.affectedSortFewest')}
           </Chip>
         </FilterRow>
-        <FilterRow role="group" aria-label="Filter by issue density">
-          {(
-            [
-              ['all', 'All'],
-              ['heavy', 'Heavy'],
-              ['medium', 'Medium'],
-              ['light', 'Light'],
-            ] as const
-          ).map(([id, label]) => (
+        <FilterRow role="group" aria-label={t('domain.affectedPagesDensityAria')}>
+          {densityChips.map(({ id, label }) => (
             <Chip
               key={id}
               size="sm"
@@ -149,19 +151,22 @@ export function DomainIssueAffectedPages({
       </div>
 
       {loading && !data ? (
-        <p className="checkion-domain-issues__affected-status">Loading pages…</p>
+        <p className="checkion-domain-issues__affected-status">{t('domain.affectedLoading')}</p>
       ) : null}
       {error ? (
-        <p className="checkion-domain-issues__affected-status">Could not load pages.</p>
+        <p className="checkion-domain-issues__affected-status">{t('domain.affectedLoadError')}</p>
       ) : null}
 
       {data?.items.length ? (
-        <table className="checkion-report__table checkion-domain-issues__affected-table" aria-label="Affected pages">
+        <table
+          className="checkion-report__table checkion-domain-issues__affected-table"
+          aria-label={t('domain.affectedPages')}
+        >
           <thead>
             <tr>
-              <th scope="col">Page</th>
-              <th scope="col">Issues</th>
-              <th scope="col">Critical</th>
+              <th scope="col">{t('domain.affectedColPage')}</th>
+              <th scope="col">{t('domain.affectedColIssues')}</th>
+              <th scope="col">{t('domain.affectedColCritical')}</th>
             </tr>
           </thead>
           <tbody>
@@ -184,17 +189,20 @@ export function DomainIssueAffectedPages({
       ) : null}
 
       {!loading && !error && data && data.items.length === 0 ? (
-        <p className="checkion-domain-issues__affected-status">No pages match this filter.</p>
+        <p className="checkion-domain-issues__affected-status">{t('domain.affectedEmpty')}</p>
       ) : null}
 
       {total > 0 ? (
         <nav
           className="checkion-domain-issues__pager checkion-domain-issues__pager--nested"
-          aria-label="Affected pages"
+          aria-label={t('domain.affectedPages')}
         >
           <p className="checkion-domain-issues__pager-meta" aria-live="polite">
-            Pages {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{' '}
-            {total.toLocaleString()}
+            {t('domain.affectedPagesRange', {
+              start: rangeStart.toLocaleString(),
+              end: rangeEnd.toLocaleString(),
+              total: total.toLocaleString(),
+            })}
           </p>
           <div className="checkion-domain-issues__pager-actions">
             <Button
@@ -203,7 +211,7 @@ export function DomainIssueAffectedPages({
               disabled={page <= 1 || loading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Previous
+              {t('domain.previous')}
             </Button>
             <Button
               variant="ghost"
@@ -211,7 +219,7 @@ export function DomainIssueAffectedPages({
               disabled={page >= pageCount || loading}
               onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             >
-              Next
+              {t('domain.next')}
             </Button>
           </div>
         </nav>

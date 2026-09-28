@@ -15,6 +15,14 @@ const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'minor',
 ]
 
+const SEVERITY_LABEL: Record<IssueSeverity | 'all', string> = {
+  all: 'results.issuesChrome.severityAll',
+  critical: 'results.issuesChrome.severityCritical',
+  serious: 'results.issuesChrome.severitySerious',
+  moderate: 'results.issuesChrome.severityModerate',
+  minor: 'results.issuesChrome.severityMinor',
+}
+
 const SEVERITY_TIP: Partial<Record<IssueSeverity, TipId>> = {
   critical: 'issue.severity.critical',
   serious: 'issue.severity.serious',
@@ -22,7 +30,7 @@ const SEVERITY_TIP: Partial<Record<IssueSeverity, TipId>> = {
   minor: 'issue.severity.minor',
 }
 
-/** Compact expandable issue rail for the 20% column beside the capture. */
+/** Findings rail beside the capture stage. */
 export function IssueRail({
   issues,
   openId,
@@ -81,7 +89,7 @@ export function IssueRail({
         >
           {(['critical', 'serious', 'moderate', 'minor'] as const).map((s) => (
             <LabelWithTip key={s} tipId={SEVERITY_TIP[s]!}>
-              <span className="checkion-issue-rail__sev-tip">{s}</span>
+              <span className="checkion-issue-rail__sev-tip">{t(SEVERITY_LABEL[s])}</span>
             </LabelWithTip>
           ))}
         </div>
@@ -96,7 +104,10 @@ export function IssueRail({
             >
               {s === 'all'
                 ? t('results.issuesChrome.allCount', { count: counts.all })
-                : `${s[0]!.toUpperCase()} ${counts[s] ?? 0}`}
+                : t('results.issuesChrome.sevCount', {
+                    sev: t(SEVERITY_LABEL[s]),
+                    count: counts[s] ?? 0,
+                  })}
             </Chip>
           ))}
         </FilterRow>
@@ -126,7 +137,7 @@ export function IssueRail({
                   </span>
                   <span className="checkion-issue-rail__title">{issue.title}</span>
                   <span className="checkion-issue-rail__meta">
-                    {issue.severity}
+                    {t(SEVERITY_LABEL[issue.severity])}
                     {issue.boundingBox ? t('results.issuesChrome.mapSuffix') : ''}
                   </span>
                 </button>

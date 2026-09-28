@@ -14,6 +14,14 @@ const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'minor',
 ]
 
+const SEVERITY_LABEL: Record<IssueSeverity | 'all', string> = {
+  all: 'domain.severityAll',
+  critical: 'domain.severityCritical',
+  serious: 'domain.severitySerious',
+  moderate: 'domain.severityModerate',
+  minor: 'domain.severityMinor',
+}
+
 const PAGE_SIZE = 25
 
 /** Domain issues = systemic groups by pages affected — no capture canvas. */
@@ -86,7 +94,7 @@ export function DomainIssuesPanel({
         <FilterRow role="group" aria-label={t('domain.severityFilter')}>
           {SEVERITIES.map((s) => (
             <Chip key={s} size="sm" selected={severity === s} onClick={() => setSeverity(s)}>
-              {s}
+              {t(SEVERITY_LABEL[s])}
             </Chip>
           ))}
         </FilterRow>
@@ -115,11 +123,11 @@ export function DomainIssuesPanel({
                     onClick={() => setExpandedId(open ? null : issue.id)}
                   >
                     <Chip static size="sm">
-                      {issue.severity}
+                      {t(SEVERITY_LABEL[issue.severity])}
                     </Chip>
                     <span className="checkion-domain-issues__title">{issue.title}</span>
                     <span className="checkion-domain-issues__pages">
-                      {issue.affectedCount.toLocaleString()} pages
+                      {t('domain.pagesAffected', { n: issue.affectedCount.toLocaleString() })}
                     </span>
                     <span className="checkion-domain-systemic__bar" aria-hidden>
                       <span style={{ width: `${width}%` }} />
@@ -153,7 +161,7 @@ export function DomainIssuesPanel({
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Rule help
+                          {t('domain.ruleHelp')}
                         </a>
                       ) : null}
                       <DomainIssueAffectedPages
