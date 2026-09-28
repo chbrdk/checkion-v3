@@ -86,3 +86,5 @@ export {
 export type { AccentPreference, AccentOption } from '../../../../msqdx-ui/packages/ui/src/accentPreference'
 export { AccentSwatchGroup } from '../../../../msqdx-ui/packages/ui/src/components/AccentSwatchGroup'
 export type { AccentSwatchGroupProps } from '../../../../msqdx-ui/packages/ui/src/components/AccentSwatchGroup'
+export { IconBell, IconChat } from '../../../../msqdx-ui/packages/ui/src/components/icons'
+export type { IconProps } from '../../../../msqdx-ui/packages/ui/src/components/icons'

@@ -57,6 +57,8 @@ describe('Dockerfile Coolify packaging', () => {
   it('re-exports CardActions from the curated @msqdx/ui barrel', () => {
     const barrel = readFileSync(resolve(repoRoot, 'apps/web/lib/msqdx-ui.ts'), 'utf8')
     expect(barrel).toContain("export { CardActions } from '../../../../msqdx-ui/packages/ui/src/components/CardActions'")
+    expect(barrel).toContain('IconBell')
+    expect(barrel).toContain('IconChat')
     const cardActions = resolve(repoRoot, '../msqdx-ui/packages/ui/src/components/CardActions.tsx')
     expect(existsSync(cardActions)).toBe(true)
   })
