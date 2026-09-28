@@ -62,8 +62,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Bump MSQDX_UI_REF whenever checkion barrels need a newer primitive from chbrdk/msqdx-ui.
 FROM base AS ds
 ARG MSQDX_UI_REPO=https://github.com/chbrdk/msqdx-ui.git
-# SeriesChart for GEO position history — msqdx-ui main @ af801ee (2026-09-19).
-ARG MSQDX_UI_REF=baadd64135bee74b22b46f70a3fb4c1383ddce0c
+# IconBell / IconChat (Wave 5/6) for notification + assistant FAB — msqdx-ui main @ 721aa03.
+ARG MSQDX_UI_REF=721aa03a2251ff7203094df7542ba015ebee0b84
 RUN git init /workspace/msqdx-ui \
     && cd /workspace/msqdx-ui \
     && git remote add origin "${MSQDX_UI_REPO}" \
@@ -113,6 +113,8 @@ RUN test -d /workspace/msqdx-ui/packages/ui/src \
     && grep -q "export { SeriesChart, collectSeriesLabels }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { KpiMetric }" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && grep -q "export { WidgetGrid }" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "IconBell" /workspace/msqdx-ui/packages/ui/src/index.ts \
+    && grep -q "IconChat" /workspace/msqdx-ui/packages/ui/src/index.ts \
     && rm -rf /workspace/msqdx-ui/node_modules \
     && ln -s /workspace/checkion-v3/node_modules /workspace/msqdx-ui/node_modules \
     && test -d /workspace/msqdx-ui/node_modules/@types/react
