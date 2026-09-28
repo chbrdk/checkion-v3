@@ -236,14 +236,8 @@ describe('panels smoke', () => {
       ]),
     )
     expect(document.querySelector('#geo-history.checkion-project-chapter')).toBeTruthy()
-    expect(screen.getByRole('link', { name: /New scan/i })).toHaveAttribute(
-      'href',
-      '/scan?projectId=p1&mode=single',
-    )
-    expect(screen.getByRole('link', { name: /Open GEO/i })).toHaveAttribute(
-      'href',
-      '/geo/geo-x/overview',
-    )
+    expect(document.querySelector('.checkion-magazine-topbar-actions')).toBeNull()
+    expect(screen.queryByRole('link', { name: /New scan/i })).toBeNull()
     expect(screen.getByLabelText('Single scans')).toBeTruthy()
     expect(screen.getByLabelText('Deep scans')).toBeTruthy()
     expect(screen.getByLabelText('GEO runs')).toBeTruthy()

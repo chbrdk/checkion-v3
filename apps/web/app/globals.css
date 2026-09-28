@@ -371,9 +371,9 @@ a { color: inherit; text-decoration: none; }
 
 .checkion-project-cover {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
   gap: clamp(1.25rem, 3vw, 2.5rem);
-  align-items: end;
+  align-items: start;
   padding-block: clamp(0.75rem, 2vw, 1.35rem) clamp(1.75rem, 4vw, 2.75rem);
   border-bottom: 1px solid var(--line);
   animation: checkion-rise 0.55s ease-out both;
@@ -429,14 +429,25 @@ a { color: inherit; text-decoration: none; }
   margin: 1rem 0 0;
 }
 
+.checkion-project-cover__aside {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.checkion-project-cover__aside .checkion-project-team.ds-panel--editorial {
+  border-top: 0;
+}
+
 .checkion-project-cover__actions {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: flex-end;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.35rem;
   margin: 0;
-  padding-bottom: 0.15rem;
 }
 
 .checkion-project-cover__actions .ds-btn {
@@ -445,23 +456,7 @@ a { color: inherit; text-decoration: none; }
   min-width: 0;
 }
 
-.checkion-project-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
-  gap: var(--msqdx-space-6, 1.5rem);
-  align-items: start;
-  margin-block: var(--msqdx-space-6, 1.5rem);
-}
-
-.checkion-project-intro__team {
-  max-width: 32rem;
-}
-
-.checkion-project-intro__team .checkion-project-team.ds-panel--editorial {
-  border-top: 0;
-}
-
-/* Team aside — same magazine editable-list language as GEO queries / Audion */
+/* Team — same magazine editable-list language as GEO queries / Audion */
 .checkion-project-team__main {
   display: grid;
   gap: 0.1rem;
@@ -494,7 +489,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 900px) {
-  .checkion-project-intro {
+  .checkion-project-cover {
     grid-template-columns: 1fr;
   }
 }
@@ -620,6 +615,10 @@ a { color: inherit; text-decoration: none; }
   align-items: start;
 }
 
+.checkion-project-run-list > li:last-child {
+  border-bottom: 0;
+}
+
 .checkion-project-run-list__main {
   display: grid;
   gap: 0.2rem;
@@ -682,11 +681,6 @@ a { color: inherit; text-decoration: none; }
   .checkion-project-cover {
     grid-template-columns: 1fr;
     align-items: start;
-  }
-
-  .checkion-project-cover__actions {
-    flex-direction: row;
-    flex-wrap: wrap;
   }
 
   .checkion-project-pulse {
@@ -3393,6 +3387,10 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 .checkion-geo-title-editor__rename.ds-btn,
 .checkion-job-title-editor__rename.ds-btn {
   flex-shrink: 0;
+}
+
+.checkion-geo-history-chapter {
+  margin-top: clamp(1.5rem, 4vw, 2.75rem);
 }
 
 .checkion-geo-history-filters {

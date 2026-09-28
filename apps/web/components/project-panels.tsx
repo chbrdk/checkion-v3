@@ -312,13 +312,6 @@ export function ProjectWorkspace({
     domains.find((d) => d.overallScore != null)?.overallScore ??
     latestGeo?.overallScore ??
     null
-  const geoHref = latestGeo
-    ? paths.routes.geoSection(latestGeo.id, 'overview')
-    : paths.routes.scanLaunch({
-        projectId: project.id,
-        mode: 'geo',
-        url: project.domain.startsWith('http') ? project.domain : `https://${project.domain}`,
-      })
   const projectUrl = project.domain.startsWith('http')
     ? project.domain
     : `https://${project.domain}`
@@ -345,23 +338,6 @@ export function ProjectWorkspace({
           </span>
           <span>{project.name}</span>
         </nav>
-        <div className="checkion-magazine-topbar-actions">
-          <Link href={paths.routes.scanLaunch({ projectId: project.id, mode: 'single' })}>
-            <Button variant="primary" size="sm">
-              {t('projects.newScan')}
-            </Button>
-          </Link>
-          <Link href={paths.routes.projectSeo(project.id)}>
-            <Button variant="ghost" size="sm">
-              {t('projects.openSeo')}
-            </Button>
-          </Link>
-          <Link href={geoHref}>
-            <Button variant="ghost" size="sm">
-              {latestGeo ? t('projects.openGeo') : t('projects.startGeo')}
-            </Button>
-          </Link>
-        </div>
       </div>
 
       <header className="checkion-project-cover">
@@ -395,52 +371,48 @@ export function ProjectWorkspace({
             </Text>
           ) : null}
         </div>
-        <div className="checkion-project-cover__actions">
-          <Button type="button" size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
-            {t('common.edit')}
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteOpen(true)}>
-            {t('projects.archiveConfirm')}
-          </Button>
-        </div>
-      </header>
-
-      <div className="checkion-project-intro">
-        <div className="checkion-project-intro__copy">
-          <WorkspaceChapter
-            eyebrow={t('projects.pulseEyebrow')}
-            title={t('projects.pulseTitle')}
-            deck={t('projects.pulseDeck')}
-          >
-            <div className="checkion-project-pulse" aria-label={t('projects.pulseAria')}>
-              <div className="checkion-project-pulse__meter">
-                <p className="checkion-project-pulse__value">{singleScans.length}</p>
-                <p className="checkion-project-pulse__label">{t('projects.pulseSingles')}</p>
-              </div>
-              <div className="checkion-project-pulse__meter">
-                <p className="checkion-project-pulse__value">{domainCount}</p>
-                <p className="checkion-project-pulse__label">{t('projects.pulseDeep')}</p>
-              </div>
-              <div className="checkion-project-pulse__meter">
-                <p className="checkion-project-pulse__value">{geoJobs.length}</p>
-                <p className="checkion-project-pulse__label">{t('projects.pulseGeo')}</p>
-              </div>
-              <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
-                <p className="checkion-project-pulse__value">
-                  {latestScore != null ? latestScore : '—'}
-                </p>
-                <p className="checkion-project-pulse__label">{t('projects.pulseLatestScore')}</p>
-              </div>
-            </div>
-          </WorkspaceChapter>
-        </div>
-        <aside className="checkion-project-intro__team">
+        <aside className="checkion-project-cover__aside">
+          <div className="checkion-project-cover__actions">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
+              {t('common.edit')}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteOpen(true)}>
+              {t('projects.archiveConfirm')}
+            </Button>
+          </div>
           <ProjectTeamPanel
             projectId={project.id}
             platformProjectId={project.platformProjectId}
           />
         </aside>
-      </div>
+      </header>
+
+      <WorkspaceChapter
+        eyebrow={t('projects.pulseEyebrow')}
+        title={t('projects.pulseTitle')}
+        deck={t('projects.pulseDeck')}
+      >
+        <div className="checkion-project-pulse" aria-label={t('projects.pulseAria')}>
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{singleScans.length}</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseSingles')}</p>
+          </div>
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{domainCount}</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseDeep')}</p>
+          </div>
+          <div className="checkion-project-pulse__meter">
+            <p className="checkion-project-pulse__value">{geoJobs.length}</p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseGeo')}</p>
+          </div>
+          <div className="checkion-project-pulse__meter" data-tone={scoreTone(latestScore)}>
+            <p className="checkion-project-pulse__value">
+              {latestScore != null ? latestScore : '—'}
+            </p>
+            <p className="checkion-project-pulse__label">{t('projects.pulseLatestScore')}</p>
+          </div>
+        </div>
+      </WorkspaceChapter>
 
       <WorkspaceChapter
         eyebrow={t('projects.runsEyebrow')}
