@@ -50,7 +50,7 @@ DS primitives via `@msqdx/ui`; product layout under `checkion-cover` / `checkion
 - **Layout:** ≈70/30 stage — capture + visual layers keep the wide column; findings rail is a sticky magazine companion (`minmax(20rem, 32%)`), not a Creation-style dockable tools sidepanel.
 - **Canvas:** `screenshotUrl` at capture viewport (fixture 1400×900); markers from each issue’s `boundingBox`.
 - **Layers (same canvas):** `Issues` (default) · `Heatmap` · `Regions`.
-- **Sync:** click marker → expand rail row + show description; click rail row → highlight marker (forces Issues layer).
+- **Sync:** click marker → expand rail row (rule / WCAG / runner tags, selector, rule-help link — no title-duplicate detail); click rail row → highlight marker (forces Issues layer).
 - **Not:** a fourth Contents route for “Visual”.
 
 ## Chapter 03 Detail — field inventory

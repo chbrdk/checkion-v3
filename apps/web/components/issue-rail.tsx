@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Chip, EmptyState, FilterRow, Text } from '@msqdx/ui'
+import { Chip, EmptyState, FilterRow } from '@msqdx/ui'
 import type { IssueSeverity, IssueSummary } from '@checkion-v3/contracts'
-import type { TipId } from '../lib/help-tips'
 import { useT } from '../lib/user-prefs'
-import { LabelWithTip } from './help-tip'
 
 const SEVERITIES: Array<IssueSeverity | 'all'> = [
   'all',
@@ -21,13 +19,6 @@ const SEVERITY_LABEL: Record<IssueSeverity | 'all', string> = {
   serious: 'results.issuesChrome.severitySerious',
   moderate: 'results.issuesChrome.severityModerate',
   minor: 'results.issuesChrome.severityMinor',
-}
-
-const SEVERITY_TIP: Partial<Record<IssueSeverity, TipId>> = {
-  critical: 'issue.severity.critical',
-  serious: 'issue.severity.serious',
-  moderate: 'issue.severity.moderate',
-  minor: 'issue.severity.minor',
 }
 
 /** Findings rail beside the capture stage. */
@@ -82,17 +73,6 @@ export function IssueRail({
       </header>
 
       <div className="checkion-issue-rail__filters">
-        <span className="checkion-issue-rail__filter-label">{t('results.issuesChrome.severity')}</span>
-        <div
-          className="checkion-issue-rail__sev-tips"
-          aria-label={t('results.issuesChrome.severityGlossary')}
-        >
-          {(['critical', 'serious', 'moderate', 'minor'] as const).map((s) => (
-            <LabelWithTip key={s} tipId={SEVERITY_TIP[s]!}>
-              <span className="checkion-issue-rail__sev-tip">{t(SEVERITY_LABEL[s])}</span>
-            </LabelWithTip>
-          ))}
-        </div>
         <FilterRow role="group" aria-label={t('results.issuesChrome.severity')}>
           {SEVERITIES.map((s) => (
             <Chip
@@ -143,25 +123,29 @@ export function IssueRail({
                 </button>
                 {open ? (
                   <div className="checkion-issue-rail__body">
-                    <Text role="meta">
-                      {issue.ruleId}
-                      {issue.wcagLevel ? ` · WCAG ${issue.wcagLevel}` : ''}
-                      {issue.runner ? ` · ${issue.runner}` : ''}
-                    </Text>
-                    <p>
-                      {issue.detail ?? t('results.issuesChrome.dummyDetail')}
-                    </p>
+                    <div className="checkion-issue-rail__tags" aria-label={t('results.issuesChrome.issueDetails')}>
+                      <span className="checkion-issue-rail__tag">{issue.ruleId}</span>
+                      {issue.wcagLevel ? (
+                        <span className="checkion-issue-rail__tag">WCAG {issue.wcagLevel}</span>
+                      ) : null}
+                      {issue.runner ? (
+                        <span className="checkion-issue-rail__tag">{issue.runner}</span>
+                      ) : null}
+                    </div>
                     {issue.selector ? (
-                      <Text role="mono" as="p">
-                        {issue.selector}
-                      </Text>
+                      <div className="checkion-issue-rail__fact">
+                        <span className="checkion-issue-rail__fact-label">
+                          {t('results.issuesChrome.selector')}
+                        </span>
+                        <code className="checkion-issue-rail__selector">{issue.selector}</code>
+                      </div>
                     ) : null}
                     {issue.helpUrl ? (
                       <a
                         href={issue.helpUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="checkion-band-action"
+                        className="checkion-issue-rail__help"
                       >
                         {t('results.issuesChrome.ruleHelp')}
                       </a>

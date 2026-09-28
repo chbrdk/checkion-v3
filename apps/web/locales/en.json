@@ -542,6 +542,7 @@
       "noMatches": "No matches.",
       "mapSuffix": " · map",
       "dummyDetail": "Dummy finding — remediation copy lands when the live scanner is wired.",
+      "selector": "Selector",
       "ruleHelp": "Rule help →",
       "leadFinding": "Lead finding",
       "severityMix": "Severity mix",

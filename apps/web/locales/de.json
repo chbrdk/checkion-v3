@@ -542,6 +542,7 @@
       "noMatches": "Keine Treffer.",
       "mapSuffix": " · Karte",
       "dummyDetail": "Dummy-Finding — Remediation-Text kommt, wenn der Live-Scanner angebunden ist.",
+      "selector": "Selektor",
       "ruleHelp": "Regelhilfe →",
       "leadFinding": "Leit-Finding",
       "severityMix": "Schweregrad-Mix",

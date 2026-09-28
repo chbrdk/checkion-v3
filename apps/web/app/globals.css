@@ -2252,25 +2252,6 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
   margin-bottom: 0.65rem;
 }
 
-.checkion-issue-rail__filter-label {
-  font-size: var(--type-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.checkion-issue-rail__sev-tips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.65rem;
-}
-
-.checkion-issue-rail__sev-tip {
-  font-size: var(--type-xs);
-  color: var(--muted);
-  text-transform: capitalize;
-}
-
 .checkion-launch-tip-row {
   display: flex;
   flex-wrap: wrap;
@@ -2518,14 +2499,62 @@ a.checkion-home-cta.checkion-capability-tile:focus-visible {
 
 .checkion-issue-rail__body {
   display: grid;
-  gap: 0.35rem;
-  padding: 0 0.15rem 0.65rem 2rem;
-  font-size: var(--type-sm);
-  line-height: 1.35;
+  gap: 0.55rem;
+  padding: 0.1rem 0.15rem 0.75rem 2rem;
 }
 
-.checkion-issue-rail__body p {
+.checkion-issue-rail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.checkion-issue-rail__tag {
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.12rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+.checkion-issue-rail__fact {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.checkion-issue-rail__fact-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkion-issue-rail__selector {
+  display: block;
   margin: 0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: var(--ink, var(--fg));
+  background: color-mix(in srgb, var(--line) 28%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--line) 90%, transparent);
+}
+
+.checkion-issue-rail__help {
+  justify-self: start;
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--ink, var(--fg));
+  border-bottom: 1px solid color-mix(in srgb, var(--ink, var(--fg)) 35%, transparent);
+}
+
+.checkion-issue-rail__help:hover {
+  border-bottom-color: var(--ink, var(--fg));
 }
 
 .checkion-dossier {
