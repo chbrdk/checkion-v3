@@ -274,10 +274,11 @@ export function SeoProjectWorkspace({
       setBusy(true)
       setError(null)
       try {
+        const host = query.seed.trim() || domain
         const res = await fetch(paths.routes.apiProjectSeoDomain(projectId), {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'refresh' }),
+          body: JSON.stringify({ action: 'refresh', domain: host }),
         })
         const data = (await res.json()) as SeoDomainSnapshot & {
           detail?: string
@@ -286,7 +287,6 @@ export function SeoProjectWorkspace({
         if (!res.ok) {
           throw new Error(data.detail || data.error || `HTTP ${res.status}`)
         }
-        const host = query.seed.trim() || domain
         const prevRecent = domainModel.searchBand?.recent ?? []
         const recent = [
           host,
@@ -343,10 +343,11 @@ export function SeoProjectWorkspace({
       setBusy(true)
       setError(null)
       try {
+        const host = query.seed.trim() || domain
         const res = await fetch(paths.routes.apiProjectSeoBacklinks(projectId), {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action: 'refresh' }),
+          body: JSON.stringify({ action: 'refresh', domain: host }),
         })
         const data = (await res.json()) as SeoBacklinkSnapshot & {
           detail?: string
@@ -355,7 +356,6 @@ export function SeoProjectWorkspace({
         if (!res.ok) {
           throw new Error(data.detail || data.error || `HTTP ${res.status}`)
         }
-        const host = query.seed.trim() || domain
         const next = [data, ...backlinks.filter((b) => b.id !== data.id)].slice(0, 20)
         applyBacklinksHistory(next, host, query)
       } catch (e) {

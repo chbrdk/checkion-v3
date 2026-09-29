@@ -34,6 +34,8 @@ Fixture mode returns deterministic sample rows (`stubbed: true`, `source: "fixtu
 - `POST /dataforseo_labs/google/domain_rank_overview/live` — organic KW · traffic · cost
 - `POST /dataforseo_labs/google/ranked_keywords/live` — top ranked keywords (limit **40**)
 
+**`target` formatting (required):** bare host only — no `https://`, no `www.`, no path/port/query. Normalize via `normalizeDataForSeoTarget` before every Labs/Backlinks call. Invalid targets surface vendor `Invalid Field: 'target'` (40501); prefer our clear `invalid_domain` message when the host cannot be normalized.
+
 ### Backlinks (one Capture / Refresh)
 Primary (required for live success — **summary + pages + anchors + referring_domains** must succeed):
 

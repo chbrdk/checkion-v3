@@ -14,9 +14,9 @@ Base: `/api/projects/:projectId/seo`. Auth + Access Model B on project.
 | POST | `/keywords` | `{ action: 'save'\|'research'\|'hydrate', keywords?, seed?, … }` |
 | POST | `/keywords/suggest` | Research seeds via Market Suggest Research Agent — `{ locale?, seedHint? }` → `{ keywords[], brief?, agent?, model, stubbed }` |
 | GET | `/domain` | Latest domain snapshot (+ ranked keywords) |
-| POST | `/domain` | `{ action: 'refresh' }` — DataForSEO → snapshot |
+| POST | `/domain` | `{ action: 'refresh', domain? }` — DataForSEO → snapshot; optional `domain` overrides Collection host (search-band seed) |
 | GET | `/backlinks` | Latest + history |
-| POST | `/backlinks` | `{ action: 'refresh' }` |
+| POST | `/backlinks` | `{ action: 'refresh', domain? }` — same optional host override as Domain |
 | GET | `/rank-configs` | List configs |
 | POST | `/rank-configs` | Create `{ domain, keywords[], schedule?, locationCode? }` |
 | POST | `/rank-configs/suggest` | Rank track-set via Research Agent (saved Research short-circuit if ≥5 clean) |

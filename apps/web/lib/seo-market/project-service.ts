@@ -31,6 +31,7 @@ import {
 } from './field-suggest'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
+import { normalizeDataForSeoTarget } from './dataforseo-target'
 import {
   enrichmentHasSignal,
   publishMarketSuggestBriefToPack,
@@ -187,11 +188,11 @@ export async function projectResearchKeywords(input: {
 
 export async function projectRefreshDomain(
   projectId: string,
-  opts?: { userId?: string | null },
+  opts?: { userId?: string | null; domain?: string | null },
 ): Promise<SeoDomainSnapshot> {
   const project = await getProject(projectId)
-  if (!project?.domain) throw new Error('project has no domain')
-  const domain = normalizeDomain(project.domain)
+  if (!project?.domain && !opts?.domain?.trim()) throw new Error('project has no domain')
+  const domain = normalizeDataForSeoTarget(opts?.domain?.trim() || project!.domain)
 
   let result
   if (!shouldRunLiveSeoMarket()) {
@@ -229,11 +230,11 @@ export async function projectRefreshDomain(
 
 export async function projectRefreshBacklinks(
   projectId: string,
-  opts?: { userId?: string | null },
+  opts?: { userId?: string | null; domain?: string | null },
 ): Promise<SeoBacklinkSnapshot> {
   const project = await getProject(projectId)
-  if (!project?.domain) throw new Error('project has no domain')
-  const domain = normalizeDomain(project.domain)
+  if (!project?.domain && !opts?.domain?.trim()) throw new Error('project has no domain')
+  const domain = normalizeDataForSeoTarget(opts?.domain?.trim() || project!.domain)
 
   let result
   if (!shouldRunLiveSeoMarket()) {

@@ -1,6 +1,7 @@
 import { paths } from '../paths'
 import { requireDataForSeoKey } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
+import { normalizeDataForSeoTarget } from './dataforseo-target'
 import type {
   SeoBacklinksResult,
   SeoDomainOverviewResult,
@@ -195,14 +196,17 @@ export async function liveDomainOverview(input: {
   projectId: string
   domain: string
 }): Promise<{ result: SeoDomainOverviewResult; units: number; costUsd: number }> {
-  const domain = input.domain.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const domain = normalizeDataForSeoTarget(input.domain)
   const { envelope, units, costUsd } = await dataForSeoPost(
     '/dataforseo_labs/google/domain_rank_overview/live',
     [{ target: domain }],
   )
   const taskResult = envelope.tasks?.[0]?.result
   const first = Array.isArray(taskResult) ? asRecord(taskResult[0]) : null
-  const metrics = first ? asRecord(first.metrics) : null
+  // Labs nests metrics under result[0].items[0], not result[0] itself.
+  const items = first && Array.isArray(first.items) ? first.items : []
+  const item0 = items.length ? asRecord(items[0]) : first
+  const metrics = item0 ? asRecord(item0.metrics) : null
   const organic = metrics ? asRecord(metrics.organic) : null
 
   let topKeywords: SeoKeywordIdea[] = []
@@ -273,7 +277,7 @@ export async function liveKeywordPositions(input: {
   units: number
   costUsd: number
 }> {
-  const domain = input.domain.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+  const domain = normalizeDataForSeoTarget(input.domain)
   const at = new Date().toISOString()
   const snapshots: Array<{
     keyword: string

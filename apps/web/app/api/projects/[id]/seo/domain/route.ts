@@ -30,7 +30,14 @@ export async function POST(
   const auth = await requireProjectSeoApi(request, id)
   if (!auth.ok) return auth.response
   try {
-    const snapshot = await projectRefreshDomain(auth.projectId, { userId: auth.viewerId })
+    const body = (await request.json().catch(() => ({}))) as {
+      action?: string
+      domain?: string
+    }
+    const snapshot = await projectRefreshDomain(auth.projectId, {
+      userId: auth.viewerId,
+      domain: typeof body.domain === 'string' ? body.domain : undefined,
+    })
     return NextResponse.json(snapshot)
   } catch (e) {
     return projectSeoErrorResponse(e)

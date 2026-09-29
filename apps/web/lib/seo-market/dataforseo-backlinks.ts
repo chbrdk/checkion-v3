@@ -13,6 +13,7 @@ import type {
   SeoBacklinkTldBucket,
   SeoBacklinksResult,
 } from '@checkion-v3/contracts'
+import { normalizeDataForSeoTarget } from './dataforseo-target'
 
 type DataForSeoEnvelope = {
   status_code?: number
@@ -79,10 +80,7 @@ export async function fetchLiveBacklinksPack(
   post: PostFn,
   input: { projectId: string; domain: string; limit?: number },
 ): Promise<{ result: SeoBacklinksResult; units: number; costUsd: number }> {
-  const domain = input.domain
-    .replace(/^https?:\/\//, '')
-    .replace(/\/$/, '')
-    .replace(/^www\./, '')
+  const domain = normalizeDataForSeoTarget(input.domain)
   const limit = Math.min(Math.max(input.limit ?? 25, 1), 50)
   const dateTo = weekAgoIso(0)
   const dateFrom = weekAgoIso(28)

@@ -22,6 +22,7 @@ import {
 } from './fixtures'
 import { shouldRunLiveSeoMarket } from './live-seo-market-gate'
 import { brandSeedFromHost } from './host-utils'
+import { normalizeDataForSeoTarget } from './dataforseo-target'
 import {
   assertSeoMarketSoftCap,
   getSeoMarketCache,
@@ -31,11 +32,15 @@ import {
 } from './store'
 
 function normalizeDomain(raw: string): string {
-  return raw
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./i, '')
-    .replace(/\/$/, '')
-    .toLowerCase()
+  try {
+    return normalizeDataForSeoTarget(raw)
+  } catch {
+    return raw
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./i, '')
+      .replace(/\/$/, '')
+      .toLowerCase()
+  }
 }
 
 export async function researchKeywords(input: {

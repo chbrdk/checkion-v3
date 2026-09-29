@@ -45,7 +45,11 @@ export function projectSeoErrorResponse(e: unknown): NextResponse {
       { status: err.message === 'not_found' ? 404 : 400 },
     )
   }
-  if (err.message === 'keywords are required' || err.message === 'domain is required') {
+  if (
+    err.message === 'keywords are required' ||
+    err.message === 'domain is required' ||
+    err.code === 'invalid_domain'
+  ) {
     return NextResponse.json(
       { error: 'invalid_body', detail: err.message },
       { status: 400 },
