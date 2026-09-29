@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import type { ScanOverview } from '@checkion-v3/contracts'
+import { ASSISTANT_ENTITY_PAGE_SCAN } from '../lib/assistant-page-context'
 import { getProject } from '../lib/fixtures/project-store'
 import { hasAudionCorrelation } from '../lib/scan-correlation'
 import { scoreTone } from '../lib/scan-display'
+import { AssistantPageContextPublisher } from './assistant-page-context'
 import { FromAudionHint } from './from-audion-hint'
 import { ResultMagazineChrome } from './magazine-shell-chrome'
 import { ResultSectionNav } from './result-section-nav'
@@ -49,12 +51,18 @@ export async function ResultMagazineShell({
   const title = customTitle || fallbackTitle
   const deck = overview.classification?.shortSummary ?? overview.lede
   const tone = scoreTone(scan.overallScore)
+  const collectionId = scan.platformProjectId ?? project?.platformProjectId ?? null
 
   return (
     <article
       className="checkion-magazine checkion-magazine--scan checkion-magazine--editorial"
       data-variant={variant}
     >
+      <AssistantPageContextPublisher
+        platformProjectId={collectionId}
+        entityType={ASSISTANT_ENTITY_PAGE_SCAN}
+        entityId={scan.id}
+      />
       <ResultMagazineChrome
         tone={tone}
         projectId={overview.scan.projectId}

@@ -24,7 +24,7 @@ Magazine app chrome via `@msqdx/ui` only: `AppFrame`, `NavRail`, `BrandCorner`, 
 
 The **Notifications** control lives in the NavRail footer (above Settings). It opens the global notification center panel beside the rail — not in the topbar.
 
-Authenticated shell MUST mount `PlatformAssistantHost` (FAB + `ChatOverlay` → Plexon `/assistant/embed`). Plexon base from `paths` / runtime-config — never hardcode. Spec: `plexon-v3/specs/domain/central-assistant-flyout.md`.
+Authenticated shell MUST mount `AssistantPageContextProvider` + `PlatformAssistantHost` (FAB + `ChatOverlay` → Plexon `/assistant/embed`). Host MUST pass Collection (`platformProjectId`) when known and post live `assistant:context` (not theme-only). Project workspace and scan result surfaces publish Collection via `AssistantPageContextPublisher`. Never treat local `/projects/{id}` as Collection — use `project.platformProjectId` / scan correlation only when it is a real Plexon UUID. Spec: `plexon-v3/specs/domain/assistant-page-context.md` · `plexon-v3/specs/domain/central-assistant-flyout.md` · rollout `plexon-v3/knowledge/assistant-page-context-rollout.md`.
 
 Deferred nav: Deep-Scans hub, Developers, GEO, Journey Agent live.
 

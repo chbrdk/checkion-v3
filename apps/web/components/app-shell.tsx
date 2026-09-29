@@ -23,6 +23,7 @@ import {
   JobsRailIcon,
   useJobNotifications,
 } from './job-notification-center'
+import { AssistantPageContextProvider } from './assistant-page-context'
 import { PlatformAssistantHost } from './platform-assistant-host'
 import { ShellBrandCorner } from './shell-brand-corner'
 import { paths } from '../lib/paths'
@@ -91,53 +92,55 @@ export function AppShell({
         : t('nav.jobs')
 
   return (
-    <AppFrame
-      railEdge={railEdge}
-      style={frameStyle}
-      backCorner={<ShellBackButton label={t('nav.back')} onClick={() => router.back()} />}
-      brandCorner={<ShellBrandCorner />}
-      rail={
-        <NavRail
-          dockable
-          dockStorageKey={paths.railDockStorageKey}
-          defaultDockEdge={paths.railDockEdge}
-          onDockEdgeChange={setRailEdge}
-          logo={<MsqdxLogoMark size={26} title="MSQ DX" />}
-          logoLabel={t('nav.homeAria', { brand: paths.brandLabel })}
-          linkComponent={Link}
-          items={primaryNav.map((item) => ({ ...item, active: isActive(item.href) }))}
-          footerItems={[
-            {
-              id: 'jobs',
-              label: t('nav.jobs'),
-              active: jobsOpen,
-              ariaLabel: jobsAria,
-              title: jobsAria,
-              icon: <JobsRailIcon runningCount={runningCount} failedCount={failedCount} />,
-              onClick: () => setJobsOpen((value) => !value),
-            },
-            {
-              id: 'settings',
-              label: t('nav.settings'),
-              href: paths.routes.settings,
-              active: isActive(paths.routes.settings),
-              ariaLabel: t('nav.settingsAria'),
-              icon: <Avatar name={displayName} size="sm" className="rail-avatar" />,
-            },
-          ]}
-        />
-      }
-    >
-      <JobNotificationCenterPanel
-        open={jobsOpen}
-        onClose={() => setJobsOpen(false)}
+    <AssistantPageContextProvider>
+      <AppFrame
         railEdge={railEdge}
-      />
-      <div className="app-main checkion-stage">
-        {pageLead ? <p className="checkion-page-lead">{pageLead}</p> : null}
-        {children}
-      </div>
-      <PlatformAssistantHost />
-    </AppFrame>
+        style={frameStyle}
+        backCorner={<ShellBackButton label={t('nav.back')} onClick={() => router.back()} />}
+        brandCorner={<ShellBrandCorner />}
+        rail={
+          <NavRail
+            dockable
+            dockStorageKey={paths.railDockStorageKey}
+            defaultDockEdge={paths.railDockEdge}
+            onDockEdgeChange={setRailEdge}
+            logo={<MsqdxLogoMark size={26} title="MSQ DX" />}
+            logoLabel={t('nav.homeAria', { brand: paths.brandLabel })}
+            linkComponent={Link}
+            items={primaryNav.map((item) => ({ ...item, active: isActive(item.href) }))}
+            footerItems={[
+              {
+                id: 'jobs',
+                label: t('nav.jobs'),
+                active: jobsOpen,
+                ariaLabel: jobsAria,
+                title: jobsAria,
+                icon: <JobsRailIcon runningCount={runningCount} failedCount={failedCount} />,
+                onClick: () => setJobsOpen((value) => !value),
+              },
+              {
+                id: 'settings',
+                label: t('nav.settings'),
+                href: paths.routes.settings,
+                active: isActive(paths.routes.settings),
+                ariaLabel: t('nav.settingsAria'),
+                icon: <Avatar name={displayName} size="sm" className="rail-avatar" />,
+              },
+            ]}
+          />
+        }
+      >
+        <JobNotificationCenterPanel
+          open={jobsOpen}
+          onClose={() => setJobsOpen(false)}
+          railEdge={railEdge}
+        />
+        <div className="app-main checkion-stage">
+          {pageLead ? <p className="checkion-page-lead">{pageLead}</p> : null}
+          {children}
+        </div>
+        <PlatformAssistantHost />
+      </AppFrame>
+    </AssistantPageContextProvider>
   )
 }

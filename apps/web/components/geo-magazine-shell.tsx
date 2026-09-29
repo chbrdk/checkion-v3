@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import type { GeoOverview } from '@checkion-v3/contracts'
+import { ASSISTANT_ENTITY_GEO_JOB } from '../lib/assistant-page-context'
 import { getProject } from '../lib/fixtures/project-store'
 import { scoreTone } from '../lib/scan-display'
+import { AssistantPageContextPublisher } from './assistant-page-context'
 import { GeoSectionNav, type GeoSectionId } from './geo-section-nav'
 import { GeoMagazineChrome } from './magazine-shell-chrome'
 
@@ -37,6 +39,11 @@ export async function GeoMagazineShell({
       className="checkion-magazine checkion-magazine--geo checkion-magazine--editorial"
       data-variant={variant}
     >
+      <AssistantPageContextPublisher
+        platformProjectId={project?.platformProjectId}
+        entityType={ASSISTANT_ENTITY_GEO_JOB}
+        entityId={job.id}
+      />
       <GeoMagazineChrome
         tone={tone}
         projectId={job.projectId}

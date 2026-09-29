@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import type { DomainOverview } from '@checkion-v3/contracts'
+import { ASSISTANT_ENTITY_DOMAIN_SCAN } from '../lib/assistant-page-context'
 import { scoreTone } from '../lib/scan-display'
 import { getProject } from '../lib/fixtures/project-store'
+import { AssistantPageContextPublisher } from './assistant-page-context'
 import { ResultSectionNav } from './result-section-nav'
 import { DomainMagazineChrome } from './magazine-shell-chrome'
 
@@ -40,6 +42,11 @@ export async function DomainMagazineShell({
       className="checkion-magazine checkion-magazine--domain checkion-magazine--editorial"
       data-variant={variant}
     >
+      <AssistantPageContextPublisher
+        platformProjectId={project?.platformProjectId}
+        entityType={ASSISTANT_ENTITY_DOMAIN_SCAN}
+        entityId={scan.id}
+      />
       <DomainMagazineChrome
         tone={tone}
         projectId={scan.projectId}

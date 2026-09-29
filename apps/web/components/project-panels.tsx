@@ -12,6 +12,7 @@ import type {
   ProjectSummary,
   ScanSummary,
 } from '@checkion-v3/contracts'
+import { AssistantPageContextPublisher } from './assistant-page-context'
 import { ProjectTeamPanel } from './project-team-panel'
 import { ProjectDeleteConfirm, ProjectFormDialog } from './project-form-dialog'
 import { GeoHistoryChapter } from './geo-history-chapter'
@@ -330,6 +331,7 @@ export function ProjectWorkspace({
       className="checkion-magazine checkion-magazine--editorial checkion-project-workspace"
       data-section="project-workspace"
     >
+      <AssistantPageContextPublisher platformProjectId={project.platformProjectId} />
       <div className="checkion-magazine-topbar">
         <nav className="briefing-nav signal-nav" aria-label={t('common.breadcrumb')}>
           <Link href={paths.routes.projects}>{t('nav.projects')}</Link>
