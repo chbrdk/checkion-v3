@@ -41,7 +41,7 @@ export type DomainScanOptions = {
     projectId?: string | null;
     /** When true, reuse prior scan if HEAD ETag/Last-Modified matches stored hints. */
     skipUnchangedPages?: boolean;
-    /** When true, run Qwen page-topic classification per page (costly; off by default). */
+    /** When true, run Qwen page-topic classification per page (default on; set false to skip). */
     classifyPageTopics?: boolean;
     /**
      * Poll user-requested pause/cancel from persistence. Omit for unmanaged runs.
@@ -359,7 +359,7 @@ export async function* runDomainScan(
                 userId: options.userId,
                 id: pageScanId,
                 sharedBrowser,
-                classifyPageTopics: options.classifyPageTopics === true,
+                classifyPageTopics: options.classifyPageTopics !== false,
             }),
             new Promise<never>((_, reject) => {
                 pageTimeout = setTimeout(() => {

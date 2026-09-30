@@ -26,4 +26,4 @@ No mega-JSON hydrate in MVP.
 | `useSitemap` | no | |
 | `waitForCompletion` | no | |
 | `skipUnchangedPages` | no | |
-| `classifyPageTopics` | no | When `true`, run OpenRouter Qwen page-topic classification per page (`page-classification-llm.md`). Default off. |
+| `classifyPageTopics` | no | Page-topic classification per page (default **on**). Set `false` to skip OpenRouter Qwen calls (`page-classification-llm.md`). |

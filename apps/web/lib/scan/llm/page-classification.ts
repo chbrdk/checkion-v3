@@ -140,7 +140,7 @@ function buildPrompt(result: ScanResult): { system: string; user: string } {
 
 /**
  * Classify page topics. Fail-open: returns null when disabled, unconfigured, or on error.
- * @param opts.classifyPageTopics — default true (single scans); deep scans pass false unless flagged.
+ * @param opts.classifyPageTopics — default true (single + deep); pass false to skip.
  */
 export async function classifyPageWithLlm(
   result: ScanResult,

@@ -140,7 +140,7 @@ export async function executeDomainLiveScan(input: {
       projectId: input.projectId,
       userId: input.userId,
       skipUnchangedPages: input.skipUnchangedPages,
-      classifyPageTopics: input.classifyPageTopics === true,
+      classifyPageTopics: input.classifyPageTopics !== false,
       getScanControl: input.getScanControl,
     }),
   )

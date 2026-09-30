@@ -1053,7 +1053,7 @@ export interface ScanOptions {
     runners?: Runner[];
     /**
      * Run OpenRouter Qwen page-topic classification after the lab pass.
-     * Single scans default on; deep scans pass true only when `classifyPageTopics` was set on start.
+     * Default on for single and deep; pass `false` to skip.
      */
     classifyPageTopics?: boolean;
     /** Optional: single-page scan progress (e.g. NDJSON stream to the client). */

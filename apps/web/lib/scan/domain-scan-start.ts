@@ -63,7 +63,7 @@ export type StartDomainScanInput = {
   waitForCompletion?: boolean
   /** Reuse prior page results when ETag/Last-Modified still match (default true). */
   skipUnchangedPages?: boolean
-  /** When true, run Qwen page-topic classification per page. */
+  /** When true (default), run Qwen page-topic classification per page. */
   classifyPageTopics?: boolean
   /** Plexon billing user for domain_scan_page events. */
   userId?: string
@@ -117,7 +117,7 @@ export async function startDomainScan(
         maxPages,
         useSitemap: input.useSitemap,
         skipUnchangedPages,
-        classifyPageTopics: input.classifyPageTopics === true,
+        classifyPageTopics: input.classifyPageTopics !== false,
         userId: input.userId,
         getScanControl: hooks.getScanControl
           ? () => hooks.getScanControl!(id)

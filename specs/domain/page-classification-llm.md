@@ -22,8 +22,8 @@ Uses existing `PageClassificationSnapshot`:
 | Path | Trigger |
 |------|---------|
 | Single scan | Always when live scans + `OPENROUTER_API_KEY` |
-| Deep scan | When `classifyPageTopics=true` on start (Plexon domain-scan-all / `POST /api/domain-scans`) |
-| Re-scan | Operator re-run domain job with the flag |
+| Deep scan | Always (same per-page path as single); opt out with `classifyPageTopics=false` |
+| Re-scan | Operator re-run domain job |
 
 ## Model
 
@@ -33,7 +33,7 @@ Uses existing `PageClassificationSnapshot`:
 
 ## Acceptance
 
-- **MUSS** `GET /api/domain-scans/:id/pages` rows include non-empty `classification.tags` after live deep scan with flag.
+- **MUSS** `GET /api/domain-scans/:id/pages` rows include non-empty `classification.tags` after live deep scan (when key present).
 - **MUSS** fail open: scan completes even if classification fails (log + null classification).
 - **MUSS NOT** block scan pipeline on LLM timeout >30s (skip classification for that page).
 

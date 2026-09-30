@@ -317,7 +317,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
   const job = (row.payload?.job ?? {}) as Partial<DomainScanJobOptions>
   const maxPages = resolveDomainScanMaxPages(job.maxPages)
   const skipUnchangedPages = resolveSkipUnchangedPages(job.skipUnchangedPages)
-  const classifyPageTopics = job.classifyPageTopics === true
+  const classifyPageTopics = job.classifyPageTopics !== false
   const linkScanId = job.linkScanId?.trim() || undefined
   const stopHb = startHeartbeat('domain', row.id)
   const jobTimeoutMs = resolveScanWorkerJobTimeoutMs(maxPages)

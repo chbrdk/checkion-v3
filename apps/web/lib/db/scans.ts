@@ -857,7 +857,7 @@ export async function enqueueQueuedDomainScan(input: {
         maxPages,
         ...(input.useSitemap === false ? { useSitemap: false } : {}),
         skipUnchangedPages,
-        ...(input.classifyPageTopics === true ? { classifyPageTopics: true } : {}),
+        ...(input.classifyPageTopics === false ? { classifyPageTopics: false } : {}),
         ...(input.linkScanId ? { linkScanId: input.linkScanId } : {}),
         ...(input.userId ? { userId: input.userId } : {}),
       },
