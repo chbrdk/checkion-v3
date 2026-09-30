@@ -764,6 +764,7 @@ async function dbCreateLiveScan(input: {
         projectId: input.projectId,
         url: input.url,
         mode: 'single',
+        userId: input.userId,
       })
       const completed = withScanCorrelation(bundle.scan, input.correlation)
       await db
@@ -820,6 +821,7 @@ export async function enqueueQueuedDomainScan(input: {
   maxPages?: number
   useSitemap?: boolean
   skipUnchangedPages?: boolean
+  classifyPageTopics?: boolean
   linkScanId?: string
   userId?: string
 }): Promise<DomainScanLight> {
@@ -855,6 +857,7 @@ export async function enqueueQueuedDomainScan(input: {
         maxPages,
         ...(input.useSitemap === false ? { useSitemap: false } : {}),
         skipUnchangedPages,
+        ...(input.classifyPageTopics === true ? { classifyPageTopics: true } : {}),
         ...(input.linkScanId ? { linkScanId: input.linkScanId } : {}),
         ...(input.userId ? { userId: input.userId } : {}),
       },
@@ -872,6 +875,7 @@ export async function dbCreateDomainScan(input: {
   useSitemap?: boolean
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
+  classifyPageTopics?: boolean
   userId?: string
 }): Promise<DomainScanLight> {
   if (!shouldRunLiveScans()) {
@@ -895,6 +899,7 @@ export async function dbCreateDomainScan(input: {
       maxPages: input.maxPages,
       useSitemap: input.useSitemap,
       skipUnchangedPages: input.skipUnchangedPages,
+      classifyPageTopics: input.classifyPageTopics,
       userId: input.userId,
     })
     if (input.waitForCompletion) {
@@ -911,6 +916,7 @@ export async function dbCreateDomainScan(input: {
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
       skipUnchangedPages: input.skipUnchangedPages,
+      classifyPageTopics: input.classifyPageTopics,
       userId: input.userId,
     },
     createLiveDomainScanHooks({

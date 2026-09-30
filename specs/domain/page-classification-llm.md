@@ -1,6 +1,6 @@
 # Page classification LLM (live)
 
-**Status:** Accepted — Wave 2 (2026-09-02)  
+**Status:** Accepted — Wave 2 (2026-09-02); Qwen Flash via OpenRouter (2026-09-30)  
 **Implements:** `apps/web/lib/scan/llm/page-classification.ts`  
 **Unblocks:** audion site-topics, persona page ranking quality
 
@@ -12,23 +12,24 @@ Replace Phase 2 stub (`classifyPageWithLlm` → `null`) with live classification
 
 Uses existing `PageClassificationSnapshot`:
 
-- `shortSummary` (1–2 sentences, DE or EN from scan locale)
+- `shortSummary` (1–2 sentences, DE or EN from page `htmlLang` / scan locale)
 - `tags[]` (3–8 lowercase topic tokens)
-- `intensityTier` 1–5
-- optional `tagTiers`
+- `intensityTier` 1–5 (derived as max of `tagTiers`)
+- optional `tagTiers` (`{ tag, tier }[]`)
 
 ## When it runs
 
 | Path | Trigger |
 |------|---------|
-| Single scan | Always when `CHECKION_LIVE_SCANS` + API key |
-| Deep scan | When `classifyPageTopics=true` on start (Plexon domain-scan-all already sends query param) |
-| Re-scan | Operator re-run domain job |
+| Single scan | Always when live scans + `OPENROUTER_API_KEY` |
+| Deep scan | When `classifyPageTopics=true` on start (Plexon domain-scan-all / `POST /api/domain-scans`) |
+| Re-scan | Operator re-run domain job with the flag |
 
 ## Model
 
-- Default: catalog fast tier (`OPENAI_MODEL` / env) for volume
-- Optional Anthropic path when `ANTHROPIC_API_KEY` + `CHECKION_PAGE_CLASSIFY_PROVIDER=anthropic`
+- **Default:** OpenRouter `qwen/qwen3.7-flash` (`CHECKION_PAGE_CLASSIFY_MODEL`, falls back to same default as Market field suggest)
+- Transport: OpenRouter chat completions + `response_format: json_object`
+- **Not Jev** — Jev has no free-text tags/summary; keep System One for closed gates only
 
 ## Acceptance
 
@@ -39,4 +40,5 @@ Uses existing `PageClassificationSnapshot`:
 ## Tests
 
 - Stub LLM returns tags → adapt-scan-result persists on overview
+- Parser rejects empty / malformed payloads
 - Deep scan with flag → corpus page overview has classification

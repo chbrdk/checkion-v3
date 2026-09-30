@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     useSitemap?: boolean
     waitForCompletion?: boolean
     skipUnchangedPages?: boolean
+    classifyPageTopics?: boolean
   }
   if (!body.projectId || !body.url) {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
     useSitemap: body.useSitemap,
     waitForCompletion: body.waitForCompletion === true,
     skipUnchangedPages: body.skipUnchangedPages,
+    classifyPageTopics: body.classifyPageTopics === true,
     userId: viewer.viewerId ?? undefined,
   })
   return NextResponse.json(domain, { status: 201 })

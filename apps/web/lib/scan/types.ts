@@ -778,6 +778,8 @@ export type DomainScanResult = {
     scanOptions?: {
         /** When false, skip AI fill of project industry + tags. Default: treat as true if omitted. */
         aiFillProjectMetadata?: boolean;
+        /** When true, run Qwen page-topic classification per page. */
+        classifyPageTopics?: boolean;
     };
 };
 
@@ -1049,6 +1051,11 @@ export interface ScanOptions {
     standard?: WcagStandard;
     device?: Device;
     runners?: Runner[];
+    /**
+     * Run OpenRouter Qwen page-topic classification after the lab pass.
+     * Single scans default on; deep scans pass true only when `classifyPageTopics` was set on start.
+     */
+    classifyPageTopics?: boolean;
     /** Optional: single-page scan progress (e.g. NDJSON stream to the client). */
     onProgress?: (event: { phase: ScanDevicePhase; device: Device }) => void;
     /**

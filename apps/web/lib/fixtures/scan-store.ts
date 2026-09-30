@@ -375,6 +375,7 @@ async function memoryCreateDomainScan(input: {
   useSitemap?: boolean
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
+  classifyPageTopics?: boolean
   linkScanId?: string
   userId?: string
 }): Promise<DomainScanLight> {
@@ -395,6 +396,7 @@ async function memoryCreateDomainScan(input: {
       useSitemap: input.useSitemap,
       waitForCompletion: input.waitForCompletion,
       skipUnchangedPages: input.skipUnchangedPages,
+      classifyPageTopics: input.classifyPageTopics,
       userId: input.userId,
     },
     {
@@ -646,6 +648,7 @@ export async function createDomainScan(input: {
   useSitemap?: boolean
   waitForCompletion?: boolean
   skipUnchangedPages?: boolean
+  classifyPageTopics?: boolean
   userId?: string
 }): Promise<DomainScanLight> {
   if (isDatabaseConfigured()) {

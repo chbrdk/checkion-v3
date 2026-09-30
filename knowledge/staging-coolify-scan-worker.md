@@ -43,7 +43,8 @@ CHECKION_SCAN_WORKER_JOB_TIMEOUT_MS=21600000        # optional override; default
 DOMAIN_SCAN_CONCURRENCY=5              # parallel pages per domain job (worker image default 5)
 # Optional: second scan-worker replica for parallel domain jobs (exclusive DB claim)
 # Optional LLM for page classification (same as web):
-# OPENAI_API_KEY=…
+# OPENROUTER_API_KEY=…
+# CHECKION_PAGE_CLASSIFY_MODEL=qwen/qwen3.7-flash
 ```
 
 Mount the **same** Coolify **directory** file-storage on main-app and scan-worker:

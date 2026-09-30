@@ -103,7 +103,7 @@ export const paths = {
   envSeoMarketDailySoftCap: 'CHECKION_SEO_MARKET_DAILY_SOFT_CAP',
   seoMarketDailySoftCapDefault: 80,
   dataForSeoApiBase: 'https://api.dataforseo.com/v3',
-  /** OpenRouter (Jev + Field smart suggestions). */
+  /** OpenRouter (Jev + Field smart suggestions + page classification). */
   envOpenRouterApiKey: 'OPENROUTER_API_KEY',
   envOpenRouterApiBaseUrl: 'OPENROUTER_API_BASE_URL',
   openRouterApiBaseDefault: 'https://openrouter.ai',
@@ -111,6 +111,10 @@ export const paths = {
   openRouterAppTitle: 'CHECKION Market SEO',
   envSeoFieldSuggestModel: 'CHECKION_SEO_FIELD_SUGGEST_MODEL',
   seoFieldSuggestModelDefault: 'qwen/qwen3.7-flash',
+  /** Page topics / classification (Qwen Flash). Spec: `page-classification-llm.md`. */
+  envPageClassifyModel: 'CHECKION_PAGE_CLASSIFY_MODEL',
+  pageClassifyModelDefault: 'qwen/qwen3.7-flash',
+  pageClassifyTimeoutMs: 30_000,
   /** `inline` (web executes) or `external` (scan-worker claims DB jobs). */
   envScanWorkerMode: 'CHECKION_SCAN_WORKER_MODE',
   /** Worker stale reclaim grace ms (default 120000). */

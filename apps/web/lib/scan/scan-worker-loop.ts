@@ -317,6 +317,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
   const job = (row.payload?.job ?? {}) as Partial<DomainScanJobOptions>
   const maxPages = resolveDomainScanMaxPages(job.maxPages)
   const skipUnchangedPages = resolveSkipUnchangedPages(job.skipUnchangedPages)
+  const classifyPageTopics = job.classifyPageTopics === true
   const linkScanId = job.linkScanId?.trim() || undefined
   const stopHb = startHeartbeat('domain', row.id)
   const jobTimeoutMs = resolveScanWorkerJobTimeoutMs(maxPages)
@@ -358,6 +359,7 @@ async function runDomainJob(row: DomainScanRow): Promise<void> {
       maxPages,
       useSitemap: job.useSitemap,
       skipUnchangedPages,
+      classifyPageTopics,
       userId: typeof job.userId === 'string' ? job.userId : undefined,
       getScanControl: hooks.getScanControl ? () => hooks.getScanControl!(row.id) : undefined,
       onProgress: async (scanned, total, currentUrl) => {

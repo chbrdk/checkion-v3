@@ -30,6 +30,7 @@ export type DomainScanRunner = (
     projectId?: string | null
     userId?: string
     skipUnchangedPages?: boolean
+    classifyPageTopics?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
 ) =>
@@ -64,6 +65,7 @@ async function defaultDomainRunner(
     projectId?: string | null
     userId?: string
     skipUnchangedPages?: boolean
+    classifyPageTopics?: boolean
     getScanControl?: () => Promise<DomainScanControlState>
   },
 ): Promise<AsyncGenerator<DomainScanStreamUpdate, unknown, unknown>> {
@@ -91,6 +93,7 @@ export async function executeSingleLiveScan(input: {
   projectId: string
   url: string
   mode?: 'single' | 'deep'
+  userId?: string
 }): Promise<PersistedScanBundle> {
   const runner = singleRunner ?? defaultSingleRunner
   const result = await runner({
@@ -100,6 +103,8 @@ export async function executeSingleLiveScan(input: {
     runners: ['axe', 'htmlcs'],
     id: input.id,
     groupId: input.id,
+    userId: input.userId,
+    classifyPageTopics: true,
   })
   const normalized: ScanResult = { ...result, id: input.id, groupId: result.groupId ?? input.id }
   return adaptScanResultToContracts(normalized, {
@@ -116,6 +121,7 @@ export async function executeDomainLiveScan(input: {
   maxPages?: number
   useSitemap?: boolean
   skipUnchangedPages?: boolean
+  classifyPageTopics?: boolean
   userId?: string
   onProgress?: (scanned: number, total: number, currentUrl: string) => void | Promise<void>
   getScanControl?: () => Promise<DomainScanControlState>
@@ -134,6 +140,7 @@ export async function executeDomainLiveScan(input: {
       projectId: input.projectId,
       userId: input.userId,
       skipUnchangedPages: input.skipUnchangedPages,
+      classifyPageTopics: input.classifyPageTopics === true,
       getScanControl: input.getScanControl,
     }),
   )

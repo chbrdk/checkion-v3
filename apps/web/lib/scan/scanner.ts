@@ -2181,9 +2181,12 @@ export async function runScan(
 
         report('page_classification');
         phaseTiming.mark('pre_classification');
-        // Phase 2 stub — classifyPageWithLlm returns null; no usage until Phase 3.
+        // Spec: page-classification-llm.md — Qwen Flash via OpenRouter; fail-open.
         const { classifyPageWithLlm } = await import('./llm/page-classification');
-        const classifyOutcome = await classifyPageWithLlm(result).catch(() => null);
+        const classifyOutcome = await classifyPageWithLlm(result, {
+            classifyPageTopics: options.classifyPageTopics ?? true,
+            userId: options.userId,
+        }).catch(() => null);
         if (classifyOutcome?.classification) {
             result.pageClassification = classifyOutcome.classification;
         }

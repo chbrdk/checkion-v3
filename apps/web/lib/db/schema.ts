@@ -95,7 +95,9 @@ export type DomainScanPayload = {
     maxPages: number
     useSitemap?: boolean
     skipUnchangedPages?: boolean
+    classifyPageTopics?: boolean
     linkScanId?: string
+    userId?: string
   }
 }
 
