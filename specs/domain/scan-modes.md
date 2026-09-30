@@ -117,4 +117,4 @@ AUDION may optionally trigger **`mode: single`** for a step URL (Chat-Inspect / 
 AUDION research may call **`POST /api/fetch-page`** for Chromium page text when HTTP crawl is blocked — see `specs/api/fetch-page.md` (not a WCAG scan).
 
 ## Deferred
-Journey agent live, performance-as-primary tab, page reuse cache (`skipUnchangedPages` + `page_scan_cache`), competitor cron, normalized `scan_issues` tables, multi-provider GEO cron. Market SEO GSC OAuth polish beyond status/fixture.
+Journey agent live, performance-as-primary tab, page reuse cache (`skipUnchangedPages` + `page_scan_cache` + conditional headers / content fingerprint — `page-unchanged-reuse.md`), competitor cron, normalized `scan_issues` tables, multi-provider GEO cron. Market SEO GSC OAuth polish beyond status/fixture.

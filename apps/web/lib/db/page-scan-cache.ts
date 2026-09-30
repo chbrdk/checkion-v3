@@ -7,23 +7,31 @@ import { normalizeScanUrl } from '@/lib/scan/url-normalize'
 import { v4 as uuidv4 } from 'uuid'
 
 export type CachedPageScan = {
-  documentCacheHints: NonNullable<ScanResult['documentCacheHints']>
+  documentCacheHints: {
+    etag?: string
+    lastModified?: string
+  }
+  contentFingerprint?: string
   scanResult: ScanResult
 }
 
-function hintsFromResult(
-  result: ScanResult,
-): NonNullable<ScanResult['documentCacheHints']> | null {
+function cacheableFromResult(result: ScanResult): {
+  etag?: string
+  lastModified?: string
+  contentFingerprint?: string
+} | null {
   const etag = result.documentCacheHints?.etag?.trim()
   const lastModified = result.documentCacheHints?.lastModified?.trim()
-  if (!etag && !lastModified) return null
+  const contentFingerprint = result.contentFingerprint?.trim()
+  if (!etag && !lastModified && !contentFingerprint) return null
   return {
     ...(etag ? { etag } : {}),
     ...(lastModified ? { lastModified } : {}),
+    ...(contentFingerprint ? { contentFingerprint } : {}),
   }
 }
 
-/** Latest cached page scan for project + normalized URL with reuse hints. */
+/** Latest cached page scan for project + normalized URL with reuse hints and/or fingerprint. */
 export async function getLatestCachedPageScan(input: {
   projectId: string
   url: string
@@ -48,7 +56,12 @@ export async function getLatestCachedPageScan(input: {
   if (!row) return null
   const etag = row.etag?.trim()
   const lastModified = row.lastModified?.trim()
-  if (!etag && !lastModified) return null
+  const contentFingerprint =
+    row.contentFingerprint?.trim() ||
+    (typeof (row.result as { contentFingerprint?: unknown })?.contentFingerprint === 'string'
+      ? String((row.result as { contentFingerprint: string }).contentFingerprint).trim()
+      : '')
+  if (!etag && !lastModified && !contentFingerprint) return null
   const scanResult = row.result as unknown as ScanResult
   if (!scanResult || typeof scanResult !== 'object') return null
   return {
@@ -56,19 +69,20 @@ export async function getLatestCachedPageScan(input: {
       ...(etag ? { etag } : {}),
       ...(lastModified ? { lastModified } : {}),
     },
+    ...(contentFingerprint ? { contentFingerprint } : {}),
     scanResult,
   }
 }
 
-/** Upsert slim page result for future HEAD reuse. No-op when hints are missing. */
+/** Upsert slim page result for future reuse. No-op when neither headers nor fingerprint exist. */
 export async function upsertCachedPageScan(input: {
   projectId: string
   result: ScanResult
   device?: string
 }): Promise<void> {
   if (!isDatabaseConfigured()) return
-  const hints = hintsFromResult(input.result)
-  if (!hints) return
+  const cacheable = cacheableFromResult(input.result)
+  if (!cacheable) return
 
   const normalizedUrl = normalizeScanUrl(input.result.url)
   const device = input.device ?? 'desktop'
@@ -87,9 +101,9 @@ export async function upsertCachedPageScan(input: {
     .limit(1)
 
   const payload = {
-    etag: hints.etag ?? null,
-    lastModified: hints.lastModified ?? null,
-    contentFingerprint: slim.contentFingerprint ?? null,
+    etag: cacheable.etag ?? null,
+    lastModified: cacheable.lastModified ?? null,
+    contentFingerprint: cacheable.contentFingerprint ?? slim.contentFingerprint ?? null,
     result: slim as unknown as Record<string, unknown>,
     updatedAt: new Date(),
   }

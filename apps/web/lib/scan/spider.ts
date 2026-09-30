@@ -316,7 +316,7 @@ export async function* runDomainScan(
         if (options.skipUnchangedPages && projectId) {
             try {
                 const { getLatestCachedPageScan } = await import('@/lib/db/page-scan-cache')
-                const { checkPageUnchangedByHeaders } = await import('@/lib/scan/page-unchanged-check')
+                const { resolvePageUnchanged } = await import('@/lib/scan/page-unchanged-check')
                 const { cloneScanResultForReuse } = await import('@/lib/scan/domain-scan-reuse')
                 const { copyScreenshot, readScreenshot } = await import('@/lib/scan/screenshot-storage')
                 const prev = await getLatestCachedPageScan({
@@ -324,24 +324,25 @@ export async function* runDomainScan(
                     url: current.url,
                     device: 'desktop',
                 })
-                if (prev?.documentCacheHints) {
-                    const status = await checkPageUnchangedByHeaders(
-                        current.url,
-                        prev.documentCacheHints,
-                    )
+                if (prev) {
+                    const status = await resolvePageUnchanged(current.url, {
+                        etag: prev.documentCacheHints.etag,
+                        lastModified: prev.documentCacheHints.lastModified,
+                        contentFingerprint:
+                            prev.contentFingerprint || prev.scanResult.contentFingerprint,
+                    })
                     if (status === 'unchanged') {
                         const prevId = prev.scanResult.id
-                        const hasCapture = prevId ? Boolean(await readScreenshot(prevId)) : false
-                        if (hasCapture && prevId) {
-                            await copyScreenshot(prevId, pageScanId)
-                            return cloneScanResultForReuse(
-                                prev.scanResult,
-                                domainId,
-                                current.url,
-                                pageScanId,
-                            )
+                        if (prevId && (await readScreenshot(prevId))) {
+                            await copyScreenshot(prevId, pageScanId).catch(() => undefined)
                         }
-                        // No capture on disk — fall through to full scan (capture required).
+                        // Reuse lab result even when capture is missing — avoid full axe pass.
+                        return cloneScanResultForReuse(
+                            prev.scanResult,
+                            domainId,
+                            current.url,
+                            pageScanId,
+                        )
                     }
                 }
             } catch (err) {

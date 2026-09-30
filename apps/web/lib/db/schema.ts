@@ -119,7 +119,7 @@ export const domainScans = pgTable('domain_scans', {
 export type DomainScanRow = typeof domainScans.$inferSelect
 
 /**
- * Per-URL page results for deep-scan reuse (ETag / Last-Modified HEAD match).
+ * Per-URL page results for deep-scan reuse (ETag / Last-Modified / content fingerprint).
  * Slim ScanResult JSON — screenshots stripped on write.
  */
 export const pageScanCache = pgTable(
