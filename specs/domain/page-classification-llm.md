@@ -29,6 +29,9 @@ Uses existing `PageClassificationSnapshot`:
 
 - **Default:** OpenRouter `qwen/qwen3.7-flash` (`CHECKION_PAGE_CLASSIFY_MODEL`, falls back to same default as Market field suggest)
 - Transport: OpenRouter chat completions + `response_format: json_object`
+- **Thinking off:** request `reasoning.effort=none` and prompt `/no_think` — Qwen Flash thinking otherwise burns `max_tokens` and yields empty/non-JSON `content`
+- Deep crawl: concurrency ≤2 + 429 backoff so OpenRouter rate limits don't wipe the rollup
+- Parser: tolerate markdown fences / think-blocks around the JSON object
 - **Not Jev** — Jev has no free-text tags/summary; keep System One for closed gates only
 
 ## Acceptance

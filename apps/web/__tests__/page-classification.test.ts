@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import {
   classifyPageWithLlm,
+  extractMessageContent,
+  parseJsonLoose,
   parsePageClassificationPayload,
 } from '../lib/scan/llm/page-classification'
 import { adaptScanResultToContracts } from '../lib/scan/adapt-scan-result'
@@ -52,6 +54,30 @@ describe('page-classification', () => {
     expect(parsed?.shortSummary).toMatch(/automotive/i)
     expect(parsed?.tagTiers).toHaveLength(3)
     expect(parsed?.tagTiers[0]).toEqual({ tag: 'automotive integration', tier: 5 })
+  })
+
+  it('parseJsonLoose tolerates fences and think blocks', () => {
+    const payload = {
+      shortSummary: 'Career landing for apprentices.',
+      tagTiers: [
+        { tag: 'apprenticeships', tier: 5 },
+        { tag: 'employer branding', tier: 4 },
+        { tag: 'insurance careers', tier: 3 },
+      ],
+    }
+    const fenced = `\`\`\`json\n${JSON.stringify(payload)}\n\`\`\``
+    expect(parsePageClassificationPayload(parseJsonLoose(fenced))).not.toBeNull()
+
+    const withThink = `<think>plan tags</think>\n${JSON.stringify(payload)}`
+    expect(parsePageClassificationPayload(parseJsonLoose(withThink))).not.toBeNull()
+  })
+
+  it('extractMessageContent joins content parts', () => {
+    expect(
+      extractMessageContent({
+        content: [{ type: 'text', text: '{"a":1}' }],
+      }),
+    ).toBe('{"a":1}')
   })
 
   it('rejects fewer than 3 tags or empty summary', () => {
