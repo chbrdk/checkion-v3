@@ -19,7 +19,7 @@ Deep magazine summarizes **all single-page scans in a deep scan corpus**. It is 
 ## Payload (`DomainOverview`)
 - `scan: DomainScanLight` (+ optional `industry`, `tags`, `issueStats`, **`scoresByKind`**)
 - `scores`, `lede`, `systemicIssues[{ id, title, pageCount, severity? }]`
-- Aggregate chapters: `performance` (avgs), `seoCoverage`, `ux` (+ readability bands), `eco` (+ gradeDistribution), `links`, `securityPrivacy`, `eeat`, `generative`, `infra`, `classification`
+- Aggregate chapters: `performance` (avgs), `seoCoverage`, `ux` (+ readability bands), `eco` (+ gradeDistribution), `links`, `securityPrivacy`, `eeat`, `generative`, `infra`, `classification` / `themeRollup` (top topics by page count)
 - `pageSamples[]` — overview teaser; each row’s `scanId` is a **persisted** corpus page scan (`{domainId}-p{n}`) with live capture
 
 ## Aggregated kind scores (list + hub + catalog)
@@ -37,7 +37,7 @@ Each deep crawl **must** persist every scanned page as a `scans` row:
 Issue affected-page links prefer these rows (URL match). Virtual `dpage__` / `dsample__` ids remain **legacy fallback** only when no corpus page row exists (pre-persist jobs need a re-scan for captures).
 
 ## Magazine chapters
-- **Overview** — scoreline with GEO-style LabTile snapshot (overall + weakest kind means) · `ScoresPanel` RankedList · magazine **Corpus signal** chapter (hairline meters, no `StatusMeterPanel` box) · systemic `RankedList` · Margins & pace lab tiles · SEO 30/70 (reading + meters) · distribution donuts · Trust/GEO reading (LLM one-liner + fallback) · E-E-A-T / GEO readout bars · page-sample `RankedList` (rows → `/results/{scanId}/overview` with live capture)
+- **Overview** — scoreline · **Topics** chapter (`themeRollup` RankedList) · magazine **Corpus signal** · systemic `RankedList` · Margins & pace · SEO · distributions · Trust/GEO · E-E-A-T / GEO · page-sample `RankedList`
 - **Issues** — compact systemic groups (pages affected) with filter, pagination (25/page), accordion detail + affected-pages table (sorted by issue load, density filter, 25/page; rows link to corpus page `/results/{scanId}`); no screenshot canvas on the domain issues shell itself
 - **Detail** — corpus ledger bands (same report chrome as single, aggregate facts + domain formulas)
 

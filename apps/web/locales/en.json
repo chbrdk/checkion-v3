@@ -460,6 +460,8 @@
     "dense": "Dense",
     "dossierCanonical": "Canonical",
     "dossierClassed": "Classed",
+    "topicsEyebrow": "Topics",
+    "topicsHeadline": "What is this page about?",
     "labAria": "UX eco links",
     "uxLab": "UX lab",
     "mobile": "Mobile",
@@ -879,6 +881,11 @@
     "llmsTxtPages": "llms.txt pages",
     "aiAllowingRobots": "AI-allowing robots",
     "infraThemes": "Infra & themes",
+    "themesEyebrow": "Topics",
+    "themesHeadline": "Most common topics in the crawl",
+    "themesMeta": "{classified} of {total} pages classified",
+    "themesMetaFallback": "Themes from page classification",
+    "themePages": "{n} pages",
     "host": "Host",
     "location": "Location",
     "platforms": "Platforms",
@@ -1006,7 +1013,9 @@
         "trackingHosts": "Tracking hosts",
         "summary": "Summary",
         "tags": "Tags",
-        "intensityTier": "Intensity tier"
+        "intensityTier": "Intensity tier",
+        "themeCoverage": "Pages with topics",
+        "topThemes": "Top themes"
       },
       "formulas": {
         "ledger": "Domain overall = crawl score from aggregated page runs. Category rows = lens scores over the corpus.",

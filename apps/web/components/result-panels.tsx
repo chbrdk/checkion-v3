@@ -305,6 +305,27 @@ export function ResultOverviewPanel({
         </section>
       )}
 
+      {overview.classification?.tags?.length ? (
+        <section className="checkion-domain-chapter" aria-labelledby="page-topics-heading">
+          <header className="checkion-domain-chapter__head">
+            <p className="checkion-spread__eyebrow">{t('results.topicsEyebrow')}</p>
+            <h3 id="page-topics-heading" className="checkion-spread__headline">
+              {t('results.topicsHeadline')}
+            </h3>
+            {overview.classification.shortSummary ? (
+              <Text role="meta">{overview.classification.shortSummary}</Text>
+            ) : null}
+          </header>
+          <div className="checkion-chip-row">
+            {overview.classification.tags.map((tag) => (
+              <Chip key={tag} static size="sm">
+                {tag}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* On the page — reading profile left, story right */}
       {(seo || ux || overview.classification) && (
         <section

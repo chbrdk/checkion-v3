@@ -202,6 +202,7 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
     generative: geo,
     infra,
     classification,
+    themeRollup,
     pageSamples,
     systemicIssues,
   } = overview
@@ -436,6 +437,21 @@ export function DomainDetailPanel({ overview }: { overview: DomainOverview }) {
     push(classRows, f('summary'), classification.shortSummary)
     push(classRows, f('tags'), classification.tags.join(', '))
     push(classRows, f('intensityTier'), String(classification.intensityTier))
+  }
+  if (themeRollup?.themes?.length) {
+    push(
+      classRows,
+      f('themeCoverage'),
+      `${themeRollup.pagesWithClassification}/${themeRollup.totalPages}`,
+    )
+    push(
+      classRows,
+      f('topThemes'),
+      themeRollup.themes
+        .slice(0, 8)
+        .map((th) => `${th.tag} (${th.pageCount})`)
+        .join(' · '),
+    )
   }
 
   const systemicRows: Fact[] = systemicIssues.slice(0, 12).map((issue) => ({

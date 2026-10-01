@@ -460,6 +460,8 @@
     "dense": "Dense",
     "dossierCanonical": "Canonical",
     "dossierClassed": "Klassifiziert",
+    "topicsEyebrow": "Themen",
+    "topicsHeadline": "Worum geht es auf der Seite?",
     "labAria": "UX Eco Links",
     "uxLab": "UX-Lab",
     "mobile": "Mobile",
@@ -879,6 +881,11 @@
     "llmsTxtPages": "llms.txt-Seiten",
     "aiAllowingRobots": "KI-erlaubende Robots",
     "infraThemes": "Infra & Themen",
+    "themesEyebrow": "Themen",
+    "themesHeadline": "Häufigste Topics im Crawl",
+    "themesMeta": "{classified} von {total} Seiten klassifiziert",
+    "themesMetaFallback": "Themen aus der Seitenklassifikation",
+    "themePages": "{n} Seiten",
     "host": "Host",
     "location": "Standort",
     "platforms": "Plattformen",
@@ -1006,7 +1013,9 @@
         "trackingHosts": "Tracking-Hosts",
         "summary": "Zusammenfassung",
         "tags": "Tags",
-        "intensityTier": "Intensitätsstufe"
+        "intensityTier": "Intensitätsstufe",
+        "themeCoverage": "Seiten mit Themen",
+        "topThemes": "Top-Themen"
       },
       "formulas": {
         "ledger": "Domain-Gesamtscore = Crawl-Score aus aggregierten Seitenläufen. Kategoriezeilen = Linsen-Scores über den Corpus.",

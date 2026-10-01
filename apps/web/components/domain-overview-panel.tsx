@@ -347,6 +347,52 @@ export function DomainOverviewPanel({
         </aside>
       </section>
 
+      {overview.themeRollup?.themes?.length || overview.classification?.tags?.length ? (
+        <section className="checkion-domain-chapter" aria-labelledby="domain-themes-heading">
+          <header className="checkion-domain-chapter__head">
+            <p className="checkion-spread__eyebrow">{t('domain.themesEyebrow')}</p>
+            <h3 id="domain-themes-heading" className="checkion-spread__headline">
+              {t('domain.themesHeadline')}
+            </h3>
+            <Text role="meta">
+              {overview.themeRollup
+                ? t('domain.themesMeta', {
+                    classified: overview.themeRollup.pagesWithClassification,
+                    total: overview.themeRollup.totalPages,
+                  })
+                : t('domain.themesMetaFallback')}
+            </Text>
+          </header>
+          {overview.themeRollup?.themes?.length ? (
+            <RankedList>
+              {overview.themeRollup.themes.slice(0, 10).map((theme, i) => (
+                <RankedRow
+                  key={theme.tag}
+                  index={i + 1}
+                  label={theme.tag}
+                  value={t('domain.themePages', { n: theme.pageCount })}
+                  barPct={Math.max(
+                    6,
+                    Math.round(
+                      (100 * theme.pageCount) /
+                        Math.max(1, overview.themeRollup!.pagesWithClassification),
+                    ),
+                  )}
+                />
+              ))}
+            </RankedList>
+          ) : overview.classification?.tags?.length ? (
+            <div className="checkion-chip-row">
+              {overview.classification.tags.map((tag) => (
+                <Chip key={tag} static size="sm">
+                  {tag}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <section
         className="checkion-domain-chapter checkion-domain-corpus-signal"
         data-level={corpusLevel(overview.scores)}
@@ -620,7 +666,7 @@ export function DomainOverviewPanel({
         </section>
       ) : null}
 
-      {(eeat || geo || overview.classification || overview.infra) && (
+      {(eeat || geo || overview.infra) && (
         <section className="checkion-domain-chapter" aria-labelledby="trust-heading">
           <header className="checkion-domain-chapter__head">
             <p className="checkion-spread__eyebrow">{t('domain.trustGeoThemes')}</p>
@@ -704,11 +750,10 @@ export function DomainOverviewPanel({
                 </dl>
               </div>
             ) : null}
-            {overview.infra || overview.classification ? (
+            {overview.infra ? (
               <div className="checkion-domain-card">
                 <h4>{t('domain.infraThemes')}</h4>
-                {overview.infra ? (
-                  <dl className="checkion-domain-facts">
+                <dl className="checkion-domain-facts">
                     <div>
                       <dt>{t('domain.host')}</dt>
                       <dd>
@@ -727,16 +772,6 @@ export function DomainOverviewPanel({
                       <dd>{overview.infra.platforms?.join(', ') || '—'}</dd>
                     </div>
                   </dl>
-                ) : null}
-                {overview.classification?.tags?.length ? (
-                  <div className="checkion-chip-row">
-                    {overview.classification.tags.slice(0, 6).map((tag) => (
-                      <Chip key={tag} static size="sm">
-                        {tag}
-                      </Chip>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             ) : null}
           </div>

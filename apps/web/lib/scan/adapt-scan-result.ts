@@ -11,12 +11,14 @@ import type {
   DomainScanLight,
   DomainSeoCoverage,
   DomainSystemicIssue,
+  DomainThemeRollup,
   DomainUxAggregate,
   IssueSeverity,
   IssueStats,
   IssueSummary,
   LinkSnapshot,
   InfraSnapshot,
+  PageClassificationSnapshot,
   ScanOverview,
   ScanSummary,
   ScoreCard,
@@ -34,6 +36,10 @@ import { normalizeUxReadability } from '../readability-cefr'
 import { apiScanScreenshot } from './constants'
 import { selectTopIssueGroups } from '../issue-groups'
 import { meanDomainOverallScore } from './domain-overall-score'
+import {
+  buildDomainThemeRollup,
+  classificationSnapshotFromThemeRollup,
+} from './aggregate-page-classification'
 
 function mapSeverity(type: Issue['type']): IssueSeverity {
   if (type === 'error') return 'critical'
@@ -692,7 +698,13 @@ export function buildDomainOverviewAggregates(
   | 'links'
   | 'securityPrivacy'
   | 'infra'
+  | 'classification'
+  | 'themeRollup'
 > {
+  const themeRollup: DomainThemeRollup | undefined = buildDomainThemeRollup(pages)
+  const classification: PageClassificationSnapshot | undefined = themeRollup
+    ? classificationSnapshotFromThemeRollup(themeRollup)
+    : undefined
   return {
     seoCoverage: buildDomainSeoCoverage(pages),
     eeat: mapDomainEeatAggregate(domainResult.eeat, pages.length),
@@ -703,6 +715,8 @@ export function buildDomainOverviewAggregates(
     links: buildDomainLinks(pages),
     securityPrivacy: buildDomainSecurityPrivacy(pages),
     infra: buildDomainInfra(pages),
+    classification,
+    themeRollup,
   }
 }
 

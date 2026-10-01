@@ -34,6 +34,7 @@ Uses existing `PageClassificationSnapshot`:
 ## Acceptance
 
 - **MUSS** `GET /api/domain-scans/:id/pages` rows include non-empty `classification.tags` after live deep scan (when key present).
+- **MUSS** deep Overview persist `themeRollup` (top themes by weighted page occurrence) + magazine `classification.tags` from that rollup.
 - **MUSS** fail open: scan completes even if classification fails (log + null classification).
 - **MUSS NOT** block scan pipeline on LLM timeout >30s (skip classification for that page).
 

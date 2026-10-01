@@ -356,6 +356,22 @@ export interface PageClassificationSnapshot {
   tagTiers?: Array<{ tag: string; tier: number }>
 }
 
+/** One theme across a deep-scan corpus (pageClassification rollup). */
+export interface DomainThemeStat {
+  tag: string
+  pageCount: number
+  /** Weighted score (tier² sum, boilerplate damped). */
+  score: number
+  maxTier: number
+}
+
+/** Domain-wide topic rollup for magazine Overview. */
+export interface DomainThemeRollup {
+  totalPages: number
+  pagesWithClassification: number
+  themes: DomainThemeStat[]
+}
+
 export interface PassedCheck {
   id: string
   description: string
@@ -572,6 +588,8 @@ export interface DomainOverview {
   generative?: DomainGenerativeAggregate
   infra?: InfraSnapshot
   classification?: PageClassificationSnapshot
+  /** Top topics across corpus pages (from per-page classification). */
+  themeRollup?: DomainThemeRollup
   /** Worst / sample pages for overview teaser (not full crawl table). */
   pageSamples?: DomainPageSample[]
 }
