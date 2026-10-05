@@ -398,7 +398,7 @@ export function resolveHelpTip(
   id: TipId,
   locale: HelpTipLocale | string | null | undefined,
 ): { content: string; label: string; relatedArticle?: string } {
-  const entry = HELP_TIPS[id]
+  const entry = HELP_TIPS[id] as HelpTipEntry
   const loc = locale === 'de' ? 'de' : 'en'
   return {
     content: entry[loc] || entry.en,
