@@ -25,6 +25,7 @@ import {
 } from './job-notification-center'
 import { AssistantPageContextProvider } from './assistant-page-context'
 import { PlatformAssistantHost } from './platform-assistant-host'
+import { PlatformHelpHost } from './platform-help-host'
 import { ShellBrandCorner } from './shell-brand-corner'
 import { paths } from '../lib/paths'
 import { useUserPrefs } from '../lib/user-prefs'
@@ -140,6 +141,7 @@ export function AppShell({
           {children}
         </div>
         <PlatformAssistantHost />
+        <PlatformHelpHost placement="fixed" />
       </AppFrame>
     </AssistantPageContextProvider>
   )

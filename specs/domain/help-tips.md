@@ -10,6 +10,8 @@
 - Locale from Settings prefs (`paths.localeStorageKey` / `useUserPrefs().locale`), fallback `en`.
 - UI chrome (nav, buttons, band titles) is localized separately via SET-L1 dictionaries (`knowledge/i18n.md`).
 - DS `InfoTip` receives already-resolved `content` + English `label` (aria-label).
+- Optional `relatedArticle` (suite help article id) opens product `PlatformHelpHost` → Plexon `/help/embed` (`plexon-v3/specs/domain/suite-help-docs.md` Wave 2+).
+- Wave 4 bridges: `launch.seo` → `checkion.scan.seo-crawl` · `launch.depth.deep` → `checkion.scan.domain-deep` · `launch.depth.single` / `launch.wcag` → `checkion.scan.wcag-quick` · `launch.geo*` → `checkion.scan.geo-layers`. Overview: `checkion.getting-started`.
 
 ## Tip-ID convention
 

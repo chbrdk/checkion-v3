@@ -4,13 +4,18 @@ import type { ReactNode } from 'react'
 import { InfoTip } from '../lib/msqdx-ui-client'
 import { resolveHelpTip, type TipId } from '../lib/help-tips'
 import { useHelpTipLocale } from '../lib/user-prefs'
+import { dispatchProductHelpOpen } from './platform-help-host'
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
 }
 
 /** Resolve bilingual tip body for the Settings locale (fallback en). */
-export function useHelpTip(id: TipId): { content: string; label: string } {
+export function useHelpTip(id: TipId): {
+  content: string
+  label: string
+  relatedArticle?: string
+} {
   const locale = useHelpTipLocale()
   return resolveHelpTip(id, locale)
 }
@@ -26,10 +31,22 @@ export type LabelWithTipProps = {
 /** Visible label + DS InfoTip trigger (jargon / metrics only). */
 export function LabelWithTip({ tipId, children, className, tipSize = 'sm' }: LabelWithTipProps) {
   const tip = useHelpTip(tipId)
+  const locale = useHelpTipLocale()
+  const moreLabel = locale === 'de' ? 'Hilfe-Artikel' : 'Help article'
+
   return (
     <span className={cx('checkion-label-with-tip', className)}>
       {children}
       <InfoTip content={tip.content} label={tip.label} size={tipSize} />
+      {tip.relatedArticle ? (
+        <button
+          type="button"
+          className="checkion-help-tip-article"
+          onClick={() => dispatchProductHelpOpen({ articleId: tip.relatedArticle })}
+        >
+          {moreLabel}
+        </button>
+      ) : null}
     </span>
   )
 }

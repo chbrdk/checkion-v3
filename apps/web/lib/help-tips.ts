@@ -9,6 +9,8 @@ export type HelpTipEntry = {
   de: string
   /** Trigger aria-label — English UI chrome. */
   label: string
+  /** Optional suite help article id (plexon content/help). */
+  relatedArticle?: string
 }
 
 export const HELP_TIPS = {
@@ -17,6 +19,7 @@ export const HELP_TIPS = {
     label: 'About Accessibility score',
     en: 'How well the page works with assistive tech and keyboard navigation. Lower when errors and warnings pile up across pages.',
     de: 'Wie gut die Seite mit Assistenztechnik und Tastatur funktioniert. Sinkt, wenn Fehler und Warnungen über Seiten hinweg zunehmen.',
+    relatedArticle: 'checkion.scan.wcag-quick',
   },
   'score.seo': {
     label: 'About SEO score',
@@ -140,6 +143,7 @@ export const HELP_TIPS = {
     label: 'About Discoverability',
     en: 'How findable the page is for AI systems (llms.txt, FAQ schema, crawl cues).',
     de: 'Wie auffindbar die Seite für KI-Systeme ist (llms.txt, FAQ-Schema, Crawl-Signale).',
+    relatedArticle: 'checkion.scan.geo-layers',
   },
   'geo.repurposing': {
     label: 'About Repurposing',
@@ -313,36 +317,43 @@ export const HELP_TIPS = {
     label: 'About WCAG capability',
     en: 'Accessibility-first scan (axe / HTMLCS) with SEO and performance beside it.',
     de: 'Accessibility-first Scan (axe / HTMLCS) mit SEO und Performance daneben.',
+    relatedArticle: 'checkion.scan.wcag-quick',
   },
   'launch.geo': {
     label: 'About GEO capability',
     en: 'Prompt × model presence job — how generative answers cite the brand. Pick Model memory (Layer 1) or Live search (Layer 2).',
     de: 'Prompt×Modell-Präsenzjob — wie generative Antworten die Marke zitieren. Wähle Modell-Gedächtnis (Layer 1) oder Live-Suche (Layer 2).',
+    relatedArticle: 'checkion.scan.geo-layers',
   },
   'launch.seo': {
     label: 'About SEO capability',
     en: 'Host crawl for SEO coverage across pages (titles, meta, H1s, density).',
     de: 'Host-Crawl für SEO-Abdeckung über Seiten (Titles, Meta, H1s, Dichte).',
+    relatedArticle: 'checkion.scan.seo-crawl',
   },
   'launch.depth.single': {
     label: 'About Quick single scan',
     en: 'One URL → one magazine result. Fast path for a single page.',
     de: 'Eine URL → ein Magazine-Ergebnis. Schneller Pfad für eine Seite.',
+    relatedArticle: 'checkion.scan.wcag-quick',
   },
   'launch.depth.deep': {
     label: 'About Deep scan',
     en: 'Broader crawl under the host — domain magazine with multi-page coverage.',
     de: 'Breiterer Crawl unter dem Host — Domain-Magazine mit Mehrseiten-Abdeckung.',
+    relatedArticle: 'checkion.scan.domain-deep',
   },
   'launch.geo.recall': {
     label: 'About Model memory GEO',
     en: 'Layer 1 — ungrounded chat. Measures whether the model already names your host from training, not ChatGPT-with-search.',
     de: 'Layer 1 — Chat ohne Suche. Misst, ob das Modell euren Host aus dem Training nennt — nicht ChatGPT mit Suche.',
+    relatedArticle: 'checkion.scan.geo-layers',
   },
   'launch.geo.live': {
     label: 'About Live search GEO',
     en: 'Layer 2 — provider web search. Closer to ChatGPT with browse; still not the consumer ChatGPT app. Never mixed with Model memory scores.',
     de: 'Layer 2 — Websuche der Provider. Näher an ChatGPT mit Browse; nicht die ChatGPT-App. Nie mit Modell-Gedächtnis-Scores mischen.',
+    relatedArticle: 'checkion.scan.geo-layers',
   },
   'job.status.queued': {
     label: 'About queued status',
@@ -386,12 +397,13 @@ export type TipId = keyof typeof HELP_TIPS
 export function resolveHelpTip(
   id: TipId,
   locale: HelpTipLocale | string | null | undefined,
-): { content: string; label: string } {
+): { content: string; label: string; relatedArticle?: string } {
   const entry = HELP_TIPS[id]
   const loc = locale === 'de' ? 'de' : 'en'
   return {
     content: entry[loc] || entry.en,
     label: entry.label,
+    relatedArticle: entry.relatedArticle,
   }
 }
 

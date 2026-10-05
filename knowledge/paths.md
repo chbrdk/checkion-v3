@@ -10,6 +10,7 @@
 - Scan worker: Coolify app `checkion-v3:scan-worker` uuid `abkibn5gtbcmwvwvwidmwigk` · FQDN `https://abkibn5gtbcmwvwvwidmwigk.projects-a.plygrnd.tech` · Dockerfile `/services/scan-worker/Dockerfile` · port **3011** · ops `knowledge/staging-coolify-scan-worker.md` · spec `specs/domain/scan-worker.md`
 - plexon-v3: `https://plexon-v3.projects-a.plygrnd.tech`
 - Central Assistant flyout: AppShell `AssistantPageContextProvider` + `PlatformAssistantHost` → `{plexon}/assistant/embed` (+ `theme` / `assistant:theme` + live `assistant:context`) · Collection from `project.platformProjectId` / scan correlation (real UUID only) · `plexon-v3/specs/domain/assistant-page-context.md` · `plexon-v3/specs/domain/central-assistant-flyout.md` · rollout `plexon-v3/knowledge/assistant-page-context-rollout.md`
+- Suite Help Hub (Wave 2): AppShell `PlatformHelpHost` → `{plexon}/help/embed` (`paths.pathHelpEmbed`) · optional tip `relatedArticle` · Spec `plexon-v3/specs/domain/suite-help-docs.md` · public docs `{plexon}/docs` (`paths.pathDocsPublic`)
 - Product launcher: BrandCorner → `ShellBrandCorner` / `lib/platform-product-switcher.ts`; staging fallbacks in `paths.ecosystemStaging*` when `NEXT_PUBLIC_*_URL` unset
 - Attach runbook: `knowledge/staging-coolify.md`
 - **Operator (after smoke):** on **plexon-v3** Coolify set `NEXT_PUBLIC_CHECKION_URL=https://checkion-v3.projects-a.plygrnd.tech` so Collection dashboard / registry deep-links target v3 (do not leave prod `checkion.projects-a…`). See `plexon-v3/knowledge/coolify-v3-staging-runbook.md` §4.3 Wave B note.
